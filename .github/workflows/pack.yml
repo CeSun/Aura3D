@@ -3,7 +3,7 @@ name: Build Nuget Packages
 on:
   workflow_dispatch:
 
-job:
+jobs:
   build:
     runs-on: ubuntu-latest
 
