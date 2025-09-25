@@ -1,0 +1,21 @@
+name: Build Nuget Packages
+
+on:
+  workflow_dispatch:
+
+job:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+      
+      - name: Pack Aura3D.Core
+        run: dotnet pack src/Aura3D.Core -o nugets
+
+      - name: Pack Aura3D.Avalonia
+        run: dotnet pack src/Aura3D.Avalonia -o nugets
+      
+      - name: Upload to Nuget
+        run: dotnet nuget push "nugets/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

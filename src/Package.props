@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TargetFramework>net8.0</TargetFramework>
+    <Authors>CeSun</Authors>
+    <Description>Three Dimensional Control for Avalonia</Description>
+    <RepositoryUrl>https://github.com/CeSun/Aura3d</RepositoryUrl>        
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/CeSun/Aura3d</PackageProjectUrl>        
+    <Version>0.0.1</Version>
+  </PropertyGroup>
+</Project>
