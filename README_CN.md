@@ -43,7 +43,7 @@ dotnet add package Aura3D.Avalonia
 
 在 SceneInitialized 事件中，初始化你的场景：
 
-```
+```CSharp
  public void OnSceneInitialized(object sender, RoutedEventArgs args)
  {
 

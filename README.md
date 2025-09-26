@@ -45,7 +45,7 @@ Then use the Aura3DView control in your project and bind the SceneInitialized ev
 
 Initialize your scene in the SceneInitialized event:
 
-```
+```CSharp
  public void OnSceneInitialized(object sender, RoutedEventArgs args)
  {
 	
