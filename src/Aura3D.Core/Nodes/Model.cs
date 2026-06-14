@@ -74,9 +74,6 @@ public class Model : Node
 
         foreach(var mesh in model.Meshes)
         {
-            // clone() 内部将 Mesh.Model 指向了原始 Model，
-            // 此处修正为克隆后的 Model，使 Mesh 能正确访问
-            // 克隆体的 Skeleton / AnimationSampler。
             mesh.Model = model;
 
             if (copyType == CopyType.SharedResourceData)
@@ -87,7 +84,7 @@ public class Model : Node
             else if (copyType == CopyType.FullCopy)
             {
                 mesh.Geometry = mesh.Geometry?.DeepClone();
-                mesh.Material = mesh.Material?.DeepClone();
+                mesh.Material = mesh.Material?.DeepClone(deepCopyTextures: true);
             }
         }
 

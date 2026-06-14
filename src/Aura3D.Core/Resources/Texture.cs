@@ -140,6 +140,7 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>, IGpuResource, ITex
             Height = Height,
             LdrData = LdrData,
             HdrData = HdrData,
+            IsHdr = IsHdr,
             WrapS = WrapS,
             WrapT = WrapT,
             MinFilter = MinFilter,

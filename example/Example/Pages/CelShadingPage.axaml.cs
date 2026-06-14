@@ -24,6 +24,7 @@ public partial class CelShadingPage : UserControl
     {
         InitializeComponent();
         _cameraController = new CameraController(aura3Dview);
+        
     }
 
     private void Aura3DView_SceneInitialized(object? sender, Aura3D.Avalonia.InitializedRoutedEventArgs e)

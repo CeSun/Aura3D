@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:a="https://github.com/CeSun/Aura3D"
+            xmlns:acr="clr-namespace:Aura3D.Pipeline.CelShading;assembly=Aura3D.Pipeline.CelShading"
+            xmlns:vm="clr-namespace:Example.ViewModels"
+            x:DataType="vm:CelShadingMaterialEditorViewModel"
+             x:Class="Example.Pages.CelShadingMaterialEditorPage">
+  <DockPanel>
+    <!-- Right Panel: World Editor -->
+    <Grid DockPanel.Dock="Right" Width="280" RowDefinitions="*,5,*">
+      <!-- World Outliner -->
+      <Border Grid.Row="0" Theme="{StaticResource CardBorder}" Padding="10" Margin="8,8,8,0">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" FontSize="14" FontWeight="Bold" Text="World Outliner" Margin="0,0,0,4" />
+          <TreeView x:Name="NodeTree" ItemsSource="{Binding RootNodes}" SelectionChanged="NodeTree_SelectionChanged">
+            <TreeView.ItemTemplate>
+              <TreeDataTemplate ItemsSource="{Binding Children}">
+                <TextBlock Text="{Binding DisplayName}" FontSize="12" />
+              </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+          </TreeView>
+        </DockPanel>
+      </Border>
+
+      <!-- Splitter -->
+      <GridSplitter Grid.Row="1" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext"
+                    Background="#444" Cursor="SizeNorthSouth" Margin="8,0" />
+
+      <!-- Material Editor -->
+      <Border Grid.Row="2" Theme="{StaticResource CardBorder}" Padding="10" Margin="8,0,8,8">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top" FontSize="14" FontWeight="Bold" Text="Material Editor" Margin="0,0,0,4" />
+          <Panel IsVisible="{Binding HasMaterial}">
+            <ScrollViewer>
+              <StackPanel Spacing="8">
+                <!-- Texture Channels -->
+                <ItemsControl ItemsSource="{Binding Channels}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Theme="{StaticResource CardBorder}" Padding="6" Margin="0,2"
+                              Tapped="ChannelThumbnail_Click" Cursor="Hand">
+                        <StackPanel Spacing="4">
+                          <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" />
+                          <Border Height="48" CornerRadius="4" ClipToBounds="True"
+                                  Background="#333">
+                            <Image Source="{Binding Thumbnail}"
+                                   Stretch="UniformToFill"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                          </Border>
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Parameters -->
+                <ItemsControl ItemsSource="{Binding Parameters}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Theme="{StaticResource CardBorder}" Padding="6" Margin="0,2">
+                        <StackPanel Spacing="4">
+                          <TextBlock Text="{Binding Key}" FontSize="11" Foreground="#AAA" />
+                          <!-- Color editor -->
+                          <Panel IsVisible="{Binding IsColor}">
+                            <ColorPicker Color="{Binding ColorValue}" />
+                          </Panel>
+                          <!-- Float editor -->
+                          <Panel IsVisible="{Binding IsFloat}">
+                            <TextBox Text="{Binding StringValue}" FontSize="11" />
+                          </Panel>
+                          <!-- Int editor -->
+                          <Panel IsVisible="{Binding IsInt}">
+                            <TextBox Text="{Binding StringValue}" FontSize="11" />
+                          </Panel>
+                          <!-- Other (read-only) -->
+                          <Panel IsVisible="{Binding IsOther}">
+                            <TextBlock Text="{Binding StringValue}" FontSize="11" Foreground="#7EC8E3" />
+                          </Panel>
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </ScrollViewer>
+          </Panel>
+        </DockPanel>
+      </Border>
+    </Grid>
+
+    <!-- 3D Viewport -->
+    <a:Aura3DView x:TypeArguments="acr:CelShadingPipeline" x:Name="aura3Dview"
+                  SceneInitialized="Aura3DView_SceneInitialized"
+                  SceneUpdated="Aura3DView_SceneUpdated" />
+  </DockPanel>
+</UserControl>

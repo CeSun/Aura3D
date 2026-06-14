@@ -15,6 +15,7 @@ public class ViewLocator : IDataTemplate
             RoboticArmViewModel roboticArmViewModel => new RoboticArmPage(),
             PbrViewModel pbrViewModel => new PbrPipelinePage(),
             CelShadingViewModel celShadingViewModel => new CelShadingPage(),
+            CelShadingMaterialEditorViewModel celShadingMaterialEditorViewModel => new CelShadingMaterialEditorPage(),
             ParticleEditorViewModel particleEditorViewModel => new ParticleEditorPage(),
             PointCloudViewModel pointCloudViewModel => new PointCloudPage(),
             PrimitiveTypeViewModel primitiveTypeViewModel => new PrimitiveTypePage(),

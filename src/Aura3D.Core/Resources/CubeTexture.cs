@@ -84,6 +84,7 @@ public class CubeTexture : BaseTexture<CubeTexture>, IGpuResource, ICubeTexture,
             Height = Height,
             LdrData = LdrData,
             HdrData = HdrData,
+            IsHdr = IsHdr,
             WrapS = WrapS,
             WrapT = WrapT,
             WrapR = WrapR,
@@ -97,25 +98,17 @@ public class CubeTexture : BaseTexture<CubeTexture>, IGpuResource, ICubeTexture,
     public CubeTexture DeepClone()
     {
         var texture = Clone();
-        if (LdrData != null)
+        texture.LdrData = new List<byte>[6];
+        texture.HdrData = new List<float>[6];
+        if (IsHdr == false)
         {
-            int i = 0;
-            if (IsHdr == false)
-            {
-                foreach (var singleFace in LdrData)
-                {
-                    var newFace = new List<byte>(singleFace);
-                    texture.LdrData[i++] = newFace;
-                }
-            }
-            else
-            {
-                foreach (var singleFace in HdrData)
-                {
-                    var newFace = new List<float>(singleFace);
-                    texture.HdrData[i++] = newFace;
-                }
-            }
+            for (int i = 0; i < 6; i++)
+                texture.LdrData[i] = new List<byte>(LdrData[i]);
+        }
+        else
+        {
+            for (int i = 0; i < 6; i++)
+                texture.HdrData[i] = new List<float>(HdrData[i]);
         }
         return texture;
     }

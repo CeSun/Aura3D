@@ -64,6 +64,15 @@ public class Material : IClone<Material>, IGpuResource
     /// <param name="key">参数键名</param>
     /// <param name="value">参数值</param>
     /// <returns>是否成功获取</returns>
+    /// <summary>
+    /// 遍历所有参数键值对
+    /// </summary>
+    public IEnumerable<KeyValuePair<string, object>> EnumerateParameters()
+    {
+        foreach (var kv in parameters)
+            yield return kv;
+    }
+
     public bool TryGetParameterValue<T>(string key, out T value)
     {
         if (parameters.TryGetValue(key, out var obj) && obj is T t)
@@ -99,48 +108,55 @@ public class Material : IClone<Material>, IGpuResource
             DoubleSided = this.DoubleSided,
             AlphaCutoff = this.AlphaCutoff,
             HasShader = this.HasShader,
-            Channels = Channels,
-            _vertexShaders = _vertexShaders,
-            _fragmentShaders = _fragmentShaders,
-            ShaderPassParametersCallbacks = ShaderPassParametersCallbacks
         };
+
+        foreach (var channel in Channels)
+        {
+            m.Channels.Add(new Channel
+            {
+                Name = channel.Name,
+                Texture = channel.Texture
+            });
+        }
+
+        foreach (var kv in _vertexShaders)
+            m._vertexShaders[kv.Key] = kv.Value;
+        foreach (var kv in _fragmentShaders)
+            m._fragmentShaders[kv.Key] = kv.Value;
+        foreach (var kv in ShaderPassParametersCallbacks)
+            m.ShaderPassParametersCallbacks[kv.Key] = kv.Value;
         foreach (var kv in parameters)
             m.parameters[kv.Key] = kv.Value;
         return m;
     }
 
-    public Material DeepClone()
+    public Material DeepClone() => DeepClone(deepCopyTextures: false);
+
+    public Material DeepClone(bool deepCopyTextures)
     {
-        var material = Clone();
-
-        material.Channels = new List<Channel>();
-
-        foreach(var channel in Channels)
+        var material = new Material
         {
-            var newChannel = new Channel
+            BlendMode = this.BlendMode,
+            DoubleSided = this.DoubleSided,
+            AlphaCutoff = this.AlphaCutoff,
+            HasShader = this.HasShader,
+        };
+
+        foreach (var channel in Channels)
+        {
+            material.Channels.Add(new Channel
             {
                 Name = channel.Name,
-                Texture = channel.Texture is Texture texture? texture.Clone() : null
-            };
-            material.Channels.Add(newChannel);
-        }
-        material._vertexShaders = [];
-        foreach (var vs in _vertexShaders)
-        {
-            material._vertexShaders.Add(vs.Key, vs.Value);
+                Texture = channel.Texture is Texture t
+                    ? (deepCopyTextures ? t.DeepClone() : t.Clone())
+                    : null
+            });
         }
 
-        material._fragmentShaders = [];
-        foreach (var fs in _fragmentShaders)
-        {
-            material._fragmentShaders.Add(fs.Key, fs.Value);
-        }
-
-        material.ShaderPassParametersCallbacks = [];
-        foreach (var callback in ShaderPassParametersCallbacks)
-        {
-            material.ShaderPassParametersCallbacks.Add(callback.Key, callback.Value);
-        }
+        material._vertexShaders = new Dictionary<string, string>(_vertexShaders);
+        material._fragmentShaders = new Dictionary<string, string>(_fragmentShaders);
+        material.ShaderPassParametersCallbacks = new Dictionary<string, Action<RenderPass>>(ShaderPassParametersCallbacks);
+        material.parameters = new Dictionary<string, object>(parameters);
 
         return material;
     }

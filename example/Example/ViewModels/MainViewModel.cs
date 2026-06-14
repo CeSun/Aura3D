@@ -40,6 +40,10 @@ namespace Example.ViewModels
                     ViewModel = new CelShadingViewModel()
                 },
                 new MenuViewModel {
+                    Title = "Cel Shading Material Editor",
+                    ViewModel = new CelShadingMaterialEditorViewModel()
+                },
+                new MenuViewModel {
                     Title = "Rendering Performance",
                     ViewModel = new RenderingPerformanceViewModel()
                 },

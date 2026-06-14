@@ -257,7 +257,16 @@ public class Geometry : IGpuResource, IClone<Geometry>
         return new Geometry
         {
             Indices = new List<uint>(Indices),
-            VertexAttributes = VertexAttributes.ToDictionary(),
+            VertexAttributes = VertexAttributes.ToDictionary(
+                kv => kv.Key,
+                kv => new VertexAttribute
+                {
+                    Name = kv.Value.Name,
+                    Location = kv.Value.Location,
+                    Size = kv.Value.Size,
+                    Data = new List<float>(kv.Value.Data),
+                    Enabled = kv.Value.Enabled
+                }),
             VertexAttributeLocations = new HashSet<uint>(VertexAttributeLocations),
             PrimitiveType = PrimitiveType
         };
