@@ -55,6 +55,9 @@
           <Panel IsVisible="{Binding HasMaterial}">
             <ScrollViewer>
               <StackPanel Spacing="8">
+                <!-- Initialize Cel Shading -->
+                <Button Content="初始化卡通渲染参数" Click="InitCelShading_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+
                 <!-- Texture Channels -->
                 <ItemsControl ItemsSource="{Binding Channels}">
                   <ItemsControl.ItemTemplate>

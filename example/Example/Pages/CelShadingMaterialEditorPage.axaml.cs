@@ -471,6 +471,69 @@ public partial class CelShadingMaterialEditorPage : UserControl
         }
     }
 
+    private const string CelShadingExtensionName = "AURA3D_TEXTURES_CELSHADING";
+
+    private static readonly string[] CelShadingTextureChannels = ["ILM", "SDF", "ShadowRamp", "SpecularRamp"];
+
+    private void InitCelShading_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_vm?.CurrentMaterial == null) return;
+
+        var material = _vm.CurrentMaterial;
+
+        if (!material.ExtensionNames.Contains(CelShadingExtensionName))
+            material.ExtensionNames.Add(CelShadingExtensionName);
+
+        // Set default parameters
+        material.SetParameterValue<int>("RenderType", 0);
+
+        material.SetParameterValue<float>("_RampIndex0", 0);
+        material.SetParameterValue<float>("_RampIndex1", 1);
+        material.SetParameterValue<float>("_RampIndex2", 2);
+        material.SetParameterValue<float>("_RampIndex3", 3);
+        material.SetParameterValue<float>("_RampIndex4", 4);
+
+        material.SetParameterValue<float>("_BrightFac", 1.0f);
+        material.SetParameterValue<float>("_GreyFac", 0.5f);
+        material.SetParameterValue<float>("_DarkFac", 0.2f);
+        material.SetParameterValue<float>("_BrightAreaShadowFac", 1.0f);
+
+        material.SetParameterValue<Vector4>("_LightAreaColorTint", new Vector4(1, 1, 1, 1));
+        material.SetParameterValue<Vector4>("_DarkShadowColor", new Vector4(0.5f, 0.5f, 0.5f, 1));
+        material.SetParameterValue<Vector4>("_CoolDarkShadowColor", new Vector4(0.5f, 0.5f, 0.6f, 1));
+
+        material.SetParameterValue<float>("_FaceShadowOffset", 0);
+        material.SetParameterValue<float>("_FaceShadowTransitionSoftness", 1.0f);
+
+        // Reset CelShading texture channels to 2x2 white
+        var whiteTex = Texture.CreateFromColor(System.Drawing.Color.White);
+        foreach (var channelName in CelShadingTextureChannels)
+        {
+            material.SetTexture(channelName, whiteTex);
+        }
+
+        // Refresh display
+        _vm.Channels.Clear();
+        foreach (var channel in material.Channels)
+        {
+            if (channel.Texture is Texture tex)
+            {
+                var thumbnail = TextureToThumbnail(tex);
+                _vm.Channels.Add(new ChannelItem(channel.Name, tex, thumbnail));
+            }
+            else if (channel.Texture != null)
+            {
+                _vm.Channels.Add(new ChannelItem(channel.Name, channel.Texture, null));
+            }
+        }
+
+        _vm.Parameters.Clear();
+        foreach (var kv in material.EnumerateParameters())
+        {
+            _vm.Parameters.Add(new ParameterItem(kv.Key, kv.Value, material));
+        }
+    }
+
     private static WriteableBitmap? TextureToThumbnail(Texture tex)
     {
         if (tex.LdrData == null || tex.LdrData.Count == 0 || tex.Width == 0 || tex.Height == 0)

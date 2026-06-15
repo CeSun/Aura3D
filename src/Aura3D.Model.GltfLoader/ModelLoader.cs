@@ -18,14 +18,14 @@ namespace Aura3D.Model;
 public static class ModelLoader
 {
 
-    static Dictionary<Type, Func<MaterialExtensionLoaderBase>> _materialExtensionFactories = new();
+    static Dictionary<Type, Func<MaterialExtensionBase>> _materialExtensionFactories = new();
 
-    public static void RegisterMaterialExtension<T1>(Func<MaterialExtensionLoaderBase> factory) where T1: JsonSerializable
+    public static void RegisterMaterialExtension<T1>(Func<MaterialExtensionBase> factory) where T1: JsonSerializable
     {
         _materialExtensionFactories[typeof(T1)] = factory;
     }
 
-    public static MaterialExtensionLoaderBase? GetExtensionLoader(string extensionName)
+    public static MaterialExtensionBase? GetExtensionLoader(string extensionName)
     {
         foreach (var factory in _materialExtensionFactories.Values)
         {
@@ -327,7 +327,7 @@ public static class ModelLoader
             if (factory == null)
                 continue;
 
-            MaterialExtensionLoaderBase materialExtension = factory();
+            MaterialExtensionBase materialExtension = factory();
             if (materialExtension == null)
                 continue;
 

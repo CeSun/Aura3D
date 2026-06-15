@@ -15,7 +15,7 @@ using Aura3D.Core.Resources;
 
 namespace Aura3D.Pipeline.CelShading;
 
-public class CelMaterialExtensionLoader : MaterialExtensionLoaderBase
+public class CelMaterialExtension : MaterialExtensionBase
 {
     public override string Name => "AURA3D_TEXTURES_CELSHADING";
 
@@ -24,7 +24,7 @@ public class CelMaterialExtensionLoader : MaterialExtensionLoaderBase
     {
         // Register Extension
         ModelLoader.RegisterMaterialExtension<Aura3DCelExtraProperties>(
-            () => new CelMaterialExtensionLoader()
+            () => new CelMaterialExtension()
             );
     }
 
