@@ -200,6 +200,36 @@ public partial class CelShadingMaterialEditorPage : UserControl
         }
     }
 
+    private async void SaveModel_Click(object? sender, RoutedEventArgs e)
+    {
+        if (NodeTree.SelectedItem is not NodeItem nodeItem) return;
+        if (nodeItem.Node is not Aura3D.Core.Nodes.Model model) return;
+
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Save Model as GLB",
+            SuggestedFileName = $"{model.Name ?? "model"}.glb",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("GLB File") { Patterns = ["*.glb"] }
+            ]
+        });
+
+        if (file == null) return;
+
+        try
+        {
+            ModelExporter.SaveGlbModel(model, file.Path.LocalPath);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to save model: {ex.Message}");
+        }
+    }
+
     private async void ChannelThumbnail_Click(object? sender, RoutedEventArgs e)
     {
         if (_vm?.CurrentMaterial == null) return;

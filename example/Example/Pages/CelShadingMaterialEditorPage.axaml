@@ -16,6 +16,15 @@
         <DockPanel>
           <TextBlock DockPanel.Dock="Top" FontSize="14" FontWeight="Bold" Text="World Outliner" Margin="0,0,0,4" />
           <TreeView x:Name="NodeTree" ItemsSource="{Binding RootNodes}" SelectionChanged="NodeTree_SelectionChanged">
+            <TreeView.Styles>
+              <Style Selector="TreeViewItem">
+                <Setter Property="ContextMenu">
+                  <ContextMenu DataContext="{Binding #NodeTree.SelectedItem}">
+                    <MenuItem Header="Save as GLB" Click="SaveModel_Click" />
+                  </ContextMenu>
+                </Setter>
+              </Style>
+            </TreeView.Styles>
             <TreeView.ItemTemplate>
               <TreeDataTemplate ItemsSource="{Binding Children}">
                 <TextBlock Text="{Binding DisplayName}" FontSize="12" />
