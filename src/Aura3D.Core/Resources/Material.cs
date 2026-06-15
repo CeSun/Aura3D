@@ -99,6 +99,15 @@ public class Material : IClone<Material>, IGpuResource
         }
     }
 
+    /// <summary>
+    /// 删除参数值
+    /// </summary>
+    /// <param name="key">参数键名</param>
+    public void RemoveParameterValue(string key)
+    {
+        parameters.Remove(key);
+    }
+
 
     public Material Clone()
     {
