@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using AvaloniaVector = Avalonia.Vector;
 
 namespace Example.Pages;
@@ -200,11 +201,87 @@ public partial class CelShadingMaterialEditorPage : UserControl
         }
     }
 
+    private async void OpenModel_Click(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Open GLB Model",
+            AllowMultiple = false,
+            FileTypeFilter =
+            [
+                new FilePickerFileType("GLB Files") { Patterns = ["*.glb"] },
+                new FilePickerFileType("glTF Files") { Patterns = ["*.gltf"] },
+                new FilePickerFileType("All Files") { Patterns = ["*"] }
+            ]
+        });
+
+        if (files.Count == 0) return;
+
+        try
+        {
+            var path = files[0].Path.LocalPath;
+            var view = aura3Dview;
+            var camera = view.MainCamera;
+
+            Aura3D.Core.Nodes.Model model;
+            if (path.EndsWith(".gltf", StringComparison.OrdinalIgnoreCase))
+                model = ModelLoader.LoadGltfModel(path);
+            else
+                model = ModelLoader.LoadGlbModel(path);
+
+            model.Position = camera.Position + camera.Forward * 2;
+
+            view.AddNode(model);
+            RefreshNodeTree(view);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to open model: {ex.Message}");
+        }
+    }
+
+    private async void SaveModelMenu_Click(object? sender, RoutedEventArgs e)
+    {
+        if (NodeTree.SelectedItem is not NodeItem nodeItem || nodeItem.Node is not Aura3D.Core.Nodes.Model model)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel is Window owner)
+            {
+                var dialog = new Window
+                {
+                    Title = "提示",
+                    Width = 300,
+                    Height = 120,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    CanResize = false,
+                    Content = new TextBlock
+                    {
+                        Text = "请先在场景大纲中选择一个 Model 类型的节点",
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                        Margin = new Avalonia.Thickness(16)
+                    }
+                };
+                await dialog.ShowDialog(owner);
+            }
+            return;
+        }
+
+        await DoSaveModel(model);
+    }
+
     private async void SaveModel_Click(object? sender, RoutedEventArgs e)
     {
         if (NodeTree.SelectedItem is not NodeItem nodeItem) return;
         if (nodeItem.Node is not Aura3D.Core.Nodes.Model model) return;
+        await DoSaveModel(model);
+    }
 
+    private async Task DoSaveModel(Aura3D.Core.Nodes.Model model)
+    {
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
 
@@ -238,8 +315,77 @@ public partial class CelShadingMaterialEditorPage : UserControl
         if (border?.DataContext is not ChannelItem channelItem) return;
 
         var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel == null) return;
+        if (topLevel is not Window owner) return;
 
+        // Show dialog with two options
+        var dialog = new Window
+        {
+            Title = "选择贴图来源",
+            Width = 320,
+            Height = 160,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false,
+            Content = new StackPanel
+            {
+                Margin = new Avalonia.Thickness(16),
+                Spacing = 12,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = $"请选择「{channelItem.Name}」贴图的来源",
+                        FontSize = 13,
+                        Margin = new Avalonia.Thickness(0, 0, 0, 4)
+                    },
+                    new StackPanel
+                    {
+                        Orientation = Avalonia.Layout.Orientation.Horizontal,
+                        Spacing = 12,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                        Children =
+                        {
+                            new Button
+                            {
+                                Content = "打开文件",
+                                Width = 120,
+                                Tag = "OpenFile"
+                            },
+                            new Button
+                            {
+                                Content = "从颜色生成",
+                                Width = 120,
+                                Tag = "GenerateFromColor"
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        string? choice = null;
+        var openFileBtn = (Button)((StackPanel)((StackPanel)dialog.Content!).Children[1]).Children[0];
+        var genColorBtn = (Button)((StackPanel)((StackPanel)dialog.Content!).Children[1]).Children[1];
+
+        openFileBtn.Click += (_, _) => { choice = "OpenFile"; dialog.Close(); };
+        genColorBtn.Click += (_, _) => { choice = "GenerateFromColor"; dialog.Close(); };
+
+        await dialog.ShowDialog(owner);
+
+        if (choice == null) return;
+
+        if (choice == "OpenFile")
+        {
+            await OpenTextureFromFile(channelItem, topLevel);
+        }
+        else if (choice == "GenerateFromColor")
+        {
+            await GenerateTextureFromColor(channelItem, owner);
+        }
+    }
+
+    private async Task OpenTextureFromFile(ChannelItem channelItem, TopLevel topLevel)
+    {
         var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             Title = "Select Texture",
@@ -257,19 +403,71 @@ public partial class CelShadingMaterialEditorPage : UserControl
         {
             await using var stream = await files[0].OpenReadAsync();
             var newTexture = TextureLoader.LoadTexture(stream);
-            _vm.CurrentMaterial.SetTexture(channelItem.Name, newTexture);
-
-            // Refresh the channel display
-            var index = _vm.Channels.IndexOf(channelItem);
-            if (index >= 0)
-            {
-                var thumbnail = TextureToThumbnail(newTexture);
-                _vm.Channels[index] = new ChannelItem(channelItem.Name, newTexture, thumbnail);
-            }
+            ApplyTextureToChannel(channelItem, newTexture);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to load texture: {ex.Message}");
+        }
+    }
+
+    private async Task GenerateTextureFromColor(ChannelItem channelItem, Window owner)
+    {
+        var colorPicker = new ColorPicker
+        {
+            Color = Avalonia.Media.Colors.White,
+            Width = 260,
+            Height = 280
+        };
+
+        var dialog = new Window
+        {
+            Title = "选择颜色",
+            Width = 300,
+            Height = 360,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            CanResize = false,
+            Content = new StackPanel
+            {
+                Margin = new Avalonia.Thickness(16),
+                Spacing = 12,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+                Children =
+                {
+                    colorPicker,
+                    new Button
+                    {
+                        Content = "确定",
+                        Width = 120,
+                        HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center
+                    }
+                }
+            }
+        };
+
+        var confirmBtn = (Button)((StackPanel)dialog.Content!).Children[1];
+        bool confirmed = false;
+        confirmBtn.Click += (_, _) => { confirmed = true; dialog.Close(); };
+
+        await dialog.ShowDialog(owner);
+
+        if (!confirmed) return;
+
+        var avaloniaColor = colorPicker.Color;
+        var drawingColor = System.Drawing.Color.FromArgb(avaloniaColor.A, avaloniaColor.R, avaloniaColor.G, avaloniaColor.B);
+        var newTexture = Texture.CreateFromColor(drawingColor);
+        ApplyTextureToChannel(channelItem, newTexture);
+    }
+
+    private void ApplyTextureToChannel(ChannelItem channelItem, Texture newTexture)
+    {
+        _vm!.CurrentMaterial!.SetTexture(channelItem.Name, newTexture);
+
+        var index = _vm.Channels.IndexOf(channelItem);
+        if (index >= 0)
+        {
+            var thumbnail = TextureToThumbnail(newTexture);
+            _vm.Channels[index] = new ChannelItem(channelItem.Name, newTexture, thumbnail);
         }
     }
 

@@ -9,6 +9,16 @@
             x:DataType="vm:CelShadingMaterialEditorViewModel"
              x:Class="Example.Pages.CelShadingMaterialEditorPage">
   <DockPanel>
+    <!-- Menu Bar -->
+    <Border DockPanel.Dock="Top" Theme="{StaticResource CardBorder}" Padding="4,2" Margin="0,0,0,2">
+      <Menu>
+        <MenuItem Header="文件">
+          <MenuItem Header="打开模型..." Click="OpenModel_Click" />
+          <MenuItem Header="保存模型..." Click="SaveModelMenu_Click" />
+        </MenuItem>
+      </Menu>
+    </Border>
+
     <!-- Right Panel: World Editor -->
     <Grid DockPanel.Dock="Right" Width="280" RowDefinitions="*,5,*">
       <!-- World Outliner -->
