@@ -25,6 +25,17 @@ public static class ModelLoader
         _materialExtensionFactories[typeof(T1)] = factory;
     }
 
+    public static MaterialExtensionLoaderBase? GetExtensionLoader(string extensionName)
+    {
+        foreach (var factory in _materialExtensionFactories.Values)
+        {
+            var loader = factory();
+            if (loader.Name == extensionName)
+                return loader;
+        }
+        return null;
+    }
+
     public static (Core.Nodes.Model, List<Core.Resources.Animation>) LoadGlbModelAndAnimations(Stream stream)
     {
         var modelRoot = ModelRoot.ReadGLB(stream, new ReadSettings { Validation = SharpGLTF.Validation.ValidationMode.TryFix });
@@ -321,6 +332,7 @@ public static class ModelLoader
                 continue;
 
             materialExtension.LoadMaterialExtension(modelRoot, material, mat);
+            mat.ExtensionNames.Add(materialExtension.Name);
         }
     }
 

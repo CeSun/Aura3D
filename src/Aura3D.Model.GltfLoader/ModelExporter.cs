@@ -5,6 +5,7 @@ using SharpGLTF.Geometry.VertexTypes;
 using SharpGLTF.Materials;
 using SharpGLTF.Memory;
 using SharpGLTF.Scenes;
+using SharpGLTF.Schema2;
 using SharpGLTF.Transforms;
 using System.Numerics;
 using System.Text;
@@ -28,7 +29,61 @@ public static class ModelExporter
         }
 
         var modelRoot = sceneBuilder.ToGltf2();
+
+        // Post-process: save material extensions
+        SaveMaterialExtensions(model, modelRoot, materialCache);
+
         modelRoot.SaveGLB(filePath);
+    }
+
+    private static void SaveMaterialExtensions(
+        Core.Nodes.Model model,
+        SharpGLTF.Schema2.ModelRoot modelRoot,
+        Dictionary<Material, MaterialBuilder> materialCache)
+    {
+        // Build Core Material → glTF Material mapping
+        var materialList = materialCache.Keys.ToList();
+        var gltfMaterials = modelRoot.LogicalTextures.Count > 0
+            ? modelRoot.LogicalMaterials.ToList()
+            : [];
+
+        for (int i = 0; i < materialList.Count && i < gltfMaterials.Count; i++)
+        {
+            var coreMaterial = materialList[i];
+            var gltfMaterial = gltfMaterials[i];
+
+            if (coreMaterial.ExtensionNames.Count == 0) continue;
+
+            // Build texture index map for this material's extension textures
+            var textureIndexMap = new Dictionary<Texture, int>();
+            foreach (var channel in coreMaterial.Channels)
+            {
+                if (channel.Texture is Texture tex && !textureIndexMap.ContainsKey(tex))
+                {
+                    int index = AddTextureToModelRoot(tex, modelRoot);
+                    textureIndexMap[tex] = index;
+                }
+            }
+
+            foreach (var extName in coreMaterial.ExtensionNames)
+            {
+                var loader = ModelLoader.GetExtensionLoader(extName);
+                loader?.SaveMaterialExtension(coreMaterial, gltfMaterial, modelRoot, textureIndexMap);
+            }
+        }
+    }
+
+    private static int AddTextureToModelRoot(Texture coreTexture, SharpGLTF.Schema2.ModelRoot modelRoot)
+    {
+        var imageBuilder = CreateImageBuilder(coreTexture);
+        var image = modelRoot.UseImage(imageBuilder.Content);
+        var sampler = modelRoot.UseTextureSampler(
+            SharpGLTF.Schema2.TextureWrapMode.REPEAT,
+            SharpGLTF.Schema2.TextureWrapMode.REPEAT,
+            TextureMipMapFilter.LINEAR,
+            TextureInterpolationFilter.LINEAR);
+        var texture = modelRoot.UseTexture(image, sampler);
+        return texture.LogicalIndex;
     }
 
     private static MeshBuilder<VertexPositionNormal, VertexTexture1, VertexEmpty> BuildMesh(
@@ -107,9 +162,9 @@ public static class ModelExporter
             .WithAlpha(
                 material.BlendMode switch
                 {
-                    BlendMode.Translucent => AlphaMode.BLEND,
-                    BlendMode.Masked => AlphaMode.MASK,
-                    _ => AlphaMode.OPAQUE
+                    BlendMode.Translucent => SharpGLTF.Materials.AlphaMode.BLEND,
+                    BlendMode.Masked => SharpGLTF.Materials.AlphaMode.MASK,
+                    _ => SharpGLTF.Materials.AlphaMode.OPAQUE
                 },
                 material.AlphaCutoff)
             .WithDoubleSide(material.DoubleSided);
@@ -190,7 +245,7 @@ internal static class PngEncoder
         for (int y = 0; y < height; y++)
         {
             rawData[y * (1 + width * 4)] = 0; // filter: None
-            Buffer.BlockCopy(rgbaData, y * width * 4, rawData, y * (1 + width * 4) + 1, width * 4);
+            System.Buffer.BlockCopy(rgbaData, y * width * 4, rawData, y * (1 + width * 4) + 1, width * 4);
         }
 
         var idat = ZlibStored(rawData);

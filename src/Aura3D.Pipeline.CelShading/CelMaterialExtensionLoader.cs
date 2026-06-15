@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using Aura3D.Model;
 using Aura3D.Core;
 using Aura3D.Core.Renderers;
+using Aura3D.Core.Resources;
 
 namespace Aura3D.Pipeline.CelShading;
 
@@ -86,6 +87,52 @@ public class CelMaterialExtensionLoader : MaterialExtensionLoaderBase
             logicMaterial.SetParameterValue<float>("_FaceShadowTransitionSoftness", celExt.FaceShadowTransitionSoftness);
 
             break;
+        }
+    }
+
+    public override void SaveMaterialExtension(
+        Core.Resources.Material logicMaterial,
+        SharpGLTF.Schema2.Material modelMaterial,
+        ModelRoot modelRoot,
+        Dictionary<Core.Resources.Texture, int> textureIndexMap)
+    {
+        var celExt = new Aura3DCelExtraProperties();
+
+        // Texture channels
+        celExt.ILM = GetTextureIndex("ILM");
+        celExt.SDF = GetTextureIndex("SDF");
+        celExt.ShadowRamp = GetTextureIndex("ShadowRamp");
+        celExt.SpecularRamp = GetTextureIndex("SpecularRamp");
+
+        // Parameters
+        logicMaterial.TryGetParameterValue("RenderType", out celExt.RenderType);
+
+        logicMaterial.TryGetParameterValue("_RampIndex0", out celExt.RampIndex0);
+        logicMaterial.TryGetParameterValue("_RampIndex1", out celExt.RampIndex1);
+        logicMaterial.TryGetParameterValue("_RampIndex2", out celExt.RampIndex2);
+        logicMaterial.TryGetParameterValue("_RampIndex3", out celExt.RampIndex3);
+        logicMaterial.TryGetParameterValue("_RampIndex4", out celExt.RampIndex4);
+
+        logicMaterial.TryGetParameterValue("_BrightFac", out celExt.BrightFac);
+        logicMaterial.TryGetParameterValue("_GreyFac", out celExt.GreyFac);
+        logicMaterial.TryGetParameterValue("_DarkFac", out celExt.DarkFac);
+        logicMaterial.TryGetParameterValue("_BrightAreaShadowFac", out celExt.BrightAreaShadowFac);
+
+        logicMaterial.TryGetParameterValue("_LightAreaColorTint", out celExt.LightAreaColorTint);
+        logicMaterial.TryGetParameterValue("_DarkShadowColor", out celExt.DarkShadowColor);
+        logicMaterial.TryGetParameterValue("_CoolDarkShadowColor", out celExt.CoolDarkShadowColor);
+
+        logicMaterial.TryGetParameterValue("_FaceShadowOffset", out celExt.FaceShadowOffset);
+        logicMaterial.TryGetParameterValue("_FaceShadowTransitionSoftness", out celExt.FaceShadowTransitionSoftness);
+
+        modelMaterial.SetExtension(celExt);
+
+        int GetTextureIndex(string channelName)
+        {
+            var tex = logicMaterial.GetTexture(channelName) as Core.Resources.Texture;
+            if (tex != null && textureIndexMap.TryGetValue(tex, out var idx))
+                return idx;
+            return -1;
         }
     }
 

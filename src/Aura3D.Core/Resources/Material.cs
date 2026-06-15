@@ -17,6 +17,11 @@ public class Material : IClone<Material>, IGpuResource
     /// </summary>
     public List<Channel> Channels { get; set; } = [];
 
+    /// <summary>
+    /// 材质使用的扩展名称列表
+    /// </summary>
+    public List<string> ExtensionNames { get; set; } = [];
+
     private Dictionary<string, object> parameters  { get; set; } = new Dictionary<string, object>();
 
     /// <summary>
@@ -119,6 +124,9 @@ public class Material : IClone<Material>, IGpuResource
             });
         }
 
+        foreach (var ext in ExtensionNames)
+            m.ExtensionNames.Add(ext);
+
         foreach (var kv in _vertexShaders)
             m._vertexShaders[kv.Key] = kv.Value;
         foreach (var kv in _fragmentShaders)
@@ -157,6 +165,7 @@ public class Material : IClone<Material>, IGpuResource
         material._fragmentShaders = new Dictionary<string, string>(_fragmentShaders);
         material.ShaderPassParametersCallbacks = new Dictionary<string, Action<RenderPass>>(ShaderPassParametersCallbacks);
         material.parameters = new Dictionary<string, object>(parameters);
+        material.ExtensionNames = new List<string>(ExtensionNames);
 
         return material;
     }
