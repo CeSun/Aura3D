@@ -20,13 +20,13 @@ public class AuraNodeFileReader
     private readonly List<object> _nodeList = [];
     private readonly List<PendingNodeState> _pendingNodes = [];
     private uint _fileVersion;
-    private uint _rootChunkType;
+    private AuraChunkType _rootChunkType;
     private uint _rootNodeId;
 
     public IReadOnlyDictionary<uint, object> ResourceMap => _resourceMap;
     public IReadOnlyDictionary<uint, Node> NodeMap => _nodeMap;
     public uint FileVersion => _fileVersion;
-    public uint RootChunkType => _rootChunkType;
+    public AuraChunkType RootChunkType => _rootChunkType;
     public uint RootNodeId => _rootNodeId;
     public Node RootNode => _nodeMap[_rootNodeId];
 
@@ -58,7 +58,7 @@ public class AuraNodeFileReader
         reader.FileVersion = _fileVersion;
 
         var stringTableSize = reader.ReadUInt32();
-        _rootChunkType = reader.ReadUInt32();
+        _rootChunkType = (AuraChunkType)reader.ReadUInt32();
         _rootNodeId = reader.ReadUInt32();
 
         var stringTableStart = stream.Position;
@@ -71,7 +71,7 @@ public class AuraNodeFileReader
 
         while (stream.Position < stream.Length)
         {
-            var chunkType = reader.ReadUInt32();
+            var chunkType = (AuraChunkType)reader.ReadUInt32();
             var chunkVersion = reader.ReadUInt32();
             var chunkDataSize = reader.ReadUInt32();
             var objectId = reader.ReadUInt32();
@@ -107,7 +107,7 @@ public class AuraNodeFileReader
         RestoreRuntimeState();
     }
 
-    private static object? DeserializeResourceByType(AuraBinaryReader reader, uint chunkType, uint chunkVersion)
+    private static object? DeserializeResourceByType(AuraBinaryReader reader, AuraChunkType chunkType, uint chunkVersion)
     {
         var resource = AuraResourceTypeRegistry.CreateResource(chunkType);
         if (resource is IAuraSerializable serializable)

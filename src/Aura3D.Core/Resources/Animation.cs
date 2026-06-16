@@ -7,7 +7,7 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 动画类，存储动画数据和采样方法
 /// </summary>
-[AuraChunk(chunkType: 6, chunkVersion: 1)]
+[AuraChunk(chunkType: AuraChunkType.Animation, chunkVersion: 1)]
 public partial class Animation
 {
     /// <summary>
@@ -62,7 +62,7 @@ public partial class Animation
 /// <summary>
 /// 动画通道，包含位置、旋转和缩放的关键帧数据
 /// </summary>
-[AuraChunk(chunkType: 8, chunkVersion: 1)]
+[AuraChunk(chunkType: AuraChunkType.AnimationChannel, chunkVersion: 1)]
 public partial class AnimationChannel
 {
     /// <summary>
@@ -86,7 +86,7 @@ public partial class AnimationChannel
 /// 关键帧结构体
 /// </summary>
 /// <typeparam name="T">关键帧值类型</typeparam>
-[AuraChunk(chunkType: 9, chunkVersion: 1)]
+[AuraChunk(chunkType: AuraChunkType.Keyframe, chunkVersion: 1)]
 public partial struct Keyframe<T> where T : struct
 {
     /// <summary>

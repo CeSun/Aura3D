@@ -7,7 +7,7 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 材质类，定义物体的表面属性和渲染行为
 /// </summary>
-[AuraChunk(chunkType: 4, chunkVersion: 1)]
+[AuraChunk(chunkType: AuraChunkType.Material, chunkVersion: 1)]
 public partial class Material : IClone<Material>, IGpuResource
 {
     /// <summary>
@@ -325,7 +325,7 @@ public partial class Material : IClone<Material>, IGpuResource
 /// <summary>
 /// 通道名称
 /// </summary>
-[AuraChunk(chunkType: 10, chunkVersion: 1)]
+[AuraChunk(chunkType: AuraChunkType.MaterialChannel, chunkVersion: 1)]
 public partial class Channel
 {
     [AuraField(since: 1)]

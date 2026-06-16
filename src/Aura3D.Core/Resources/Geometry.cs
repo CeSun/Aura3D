@@ -10,7 +10,7 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 几何体类，存储顶点数据和索引数据
 /// </summary>
-[AuraChunk(chunkType: 3, chunkVersion: 1)]
+[AuraChunk(chunkType: AuraChunkType.Geometry, chunkVersion: 1)]
 public partial class Geometry : IGpuResource, IClone<Geometry>
 {
 
@@ -282,7 +282,7 @@ public partial class Geometry : IGpuResource, IClone<Geometry>
 /// <summary>
 /// 顶点属性结构体
 /// </summary>
-[AuraChunk(chunkType: 11, chunkVersion: 1)]
+[AuraChunk(chunkType: AuraChunkType.VertexAttribute, chunkVersion: 1)]
 public partial struct VertexAttribute
 {
     /// <summary>

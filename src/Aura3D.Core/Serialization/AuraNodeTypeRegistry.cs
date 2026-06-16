@@ -4,7 +4,7 @@ namespace Aura3D.Core.Serialization;
 
 internal static class AuraNodeTypeRegistry
 {
-    public static uint GetChunkType(Node node)
+    public static AuraChunkType GetChunkType(Node node)
     {
         return node switch
         {
@@ -15,14 +15,14 @@ internal static class AuraNodeTypeRegistry
         };
     }
 
-    public static bool IsNodeChunkType(uint chunkType)
+    public static bool IsNodeChunkType(AuraChunkType chunkType)
     {
         return chunkType == AuraChunkType.Node
             || chunkType == AuraChunkType.Model
             || chunkType == AuraChunkType.Mesh;
     }
 
-    public static Node CreateNode(uint chunkType)
+    public static Node CreateNode(AuraChunkType chunkType)
     {
         return chunkType switch
         {

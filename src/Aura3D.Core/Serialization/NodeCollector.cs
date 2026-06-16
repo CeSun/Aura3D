@@ -22,7 +22,7 @@ public class NodeCollector
 
     public Node? RootNode { get; private set; }
     public uint RootNodeId { get; private set; } = uint.MaxValue;
-    public uint RootChunkType { get; private set; }
+    public AuraChunkType RootChunkType { get; private set; }
 
     public void Collect(Node rootNode)
     {
@@ -49,7 +49,7 @@ public class NodeCollector
         _nextNodeId = 0;
         RootNode = null;
         RootNodeId = uint.MaxValue;
-        RootChunkType = 0;
+        RootChunkType = AuraChunkType.None;
     }
 
     private void CollectNode(Node node)

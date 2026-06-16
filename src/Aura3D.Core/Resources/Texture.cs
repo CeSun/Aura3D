@@ -8,7 +8,7 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 纹理类，支持2D纹理的加载、上传和渲染
 /// </summary>
-[AuraChunk(chunkType: 1, chunkVersion: 1)]
+[AuraChunk(chunkType: AuraChunkType.Texture, chunkVersion: 1)]
 public partial class Texture : BaseTexture<Texture>, IClone<Texture>, IGpuResource, ITexture
 {
     /// <summary>

@@ -15,7 +15,7 @@ public class ResourceCollector
 
     public object? RootResource { get; private set; }
     public uint RootResourceId { get; private set; } = uint.MaxValue;
-    public uint RootChunkType { get; private set; }
+    public AuraChunkType RootChunkType { get; private set; }
 
     /// <summary>
     /// 从根资源出发收集整个资源图。
@@ -61,7 +61,7 @@ public class ResourceCollector
         _nextResourceId = 0;
         RootResource = null;
         RootResourceId = uint.MaxValue;
-        RootChunkType = 0;
+        RootChunkType = AuraChunkType.None;
     }
 
     private void CollectResource(object resource)

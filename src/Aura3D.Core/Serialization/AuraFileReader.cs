@@ -8,12 +8,12 @@ public class AuraFileReader
 {
     private readonly Dictionary<uint, object> _resourceMap = new();
     private uint _fileVersion;
-    private uint _rootChunkType;
+    private AuraChunkType _rootChunkType;
     private uint _rootResourceId;
 
     public IReadOnlyDictionary<uint, object> ResourceMap => _resourceMap;
     public uint FileVersion => _fileVersion;
-    public uint RootChunkType => _rootChunkType;
+    public AuraChunkType RootChunkType => _rootChunkType;
     public uint RootResourceId => _rootResourceId;
     public object RootResource => _resourceMap[_rootResourceId];
 
@@ -45,7 +45,7 @@ public class AuraFileReader
         reader.FileVersion = _fileVersion;
 
         var stringTableSize = reader.ReadUInt32();
-        _rootChunkType = reader.ReadUInt32();
+        _rootChunkType = (AuraChunkType)reader.ReadUInt32();
         _rootResourceId = reader.ReadUInt32();
 
         var stringTableStart = stream.Position;
@@ -58,7 +58,7 @@ public class AuraFileReader
 
         while (stream.Position < stream.Length)
         {
-            var chunkType = reader.ReadUInt32();
+            var chunkType = (AuraChunkType)reader.ReadUInt32();
             var chunkVersion = reader.ReadUInt32();
             var chunkDataSize = reader.ReadUInt32();
             var resourceId = reader.ReadUInt32();
@@ -77,7 +77,7 @@ public class AuraFileReader
             throw new InvalidDataException($"Root resource id {_rootResourceId} was not found in the file.");
     }
 
-    private static object? DeserializeResourceByType(AuraBinaryReader reader, uint chunkType, uint chunkVersion)
+    private static object? DeserializeResourceByType(AuraBinaryReader reader, AuraChunkType chunkType, uint chunkVersion)
     {
         var resource = AuraResourceTypeRegistry.CreateResource(chunkType);
         if (resource is IAuraSerializable serializable)

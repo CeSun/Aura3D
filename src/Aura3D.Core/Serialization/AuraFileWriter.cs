@@ -40,7 +40,7 @@ public class AuraFileWriter
         writer.Write(AuraFileHeader.Magic[3]);
         writer.Write(AuraFileHeader.CurrentFileVersion);
         writer.Write((uint)stringTableStream.Length);
-        writer.Write(_collector.RootChunkType);
+        writer.Write((uint)_collector.RootChunkType);
         writer.Write(_collector.RootResourceId);
 
         stringTableStream.Position = 0;
@@ -55,7 +55,7 @@ public class AuraFileWriter
         if (resource is not IAuraSerializable serializable)
             throw new InvalidOperationException($"Resource {resource.GetType().Name} does not implement IAuraSerializable.");
 
-        writer.Write(AuraResourceTypeRegistry.GetChunkType(resource));
+        writer.Write((uint)AuraResourceTypeRegistry.GetChunkType(resource));
         writer.Write(AuraResourceTypeRegistry.GetChunkVersion(resource));
 
         var stream = writer.BaseStream;

@@ -24,15 +24,21 @@ public static class AuraFileHeader
 /// <summary>
 /// Chunk type IDs.
 /// </summary>
-public static class AuraChunkType
+public enum AuraChunkType : uint
 {
-    public const uint Texture = 1;
-    public const uint CubeTexture = 2;
-    public const uint Geometry = 3;
-    public const uint Material = 4;
-    public const uint Skeleton = 5;
-    public const uint Animation = 6;
-    public const uint Node = 101;
-    public const uint Model = 102;
-    public const uint Mesh = 103;
+    None = 0,
+    Texture = 1,
+    CubeTexture = 2,
+    Geometry = 3,
+    Material = 4,
+    Skeleton = 5,
+    Animation = 6,
+    Bone = 7,
+    AnimationChannel = 8,
+    Keyframe = 9,
+    MaterialChannel = 10,
+    VertexAttribute = 11,
+    Node = 101,
+    Model = 102,
+    Mesh = 103,
 }

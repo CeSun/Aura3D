@@ -48,7 +48,7 @@ public class AuraNodeFileWriter
         writer.Write(AuraFileHeader.Magic[3]);
         writer.Write(AuraFileHeader.CurrentFileVersion);
         writer.Write((uint)stringTableStream.Length);
-        writer.Write(_collector.RootChunkType);
+        writer.Write((uint)_collector.RootChunkType);
         writer.Write(_collector.RootNodeId);
 
         stringTableStream.Position = 0;
@@ -63,7 +63,7 @@ public class AuraNodeFileWriter
         if (resource is not IAuraSerializable serializable)
             throw new InvalidOperationException($"Resource {resource.GetType().Name} does not implement IAuraSerializable.");
 
-        writer.Write(AuraResourceTypeRegistry.GetChunkType(resource));
+        writer.Write((uint)AuraResourceTypeRegistry.GetChunkType(resource));
         writer.Write(AuraResourceTypeRegistry.GetChunkVersion(resource));
 
         var stream = writer.BaseStream;
@@ -83,7 +83,7 @@ public class AuraNodeFileWriter
 
     private static void WriteNodeChunk(AuraBinaryWriter writer, Node node, uint nodeId, uint parentId)
     {
-        writer.Write(AuraNodeTypeRegistry.GetChunkType(node));
+        writer.Write((uint)AuraNodeTypeRegistry.GetChunkType(node));
         writer.Write(AuraNodeTypeRegistry.GetChunkVersion(node));
 
         var stream = writer.BaseStream;

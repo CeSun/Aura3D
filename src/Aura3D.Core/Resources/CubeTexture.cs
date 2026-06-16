@@ -8,7 +8,7 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 立方体纹理类，用于天空盒等需要6面纹理的场景
 /// </summary>
-[AuraChunk(chunkType: 2, chunkVersion: 1)]
+[AuraChunk(chunkType: AuraChunkType.CubeTexture, chunkVersion: 1)]
 public partial class CubeTexture : BaseTexture<CubeTexture>, IGpuResource, ICubeTexture, IClone<CubeTexture>
 {
     /// <summary>

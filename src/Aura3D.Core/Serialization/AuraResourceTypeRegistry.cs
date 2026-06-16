@@ -2,7 +2,7 @@ namespace Aura3D.Core.Serialization;
 
 internal static class AuraResourceTypeRegistry
 {
-    public static uint GetChunkType(object resource)
+    public static AuraChunkType GetChunkType(object resource)
     {
         return resource switch
         {
@@ -16,7 +16,7 @@ internal static class AuraResourceTypeRegistry
         };
     }
 
-    public static object? CreateResource(uint chunkType)
+    public static object? CreateResource(AuraChunkType chunkType)
     {
         return chunkType switch
         {
