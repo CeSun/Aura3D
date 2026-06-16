@@ -56,8 +56,8 @@ public class SerializationGenerator : IIncrementalGenerator
 
         if (auraChunkAttr == null) return null;
 
-        var chunkType = (uint)(auraChunkAttr.ConstructorArguments[0].Value ?? 0);
-        var chunkVersion = (uint)(auraChunkAttr.ConstructorArguments[1].Value ?? 1);
+        var chunkType = GetUInt32Value(auraChunkAttr.ConstructorArguments[0], defaultValue: 0u);
+        var chunkVersion = GetUInt32Value(auraChunkAttr.ConstructorArguments[1], defaultValue: 1u);
 
         var info = new TypeSerializationInfo
         {
@@ -184,7 +184,7 @@ public class SerializationGenerator : IIncrementalGenerator
 
                 if (auraFieldAttr == null) continue;
 
-                var since = (uint)(auraFieldAttr.ConstructorArguments[0].Value ?? 1);
+                var since = GetUInt32Value(auraFieldAttr.ConstructorArguments[0], defaultValue: 1u);
 
                 // Check for [AuraReference]
                 var isReference = member.GetAttributes().Any(a =>
@@ -225,6 +225,26 @@ public class SerializationGenerator : IIncrementalGenerator
     {
         var syntaxRef = member.DeclaringSyntaxReferences.FirstOrDefault();
         return syntaxRef?.Span.Start ?? int.MaxValue;
+    }
+
+    private static uint GetUInt32Value(TypedConstant constant, uint defaultValue)
+    {
+        var value = constant.Value;
+        if (value == null)
+            return defaultValue;
+
+        return value switch
+        {
+            byte byteValue => byteValue,
+            sbyte sbyteValue => unchecked((uint)sbyteValue),
+            short shortValue => unchecked((uint)shortValue),
+            ushort ushortValue => ushortValue,
+            int intValue => unchecked((uint)intValue),
+            uint uintValue => uintValue,
+            long longValue => unchecked((uint)longValue),
+            ulong ulongValue => unchecked((uint)ulongValue),
+            _ => defaultValue
+        };
     }
 
     private static TypeCategory CategorizeType(ITypeSymbol type)
