@@ -13,12 +13,18 @@
 			
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
 		        <Button Margin="10"  Content="Open File" Click="Button_Click"></Button>
+                <Button Margin="10" Content="Open Aura" Click="OpenAuraButton_Click"></Button>
+                <Button Margin="10" Content="Save Aura" Click="SaveAuraButton_Click"></Button>
                 <Button x:Name="lionButton" Margin="10"  Content="lion head" Click="Button_Click_1"></Button>
                 <Button x:Name="soldierButton" Margin="10"  Content="soldier" Click="Button_Click_1"></Button>
                 <Button x:Name="woodenButton" Margin="10"  Content="wooden stool" Click="Button_Click_1"></Button>
 				
                 <Button x:Name="resetcamera" Margin="10"  Content="ResetCamera" Click="Button_Click_1"></Button>
             </StackPanel>
+
+            <TextBlock Margin="10,0,10,10"
+                       Text="{Binding StatusMessage}"
+                       TextWrapping="Wrap" />
 
             <StackPanel  Orientation="Horizontal">
 	            <TextBlock VerticalAlignment="Center" Text="Scale:"></TextBlock>

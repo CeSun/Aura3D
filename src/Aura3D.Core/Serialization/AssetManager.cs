@@ -5,6 +5,40 @@ namespace Aura3D.Core.Serialization;
 /// </summary>
 public class AssetManager
 {
+    public static void SaveNode<T>(T node, string path) where T : Nodes.Node
+    {
+        ArgumentNullException.ThrowIfNull(node);
+
+        using var fileStream = File.Create(path);
+        SaveNode(node, fileStream);
+    }
+
+    public static void SaveNode<T>(T node, Stream stream) where T : Nodes.Node
+    {
+        ArgumentNullException.ThrowIfNull(node);
+
+        var collector = new NodeCollector();
+        collector.Collect(node);
+
+        var writer = new AuraNodeFileWriter(collector);
+        writer.Write(stream);
+    }
+
+    public static T LoadNode<T>(string path) where T : Nodes.Node
+    {
+        using var fileStream = File.OpenRead(path);
+        return LoadNode<T>(fileStream);
+    }
+
+    public static T LoadNode<T>(Stream stream) where T : Nodes.Node
+    {
+        var reader = new AuraNodeFileReader(stream);
+        if (reader.RootNode is T node)
+            return node;
+
+        throw new InvalidDataException($"Root node type mismatch. Expected {typeof(T).FullName}, actual chunk type {reader.RootChunkType}.");
+    }
+
     public static void SaveResource<T>(T resource, string path) where T : class
     {
         ArgumentNullException.ThrowIfNull(resource);

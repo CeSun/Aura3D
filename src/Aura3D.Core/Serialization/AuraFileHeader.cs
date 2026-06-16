@@ -32,4 +32,7 @@ public static class AuraChunkType
     public const uint Material = 4;
     public const uint Skeleton = 5;
     public const uint Animation = 6;
+    public const uint Node = 101;
+    public const uint Model = 102;
+    public const uint Mesh = 103;
 }

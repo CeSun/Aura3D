@@ -18,4 +18,7 @@ public partial class ModelPreviewViewModel : ViewModelBase
     public double _pitch = 1.0;
     [ObservableProperty]
     public double _roll = 1.0;
+
+    [ObservableProperty]
+    public string _statusMessage = "Load a glb/gltf model, then save it as an Aura3D file and load it back.";
 }

@@ -3,6 +3,7 @@ using Aura3D.Core;
 using Aura3D.Core.Math;
 using Aura3D.Core.Nodes;
 using Aura3D.Core.Resources;
+using Aura3D.Core.Serialization;
 using Aura3D.Model;
 using Avalonia;
 using Avalonia.Controls;
@@ -98,13 +99,15 @@ public partial class ModelPreviewPage : UserControl
 
     private async void Button_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-
         if (DataContext is ModelPreviewViewModel vm == false)
             return;
 
         var toplevel = TopLevel.GetTopLevel(this);
+        if (toplevel == null)
+            return;
 
         List<FilePickerFileType> filePickerFileTypes = [
+                    new ("Aura3D model"){ Patterns = ["*.aura"] },
                     new ("gltf file"){ Patterns = ["*.glb", "*.gltf"] },
                     new ("3D Manufacturing Format ") { Patterns = ["*.3mf"] },
                     new ("Collada") { Patterns = ["*.dae", "*.xml"] },
@@ -152,6 +155,9 @@ public partial class ModelPreviewPage : UserControl
         List<string> allextensions = [];
         foreach(var filePickerFileType in filePickerFileTypes)
         {
+            if (filePickerFileType.Patterns == null)
+                continue;
+
             foreach(var pattern in filePickerFileType.Patterns)
             {
                 allextensions.Add(pattern);
@@ -168,55 +174,7 @@ public partial class ModelPreviewPage : UserControl
 
         foreach (var file in files)
         {
-            Model? model = null;
-            List<Animation> animations = [];
-            var path = file.TryGetLocalPath();
-            if (path != null)
-            {
-                var extension = Path.GetExtension(path);
-                if (extension != null)
-                {
-                    if (extension.ToLower() == ".glb")
-                    {
-                        (model, animations) = ModelLoader.LoadGlbModelAndAnimations(path);
-                    }
-                    else if (extension.ToLower() == ".gltf")
-                    {
-                        (model, animations) = ModelLoader.LoadGltfModelAndAnimations(path);
-                    }
-                }
-                if (model == null)
-                {
-                     (model, animations) = AssimpLoader.LoadModelAndAnimations(path);
-                }
-            }
-            else
-            {
-                using (var stream = await file.OpenReadAsync())
-                {
-                    (model, animations) = AssimpLoader.LoadModelAndAnimations(stream);
-                }
-
-            }
-
-            if (animations.Count > 0)
-            {
-                model.AnimationSampler = new AnimationSampler(animations.First());
-            }
-
-            model.Position = modelPosition;
-
-            model.Position = modelPosition - model.Up * 1;
-
-            model.RotationDegrees = Vector3.Zero;
-
-            currentModel = model;
-
-            vm.Scale = 1;
-
-            vm.Yaw = currentModel.RotationDegrees.Y;
-
-
+            await LoadModelFileAsync(file, vm);
         }
     }
 
@@ -247,6 +205,80 @@ public partial class ModelPreviewPage : UserControl
     {
     }
 
+    private async void OpenAuraButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ModelPreviewViewModel vm == false)
+            return;
+
+        var toplevel = TopLevel.GetTopLevel(this);
+        if (toplevel == null)
+            return;
+
+        var files = await toplevel.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions
+            {
+                Title = "Open Aura3D Model",
+                AllowMultiple = false,
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("Aura3D model") { Patterns = ["*.aura"] }
+                ]
+            });
+
+        foreach (var file in files)
+        {
+            await LoadAuraFileAsync(file, vm);
+        }
+    }
+
+    private async void SaveAuraButton_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ModelPreviewViewModel vm == false)
+            return;
+
+        if (currentModel == null)
+        {
+            vm.StatusMessage = "There is no model to save yet. Load a glb/gltf model first.";
+            return;
+        }
+
+        var modelToSave = currentModel;
+
+        var toplevel = TopLevel.GetTopLevel(this);
+        if (toplevel == null)
+            return;
+
+        var file = await toplevel.StorageProvider.SaveFilePickerAsync(
+            new FilePickerSaveOptions
+            {
+                Title = "Save Aura3D Model",
+                SuggestedFileName = BuildSuggestedAuraFileName(currentModel.Name),
+                DefaultExtension = "aura",
+                FileTypeChoices =
+                [
+                    new FilePickerFileType("Aura3D model") { Patterns = ["*.aura"] }
+                ]
+            });
+
+        if (file == null)
+            return;
+
+        var localPath = file.TryGetLocalPath();
+        await Task.Run(async () =>
+        {
+            if (localPath != null)
+            {
+                AssetManager.SaveNode(modelToSave, localPath);
+                return;
+            }
+
+            await using var stream = await file.OpenWriteAsync();
+            AssetManager.SaveNode(modelToSave, stream);
+        });
+
+        vm.StatusMessage = $"Saved current model to Aura3D file: {localPath ?? file.Name}.";
+    }
+
     private async void Button_Click_1(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is ModelPreviewViewModel vm == false)
@@ -274,6 +306,7 @@ public partial class ModelPreviewPage : UserControl
                     lionButton.IsEnabled = true;
                 }
                 currentModel = lion;
+                vm.StatusMessage = "Loaded built-in glb sample. You can now save it as an Aura3D file.";
                 break;
             case "soldier":
                 if (solider == null)
@@ -291,6 +324,7 @@ public partial class ModelPreviewPage : UserControl
                     soldierButton.IsEnabled = true;
                 }
                 currentModel = solider;
+                vm.StatusMessage = "Loaded built-in glb sample. You can now save it as an Aura3D file.";
                 break;
             case "wooden stool":
                 if (woodenStool == null)
@@ -308,9 +342,13 @@ public partial class ModelPreviewPage : UserControl
                     woodenButton.IsEnabled = true;
                 }
                 currentModel = woodenStool;
+                vm.StatusMessage = "Loaded built-in glb sample. You can now save it as an Aura3D file.";
                 break;
             case "ResetCamera":
-                aura3d.MainCamera.FitToBoundingBox(_currentModel.BoundingBox);
+                if (_currentModel != null)
+                {
+                    aura3d.MainCamera.FitToBoundingBox(_currentModel.BoundingBox);
+                }
                 break;
             default:
                 break;
@@ -354,5 +392,97 @@ public partial class ModelPreviewPage : UserControl
         if (DataContext is ModelPreviewViewModel vm == false)
             return;
         node.RotationDegrees = new Vector3(node.RotationDegrees.X, node.RotationDegrees.Y, (float)vm.Roll);
+    }
+
+    private async Task LoadModelFileAsync(IStorageFile file, ModelPreviewViewModel vm)
+    {
+        var path = file.TryGetLocalPath();
+        var extension = path != null ? Path.GetExtension(path).ToLowerInvariant() : null;
+
+        if (extension == ".aura")
+        {
+            await LoadAuraFileAsync(file, vm);
+            return;
+        }
+
+        Model? model = null;
+        List<Animation> animations = [];
+
+        if (path != null)
+        {
+            if (extension == ".glb")
+            {
+                (model, animations) = await Task.Run(() => ModelLoader.LoadGlbModelAndAnimations(path));
+            }
+            else if (extension == ".gltf")
+            {
+                (model, animations) = await Task.Run(() => ModelLoader.LoadGltfModelAndAnimations(path));
+            }
+
+            if (model == null)
+            {
+                (model, animations) = await Task.Run(() => AssimpLoader.LoadModelAndAnimations(path));
+            }
+        }
+        else
+        {
+            await using var stream = await file.OpenReadAsync();
+            (model, animations) = await Task.Run(() => AssimpLoader.LoadModelAndAnimations(stream));
+        }
+
+        ApplyLoadedModel(model, animations);
+        vm.StatusMessage = $"Imported model from {path ?? file.Name}. You can now save it as an Aura3D file.";
+    }
+
+    private async Task LoadAuraFileAsync(IStorageFile file, ModelPreviewViewModel vm)
+    {
+        Model model;
+        var path = file.TryGetLocalPath();
+
+        if (path != null)
+        {
+            model = await Task.Run(() => AssetManager.LoadNode<Model>(path));
+        }
+        else
+        {
+            await using var stream = await file.OpenReadAsync();
+            model = await Task.Run(() => AssetManager.LoadNode<Model>(stream));
+        }
+
+        ApplyLoadedModel(model);
+        vm.StatusMessage = $"Loaded model from Aura3D file: {path ?? file.Name}.";
+    }
+
+    private void ApplyLoadedModel(Model model, List<Animation>? animations = null)
+    {
+        if (animations is { Count: > 0 })
+        {
+            model.AnimationSampler = new AnimationSampler(animations.First());
+        }
+
+        model.Position = modelPosition;
+        model.Position = modelPosition - model.Up * 1;
+        model.RotationDegrees = Vector3.Zero;
+
+        currentModel = model;
+
+        if (DataContext is ModelPreviewViewModel vm)
+        {
+            vm.Scale = 1;
+            vm.Yaw = model.RotationDegrees.Y;
+            vm.Pitch = model.RotationDegrees.X;
+            vm.Roll = model.RotationDegrees.Z;
+        }
+    }
+
+    private static string BuildSuggestedAuraFileName(string? modelName)
+    {
+        var baseName = string.IsNullOrWhiteSpace(modelName) ? "model" : modelName.Trim();
+        foreach (var invalidChar in Path.GetInvalidFileNameChars())
+        {
+            baseName = baseName.Replace(invalidChar, '_');
+        }
+
+        return $"{baseName}.aura";
     }
 }
