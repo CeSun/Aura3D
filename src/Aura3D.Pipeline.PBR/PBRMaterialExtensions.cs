@@ -4,7 +4,7 @@ namespace Aura3D.Pipeline.PBR;
 
 /// <summary>
 /// PBR 延迟渲染管线的 Material 扩展 —— 提供 MetallicRoughness、Occlusion、Emissive 等 PBR 特有纹理的 Getter / Setter。
-/// .NET 10+ 使用 C# 14 extension 块语法（支持扩展属性），.NET 10 以下使用传统扩展函数。
+/// .NET 10+ 使用 C# 14 extension 块语法（支持扩展属性），同时保留传统扩展函数并标记为已弃用；.NET 10 以下使用传统扩展函数。
 /// </summary>
 public static class PBRMaterialExtensions
 {
@@ -39,37 +39,55 @@ public static class PBRMaterialExtensions
             set => material.SetTexture("Emissive", value);
         }
     }
-#else
+#endif
+
     /// <summary>
     /// 获取 MetallicRoughness（金属度/粗糙度）纹理。
     /// R 通道为金属度，G 通道为粗糙度。
     /// </summary>
+#if NET10_0_OR_GREATER
+    [Obsolete("Use the MetallicRoughness extension property instead.", false)]
+#endif
     public static ITexture? GetMetallicRoughness(this Material material) => material.GetTexture("MetallicRoughness");
 
     /// <summary>
     /// 设置 MetallicRoughness（金属度/粗糙度）纹理。
     /// R 通道为金属度，G 通道为粗糙度。
     /// </summary>
+#if NET10_0_OR_GREATER
+    [Obsolete("Use the MetallicRoughness extension property instead.", false)]
+#endif
     public static void SetMetallicRoughness(this Material material, ITexture? texture) => material.SetTexture("MetallicRoughness", texture);
 
     /// <summary>
     /// 获取 Occlusion（环境光遮蔽）纹理。
     /// </summary>
+#if NET10_0_OR_GREATER
+    [Obsolete("Use the Occlusion extension property instead.", false)]
+#endif
     public static ITexture? GetOcclusion(this Material material) => material.GetTexture("Occlusion");
 
     /// <summary>
     /// 设置 Occlusion（环境光遮蔽）纹理。
     /// </summary>
+#if NET10_0_OR_GREATER
+    [Obsolete("Use the Occlusion extension property instead.", false)]
+#endif
     public static void SetOcclusion(this Material material, ITexture? texture) => material.SetTexture("Occlusion", texture);
 
     /// <summary>
     /// 获取 Emissive（自发光）纹理。
     /// </summary>
+#if NET10_0_OR_GREATER
+    [Obsolete("Use the Emissive extension property instead.", false)]
+#endif
     public static ITexture? GetEmissive(this Material material) => material.GetTexture("Emissive");
 
     /// <summary>
     /// 设置 Emissive（自发光）纹理。
     /// </summary>
-    public static void SetEmissive(this Material material, ITexture? texture) => material.SetTexture("Emissive", texture);
+#if NET10_0_OR_GREATER
+    [Obsolete("Use the Emissive extension property instead.", false)]
 #endif
+    public static void SetEmissive(this Material material, ITexture? texture) => material.SetTexture("Emissive", texture);
 }

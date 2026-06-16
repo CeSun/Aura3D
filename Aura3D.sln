@@ -15,9 +15,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.iOS", "example\Exam
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.Browser", "example\Example.Browser\Example.Browser.csproj", "{60654BC9-0E85-4D94-9C3C-A8A27A5C4724}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RenderDebug.Desktop", "src\Test\RenderDebug.Desktop\RenderDebug.Desktop.csproj", "{3359D9B4-1CE3-F8FB-D88A-B091D568EB05}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RenderDebug.Desktop", "src\RenderDebug\RenderDebug.Desktop\RenderDebug.Desktop.csproj", "{3359D9B4-1CE3-F8FB-D88A-B091D568EB05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RenderDebug.Android", "src\Test\RenderDebug.Android\RenderDebug.Android.csproj", "{78D98599-9343-43BC-B359-DFD1C65EC3B1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RenderDebug.Android", "src\RenderDebug\RenderDebug.Android\RenderDebug.Android.csproj", "{78D98599-9343-43BC-B359-DFD1C65EC3B1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Core", "src\Aura3D.Core\Aura3D.Core.csproj", "{D00FCDCE-C60A-4E79-9172-DC14E4683AF8}"
 EndProject
@@ -25,7 +25,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Avalonia", "src\Aura
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Model.AssimpLoader", "src\Aura3D.Model.AssimpLoader\Aura3D.Model.AssimpLoader.csproj", "{26DEC684-012F-4DA5-A54C-235F80760107}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{5858C076-6091-4F51-AC46-7F299A4FDF5C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RenderDebug", "RenderDebug", "{5858C076-6091-4F51-AC46-7F299A4FDF5C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Configs", "Configs", "{9FA3D6BD-1EC1-3BA5-80CB-CE02773A58D5}"
 	ProjectSection(SolutionItems) = preProject
@@ -38,7 +38,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{2E8E
 		.github\workflows\pack.yml = .github\workflows\pack.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RenderDebug", "src\Test\RenderDebug\RenderDebug.csproj", "{564C4307-DD8A-4CEB-B8A6-7DCF1980633A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RenderDebug", "src\RenderDebug\RenderDebug\RenderDebug.csproj", "{564C4307-DD8A-4CEB-B8A6-7DCF1980633A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Model.GltfLoader", "src\Aura3D.Model.GltfLoader\Aura3D.Model.GltfLoader.csproj", "{3698D0E0-94CF-4A33-90C3-14EB988C208C}"
 EndProject
@@ -53,6 +53,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Pipeline.CelShading", "src\Aura3D.Pipeline.CelShading\Aura3D.Pipeline.CelShading.csproj", "{FB2D333A-91CF-4F0A-8C0F-A445ECC9FE8C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Core.Serialization.SourceGenerator", "src\Aura3D.Core.Serialization.SourceGenerator\Aura3D.Core.Serialization.SourceGenerator.csproj", "{431D7AD0-5CB8-4AE3-8374-49635C8C80D4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{C7A598AB-00A7-B2A3-476F-B8654C250298}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Tests", "src\Test\Aura3D.Tests\Aura3D.Tests.csproj", "{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -250,6 +254,18 @@ Global
 		{431D7AD0-5CB8-4AE3-8374-49635C8C80D4}.Release|x64.Build.0 = Release|Any CPU
 		{431D7AD0-5CB8-4AE3-8374-49635C8C80D4}.Release|x86.ActiveCfg = Release|Any CPU
 		{431D7AD0-5CB8-4AE3-8374-49635C8C80D4}.Release|x86.Build.0 = Release|Any CPU
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}.Debug|x64.Build.0 = Debug|Any CPU
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}.Debug|x86.Build.0 = Debug|Any CPU
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}.Release|x64.ActiveCfg = Release|Any CPU
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}.Release|x64.Build.0 = Release|Any CPU
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}.Release|x86.ActiveCfg = Release|Any CPU
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -272,6 +288,8 @@ Global
 		{51867E2E-31AD-4C3F-A42F-1DEC15A0D258} = {0B38DCCE-7167-4472-916D-EC0AEE86B5AE}
 		{FB2D333A-91CF-4F0A-8C0F-A445ECC9FE8C} = {0B38DCCE-7167-4472-916D-EC0AEE86B5AE}
 		{431D7AD0-5CB8-4AE3-8374-49635C8C80D4} = {F1F96D76-2F80-455F-B8E6-C1F3AE870600}
+		{C7A598AB-00A7-B2A3-476F-B8654C250298} = {F1F96D76-2F80-455F-B8E6-C1F3AE870600}
+		{D9A142D4-D615-4BFA-8EED-0C26E1F2806E} = {C7A598AB-00A7-B2A3-476F-B8654C250298}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9DD70FFC-DCCE-4FB7-A583-15A054911F89}
