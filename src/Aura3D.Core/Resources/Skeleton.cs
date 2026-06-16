@@ -8,7 +8,7 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 骨骼系统，包含骨架层级结构与运行时缓存。
 /// </summary>
-[AuraChunk(chunkType: 5, chunkVersion: 2)]
+[AuraChunk(chunkType: 5, chunkVersion: 1)]
 public partial class Skeleton
 {
     private List<Bone> _bones = new();
@@ -34,7 +34,7 @@ public partial class Skeleton
     /// <summary>
     /// 根骨骼索引。用于反序列化后重建 <see cref="Root"/>。
     /// </summary>
-    [AuraField(since: 2)]
+    [AuraField(since: 1)]
     public int RootIndex
     {
         get => _rootIndex;
@@ -148,7 +148,7 @@ public partial class Skeleton
 /// <summary>
 /// 骨骼节点。
 /// </summary>
-[AuraChunk(chunkType: 7, chunkVersion: 2)]
+[AuraChunk(chunkType: 7, chunkVersion: 1)]
 public partial class Bone
 {
     [AuraField(since: 1)]
@@ -160,7 +160,7 @@ public partial class Bone
     /// <summary>
     /// 父骨骼索引。用于反序列化后重建层级。
     /// </summary>
-    [AuraField(since: 2)]
+    [AuraField(since: 1)]
     public int ParentIndex = -1;
 
     [AuraField(since: 1)]

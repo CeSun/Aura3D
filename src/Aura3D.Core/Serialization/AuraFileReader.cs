@@ -35,11 +35,14 @@ public class AuraFileReader
         }
 
         _fileVersion = reader.ReadUInt32();
-        if (_fileVersion != AuraFileHeader.CurrentFileVersion)
+        if (_fileVersion < AuraFileHeader.MinimumSupportedFileVersion ||
+            _fileVersion > AuraFileHeader.CurrentFileVersion)
         {
             throw new NotSupportedException(
-                $"Unsupported .aura file version {_fileVersion}. Expected {AuraFileHeader.CurrentFileVersion}.");
+                $"Unsupported .aura file version {_fileVersion}. Supported range: {AuraFileHeader.MinimumSupportedFileVersion}-{AuraFileHeader.CurrentFileVersion}.");
         }
+
+        reader.FileVersion = _fileVersion;
 
         var stringTableSize = reader.ReadUInt32();
         _rootChunkType = reader.ReadUInt32();

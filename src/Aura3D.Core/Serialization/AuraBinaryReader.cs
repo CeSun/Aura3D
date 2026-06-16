@@ -33,6 +33,7 @@ public class AuraBinaryReader : IDisposable
     private readonly List<object>? _nodeList;
 
     public Stream BaseStream => _reader.BaseStream;
+    public uint FileVersion { get; set; } = AuraFileHeader.CurrentFileVersion;
 
     public AuraBinaryReader(Stream stream, Dictionary<uint, object> resourceMap, List<object> nodeList)
     {
@@ -85,7 +86,9 @@ public class AuraBinaryReader : IDisposable
         _stringTable = new List<string>(count);
         for (int i = 0; i < count; i++)
         {
-            var length = _reader.ReadUInt16();
+            var length = FileVersion >= 3
+                ? _reader.ReadInt32()
+                : _reader.ReadUInt16();
             var bytes = _reader.ReadBytes(length);
             _stringTable.Add(Encoding.UTF8.GetString(bytes));
         }
@@ -323,7 +326,10 @@ public class AuraBinaryReader : IDisposable
         {
             var instance = Activator.CreateInstance(type)
                 ?? throw new InvalidOperationException($"Unable to create an instance of '{type.FullName}' during deserialization.");
-            ((IAuraSerializable)instance).Deserialize(this, GetChunkVersion(type));
+            var chunkVersion = FileVersion >= 3
+                ? ReadUInt32()
+                : GetChunkVersion(type);
+            ((IAuraSerializable)instance).Deserialize(this, chunkVersion);
             return instance;
         }
 

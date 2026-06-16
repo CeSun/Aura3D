@@ -22,6 +22,7 @@ public class AuraFileWriter
 
         using var payloadStream = new MemoryStream();
         using var payloadWriter = new AuraBinaryWriter(payloadStream, resourceMap, new Dictionary<object, int>());
+        payloadWriter.FileVersion = AuraFileHeader.CurrentFileVersion;
 
         foreach (var resource in _collector.Resources)
         {
@@ -32,6 +33,7 @@ public class AuraFileWriter
         payloadWriter.FlushStringTable(stringTableStream);
 
         using var writer = new AuraBinaryWriter(stream, resourceMap, new Dictionary<object, int>());
+        writer.FileVersion = AuraFileHeader.CurrentFileVersion;
         writer.Write(AuraFileHeader.Magic[0]);
         writer.Write(AuraFileHeader.Magic[1]);
         writer.Write(AuraFileHeader.Magic[2]);

@@ -1,23 +1,28 @@
 namespace Aura3D.Core.Serialization;
 
 /// <summary>
-/// .aura 文件格式常量。
+/// .aura file format constants.
 /// </summary>
 public static class AuraFileHeader
 {
     /// <summary>
-    /// 文件 Magic: "aura"
+    /// File magic: "aura"
     /// </summary>
     public static readonly byte[] Magic = { 0x61, 0x75, 0x72, 0x61 }; // "aura"
 
     /// <summary>
-    /// 当前文件格式版本。
+    /// Current file format version.
     /// </summary>
-    public const uint CurrentFileVersion = 2;
+    public const uint CurrentFileVersion = 3;
+
+    /// <summary>
+    /// Current earliest supported file format version.
+    /// </summary>
+    public const uint MinimumSupportedFileVersion = 2;
 }
 
 /// <summary>
-/// Chunk 类型 ID。
+/// Chunk type IDs.
 /// </summary>
 public static class AuraChunkType
 {

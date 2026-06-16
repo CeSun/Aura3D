@@ -37,8 +37,14 @@ public partial class Texture : BaseTexture<Texture>, IClone<Texture>, IGpuResour
 
 
     }
+    private bool _needsUpload = true;
+
     [AuraField(since: 1)]
-    public bool NeedsUpload { get; set; } = true;
+    public bool NeedsUpload
+    {
+        get => _needsUpload;
+        set => _needsUpload = value || TextureId == 0;
+    }
     public uint TextureId { get; set; }
 
     [AuraField(since: 1)]

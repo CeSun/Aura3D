@@ -35,6 +35,7 @@ public class AuraBinaryWriter : IDisposable
     private uint _nextStringId;
 
     public Stream BaseStream => _writer.BaseStream;
+    public uint FileVersion { get; set; } = AuraFileHeader.CurrentFileVersion;
 
     public AuraBinaryWriter(Stream stream, Dictionary<object, uint> resourceMap, Dictionary<object, int> nodeIndexMap)
     {
@@ -226,7 +227,17 @@ public class AuraBinaryWriter : IDisposable
         writer.Write(_strings.Count);
         foreach (var bytes in _strings)
         {
-            writer.Write((ushort)bytes.Length);
+            if (FileVersion >= 3)
+            {
+                writer.Write(bytes.Length);
+            }
+            else
+            {
+                if (bytes.Length > ushort.MaxValue)
+                    throw new InvalidOperationException($"String length {bytes.Length} exceeds the v2 file format limit of {ushort.MaxValue} bytes.");
+
+                writer.Write((ushort)bytes.Length);
+            }
             writer.Write(bytes);
         }
     }
@@ -405,6 +416,11 @@ public class AuraBinaryWriter : IDisposable
 
         if (value is IAuraSerializable serializable)
         {
+            if (FileVersion >= 3)
+            {
+                Write(GetChunkVersion(type));
+            }
+
             serializable.Serialize(this);
             return;
         }
@@ -494,6 +510,15 @@ public class AuraBinaryWriter : IDisposable
     private static bool IsNullableType(Type type)
     {
         return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+    }
+
+    private static uint GetChunkVersion(Type type)
+    {
+        var attribute = type.GetCustomAttributes(typeof(AuraChunkAttribute), inherit: false)
+            .OfType<AuraChunkAttribute>()
+            .FirstOrDefault();
+
+        return attribute?.ChunkVersion ?? 1u;
     }
 
     public void Dispose()

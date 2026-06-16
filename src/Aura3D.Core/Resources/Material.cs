@@ -106,8 +106,27 @@ public partial class Material : IClone<Material>, IGpuResource
     {
         if(value != null)
         {
+            if (!IsSupportedParameterValue(value))
+                throw new ArgumentException($"Material parameter serialization does not support values of type '{value.GetType().FullName}'.", nameof(value));
+
             parameters[key] = value;
         }
+    }
+
+    private static bool IsSupportedParameterValue(object value)
+    {
+        return value is bool
+            or int
+            or uint
+            or float
+            or double
+            or long
+            or ulong
+            or string
+            or System.Numerics.Vector2
+            or System.Numerics.Vector3
+            or System.Numerics.Vector4
+            or Color;
     }
 
 
