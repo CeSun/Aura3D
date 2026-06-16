@@ -1,4 +1,5 @@
 ﻿using Aura3D.Core.Renderers;
+using Aura3D.Core.Serialization;
 using System.Drawing;
 
 namespace Aura3D.Core.Resources;
@@ -6,45 +7,55 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 材质类，定义物体的表面属性和渲染行为
 /// </summary>
-public class Material : IClone<Material>, IGpuResource
+[AuraChunk(chunkType: 4, chunkVersion: 1)]
+public partial class Material : IClone<Material>, IGpuResource
 {
     /// <summary>
     /// 是否需要上传到GPU
     /// </summary>
     public bool NeedsUpload { get; set; } = false;
+
     /// <summary>
     /// 材质通道列表
     /// </summary>
+    [AuraField(since: 1)]
     public List<Channel> Channels { get; set; } = [];
 
-    private Dictionary<string, object> parameters  { get; set; } = new Dictionary<string, object>();
+    [AuraField(since: 1)]
+    private Dictionary<string, object> parameters { get; set; } = new Dictionary<string, object>();
 
     /// <summary>
     /// 混合模式
     /// </summary>
+    [AuraField(since: 1)]
     public BlendMode BlendMode { get; set; } = BlendMode.Opaque;
 
     /// <summary>
     /// 是否双面渲染
     /// </summary>
+    [AuraField(since: 1)]
     public bool DoubleSided { get; set; } = false;
 
     /// <summary>
     /// 透明度阈值
     /// </summary>
+    [AuraField(since: 1)]
     public float AlphaCutoff { get; set; } = 0.5f;
 
     /// <summary>
     /// 是否有自定义着色器
     /// </summary>
+    [AuraField(since: 1)]
     public bool HasShader { get; set; } = false;
     /// <summary>
     /// 顶点着色器字典（只读）
     /// </summary>
     public IReadOnlyDictionary<string, string> VertexShaders => _vertexShaders;
 
+    [AuraField(since: 1)]
     private Dictionary<string, string> _vertexShaders = new Dictionary<string, string>();
 
+    [AuraField(since: 1)]
     private Dictionary<string, string> _fragmentShaders = new Dictionary<string, string>();
 
     /// <summary>
@@ -286,10 +297,14 @@ public class Material : IClone<Material>, IGpuResource
 /// <summary>
 /// 通道名称
 /// </summary>
-public class Channel
+[AuraChunk(chunkType: 10, chunkVersion: 1)]
+public partial class Channel
 {
+    [AuraField(since: 1)]
     public string Name { get; set; } = string.Empty;
 
+    [AuraField(since: 1)]
+    [AuraReference]
     public ITexture? Texture { get; set; }
 }
 

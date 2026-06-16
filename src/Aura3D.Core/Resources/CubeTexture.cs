@@ -1,3 +1,4 @@
+using Aura3D.Core.Serialization;
 using Silk.NET.OpenGLES;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -7,7 +8,8 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 立方体纹理类，用于天空盒等需要6面纹理的场景
 /// </summary>
-public class CubeTexture : BaseTexture<CubeTexture>, IGpuResource, ICubeTexture, IClone<CubeTexture>
+[AuraChunk(chunkType: 2, chunkVersion: 1)]
+public partial class CubeTexture : BaseTexture<CubeTexture>, IGpuResource, ICubeTexture, IClone<CubeTexture>
 {
     /// <summary>
     /// 是否需要上传到GPU
@@ -18,12 +20,20 @@ public class CubeTexture : BaseTexture<CubeTexture>, IGpuResource, ICubeTexture,
     /// </summary>
     public uint TextureId { get; set; }
 
+    [AuraField(since: 1)]
     public uint Width { get; set; }
 
+    [AuraField(since: 1)]
     public uint Height { get; set; }
 
+    [AuraField(since: 1)]
     public List<byte>[] LdrData { get; set; } = [[], [], [], [], [], []];
-   public List<float>[] HdrData { get; set; } = [[], [], [], [], [], []];
+
+    [AuraField(since: 1)]
+    public List<float>[] HdrData { get; set; } = [[], [], [], [], [], []];
+
+    [AuraField(since: 1)]
+    public TextureWrapMode WrapR { get; set; } = TextureWrapMode.ClampToEdge;
 
     public unsafe void Upload(GL gl)
     {
@@ -112,8 +122,6 @@ public class CubeTexture : BaseTexture<CubeTexture>, IGpuResource, ICubeTexture,
         }
         return texture;
     }
-
-    public TextureWrapMode WrapR { get; set; } = TextureWrapMode.ClampToEdge;
 
     protected GLEnum GlWarpR => WrapR switch
     {

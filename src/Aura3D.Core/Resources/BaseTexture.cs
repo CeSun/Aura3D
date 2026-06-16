@@ -1,3 +1,4 @@
+using Aura3D.Core.Serialization;
 using Silk.NET.OpenGLES;
 
 namespace Aura3D.Core.Resources;
@@ -11,34 +12,41 @@ public abstract class BaseTexture<T> where T : BaseTexture<T>
     /// <summary>
     /// 是否为 HDR 纹理
     /// </summary>
+    [AuraField(since: 1)]
     public bool IsHdr { get; set; } = false;
     /// <summary>
     /// S 方向环绕模式
     /// </summary>
+    [AuraField(since: 1)]
     public TextureWrapMode WrapS { get; set; } = TextureWrapMode.ClampToEdge;
 
     /// <summary>
     /// T 方向环绕模式
     /// </summary>
+    [AuraField(since: 1)]
     public TextureWrapMode WrapT { get; set; } = TextureWrapMode.ClampToEdge;
 
     /// <summary>
     /// 缩小过滤模式
     /// </summary>
+    [AuraField(since: 1)]
     public TextureFilterMode MinFilter { get; set; } = TextureFilterMode.Linear;
 
     /// <summary>
     /// 放大过滤模式
     /// </summary>
+    [AuraField(since: 1)]
     public TextureFilterMode MagFilter { get; set; } = TextureFilterMode.Linear;
     /// <summary>
     /// 颜色格式
     /// </summary>
+    [AuraField(since: 1)]
     public ColorFormat ColorFormat { get; set; }
 
     /// <summary>
     /// 是否在伽马空间
     /// </summary>
+    [AuraField(since: 1)]
     public bool IsGammaSpace { get; set; } = false;
 
 

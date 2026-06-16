@@ -1,3 +1,4 @@
+using Aura3D.Core.Serialization;
 using Silk.NET.OpenGLES;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -7,7 +8,8 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 纹理类，支持2D纹理的加载、上传和渲染
 /// </summary>
-public class Texture : BaseTexture<Texture>, IClone<Texture>, IGpuResource, ITexture
+[AuraChunk(chunkType: 1, chunkVersion: 1)]
+public partial class Texture : BaseTexture<Texture>, IClone<Texture>, IGpuResource, ITexture
 {
     /// <summary>
     /// 从颜色创建纯色纹理
@@ -35,15 +37,20 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>, IGpuResource, ITex
 
 
     }
+    [AuraField(since: 1)]
     public bool NeedsUpload { get; set; } = true;
     public uint TextureId { get; set; }
 
+    [AuraField(since: 1)]
     public uint Width { get; set; }
 
+    [AuraField(since: 1)]
     public uint Height { get; set; }
 
+    [AuraField(since: 1)]
     public List<byte> LdrData { get; set; } = [];
 
+    [AuraField(since: 1)]
     public List<float> HdrData { get; set; } = [];
 
     public Texture SetLdrData(List<byte> data, uint width, uint height)

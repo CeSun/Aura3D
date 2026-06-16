@@ -25,4 +25,10 @@
     </EmbeddedResource>
   </ItemGroup>
 
+<ItemGroup>
+    <ProjectReference Include="..\Aura3D.Core.Serialization.SourceGenerator\Aura3D.Core.Serialization.SourceGenerator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
 </Project>

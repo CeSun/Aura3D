@@ -1,38 +1,68 @@
+using Aura3D.Core.Serialization;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Aura3D.Core.Resources;
 
 /// <summary>
-/// 骨骼系统，包含所有骨骼的层级结构
+/// 骨骼系统，包含骨架层级结构与运行时缓存。
 /// </summary>
-public class Skeleton
+[AuraChunk(chunkType: 5, chunkVersion: 2)]
+public partial class Skeleton
 {
-    /// <summary>
-    /// 所有骨骼的列表
-    /// </summary>
-    public List<Bone> Bones = new List<Bone>();
-
-    /// <summary>
-    /// 根骨骼
-    /// </summary>
-    public Bone Root = new Bone();
-
-    /// <summary>
-    /// 骨骼名称到索引的映射缓存，用于快速查找
-    /// </summary>
+    private List<Bone> _bones = new();
+    private int _rootIndex = -1;
+    private Bone _root = new();
     private Dictionary<string, int>? _boneIndexCache;
+    private BoneMatrixBuffer? _boneMatrixBuffer;
 
     /// <summary>
-    /// 静态绑定位姿的骨骼矩阵 UBO（懒创建）。
-    /// 当网格有 <see cref="IAnimationSampler"/> 时优先使用采样器的缓冲区。
+    /// 所有骨骼列表。
     /// </summary>
-    private BoneMatrixBuffer? _boneMatrixBuffer;
-    public BoneMatrixBuffer BoneMatrixBuffer
+    [AuraField(since: 1)]
+    public List<Bone> Bones
+    {
+        get => _bones;
+        set
+        {
+            _bones = value ?? new List<Bone>();
+            RebuildHierarchy();
+        }
+    }
+
+    /// <summary>
+    /// 根骨骼索引。用于反序列化后重建 <see cref="Root"/>。
+    /// </summary>
+    [AuraField(since: 2)]
+    public int RootIndex
+    {
+        get => _rootIndex;
+        set
+        {
+            _rootIndex = value;
+            RebuildHierarchy();
+        }
+    }
+
+    /// <summary>
+    /// 运行时根骨骼，不单独参与序列化。
+    /// </summary>
+    public Bone Root
+    {
+        get => _root;
+        set
+        {
+            _root = value;
+            _rootIndex = value.Index;
+            InvalidateRuntimeState();
+        }
+    }
+
+    /// <summary>
+    /// 静态绑定姿态的骨骼矩阵缓冲区，按需创建。
+    /// </summary>
+    private BoneMatrixBuffer BoneMatrixBufferInternal
     {
         get
         {
@@ -41,10 +71,11 @@ public class Skeleton
         }
     }
 
+    public BoneMatrixBuffer BoneMatrixBuffer => BoneMatrixBufferInternal;
+
     /// <summary>
-    /// 获取骨骼名称到索引的映射。首次访问时构建缓存。
+    /// 获取骨骼名到索引的映射。
     /// </summary>
-    /// <returns>骨骼名称到索引的字典</returns>
     public Dictionary<string, int> GetBoneIndexMap()
     {
         if (_boneIndexCache == null)
@@ -55,62 +86,113 @@ public class Skeleton
                 _boneIndexCache[bone.Name] = bone.Index;
             }
         }
+
         return _boneIndexCache;
     }
 
     /// <summary>
-    /// 根据骨骼名称获取索引
+    /// 根据骨骼名称获取索引。
     /// </summary>
-    /// <param name="boneName">骨骼名称</param>
-    /// <returns>骨骼索引，如果未找到则返回 -1</returns>
     public int GetBoneIndex(string boneName)
     {
-        if (GetBoneIndexMap().TryGetValue(boneName, out var index))
+        return GetBoneIndexMap().TryGetValue(boneName, out var index) ? index : -1;
+    }
+
+    private void RebuildHierarchy()
+    {
+        InvalidateRuntimeState();
+
+        if (_bones.Count == 0)
         {
-            return index;
+            _root = new Bone();
+            _rootIndex = -1;
+            return;
         }
-        return -1;
+
+        var boneByIndex = new Dictionary<int, Bone>(_bones.Count);
+        foreach (var bone in _bones)
+        {
+            bone.Children.Clear();
+            bone.SetParent(null, updateParentIndex: false);
+            boneByIndex[bone.Index] = bone;
+        }
+
+        foreach (var bone in _bones)
+        {
+            if (bone.ParentIndex < 0)
+                continue;
+
+            if (!boneByIndex.TryGetValue(bone.ParentIndex, out var parent))
+                continue;
+
+            bone.SetParent(parent, updateParentIndex: false);
+            parent.Children.Add(bone);
+        }
+
+        if (!boneByIndex.TryGetValue(_rootIndex, out var rootBone))
+        {
+            rootBone = _bones.Find(bone => bone.Parent == null) ?? _bones[0];
+            _rootIndex = rootBone.Index;
+        }
+
+        _root = rootBone;
+    }
+
+    private void InvalidateRuntimeState()
+    {
+        _boneIndexCache = null;
+        _boneMatrixBuffer = null;
     }
 }
 
 /// <summary>
-/// 骨骼类，表示骨骼层级中的一个节点
+/// 骨骼节点。
 /// </summary>
-public class Bone
+[AuraChunk(chunkType: 7, chunkVersion: 2)]
+public partial class Bone
 {
-    /// <summary>
-    /// 骨骼名称
-    /// </summary>
+    [AuraField(since: 1)]
     public string Name = string.Empty;
 
-    /// <summary>
-    /// 骨骼索引
-    /// </summary>
+    [AuraField(since: 1)]
     public int Index = -1;
 
     /// <summary>
-    /// 逆世界矩阵，用于蒙皮
+    /// 父骨骼索引。用于反序列化后重建层级。
     /// </summary>
+    [AuraField(since: 2)]
+    public int ParentIndex = -1;
+
+    [AuraField(since: 1)]
     public Matrix4x4 InverseWorldMatrix = Matrix4x4.Identity;
 
-    /// <summary>
-    /// 局部矩阵
-    /// </summary>
+    [AuraField(since: 1)]
     public Matrix4x4 LocalMatrix = Matrix4x4.Identity;
 
-    /// <summary>
-    /// 世界矩阵
-    /// </summary>
+    [AuraField(since: 1)]
     public Matrix4x4 WorldMatrix = Matrix4x4.Identity;
 
-    /// <summary>
-    /// 父骨骼
-    /// </summary>
-    public Bone? Parent = null;
+    private Bone? _parent;
 
-    /// <summary>
-    /// 子骨骼列表
-    /// </summary>
-    public List<Bone> Children = new List<Bone>();
+    // Parent/Children are runtime-only and rebuilt from ParentIndex after deserialization.
+    public Bone? Parent
+    {
+        get => _parent;
+        set
+        {
+            _parent = value;
+            ParentIndex = value?.Index ?? -1;
+        }
+    }
+
+    public List<Bone> Children = new();
+
+    internal void SetParent(Bone? parent, bool updateParentIndex)
+    {
+        _parent = parent;
+        if (updateParentIndex)
+        {
+            ParentIndex = parent?.Index ?? -1;
+        }
+    }
 }
-

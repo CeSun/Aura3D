@@ -1,31 +1,38 @@
   using System.Numerics;
 using Aura3D.Core.Math;
+using Aura3D.Core.Serialization;
 
 namespace Aura3D.Core.Resources;
 
 /// <summary>
 /// 动画类，存储动画数据和采样方法
 /// </summary>
-public class Animation
+[AuraChunk(chunkType: 6, chunkVersion: 1)]
+public partial class Animation
 {
     /// <summary>
     /// 动画名称
     /// </summary>
+    [AuraField(since: 1)]
     public string Name = string.Empty;
 
     /// <summary>
     /// 动画持续时间（秒）
     /// </summary>
+    [AuraField(since: 1)]
     public float Duration; // in seconds
 
     /// <summary>
     /// 动画通道字典，键为骨骼名称
     /// </summary>
+    [AuraField(since: 1)]
     public Dictionary<string, AnimationChannel> Channels = new();
 
     /// <summary>
     /// 关联的骨骼系统
     /// </summary>
+    [AuraField(since: 1)]
+    [AuraReference]
     public Skeleton? Skeleton;
     /// <summary>
     /// 在指定时间采样动画通道的变换矩阵
@@ -55,19 +62,23 @@ public class Animation
 /// <summary>
 /// 动画通道，包含位置、旋转和缩放的关键帧数据
 /// </summary>
-public class AnimationChannel
+[AuraChunk(chunkType: 8, chunkVersion: 1)]
+public partial class AnimationChannel
 {
     /// <summary>
     /// 位置关键帧列表
     /// </summary>
+    [AuraField(since: 1)]
     public List<Keyframe<Vector3>> PositionKeyframes = new();
     /// <summary>
     /// 旋转关键帧列表
     /// </summary>
+    [AuraField(since: 1)]
     public List<Keyframe<Quaternion>> RotationKeyframes = new();
     /// <summary>
     /// 缩放关键帧列表
     /// </summary>
+    [AuraField(since: 1)]
     public List<Keyframe<Vector3>> ScaleKeyframes = new();
 
 }
@@ -75,15 +86,18 @@ public class AnimationChannel
 /// 关键帧结构体
 /// </summary>
 /// <typeparam name="T">关键帧值类型</typeparam>
-public struct Keyframe<T> where T : struct
+[AuraChunk(chunkType: 9, chunkVersion: 1)]
+public partial struct Keyframe<T> where T : struct
 {
     /// <summary>
     /// 关键帧时间
     /// </summary>
+    [AuraField(since: 1)]
     public float Time;
     /// <summary>
     /// 关键帧值
     /// </summary>
+    [AuraField(since: 1)]
     public T Value;
 }
 

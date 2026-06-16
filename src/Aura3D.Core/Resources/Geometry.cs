@@ -1,4 +1,5 @@
 using Aura3D.Core.Math;
+using Aura3D.Core.Serialization;
 using Silk.NET.OpenGLES;
 using System.Linq;
 using System.Numerics;
@@ -9,7 +10,8 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 几何体类，存储顶点数据和索引数据
 /// </summary>
-public class Geometry : IGpuResource, IClone<Geometry>
+[AuraChunk(chunkType: 3, chunkVersion: 1)]
+public partial class Geometry : IGpuResource, IClone<Geometry>
 {
 
     /// <summary>
@@ -17,6 +19,7 @@ public class Geometry : IGpuResource, IClone<Geometry>
     /// </summary>
     public bool NeedsUpload { get; set; } = true;
 
+    [AuraField(since: 1)]
     protected Dictionary<string, VertexAttribute> VertexAttributes = new();
 
     private BoundingBox? boundingBox;
@@ -37,6 +40,7 @@ public class Geometry : IGpuResource, IClone<Geometry>
     /// <summary>
     /// 索引列表
     /// </summary>
+    [AuraField(since: 1)]
     public List<uint> Indices { get; protected set; } = [];
 
     protected HashSet<uint> VertexAttributeLocations = new();
@@ -74,6 +78,7 @@ public class Geometry : IGpuResource, IClone<Geometry>
     /// <summary>
     /// 图元类型，默认为 Triangles。
     /// </summary>
+    [AuraField(since: 1)]
     public PrimitiveType PrimitiveType { get; set; } = PrimitiveType.Triangles;
 
     public void SetVertexAttribute(string name, uint location, int size, List<float> data)
@@ -277,27 +282,33 @@ public class Geometry : IGpuResource, IClone<Geometry>
 /// <summary>
 /// 顶点属性结构体
 /// </summary>
-public struct VertexAttribute
+[AuraChunk(chunkType: 11, chunkVersion: 1)]
+public partial struct VertexAttribute
 {
     /// <summary>
     /// 属性名称
     /// </summary>
+    [AuraField(since: 1)]
     public string Name;
     /// <summary>
     /// 属性位置
     /// </summary>
+    [AuraField(since: 1)]
     public uint Location;
     /// <summary>
     /// 属性大小（分量数）
     /// </summary>
+    [AuraField(since: 1)]
     public int Size;
     /// <summary>
     /// 属性数据
     /// </summary>
+    [AuraField(since: 1)]
     public List<float> Data;
     /// <summary>
     /// 是否启用上传。默认只有 location 0~7 (Position 到 Weights_0) 为 true。
     /// </summary>
+    [AuraField(since: 1)]
     public bool Enabled;
 }
 
