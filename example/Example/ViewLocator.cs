@@ -12,6 +12,7 @@ public class ViewLocator : IDataTemplate
         {
             BaseGeometriesViewModel baseGeometriesViewModel => new BaseGeometriesPage(),
             ModelPreviewViewModel gltfModelViewModel => new ModelPreviewPage(),
+            SceneEditorViewModel sceneEditorViewModel => new SceneEditorPage(),
             RoboticArmViewModel roboticArmViewModel => new RoboticArmPage(),
             PbrViewModel pbrViewModel => new PbrPipelinePage(),
             CelShadingViewModel celShadingViewModel => new CelShadingPage(),

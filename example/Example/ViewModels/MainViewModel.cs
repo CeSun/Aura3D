@@ -24,6 +24,10 @@ namespace Example.ViewModels
                     ViewModel = new ModelPreviewViewModel()
                 },
                 new MenuViewModel {
+                    Title = "Scene Editor",
+                    ViewModel = new SceneEditorViewModel()
+                },
+                new MenuViewModel {
                     Title = "Animation",
                     ViewModel = new AnimationFeaturesViewModel()
                 },

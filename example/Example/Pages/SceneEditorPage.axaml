@@ -1,0 +1,477 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:a="https://github.com/CeSun/Aura3D"
+             xmlns:vm="clr-namespace:Example.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="860"
+             x:DataType="vm:SceneEditorViewModel"
+             x:Class="Example.Pages.SceneEditorPage">
+  <Design.DataContext>
+    <vm:SceneEditorViewModel />
+  </Design.DataContext>
+
+  <Grid RowDefinitions="Auto,*" Background="#F2F4F8">
+    <Border Grid.Row="0" Margin="8,8,8,4" Padding="10" Theme="{StaticResource CardBorder}">
+      <DockPanel LastChildFill="True">
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
+          <ComboBox x:Name="NewNodeTypeComboBox" SelectedIndex="0" Width="160">
+            <ComboBoxItem>Empty Node</ComboBoxItem>
+            <ComboBoxItem>Mesh (Box)</ComboBoxItem>
+            <ComboBoxItem>Directional Light</ComboBoxItem>
+            <ComboBoxItem>Point Light</ComboBoxItem>
+            <ComboBoxItem>Spot Light</ComboBoxItem>
+            <ComboBoxItem>Camera</ComboBoxItem>
+            <ComboBoxItem>Particle System</ComboBoxItem>
+            <ComboBoxItem>Bone Attachment</ComboBoxItem>
+          </ComboBox>
+          <Button Content="Create Node" Click="CreateNodeButton_Click" />
+          <Button Content="Load Model" Click="LoadModelButton_Click" />
+          <Button Content="Import Aura" Click="ImportAuraButton_Click" />
+          <Button Content="Export Selected"
+                  IsEnabled="{Binding CanExportSelectedNode}"
+                  Click="ExportSelectedButton_Click" />
+          <Button Content="Delete Selected"
+                  IsEnabled="{Binding CanDeleteSelectedNode}"
+                  Click="DeleteSelectedButton_Click" />
+          <Button Content="Rebuild Selected"
+                  IsEnabled="{Binding CanRebuildSelectedNode}"
+                  Click="RebuildSelectedButton_Click" />
+          <Button Content="Frame Selected"
+                  IsEnabled="{Binding CanFrameSelectedNode}"
+                  Click="FrameSelectedButton_Click" />
+          <Button Content="Refresh Outline" Click="RefreshOutlineButton_Click" />
+        </StackPanel>
+
+        <TextBlock Margin="16,0,0,0"
+                   VerticalAlignment="Center"
+                   Foreground="#51606F"
+                   Text="{Binding StatusMessage}"
+                   TextWrapping="Wrap" />
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Row="1" ColumnDefinitions="300,6,*,6,360" Margin="8,4,8,8">
+      <Border Grid.Column="0" Theme="{StaticResource CardBorder}" Padding="10">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top"
+                     FontSize="15"
+                     FontWeight="Bold"
+                     Margin="0,0,0,8"
+                     Text="Scene Outliner" />
+
+          <TreeView x:Name="NodeTree"
+                    ItemsSource="{Binding RootNodes}"
+                    DragDrop.AllowDrop="True"
+                    SelectionChanged="NodeTree_SelectionChanged">
+            <TreeView.ItemTemplate>
+              <TreeDataTemplate x:DataType="vm:SceneNodeItem" ItemsSource="{Binding Children}">
+                <Border Padding="2"
+                        Background="Transparent"
+                        PointerPressed="NodeItem_PointerPressed"
+                        PointerMoved="NodeItem_PointerMoved">
+                  <TextBlock Text="{Binding DisplayName}" />
+                </Border>
+              </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+          </TreeView>
+        </DockPanel>
+      </Border>
+
+      <GridSplitter Grid.Column="1"
+                    ResizeDirection="Columns"
+                    ResizeBehavior="PreviousAndNext"
+                    Background="#D5DCE5"
+                    Cursor="SizeWestEast" />
+
+      <Border Grid.Column="2" Theme="{StaticResource CardBorder}" ClipToBounds="True">
+        <a:Aura3DView x:Name="aura3DView"
+                      SceneInitialized="Aura3DView_SceneInitialized"
+                      SceneUpdated="Aura3DView_SceneUpdated" />
+      </Border>
+
+      <GridSplitter Grid.Column="3"
+                    ResizeDirection="Columns"
+                    ResizeBehavior="PreviousAndNext"
+                    Background="#D5DCE5"
+                    Cursor="SizeWestEast" />
+
+      <Border Grid.Column="4" Theme="{StaticResource CardBorder}" Padding="10">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top"
+                     FontSize="15"
+                     FontWeight="Bold"
+                     Margin="0,0,0,8"
+                     Text="Inspector" />
+
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="10">
+              <Border Theme="{StaticResource CardBorder}" Padding="8">
+                <StackPanel Spacing="4">
+                  <TextBlock FontWeight="SemiBold" Text="{Binding SelectedNodeTypeName}" />
+                  <TextBlock Foreground="#6A7380"
+                             FontSize="11"
+                             Text="{Binding SelectedNodePath}"
+                             TextWrapping="Wrap" />
+                  <TextBlock Foreground="#51606F"
+                             FontSize="11"
+                             Text="{Binding SelectionSummary}"
+                             TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding HasSelection}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Node" />
+
+                  <Grid ColumnDefinitions="80,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Name" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding NodeName}" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Enabled" />
+                    <CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding NodeEnabled}" />
+                  </Grid>
+
+                  <TextBlock FontWeight="SemiBold" Margin="0,4,0,0" Text="Transform" />
+
+                  <Grid ColumnDefinitions="72,Auto,*,Auto,*,Auto,*"
+                        RowDefinitions="Auto,Auto,Auto"
+                        ColumnSpacing="6"
+                        RowSpacing="6">
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Position" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Text="X" />
+                    <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding PositionX}" />
+                    <TextBlock Grid.Row="0" Grid.Column="3" VerticalAlignment="Center" Text="Y" />
+                    <TextBox Grid.Row="0" Grid.Column="4" Text="{Binding PositionY}" />
+                    <TextBlock Grid.Row="0" Grid.Column="5" VerticalAlignment="Center" Text="Z" />
+                    <TextBox Grid.Row="0" Grid.Column="6" Text="{Binding PositionZ}" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Rotation" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Text="X" />
+                    <TextBox Grid.Row="1" Grid.Column="2" Text="{Binding RotationX}" />
+                    <TextBlock Grid.Row="1" Grid.Column="3" VerticalAlignment="Center" Text="Y" />
+                    <TextBox Grid.Row="1" Grid.Column="4" Text="{Binding RotationY}" />
+                    <TextBlock Grid.Row="1" Grid.Column="5" VerticalAlignment="Center" Text="Z" />
+                    <TextBox Grid.Row="1" Grid.Column="6" Text="{Binding RotationZ}" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Scale" />
+                    <TextBlock Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" Text="X" />
+                    <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding ScaleX}" />
+                    <TextBlock Grid.Row="2" Grid.Column="3" VerticalAlignment="Center" Text="Y" />
+                    <TextBox Grid.Row="2" Grid.Column="4" Text="{Binding ScaleY}" />
+                    <TextBlock Grid.Row="2" Grid.Column="5" VerticalAlignment="Center" Text="Z" />
+                    <TextBox Grid.Row="2" Grid.Column="6" Text="{Binding ScaleZ}" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsLightSelected}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Light" />
+                  <CheckBox Content="Cast Shadow" IsChecked="{Binding CastShadow}" />
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="Light Color" />
+                    <ColorPicker Color="{Binding LightColor}" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsDirectionalLightSelected}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Directional Light" />
+                  <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Irradiance" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DirectionalIrradiance}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Shadow Width" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding DirectionalShadowWidth}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Shadow Height" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding DirectionalShadowHeight}" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Text="Shadow Near" />
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding DirectionalShadowNearPlane}" />
+                    <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="Shadow Far" />
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding DirectionalShadowFarPlane}" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsPointLightSelected}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Point Light" />
+                  <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Intensity" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding PointLuminousIntensity}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Radius" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding PointAttenuationRadius}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Soft Ratio" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding PointSoftRatio}" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Text="Shadow Near" />
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding PointShadowNearPlane}" />
+                    <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="Shadow Far" />
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding PointShadowFarPlane}" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsSpotLightSelected}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Spot Light" />
+                  <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Intensity" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding SpotLuminousIntensity}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Inner Cone" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding SpotInnerConeAngle}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Outer Cone" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding SpotOuterConeAngle}" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Text="Radius" />
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding SpotAttenuationRadius}" />
+                    <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="Soft Ratio" />
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding SpotSoftRatio}" />
+                    <TextBlock Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Text="Shadow Near" />
+                    <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding SpotShadowNearPlane}" />
+                    <TextBlock Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Text="Shadow Far" />
+                    <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding SpotShadowFarPlane}" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsCameraSelected}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Camera" />
+                  <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Projection" />
+                    <ComboBox Grid.Row="0" Grid.Column="1" SelectedIndex="{Binding CameraProjectionIndex}">
+                      <ComboBoxItem>Perspective</ComboBoxItem>
+                      <ComboBoxItem>Orthographic</ComboBoxItem>
+                    </ComboBox>
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Field Of View" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding CameraFieldOfView}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Ortho Size" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding CameraOrthographicSize}" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Text="Near Plane" />
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding CameraNearPlane}" />
+                    <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="Far Plane" />
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding CameraFarPlane}" />
+                    <TextBlock Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Text="Render Sky" />
+                    <CheckBox Grid.Row="5" Grid.Column="1" IsChecked="{Binding CameraRenderBackground}" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsModelSelected}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Model" />
+                  <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="BBox Padding" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ModelBoundingBoxPadding}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Top" Text="Info" />
+                    <TextBlock Grid.Row="1" Grid.Column="1"
+                               Foreground="#51606F"
+                               Text="{Binding ModelInfoText}"
+                               TextWrapping="Wrap" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsMeshSelected}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Mesh" />
+                  <TextBlock Foreground="#51606F"
+                             Text="{Binding MeshInfoText}"
+                             TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsMaterialEditable}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Material" />
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="Base Color" />
+                    <ColorPicker Color="{Binding MaterialBaseColor}" />
+                  </StackPanel>
+                  <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Blend Mode" />
+                    <ComboBox Grid.Row="0" Grid.Column="1" SelectedIndex="{Binding MaterialBlendModeIndex}">
+                      <ComboBoxItem>Opaque</ComboBoxItem>
+                      <ComboBoxItem>Masked</ComboBoxItem>
+                      <ComboBoxItem>Translucent</ComboBoxItem>
+                    </ComboBox>
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Double Sided" />
+                    <CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding MaterialDoubleSided}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Alpha Cutoff" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding MaterialAlphaCutoff}" />
+                  </Grid>
+
+                  <TextBlock FontWeight="SemiBold" Margin="0,6,0,0" Text="Texture Channels" />
+                  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <TextBox Grid.Column="0"
+                             Text="{Binding NewMaterialChannelName}"
+                             PlaceholderText="BaseColor / Normal / MetallicRoughness / Emissive" />
+                    <Button Grid.Column="1"
+                            Content="Add"
+                            IsEnabled="{Binding CanAddMaterialChannel}"
+                            Click="AddMaterialChannelButton_Click" />
+                  </Grid>
+                  <ItemsControl ItemsSource="{Binding MaterialChannels}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:MaterialChannelEditorItem">
+                        <Border Padding="8" Background="#F7F9FC" CornerRadius="6">
+                          <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" RowDefinitions="Auto,Auto">
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       FontWeight="SemiBold"
+                                       Text="{Binding Name}" />
+                            <Button Grid.Row="0"
+                                    Grid.Column="1"
+                                    Content="Load"
+                                    Click="LoadMaterialChannelTextureButton_Click" />
+                            <Button Grid.Row="0"
+                                    Grid.Column="2"
+                                    Content="Remove"
+                                    Click="RemoveMaterialChannelButton_Click" />
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="0"
+                                       Grid.ColumnSpan="3"
+                                       Foreground="#51606F"
+                                       FontSize="11"
+                                       Text="{Binding TextureInfo}"
+                                       TextWrapping="Wrap" />
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <TextBlock FontWeight="SemiBold" Margin="0,6,0,0" Text="Parameters" />
+                  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                    <TextBox Grid.Row="0"
+                             Grid.Column="0"
+                             Grid.ColumnSpan="2"
+                             Text="{Binding NewMaterialParameterKey}"
+                             PlaceholderText="Parameter key" />
+                    <ComboBox Grid.Row="1"
+                              Grid.Column="0"
+                              SelectedIndex="{Binding NewMaterialParameterTypeIndex}">
+                      <ComboBoxItem>Bool</ComboBoxItem>
+                      <ComboBoxItem>Int</ComboBoxItem>
+                      <ComboBoxItem>UInt</ComboBoxItem>
+                      <ComboBoxItem>Float</ComboBoxItem>
+                      <ComboBoxItem>Double</ComboBoxItem>
+                      <ComboBoxItem>Long</ComboBoxItem>
+                      <ComboBoxItem>ULong</ComboBoxItem>
+                      <ComboBoxItem>String</ComboBoxItem>
+                      <ComboBoxItem>Vector2</ComboBoxItem>
+                      <ComboBoxItem>Vector3</ComboBoxItem>
+                      <ComboBoxItem>Vector4</ComboBoxItem>
+                      <ComboBoxItem>Color</ComboBoxItem>
+                    </ComboBox>
+                    <Button Grid.Row="1"
+                            Grid.Column="1"
+                            Content="Add"
+                            IsEnabled="{Binding CanAddMaterialParameter}"
+                            Click="AddMaterialParameterButton_Click" />
+                    <TextBox Grid.Row="2"
+                             Grid.Column="0"
+                             Grid.ColumnSpan="2"
+                             Text="{Binding NewMaterialParameterValue}"
+                             PlaceholderText="Value. Vectors use comma-separated numbers; Color uses #AARRGGBB or R,G,B,A" />
+                  </Grid>
+                  <ItemsControl ItemsSource="{Binding MaterialParameters}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:MaterialParameterEditorItem">
+                        <Border Padding="8" Background="#F7F9FC" CornerRadius="6">
+                          <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" RowDefinitions="Auto,Auto,Auto">
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="0"
+                                       FontWeight="SemiBold"
+                                       Text="{Binding Key}" />
+                            <Button Grid.Row="0"
+                                    Grid.Column="1"
+                                    Content="Apply"
+                                    Click="ApplyMaterialParameterButton_Click" />
+                            <Button Grid.Row="0"
+                                    Grid.Column="2"
+                                    Content="Remove"
+                                    Click="RemoveMaterialParameterButton_Click" />
+                            <TextBlock Grid.Row="1"
+                                       Grid.Column="0"
+                                       Grid.ColumnSpan="3"
+                                       Foreground="#51606F"
+                                       FontSize="11"
+                                       Text="{Binding TypeName}" />
+                            <TextBox Grid.Row="2"
+                                     Grid.Column="0"
+                                     Grid.ColumnSpan="3"
+                                     Text="{Binding ValueText}" />
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsParticleSystemSelected}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Particle System" />
+                  <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Max Particles" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ParticleMaxParticles}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Cull Hidden" />
+                    <CheckBox Grid.Row="1" Grid.Column="1" IsChecked="{Binding ParticleEnableVisibilityCulling}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Top" Text="Info" />
+                    <TextBlock Grid.Row="2" Grid.Column="1"
+                               Foreground="#51606F"
+                               Text="{Binding ParticleInfoText}"
+                               TextWrapping="Wrap" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsInstancedMeshSelected}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Instanced Mesh" />
+                  <CheckBox Content="Enable Frustum Culling" IsChecked="{Binding InstancedMeshEnableFrustumCulling}" />
+                  <TextBlock Foreground="#51606F"
+                             Text="{Binding InstancedMeshInfoText}"
+                             TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsInstancedMeshGroupSelected}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Instanced Mesh Group" />
+                  <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Max Per Group" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding InstancedMeshGroupMaxInstancesPerGroup}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Max Depth" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding InstancedMeshGroupMaxDepth}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Top" Text="Info" />
+                    <TextBlock Grid.Row="2" Grid.Column="1"
+                               Foreground="#51606F"
+                               Text="{Binding InstancedMeshGroupInfoText}"
+                               TextWrapping="Wrap" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+
+              <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsBoneAttachmentSelected}">
+                <StackPanel Spacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Bone Attachment" />
+                  <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Bone Name" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding BoneAttachmentBoneName}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Top" Text="Info" />
+                    <TextBlock Grid.Row="1" Grid.Column="1"
+                               Foreground="#51606F"
+                               Text="{Binding BoneAttachmentInfoText}"
+                               TextWrapping="Wrap" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </ScrollViewer>
+        </DockPanel>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>
