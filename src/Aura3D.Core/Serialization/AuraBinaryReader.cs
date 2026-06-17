@@ -227,15 +227,20 @@ public class AuraBinaryReader : IDisposable
         if ((id & 0x80000000) != 0)
         {
             var nodeIndex = (int)(id & 0x7FFFFFFF);
-            if (_nodeList != null && nodeIndex < _nodeList.Count)
-                return _nodeList[nodeIndex] as T;
-            return null;
+            if (_nodeList == null || nodeIndex >= _nodeList.Count)
+                throw new InvalidDataException($"Node reference id {nodeIndex} could not be resolved during deserialization.");
+
+            return _nodeList[nodeIndex] as T
+                ?? throw new InvalidDataException(
+                    $"Node reference id {nodeIndex} could not be cast to '{typeof(T).FullName}'.");
         }
 
-        if (_resourceMap != null && _resourceMap.TryGetValue(id, out var obj))
-            return obj as T;
+        if (_resourceMap == null || !_resourceMap.TryGetValue(id, out var obj))
+            throw new InvalidDataException($"Resource reference id {id} could not be resolved during deserialization.");
 
-        return null;
+        return obj as T
+            ?? throw new InvalidDataException(
+                $"Resource reference id {id} could not be cast to '{typeof(T).FullName}'.");
     }
 
     private T ReadValue<T>()
@@ -338,10 +343,21 @@ public class AuraBinaryReader : IDisposable
         {
             var instance = Activator.CreateInstance(type)
                 ?? throw new InvalidOperationException($"Unable to create an instance of '{type.FullName}' during deserialization.");
-            var chunkVersion = FileVersion >= 3
+
+            if (FileVersion >= 4)
+            {
+                var chunkVersion = ReadUInt32();
+                var payloadSize = ReadUInt32();
+                var payloadEnd = BaseStream.Position + payloadSize;
+                ((IAuraSerializable)instance).Deserialize(this, chunkVersion);
+                BaseStream.Position = payloadEnd;
+                return instance;
+            }
+
+            var legacyChunkVersion = FileVersion >= 3
                 ? ReadUInt32()
                 : GetChunkVersion(type);
-            ((IAuraSerializable)instance).Deserialize(this, chunkVersion);
+            ((IAuraSerializable)instance).Deserialize(this, legacyChunkVersion);
             return instance;
         }
 

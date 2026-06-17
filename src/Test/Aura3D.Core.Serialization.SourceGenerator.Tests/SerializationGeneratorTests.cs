@@ -141,6 +141,81 @@ namespace Aura3D.Core.Serialization
         Assert.Equal(new object?[] { "serialized-name", 7 }, values.Cast<object?>().ToArray());
     }
 
+    [Fact]
+    public void Generator_ShouldUseActualDictionaryKeyType()
+    {
+        const string source = """
+using Aura3D.Core.Serialization;
+using System.Collections.Generic;
+
+namespace Demo
+{
+    [AuraChunk(42, 2)]
+    public partial class DemoResource
+    {
+        [AuraField(2)]
+        public Dictionary<int, string> Entries { get; set; } = new();
+    }
+}
+
+namespace Aura3D.Core.Serialization
+{
+    public interface IAuraSerializable
+    {
+        void Serialize(AuraBinaryWriter writer);
+        void Deserialize(AuraBinaryReader reader, uint chunkVersion);
+    }
+
+    [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct)]
+    public sealed class AuraChunkAttribute : System.Attribute
+    {
+        public AuraChunkAttribute(uint chunkType, uint chunkVersion)
+        {
+        }
+    }
+
+    [System.AttributeUsage(System.AttributeTargets.Field | System.AttributeTargets.Property)]
+    public sealed class AuraFieldAttribute : System.Attribute
+    {
+        public AuraFieldAttribute(uint since)
+        {
+        }
+    }
+
+    [System.AttributeUsage(System.AttributeTargets.Field | System.AttributeTargets.Property)]
+    public sealed class AuraReferenceAttribute : System.Attribute
+    {
+    }
+
+    public sealed class AuraBinaryWriter
+    {
+        public void WriteDictionary<TKey, TValue>(Dictionary<TKey, TValue> value) where TKey : notnull
+        {
+        }
+    }
+
+    public sealed class AuraBinaryReader
+    {
+        public Dictionary<TKey, TValue> ReadDictionary<TKey, TValue>() where TKey : notnull => new();
+    }
+}
+""";
+
+        var inputCompilation = CreateCompilation(source);
+        var generator = new SerializationGenerator();
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(generator);
+
+        driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out _, out var diagnostics);
+
+        Assert.Empty(diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error));
+
+        var runResult = driver.GetRunResult();
+        var generatedSource = Assert.Single(runResult.Results).GeneratedSources.Single().SourceText.ToString();
+
+        Assert.Contains("reader.ReadDictionary<int, string>()", generatedSource);
+        Assert.Contains("new Dictionary<int, string>()", generatedSource);
+    }
+
     private static CSharpCompilation CreateCompilation(string source)
     {
         return CSharpCompilation.Create(

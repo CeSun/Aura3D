@@ -226,7 +226,8 @@ public class AuraBinaryWriter : IDisposable
         }
         else
         {
-            Write(uint.MaxValue);
+            throw new InvalidOperationException(
+                $"Reference of type '{value.GetType().FullName}' was not collected before serialization.");
         }
     }
 
@@ -430,6 +431,23 @@ public class AuraBinaryWriter : IDisposable
             if (FileVersion >= 3)
             {
                 Write(GetChunkVersion(type));
+            }
+
+            if (FileVersion >= 4)
+            {
+                var stream = BaseStream;
+                var payloadSizePosition = stream.Position;
+                Write(0u);
+
+                var payloadStart = stream.Position;
+                serializable.Serialize(this);
+                var payloadEnd = stream.Position;
+                var payloadSize = checked((uint)(payloadEnd - payloadStart));
+
+                stream.Position = payloadSizePosition;
+                Write(payloadSize);
+                stream.Position = payloadEnd;
+                return;
             }
 
             serializable.Serialize(this);

@@ -460,7 +460,7 @@ public class SerializationGenerator : IIncrementalGenerator
             TypeCategory.ListFloat => "reader.ReadBlittableList<float>()",
             TypeCategory.ListUInt => "reader.ReadBlittableList<uint>()",
             TypeCategory.List => $"reader.ReadList<{GetElementType(field.TypeName)}>()",
-            TypeCategory.Dictionary => $"reader.ReadDictionary<string, {GetDictionaryValueType(field.TypeName)}>()",
+            TypeCategory.Dictionary => $"reader.ReadDictionary<{GetDictionaryKeyType(field.TypeName)}, {GetDictionaryValueType(field.TypeName)}>()",
             TypeCategory.Nullable => $"reader.ReadNullable<{GetNullableInnerType(field.TypeName)}>()",
             TypeCategory.Array => $"reader.ReadArray<{GetArrayElementType(field.TypeName)}>()",
             _ => $"reader.ReadCustom<{field.TypeName}>()"
@@ -491,7 +491,7 @@ public class SerializationGenerator : IIncrementalGenerator
             TypeCategory.ListFloat => "new List<float>()",
             TypeCategory.ListUInt => "new List<uint>()",
             TypeCategory.List => $"new List<{GetElementType(field.TypeName)}>()",
-            TypeCategory.Dictionary => $"new Dictionary<string, {GetDictionaryValueType(field.TypeName)}>()",
+            TypeCategory.Dictionary => $"new Dictionary<{GetDictionaryKeyType(field.TypeName)}, {GetDictionaryValueType(field.TypeName)}>()",
             TypeCategory.Nullable => "null",
             TypeCategory.Array => $"System.Array.Empty<{GetArrayElementType(field.TypeName)}>()",
             _ => $"default({field.TypeName})"
@@ -500,30 +500,28 @@ public class SerializationGenerator : IIncrementalGenerator
 
     private static string GetElementType(string typeName)
     {
-        // Extract T from global::System.Collections.Generic.List<T>
-        var start = typeName.IndexOf('<') + 1;
-        var end = typeName.LastIndexOf('>');
-        if (start > 0 && end > start)
-            return typeName.Substring(start, end - start);
-        return "object";
+        var genericArguments = GetTopLevelGenericArguments(typeName);
+        return genericArguments.Count >= 1 ? genericArguments[0] : "object";
+    }
+
+    private static string GetDictionaryKeyType(string typeName)
+    {
+        var genericArguments = GetTopLevelGenericArguments(typeName);
+        return genericArguments.Count >= 2 ? genericArguments[0] : "object";
     }
 
     private static string GetDictionaryValueType(string typeName)
     {
-        // Extract V from Dictionary<K,V>
-        var parts = typeName.Split(',');
-        if (parts.Length >= 2)
-            return parts[1].Trim().TrimEnd('>');
-        return "object";
+        var genericArguments = GetTopLevelGenericArguments(typeName);
+        return genericArguments.Count >= 2 ? genericArguments[1] : "object";
     }
 
     private static string GetNullableInnerType(string typeName)
     {
-        // Extract T from Nullable<T> or T?
-        var start = typeName.IndexOf('<') + 1;
-        var end = typeName.LastIndexOf('>');
-        if (start > 0 && end > start)
-            return typeName.Substring(start, end - start);
+        var genericArguments = GetTopLevelGenericArguments(typeName);
+        if (genericArguments.Count >= 1)
+            return genericArguments[0];
+
         return typeName.TrimEnd('?');
     }
 
@@ -533,5 +531,45 @@ public class SerializationGenerator : IIncrementalGenerator
             return typeName.Substring(0, typeName.Length - 2);
 
         return "object";
+    }
+
+    private static List<string> GetTopLevelGenericArguments(string typeName)
+    {
+        var start = typeName.IndexOf('<');
+        var end = typeName.LastIndexOf('>');
+        if (start < 0 || end <= start)
+            return new List<string>();
+
+        var content = typeName.Substring(start + 1, end - start - 1);
+        var arguments = new List<string>();
+        var current = new StringBuilder();
+        var depth = 0;
+
+        foreach (var character in content)
+        {
+            switch (character)
+            {
+                case '<':
+                    depth++;
+                    current.Append(character);
+                    break;
+                case '>':
+                    depth--;
+                    current.Append(character);
+                    break;
+                case ',' when depth == 0:
+                    arguments.Add(current.ToString().Trim());
+                    current.Clear();
+                    break;
+                default:
+                    current.Append(character);
+                    break;
+            }
+        }
+
+        if (current.Length > 0)
+            arguments.Add(current.ToString().Trim());
+
+        return arguments;
     }
 }

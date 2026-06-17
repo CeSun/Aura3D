@@ -13,7 +13,7 @@ public static class AuraFileHeader
     /// <summary>
     /// Current file format version.
     /// </summary>
-    public const uint CurrentFileVersion = 3;
+    public const uint CurrentFileVersion = 4;
 
     /// <summary>
     /// Current earliest supported file format version.
