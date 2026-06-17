@@ -1,6 +1,9 @@
 using Aura3D.Core.Nodes;
 using Aura3D.Core.Resources;
+using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
@@ -9,6 +12,8 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
+using AvaloniaVector = Avalonia.Vector;
 using DrawingColor = System.Drawing.Color;
 
 namespace Example.ViewModels;
@@ -896,7 +901,7 @@ public partial class SceneEditorViewModel : ViewModelBase
 
         foreach (var channel in material.Channels.OrderBy(static channel => channel.Name, StringComparer.OrdinalIgnoreCase))
         {
-            MaterialChannels.Add(new MaterialChannelEditorItem(channel.Name, DescribeTexture(channel.Texture)));
+            MaterialChannels.Add(new MaterialChannelEditorItem(material, channel.Name, channel.Texture));
         }
 
         foreach (var parameter in material.EnumerateParameters().OrderBy(static parameter => parameter.Key, StringComparer.OrdinalIgnoreCase))
@@ -1222,11 +1227,210 @@ public partial class SceneNodeItem(Node node) : ObservableObject
     }
 }
 
-public sealed class MaterialChannelEditorItem(string name, string textureInfo)
+public partial class MaterialChannelEditorItem : ObservableObject
 {
-    public string Name { get; } = name;
+    private readonly Material _material;
+    private ITexture? _textureSelection;
 
-    public string TextureInfo { get; } = textureInfo;
+    public MaterialChannelEditorItem(Material material, string name, ITexture? texture)
+    {
+        _material = material;
+        Name = name;
+        _textureSelection = texture;
+
+        if (MaterialChannelPreviewHelper.TryGetSolidColor(texture, out var color))
+        {
+            _sourceModeIndex = 1;
+            _colorValue = color;
+            UpdateColorPresentation(color);
+        }
+        else
+        {
+            _sourceModeIndex = 0;
+            _colorValue = Colors.White;
+            _textureSelection = texture;
+            UpdateTexturePresentation(texture);
+        }
+    }
+
+    public string Name { get; }
+
+    [ObservableProperty]
+    private string _textureInfo = "No texture";
+
+    [ObservableProperty]
+    private IImage? _previewImage;
+
+    [ObservableProperty]
+    private IBrush _previewBackground = new SolidColorBrush(Color.Parse("#FFE7EBF1"));
+
+    [ObservableProperty]
+    private int _sourceModeIndex;
+
+    [ObservableProperty]
+    private Color _colorValue;
+
+    public bool IsTextureMode => SourceModeIndex == 0;
+
+    public bool IsColorMode => SourceModeIndex == 1;
+
+    public bool HasPreviewImage => PreviewImage != null;
+
+    public bool ShowPreviewPlaceholder => !HasPreviewImage && IsTextureMode;
+
+    public bool CanClearTextureSelection => _textureSelection != null;
+
+    public void SetTextureSelection(ITexture? texture)
+    {
+        _textureSelection = texture;
+        if (IsTextureMode)
+        {
+            _material.SetTexture(Name, texture);
+            UpdateTexturePresentation(texture);
+        }
+
+        OnPropertyChanged(nameof(CanClearTextureSelection));
+    }
+
+    partial void OnSourceModeIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(IsTextureMode));
+        OnPropertyChanged(nameof(IsColorMode));
+        OnPropertyChanged(nameof(ShowPreviewPlaceholder));
+
+        if (value == 0)
+        {
+            _material.SetTexture(Name, _textureSelection);
+            UpdateTexturePresentation(_textureSelection);
+            return;
+        }
+
+        UpdateColorPresentation(ColorValue);
+        _material.SetTexture(Name, Texture.CreateFromColor(ToDrawingColor(ColorValue)));
+    }
+
+    partial void OnColorValueChanged(Color value)
+    {
+        if (!IsColorMode)
+            return;
+
+        UpdateColorPresentation(value);
+        _material.SetTexture(Name, Texture.CreateFromColor(ToDrawingColor(value)));
+    }
+
+    private void UpdateTexturePresentation(ITexture? texture)
+    {
+        PreviewImage = texture is Texture ldrTexture
+            ? MaterialChannelPreviewHelper.CreateThumbnail(ldrTexture)
+            : null;
+        PreviewBackground = new SolidColorBrush(Color.Parse("#FFE7EBF1"));
+        TextureInfo = texture switch
+        {
+            Texture t => $"{t.Width}x{t.Height} {t.ColorFormat}",
+            null => "No texture",
+            _ => texture.GetType().Name
+        };
+
+        OnPropertyChanged(nameof(HasPreviewImage));
+        OnPropertyChanged(nameof(ShowPreviewPlaceholder));
+        OnPropertyChanged(nameof(CanClearTextureSelection));
+    }
+
+    private void UpdateColorPresentation(Color color)
+    {
+        PreviewImage = null;
+        PreviewBackground = new SolidColorBrush(color);
+        TextureInfo = $"Color #{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+
+        OnPropertyChanged(nameof(HasPreviewImage));
+        OnPropertyChanged(nameof(ShowPreviewPlaceholder));
+    }
+
+    private static DrawingColor ToDrawingColor(Color color)
+    {
+        return DrawingColor.FromArgb(color.A, color.R, color.G, color.B);
+    }
+}
+
+internal static class MaterialChannelPreviewHelper
+{
+    public static bool TryGetSolidColor(ITexture? texture, out Color color)
+    {
+        color = Colors.White;
+        if (texture is not Texture ldrTexture || ldrTexture.LdrData.Count < 3 || ldrTexture.Width == 0 || ldrTexture.Height == 0)
+            return false;
+
+        var channelCount = ldrTexture.ColorFormat == ColorFormat.RGBA ? 4 : 3;
+        if (ldrTexture.LdrData.Count < channelCount)
+            return false;
+
+        var firstR = ldrTexture.LdrData[0];
+        var firstG = ldrTexture.LdrData[1];
+        var firstB = ldrTexture.LdrData[2];
+        var firstA = channelCount == 4 ? ldrTexture.LdrData[3] : (byte)255;
+
+        for (var index = channelCount; index + channelCount - 1 < ldrTexture.LdrData.Count; index += channelCount)
+        {
+            if (ldrTexture.LdrData[index] != firstR ||
+                ldrTexture.LdrData[index + 1] != firstG ||
+                ldrTexture.LdrData[index + 2] != firstB ||
+                (channelCount == 4 && ldrTexture.LdrData[index + 3] != firstA))
+            {
+                return false;
+            }
+        }
+
+        color = Color.FromArgb(firstA, firstR, firstG, firstB);
+        return true;
+    }
+
+    public static WriteableBitmap? CreateThumbnail(Texture texture)
+    {
+        if (texture.LdrData.Count == 0 || texture.Width == 0 || texture.Height == 0)
+            return null;
+
+        try
+        {
+            var width = (int)texture.Width;
+            var height = (int)texture.Height;
+            var bitmap = new WriteableBitmap(
+                new PixelSize(width, height),
+                new AvaloniaVector(96, 96),
+                PixelFormat.Bgra8888,
+                AlphaFormat.Unpremul);
+
+            using var frameBuffer = bitmap.Lock();
+            var sourceData = texture.LdrData;
+            var rowBytes = frameBuffer.RowBytes;
+            var channelCount = texture.ColorFormat == ColorFormat.RGBA ? 4 : 3;
+
+            for (var y = 0; y < height; y++)
+            {
+                var sourceRow = y * width * channelCount;
+                var targetRow = y * rowBytes;
+                for (var x = 0; x < width; x++)
+                {
+                    var sourceIndex = sourceRow + (x * channelCount);
+                    var targetIndex = targetRow + (x * 4);
+                    var r = sourceData[sourceIndex];
+                    var g = sourceData[sourceIndex + 1];
+                    var b = sourceData[sourceIndex + 2];
+                    var a = channelCount == 4 ? sourceData[sourceIndex + 3] : (byte)255;
+
+                    Marshal.WriteByte(frameBuffer.Address + targetIndex, b);
+                    Marshal.WriteByte(frameBuffer.Address + targetIndex + 1, g);
+                    Marshal.WriteByte(frameBuffer.Address + targetIndex + 2, r);
+                    Marshal.WriteByte(frameBuffer.Address + targetIndex + 3, a);
+                }
+            }
+
+            return bitmap;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
 
 public partial class MaterialParameterEditorItem(string key, MaterialParameterValueType valueType, string valueText) : ObservableObject

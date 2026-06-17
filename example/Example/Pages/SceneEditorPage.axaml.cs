@@ -239,14 +239,22 @@ public partial class SceneEditorPage : UserControl
         {
             await using var stream = await files[0].OpenReadAsync();
             var texture = TextureLoader.LoadTexture(stream);
-            _vm.StatusMessage = _vm.TrySetMaterialChannelTexture(item, texture, out var message)
-                ? message
-                : message;
+            item.SetTextureSelection(texture);
+            _vm.StatusMessage = $"Updated {item.Name} to use texture {files[0].Name}.";
         }
         catch (Exception ex)
         {
             _vm.StatusMessage = $"Failed to load texture for channel {item.Name}: {ex.Message}";
         }
+    }
+
+    private void ClearMaterialChannelTextureButton_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_vm == null || sender is not StyledElement { DataContext: MaterialChannelEditorItem item })
+            return;
+
+        item.SetTextureSelection(null);
+        _vm.StatusMessage = $"Cleared texture for channel {item.Name}.";
     }
 
     private void RemoveMaterialChannelButton_Click(object? sender, RoutedEventArgs e)

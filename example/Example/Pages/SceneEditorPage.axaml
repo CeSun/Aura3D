@@ -315,27 +315,87 @@
                     <ItemsControl.ItemTemplate>
                       <DataTemplate x:DataType="vm:MaterialChannelEditorItem">
                         <Border Padding="8" Background="#F7F9FC" CornerRadius="6">
-                          <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" RowDefinitions="Auto,Auto">
-                            <TextBlock Grid.Row="0"
-                                       Grid.Column="0"
-                                       FontWeight="SemiBold"
-                                       Text="{Binding Name}" />
-                            <Button Grid.Row="0"
-                                    Grid.Column="1"
-                                    Content="Load"
-                                    Click="LoadMaterialChannelTextureButton_Click" />
-                            <Button Grid.Row="0"
-                                    Grid.Column="2"
-                                    Content="Remove"
-                                    Click="RemoveMaterialChannelButton_Click" />
-                            <TextBlock Grid.Row="1"
-                                       Grid.Column="0"
-                                       Grid.ColumnSpan="3"
-                                       Foreground="#51606F"
-                                       FontSize="11"
-                                       Text="{Binding TextureInfo}"
-                                       TextWrapping="Wrap" />
-                          </Grid>
+                          <StackPanel Spacing="8">
+                            <DockPanel LastChildFill="False">
+                              <TextBlock DockPanel.Dock="Left"
+                                         VerticalAlignment="Center"
+                                         FontWeight="SemiBold"
+                                         Text="{Binding Name}" />
+                              <Button DockPanel.Dock="Right"
+                                      Content="Remove"
+                                      Click="RemoveMaterialChannelButton_Click" />
+                            </DockPanel>
+
+                            <Grid ColumnDefinitions="88,*" ColumnSpacing="10">
+                              <Border Grid.Column="0"
+                                      Height="88"
+                                      CornerRadius="6"
+                                      BorderBrush="#D8E0EB"
+                                      BorderThickness="1"
+                                      ClipToBounds="True"
+                                      Background="{Binding PreviewBackground}">
+                                <Grid>
+                                  <Image Source="{Binding PreviewImage}"
+                                         IsVisible="{Binding HasPreviewImage}"
+                                         Stretch="UniformToFill" />
+                                  <TextBlock HorizontalAlignment="Center"
+                                             VerticalAlignment="Center"
+                                             Foreground="#6E7D8D"
+                                             FontSize="11"
+                                             Text="No Preview"
+                                             IsVisible="{Binding ShowPreviewPlaceholder}" />
+                                </Grid>
+                              </Border>
+
+                              <StackPanel Grid.Column="1" Spacing="8">
+                                <Grid ColumnDefinitions="56,*" ColumnSpacing="8">
+                                  <TextBlock Grid.Column="0"
+                                             VerticalAlignment="Center"
+                                             Foreground="#51606F"
+                                             FontSize="11"
+                                             Text="Mode" />
+                                  <ComboBox Grid.Column="1"
+                                            SelectedIndex="{Binding SourceModeIndex}">
+                                    <ComboBoxItem>Texture</ComboBoxItem>
+                                    <ComboBoxItem>Color</ComboBoxItem>
+                                  </ComboBox>
+                                </Grid>
+
+                                <Panel IsVisible="{Binding IsTextureMode}">
+                                  <Grid ColumnDefinitions="Auto,Auto,*"
+                                        ColumnSpacing="8"
+                                        RowDefinitions="Auto,Auto"
+                                        RowSpacing="6">
+                                    <Button Grid.Row="0"
+                                            Grid.Column="0"
+                                            Content="Load"
+                                            Click="LoadMaterialChannelTextureButton_Click" />
+                                    <Button Grid.Row="0"
+                                            Grid.Column="1"
+                                            Content="Clear"
+                                            IsEnabled="{Binding CanClearTextureSelection}"
+                                            Click="ClearMaterialChannelTextureButton_Click" />
+                                    <TextBlock Grid.Row="1"
+                                               Grid.Column="0"
+                                               Grid.ColumnSpan="3"
+                                               Foreground="#51606F"
+                                               FontSize="11"
+                                               Text="{Binding TextureInfo}"
+                                               TextWrapping="Wrap" />
+                                  </Grid>
+                                </Panel>
+
+                                <Panel IsVisible="{Binding IsColorMode}">
+                                  <StackPanel Spacing="6">
+                                    <TextBlock Foreground="#51606F"
+                                               FontSize="11"
+                                               Text="{Binding TextureInfo}" />
+                                    <ColorPicker Color="{Binding ColorValue}" />
+                                  </StackPanel>
+                                </Panel>
+                              </StackPanel>
+                            </Grid>
+                          </StackPanel>
                         </Border>
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
