@@ -1,4 +1,3 @@
-using Aura3D.Core.Math;
 using Aura3D.Core.Nodes;
 
 namespace Aura3D.Core.Serialization;
@@ -103,44 +102,10 @@ public class AuraNodeFileWriter
 
     private static void WriteNodePayload(AuraBinaryWriter writer, Node node, uint parentId)
     {
+        if (node is not IAuraSerializable serializable)
+            throw new InvalidOperationException($"Node {node.GetType().Name} does not implement IAuraSerializable.");
+
         writer.Write(parentId);
-        writer.WriteString(node.Name);
-        writer.Write(node.Enable);
-        writer.WriteBlittable(node.LocalTransform);
-        WriteTags(writer, node.Tags);
-
-        switch (node)
-        {
-            case Model model:
-                writer.WriteResourceRef(model.Skeleton);
-                writer.Write(model.BoundingBoxPadding);
-                WriteBoundingBox(writer, model.CustomBoundingBox);
-                break;
-
-            case Mesh mesh:
-                writer.WriteResourceRef(mesh.Geometry);
-                writer.WriteResourceRef(mesh.Material);
-                break;
-        }
-    }
-
-    private static void WriteTags(AuraBinaryWriter writer, IEnumerable<string> tags)
-    {
-        var orderedTags = tags.OrderBy(tag => tag, StringComparer.Ordinal).ToList();
-        writer.Write(orderedTags.Count);
-        foreach (var tag in orderedTags)
-        {
-            writer.WriteString(tag);
-        }
-    }
-
-    private static void WriteBoundingBox(AuraBinaryWriter writer, BoundingBox? boundingBox)
-    {
-        writer.Write(boundingBox != null);
-        if (boundingBox == null)
-            return;
-
-        writer.WriteBlittable(boundingBox.Min);
-        writer.WriteBlittable(boundingBox.Max);
+        serializable.Serialize(writer);
     }
 }

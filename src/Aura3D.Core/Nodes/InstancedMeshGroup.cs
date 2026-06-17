@@ -1,4 +1,5 @@
 using Aura3D.Core.Math;
+using Aura3D.Core.Serialization;
 using System.Numerics;
 
 namespace Aura3D.Core.Nodes;
@@ -26,35 +27,58 @@ namespace Aura3D.Core.Nodes;
 /// // 每帧 Update 自动调用 BuildIfNeeded() 完成主线程收尾
 /// </code>
 /// </summary>
-public class InstancedMeshGroup : Node
+[AuraChunk(chunkType: AuraChunkType.InstancedMeshGroup, chunkVersion: 1)]
+public partial class InstancedMeshGroup : Node
 {
+    public InstancedMeshGroup()
+    {
+        Name = "InstancedMeshGroup";
+    }
+
     /// <summary>
     /// 初始化实例网格组。
     /// </summary>
     /// <param name="sourceMesh">源网格，所有实例将共享此网格的几何体与材质。</param>
     /// <exception cref="ArgumentNullException">sourceMesh 为 null 时抛出。</exception>
     public InstancedMeshGroup(Mesh sourceMesh)
+        : this()
     {
         SourceMesh = sourceMesh ?? throw new ArgumentNullException(nameof(sourceMesh));
-        Name = "InstancedMeshGroup";
     }
 
     /// <summary>
     /// 获取源网格。
     /// </summary>
-    public Mesh SourceMesh { get; }
+    [AuraField(since: 1)]
+    [AuraReference]
+    public Mesh? SourceMesh { get; private set; }
 
     /// <summary>
     /// 每个 InstancedMesh 分组最多容纳的实例数。默认 1024。
     /// 数值越小分组越细，剔除精度越高但 DrawCall 也越多。
     /// </summary>
+    [AuraField(since: 1)]
     public int MaxInstancesPerGroup { get; set; } = 1024;
 
     /// <summary>
     /// 八叉树最大深度。默认 6。
     /// 防止实例过于密集时无限递归。
     /// </summary>
+    [AuraField(since: 1)]
     public int MaxDepth { get; set; } = 6;
+
+    [AuraField(since: 1)]
+    private List<Matrix4x4> SerializedTransforms
+    {
+        get => new List<Matrix4x4>(_transforms);
+        set
+        {
+            _transforms.Clear();
+            if (value != null)
+                _transforms.AddRange(value);
+            Invalidate();
+        }
+    }
 
     /// <summary>
     /// 获取当前已创建的分组列表（调用 <see cref="Build"/> 后可用）。
@@ -205,6 +229,11 @@ public class InstancedMeshGroup : Node
         // 快照当前数据，防止后台线程读取时被主线程修改
         var transforms = new List<Matrix4x4>(_transforms);
         var sourceMesh = SourceMesh;
+        if (sourceMesh == null)
+        {
+            FinalizeEmpty();
+            return;
+        }
         var maxPerGroup = MaxInstancesPerGroup;
         var maxDepth = MaxDepth;
         var name = Name;
@@ -303,6 +332,15 @@ public class InstancedMeshGroup : Node
     {
         base.Update(delta);
         BuildIfNeeded();
+    }
+
+    public override IEnumerable<Node> EnumerateSerializationChildren()
+    {
+        if (_groups.Count == 0)
+            return Children;
+
+        var runtimeGroups = new HashSet<Node>(_groups);
+        return Children.Where(child => !runtimeGroups.Contains(child));
     }
 
     // ========================================================================

@@ -1,5 +1,6 @@
 using Aura3D.Core.Renderers;
 using Aura3D.Core.Resources;
+using Aura3D.Core.Serialization;
 using Silk.NET.OpenGLES;
 
 namespace Aura3D.Core.Nodes;
@@ -7,7 +8,8 @@ namespace Aura3D.Core.Nodes;
 /// <summary>
 /// 方向光节点，模拟无限远处的平行光源，常用于模拟太阳光。
 /// </summary>
-public class DirectionalLight : Light
+[AuraChunk(chunkType: AuraChunkType.DirectionalLight, chunkVersion: 1)]
+public partial class DirectionalLight : Light
 {
     /// <summary>
     /// 初始化 <see cref="DirectionalLight"/> 类的新实例。
@@ -20,6 +22,7 @@ public class DirectionalLight : Light
     /// <summary>
     /// 阴影贴图配置。
     /// </summary>
+    [AuraField(since: 1)]
     public DirectionalLightShadowMapConfig ShadowConfig = new DirectionalLightShadowMapConfig
     {
         Width = 50,
@@ -31,6 +34,7 @@ public class DirectionalLight : Light
     /// <summary>
     /// 获取或设置辐照度（单位：勒克斯）。
     /// </summary>
+    [AuraField(since: 1)]
     public float Irradiance { get; set; } = 80000;
 
     /// <summary>
@@ -80,25 +84,30 @@ public class CsmShadowData : IGpuResource
 /// <summary>
 /// 方向光阴影贴图配置。
 /// </summary>
-public class DirectionalLightShadowMapConfig
+[AuraChunk(chunkType: AuraChunkType.DirectionalLightShadowMapConfig, chunkVersion: 1)]
+public partial class DirectionalLightShadowMapConfig
 {
     /// <summary>
     /// 获取或设置阴影贴图宽度。
     /// </summary>
+    [AuraField(since: 1)]
     public int Width { get; set; }
 
     /// <summary>
     /// 获取或设置阴影贴图高度。
     /// </summary>
+    [AuraField(since: 1)]
     public int Height { get; set; }
 
     /// <summary>
     /// 获取或设置近裁剪面。
     /// </summary>
+    [AuraField(since: 1)]
     public float NearPlane { get; set; }
 
     /// <summary>
     /// 获取或设置远裁剪面。
     /// </summary>
+    [AuraField(since: 1)]
     public float FarPlane { get; set; }
 }

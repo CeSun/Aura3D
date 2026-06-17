@@ -42,6 +42,7 @@ internal enum TypeCategory
     Quaternion,
     Matrix4x4,
     Color,
+    BoundingBox,
     Enum,
     ListByte,
     ListFloat,

@@ -3,13 +3,15 @@ using System.Numerics;
 using Aura3D.Core.Renderers;
 using Aura3D.Core.Math;
 using Aura3D.Core.Resources;
+using Aura3D.Core.Serialization;
 
 namespace Aura3D.Core.Nodes;
 
 /// <summary>
 /// 相机节点，负责场景的拍摄与渲染，支持透视与正交两种投影模式。
 /// </summary>
-public class Camera : Node
+[AuraChunk(chunkType: AuraChunkType.Camera, chunkVersion: 1)]
+public partial class Camera : Node
 {
     /// <summary>
     /// 默认的控件渲染目标。
@@ -29,21 +31,25 @@ public class Camera : Node
     /// <summary>
     /// 获取或设置近裁剪面距离。
     /// </summary>
+    [AuraField(since: 1)]
     public float NearPlane { get; set; } = 1f; // 近裁剪面
 
     /// <summary>
     /// 获取或设置远裁剪面距离。
     /// </summary>
+    [AuraField(since: 1)]
     public float FarPlane { get; set; } = 100f; // 远裁剪面
 
     /// <summary>
     /// 获取或设置视野角度（度数）。
     /// </summary>
+    [AuraField(since: 1)]
     public float FieldOfView { get; set; } = 75f; // 视野角度（度数）
 
     /// <summary>
     /// 获取或设置正交投影时的大小。
     /// </summary>
+    [AuraField(since: 1)]
     public float OrthographicSize { get; set; } = 5f; // 正交投影时的大小
 
     /// <summary>
@@ -56,7 +62,6 @@ public class Camera : Node
             var worldTransform = WorldTransform;
 
             return Matrix4x4.CreateLookAt(worldTransform.Translation, worldTransform.Translation + worldTransform.ForwardVector(), worldTransform.UpVector());
-
         }
     }
 
@@ -73,7 +78,7 @@ public class Camera : Node
 
                 var aspectRatio = RenderTarget.Width / (float)RenderTarget.Height;
 
-                var projection =  Matrix4x4.CreatePerspectiveFieldOfView(fovRadians, aspectRatio, NearPlane, FarPlane);
+                var projection = Matrix4x4.CreatePerspectiveFieldOfView(fovRadians, aspectRatio, NearPlane, FarPlane);
 
                 return projection;
             }
@@ -102,7 +107,8 @@ public class Camera : Node
     public Vector2? WorldToScreen(Vector3 worldPos)
     {
         var clip = Vector4.Transform(new Vector4(worldPos, 1), ViewProjection);
-        if (clip.W <= 0) return null;
+        if (clip.W <= 0)
+            return null;
 
         float ndcX = clip.X / clip.W;
         float ndcY = clip.Y / clip.W;
@@ -116,6 +122,7 @@ public class Camera : Node
     /// <summary>
     /// 获取或设置投影类型。
     /// </summary>
+    [AuraField(since: 1)]
     public ProjectionType ProjectionType { get; set; } = ProjectionType.Perspective; // 投影类型
 
     /// <summary>
@@ -135,6 +142,7 @@ public class Camera : Node
     /// <summary>
     /// 是否渲染背景。
     /// </summary>
+    [AuraField(since: 1)]
     public bool IsRenderBackground = true;
 
     /// <summary>
@@ -203,7 +211,6 @@ public class Camera : Node
 
         float distance = maxExtent / MathF.Sin(fovRadians / 2f) * (1 + padding);
         distance = MathF.Max(distance, maxExtent / (MathF.Sin(fovRadians / 2f) * aspectRatio) * (1 + padding));
-       
 
         Vector3 cameraDirection = camera.Forward;
         camera.Position = boxCenter - cameraDirection * distance;

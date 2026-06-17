@@ -1,5 +1,6 @@
 using Aura3D.Core.Math;
 using Aura3D.Core.Resources;
+using Aura3D.Core.Serialization;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 
@@ -8,13 +9,16 @@ namespace Aura3D.Core.Nodes;
 /// <summary>
 /// 网格节点，包含几何体与材质信息，支持静态网格与骨骼网格。
 /// </summary>
-public class Mesh : Node, IOctreeObject
+[AuraChunk(chunkType: AuraChunkType.Mesh, chunkVersion: 1)]
+public partial class Mesh : Node, IOctreeObject
 {
     private Material? material;
 
     /// <summary>
     /// 获取或设置网格的材质。
     /// </summary>
+    [AuraField(since: 1)]
+    [AuraReference]
     public Material? Material
     {
         get => material;
@@ -50,6 +54,8 @@ public class Mesh : Node, IOctreeObject
     /// <summary>
     /// 获取或设置网格的几何体数据。
     /// </summary>
+    [AuraField(since: 1)]
+    [AuraReference]
     public Geometry? Geometry
     {
         get => geometry;

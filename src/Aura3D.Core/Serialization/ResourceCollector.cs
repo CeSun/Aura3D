@@ -71,20 +71,11 @@ public class ResourceCollector
         if (!_resourceTraversal.Add(resource))
             return;
 
-        switch (resource)
+        AuraReferenceWalker.VisitSerializableReferences(resource, reference =>
         {
-            case Resources.Material material:
-                foreach (var channel in material.Channels)
-                {
-                    if (channel.Texture != null)
-                        CollectResource(channel.Texture);
-                }
-                break;
-
-            case Resources.Animation animation when animation.Skeleton != null:
-                CollectResource(animation.Skeleton);
-                break;
-        }
+            if (AuraResourceTypeRegistry.TryGetChunkType(reference, out _))
+                CollectResource(reference);
+        });
 
         RegisterResource(resource);
     }

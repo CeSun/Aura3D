@@ -1,5 +1,6 @@
 ﻿using Aura3D.Core.Math;
 using Aura3D.Core.Resources;
+using Aura3D.Core.Serialization;
 using Silk.NET.OpenGLES;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -9,7 +10,8 @@ namespace Aura3D.Core.Nodes;
 /// <summary>
 /// 表示一个可用于实例化渲染的网格节点。
 /// </summary>
-public class InstancedMesh : Node, IGpuResource
+[AuraChunk(chunkType: AuraChunkType.InstancedMesh, chunkVersion: 1)]
+public partial class InstancedMesh : Node, IGpuResource
 {
     /// <summary>
     /// 添加一个新的实例。
@@ -111,6 +113,8 @@ public class InstancedMesh : Node, IGpuResource
 
     private Material? _material;
 
+    [AuraField(since: 1)]
+    [AuraReference]
     public Material? Material
     {
         get => _material;
@@ -123,7 +127,23 @@ public class InstancedMesh : Node, IGpuResource
 
     public bool NeedsUpload { get; set; }
 
-    private Geometry geometry { get; set; }
+    private Geometry geometry = null!;
+
+    [AuraField(since: 1)]
+    [AuraReference]
+    protected Geometry SerializedGeometry
+    {
+        get => geometry;
+        set
+        {
+            geometry = value ?? throw new InvalidOperationException("InstancedMesh geometry cannot be null.");
+            _localBoundingBox = null;
+            _localBoundingBoxComputed = false;
+            _instanceWorldBoundingBoxes.Clear();
+            _cachedWorldBoundingBox = null;
+            _worldBoundingBoxDirty = true;
+        }
+    }
 
     public uint Vao => geometry.Vao;
 
@@ -144,6 +164,7 @@ public class InstancedMesh : Node, IGpuResource
     /// <summary>
     /// 获取或设置是否对此 InstancedMesh 启用视锥体剔除。
     /// </summary>
+    [AuraField(since: 1)]
     public bool EnableFrustumCulling { get; set; } = true;
 
     /// <summary>
@@ -230,6 +251,27 @@ public class InstancedMesh : Node, IGpuResource
             p[i] = attr.Data[baseIdx + i];
 
         return m;
+    }
+
+    [AuraField(since: 1)]
+    private List<Matrix4x4> SerializedInstanceTransforms
+    {
+        get
+        {
+            var transforms = new List<Matrix4x4>(_instanceCount);
+            for (int i = 0; i < _instanceCount; i++)
+            {
+                var transform = GetInstanceTransform(i);
+                if (transform != null)
+                    transforms.Add(transform.Value);
+            }
+
+            return transforms;
+        }
+        set
+        {
+            SetInstances(value ?? new List<Matrix4x4>());
+        }
     }
 
     /// <summary>
@@ -458,6 +500,12 @@ public class InstancedMesh : Node, IGpuResource
         }
 
         _instanceCount = count;
+        _instanceWorldBoundingBoxes.Clear();
+        _cachedWorldBoundingBox = null;
+        for (int i = 0; i < count; i++)
+        {
+            UpdateInstanceWorldBoundingBox(i, transforms[i]);
+        }
 
         _worldBoundingBoxDirty = true;
 

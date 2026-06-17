@@ -1,6 +1,7 @@
 using Aura3D.Core.Math;
 using Aura3D.Core.Particles;
 using Aura3D.Core.Resources;
+using Aura3D.Core.Serialization;
 using System.Numerics;
 
 namespace Aura3D.Core.Nodes;
@@ -11,13 +12,15 @@ namespace Aura3D.Core.Nodes;
 /// and InstancedMesh (mesh mode) independently.
 /// The system provides shared lifecycle management and bounding box estimation.
 /// </summary>
-public class ParticleSystem : Node
+[AuraChunk(chunkType: AuraChunkType.ParticleSystem, chunkVersion: 1)]
+public partial class ParticleSystem : Node
 {
     /// <summary>
     /// System-level maximum particle count. Each emitter has its own MaxParticles;
     /// this property can be used as a convenience to set all emitter capacities at once.
     /// Only settable when not playing.
     /// </summary>
+    [AuraField(since: 1)]
     public int MaxParticles
     {
         get => _maxParticles;
@@ -32,6 +35,18 @@ public class ParticleSystem : Node
     public int ActiveCount => Emitters.Sum(e => e.ActiveCount);
     public List<ParticleEmitter> Emitters { get; } = new();
 
+    [AuraField(since: 1)]
+    private List<ParticleEmitter> SerializedEmitters
+    {
+        get => Emitters;
+        set
+        {
+            Emitters.Clear();
+            if (value != null)
+                Emitters.AddRange(value);
+        }
+    }
+
     // ---- Visibility culling ----
 
     private BoundingBox? _customBoundingBox;
@@ -40,6 +55,7 @@ public class ParticleSystem : Node
     /// Optional custom world-space bounding box for all emitters.
     /// When set, this overrides the automatic estimate.
     /// </summary>
+    [AuraField(since: 1)]
     public BoundingBox? CustomBoundingBox
     {
         get => _customBoundingBox;
@@ -62,6 +78,7 @@ public class ParticleSystem : Node
     /// When enabled, the particle simulation is skipped if the system's bounding box
     /// is outside the main camera frustum.
     /// </summary>
+    [AuraField(since: 1)]
     public bool EnableVisibilityCulling { get; set; } = false;
 
     /// <summary>
@@ -258,4 +275,14 @@ public class ParticleSystem : Node
     private Plane[]? _cachedFrustumPlanes;
     private BoundingBox? _estimatedBbox;
     private float _accumulatedSkippedTime;
+
+    public override IEnumerable<Node> EnumerateSerializationChildren()
+    {
+        var runtimeChildren = new HashSet<Node>(
+            Emitters
+                .Where(emitter => emitter.InstancedMesh != null)
+                .Select(emitter => emitter.InstancedMesh!));
+
+        return Children.Where(child => !runtimeChildren.Contains(child));
+    }
 }

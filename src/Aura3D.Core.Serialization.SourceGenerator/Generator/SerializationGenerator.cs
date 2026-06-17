@@ -270,6 +270,7 @@ public class SerializationGenerator : IIncrementalGenerator
         if (fullName == "global::System.Numerics.Quaternion") return TypeCategory.Quaternion;
         if (fullName == "global::System.Numerics.Matrix4x4") return TypeCategory.Matrix4x4;
         if (fullName == "global::System.Drawing.Color") return TypeCategory.Color;
+        if (fullName == "global::Aura3D.Core.Math.BoundingBox") return TypeCategory.BoundingBox;
 
         if (type.TypeKind == TypeKind.Enum) return TypeCategory.Enum;
 
@@ -422,6 +423,7 @@ public class SerializationGenerator : IIncrementalGenerator
             TypeCategory.Quaternion => $"writer.WriteBlittable({access})",
             TypeCategory.Matrix4x4 => $"writer.WriteBlittable({access})",
             TypeCategory.Color => $"writer.Write((uint){access}.ToArgb())",
+            TypeCategory.BoundingBox => $"writer.WriteBoundingBox({access})",
             TypeCategory.Enum => $"writer.Write((int){access})",
             TypeCategory.ListByte => $"writer.WriteBytes({access})",
             TypeCategory.ListFloat => $"writer.WriteBlittableList({access})",
@@ -452,6 +454,7 @@ public class SerializationGenerator : IIncrementalGenerator
             TypeCategory.Quaternion => "reader.ReadBlittable<Quaternion>()",
             TypeCategory.Matrix4x4 => "reader.ReadBlittable<Matrix4x4>()",
             TypeCategory.Color => "System.Drawing.Color.FromArgb((int)reader.ReadUInt32())",
+            TypeCategory.BoundingBox => "reader.ReadBoundingBox()",
             TypeCategory.Enum => $"({field.TypeName})reader.ReadInt32()",
             TypeCategory.ListByte => "reader.ReadBytes()",
             TypeCategory.ListFloat => "reader.ReadBlittableList<float>()",
@@ -482,6 +485,7 @@ public class SerializationGenerator : IIncrementalGenerator
             TypeCategory.Quaternion => "Quaternion.Identity",
             TypeCategory.Matrix4x4 => "Matrix4x4.Identity",
             TypeCategory.Color => "System.Drawing.Color.White",
+            TypeCategory.BoundingBox => "null",
             TypeCategory.Enum => $"default({field.TypeName})",
             TypeCategory.ListByte => "new List<byte>()",
             TypeCategory.ListFloat => "new List<float>()",

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
+using Aura3D.Core.Math;
 
 namespace Aura3D.Core.Serialization;
 
@@ -193,6 +194,16 @@ public class AuraBinaryWriter : IDisposable
     public void WriteCustom<T>(T value)
     {
         WriteValue(typeof(T), value);
+    }
+
+    public void WriteBoundingBox(BoundingBox? boundingBox)
+    {
+        Write(boundingBox != null);
+        if (boundingBox == null)
+            return;
+
+        WriteBlittable(boundingBox.Min);
+        WriteBlittable(boundingBox.Max);
     }
 
     // ---- Reference ----

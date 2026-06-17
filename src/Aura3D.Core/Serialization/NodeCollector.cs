@@ -62,20 +62,13 @@ public class NodeCollector
         _nodeMap[node] = _nextNodeId++;
         _nodes.Add(node);
 
-        switch (node)
+        AuraReferenceWalker.VisitSerializableReferences(node, reference =>
         {
-            case Model model when model.Skeleton != null:
-                CollectResource(model.Skeleton);
-                break;
-            case Mesh mesh:
-                if (mesh.Geometry != null)
-                    CollectResource(mesh.Geometry);
-                if (mesh.Material != null)
-                    CollectResource(mesh.Material);
-                break;
-        }
+            if (AuraResourceTypeRegistry.TryGetChunkType(reference, out _))
+                CollectResource(reference);
+        });
 
-        foreach (var child in node.Children.OrderBy(child => child.Name, StringComparer.Ordinal))
+        foreach (var child in node.EnumerateSerializationChildren().OrderBy(child => child.Name, StringComparer.Ordinal))
         {
             CollectNode(child);
         }

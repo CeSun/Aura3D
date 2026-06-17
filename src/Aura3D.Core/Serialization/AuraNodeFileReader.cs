@@ -1,7 +1,4 @@
-using Aura3D.Core.Math;
 using Aura3D.Core.Nodes;
-using Aura3D.Core.Resources;
-using System.Numerics;
 
 namespace Aura3D.Core.Serialization;
 
@@ -10,9 +7,11 @@ public class AuraNodeFileReader
     private sealed class PendingNodeState
     {
         public required uint NodeId { get; set; }
-        public required uint ParentId { get; init; }
         public required Node Node { get; init; }
-        public required bool Enable { get; init; }
+        public required uint ChunkVersion { get; init; }
+        public required long PayloadStart { get; init; }
+        public uint ParentId { get; set; } = uint.MaxValue;
+        public bool Enable { get; set; }
     }
 
     private readonly Dictionary<uint, object> _resourceMap = new();
@@ -80,13 +79,16 @@ public class AuraNodeFileReader
             if (AuraNodeTypeRegistry.IsNodeChunkType(chunkType))
             {
                 var node = AuraNodeTypeRegistry.CreateNode(chunkType);
-                var pendingState = ReadNodePayload(reader, node, chunkVersion);
-                pendingState.NodeId = objectId;
-
                 EnsureNodeListCapacity(objectId);
                 _nodeList[(int)objectId] = node;
                 _nodeMap[objectId] = node;
-                _pendingNodes.Add(pendingState);
+                _pendingNodes.Add(new PendingNodeState
+                {
+                    NodeId = objectId,
+                    Node = node,
+                    ChunkVersion = chunkVersion,
+                    PayloadStart = stream.Position
+                });
             }
             else
             {
@@ -101,8 +103,9 @@ public class AuraNodeFileReader
         }
 
         if (!_nodeMap.ContainsKey(_rootNodeId))
-            throw new InvalidDataException($"Root node id {_rootNodeId} was not found in the file.");
+            throw new InvalidDataException($"Root node id {_rootNodeId} s wanot found in the file.");
 
+        DeserializePendingNodes(reader, stream);
         RebuildHierarchy();
         RestoreRuntimeState();
     }
@@ -118,55 +121,19 @@ public class AuraNodeFileReader
         return resource;
     }
 
-    private PendingNodeState ReadNodePayload(AuraBinaryReader reader, Node node, uint chunkVersion)
+    private void DeserializePendingNodes(AuraBinaryReader reader, Stream stream)
     {
-        var parentId = reader.ReadUInt32();
-        node.Name = reader.ReadString();
-        var enable = reader.ReadBoolean();
-        node.LocalTransform = reader.ReadBlittable<Matrix4x4>();
-
-        node.Tags.Clear();
-        var tagCount = reader.ReadInt32();
-        for (var i = 0; i < tagCount; i++)
+        foreach (var pendingState in _pendingNodes.OrderBy(state => state.NodeId))
         {
-            node.Tags.Add(reader.ReadString());
+            stream.Position = pendingState.PayloadStart;
+            pendingState.ParentId = reader.ReadUInt32();
+
+            if (pendingState.Node is not IAuraSerializable serializable)
+                throw new InvalidOperationException($"Node {pendingState.Node.GetType().Name} does not implement IAuraSerializable.");
+
+            serializable.Deserialize(reader, pendingState.ChunkVersion);
+            pendingState.Enable = pendingState.Node.Enable;
         }
-
-        switch (node)
-        {
-            case Model model:
-                model.Skeleton = reader.ReadResourceRef<Skeleton>();
-                if (chunkVersion >= 1)
-                {
-                    model.BoundingBoxPadding = reader.ReadSingle();
-                    model.CustomBoundingBox = ReadBoundingBox(reader);
-                }
-                break;
-
-            case Mesh mesh:
-                mesh.Geometry = reader.ReadResourceRef<Geometry>();
-                mesh.Material = reader.ReadResourceRef<Material>();
-                break;
-        }
-
-        return new PendingNodeState
-        {
-            NodeId = uint.MaxValue,
-            ParentId = parentId,
-            Node = node,
-            Enable = enable
-        };
-    }
-
-    private static BoundingBox? ReadBoundingBox(AuraBinaryReader reader)
-    {
-        var hasBoundingBox = reader.ReadBoolean();
-        if (!hasBoundingBox)
-            return null;
-
-        var min = reader.ReadBlittable<Vector3>();
-        var max = reader.ReadBlittable<Vector3>();
-        return new BoundingBox(min, max);
     }
 
     private void EnsureNodeListCapacity(uint nodeId)

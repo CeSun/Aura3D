@@ -2,6 +2,7 @@ using System.Collections;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
+using Aura3D.Core.Math;
 
 namespace Aura3D.Core.Serialization;
 
@@ -202,6 +203,17 @@ public class AuraBinaryReader : IDisposable
     public T ReadCustom<T>()
     {
         return ReadValue<T>();
+    }
+
+    public BoundingBox? ReadBoundingBox()
+    {
+        var hasBoundingBox = ReadBoolean();
+        if (!hasBoundingBox)
+            return null;
+
+        var min = ReadBlittable<Vector3>();
+        var max = ReadBlittable<Vector3>();
+        return new BoundingBox(min, max);
     }
 
     // ---- Reference ----

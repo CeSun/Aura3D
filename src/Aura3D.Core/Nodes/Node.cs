@@ -2,23 +2,43 @@ using Aura3D.Core.Scenes;
 using Aura3D.Core.Resources;
 using System.Numerics;
 using Aura3D.Core.Math;
+using Aura3D.Core.Serialization;
 
 namespace Aura3D.Core.Nodes;
 
 /// <summary>
 /// 表示场景中的节点对象，支持变换（位置、旋转、缩放）及层级关系管理。
 /// </summary>
+[AuraChunk(chunkType: AuraChunkType.Node, chunkVersion: 1)]
 public partial class Node
 {
     /// <summary>
     /// 获取或设置节点名称。
     /// </summary>
+    [AuraField(since: 1)]
     public string Name { get; set; } = "Node";
 
     /// <summary>
     /// 获取节点的标签集合。
     /// </summary>
     public HashSet<string> Tags { get; } = new HashSet<string>();
+
+    [AuraField(since: 1)]
+    protected List<string> SerializedTags
+    {
+        get => Tags.OrderBy(tag => tag, StringComparer.Ordinal).ToList();
+        set
+        {
+            Tags.Clear();
+            if (value == null)
+                return;
+
+            foreach (var tag in value)
+            {
+                Tags.Add(tag);
+            }
+        }
+    }
 
     #region Transform
 
@@ -179,6 +199,7 @@ public partial class Node
     /// <summary>
     /// 获取节点的本地变换矩阵。
     /// </summary>
+    [AuraField(since: 1)]
     public Matrix4x4 LocalTransform 
     { 
         get => _localTransform;
@@ -473,6 +494,7 @@ public partial class Node
     /// <summary>
     /// 获取或设置节点是否启用，同时会级联影响所有子节点。
     /// </summary>
+    [AuraField(since: 1)]
     public bool Enable 
     {
         get => _enable; 
@@ -505,6 +527,11 @@ public partial class Node
             list.AddRange(child.GetNodesInChildren<T>());
         }
         return list;
+    }
+
+    public virtual IEnumerable<Node> EnumerateSerializationChildren()
+    {
+        return Children;
     }
 
     #endregion

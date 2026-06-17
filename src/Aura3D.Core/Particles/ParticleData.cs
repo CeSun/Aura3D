@@ -1,4 +1,5 @@
 using System.Numerics;
+using Aura3D.Core.Serialization;
 
 namespace Aura3D.Core.Particles;
 
@@ -32,17 +33,23 @@ public struct ParticleData
     public readonly Vector4 CurrentColor => Vector4.Lerp(StartColor, EndColor, AgeRatio);
 }
 
-public struct RangeFloat
+[AuraChunk(chunkType: AuraChunkType.RangeFloat, chunkVersion: 1)]
+public partial struct RangeFloat
 {
+    [AuraField(since: 1)]
     public float Min;
+    [AuraField(since: 1)]
     public float Max;
     public RangeFloat(float min, float max) { Min = min; Max = max; }
     public readonly float Random(Random rng) => Min + (float)rng.NextDouble() * (Max - Min);
 }
 
-public struct RangeVector3
+[AuraChunk(chunkType: AuraChunkType.RangeVector3, chunkVersion: 1)]
+public partial struct RangeVector3
 {
+    [AuraField(since: 1)]
     public Vector3 Min;
+    [AuraField(since: 1)]
     public Vector3 Max;
     public RangeVector3(Vector3 min, Vector3 max) { Min = min; Max = max; }
     public RangeVector3(float minX, float minY, float minZ, float maxX, float maxY, float maxZ)

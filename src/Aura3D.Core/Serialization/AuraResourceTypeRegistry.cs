@@ -4,7 +4,15 @@ internal static class AuraResourceTypeRegistry
 {
     public static AuraChunkType GetChunkType(object resource)
     {
-        return resource switch
+        if (TryGetChunkType(resource, out var chunkType))
+            return chunkType;
+
+        throw new InvalidOperationException($"Unsupported resource type: {resource.GetType().FullName}");
+    }
+
+    public static bool TryGetChunkType(object resource, out AuraChunkType chunkType)
+    {
+        chunkType = resource switch
         {
             Resources.Texture => AuraChunkType.Texture,
             Resources.CubeTexture => AuraChunkType.CubeTexture,
@@ -12,8 +20,10 @@ internal static class AuraResourceTypeRegistry
             Resources.Material => AuraChunkType.Material,
             Resources.Skeleton => AuraChunkType.Skeleton,
             Resources.Animation => AuraChunkType.Animation,
-            _ => throw new InvalidOperationException($"Unsupported resource type: {resource.GetType().FullName}")
+            _ => AuraChunkType.None
         };
+
+        return chunkType != AuraChunkType.None;
     }
 
     public static object? CreateResource(AuraChunkType chunkType)

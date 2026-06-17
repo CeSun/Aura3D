@@ -1,5 +1,6 @@
 using Aura3D.Core.Math;
 using Aura3D.Core.Resources;
+using Aura3D.Core.Serialization;
 using Silk.NET.OpenGLES;
 using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
@@ -9,11 +10,14 @@ namespace Aura3D.Core.Nodes;
 /// <summary>
 /// 模型节点，用于组织和管理包含多个 <see cref="Mesh"/> 的层级结构，支持骨骼动画。
 /// </summary>
-public class Model : Node
+[AuraChunk(chunkType: AuraChunkType.Model, chunkVersion: 1)]
+public partial class Model : Node
 {
     /// <summary>
     /// 获取或设置模型的骨骼数据。
     /// </summary>
+    [AuraField(since: 1)]
+    [AuraReference]
     public Skeleton? Skeleton { get; set; }
 
     /// <summary>
@@ -34,12 +38,14 @@ public class Model : Node
     /// <summary>
     /// 获取或设置包围盒的扩展量（模型局部空间），用于补偿动画导致的肢体超出。
     /// </summary>
+    [AuraField(since: 1)]
     public float BoundingBoxPadding { get; set; }
 
     /// <summary>
     /// 获取或设置开发者手动指定的模型局部空间包围盒。
     /// 非 null 时将覆盖所有自动计算的包围盒。
     /// </summary>
+    [AuraField(since: 1)]
     public BoundingBox? CustomBoundingBox { get; set; }
 
     /// <summary>

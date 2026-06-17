@@ -1,4 +1,5 @@
 using System.Numerics;
+using Aura3D.Core.Serialization;
 
 namespace Aura3D.Core.Nodes;
 
@@ -7,21 +8,26 @@ namespace Aura3D.Core.Nodes;
 /// 使子节点能够跟随骨骼动画运动。
 /// 使用 Mesh 的世界矩阵进行计算，正确处理 Model 与 Mesh 之间的中间节点变换。
 /// </summary>
-public class BoneAttachment : Node
+[AuraChunk(chunkType: AuraChunkType.BoneAttachment, chunkVersion: 1)]
+public partial class BoneAttachment : Node
 {
     /// <summary>
     /// 目标骨骼网格，提供骨骼数据、动画采样器和世界变换
     /// </summary>
+    [AuraField(since: 1)]
+    [AuraReference]
     public Mesh? Mesh { get; set; }
 
     /// <summary>
     /// 目标骨骼名称
     /// </summary>
+    [AuraField(since: 1)]
     public string BoneName { get; set; } = string.Empty;
 
     /// <summary>
     /// 相对于骨骼空间的局部偏移矩阵
     /// </summary>
+    [AuraField(since: 1)]
     public Matrix4x4 LocalOffset { get; set; } = Matrix4x4.Identity;
 
     private int _cachedBoneIndex = -1;
@@ -29,7 +35,7 @@ public class BoneAttachment : Node
 
     public override void Update(double delta)
     {
-        if (Mesh == null) 
+        if (Mesh == null)
             return;
 
         if (!Mesh.IsSkinnedMesh)

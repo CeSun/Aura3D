@@ -1,35 +1,53 @@
 using Aura3D.Core.Nodes;
 using Aura3D.Core.Resources;
+using Aura3D.Core.Serialization;
 using System.Drawing;
 using System.Numerics;
 
 namespace Aura3D.Core.Particles;
 
-public class ParticleEmitter
+[AuraChunk(chunkType: AuraChunkType.ParticleEmitter, chunkVersion: 1)]
+public partial class ParticleEmitter
 {
     // ---- Emission ----
 
+    [AuraField(since: 1)]
     public float EmissionRate { get; set; } = 100f;
+    [AuraField(since: 1)]
     public EmissionShape Shape { get; set; } = EmissionShape.Point;
+    [AuraField(since: 1)]
     public Vector3 ShapeSize { get; set; } = Vector3.One;
+    [AuraField(since: 1)]
     public float ConeAngle { get; set; } = 30f;
+    [AuraField(since: 1)]
     public bool Looping { get; set; } = true;
+    [AuraField(since: 1)]
     public float Duration { get; set; } = 0f;
 
     // ---- Particle properties ----
 
+    [AuraField(since: 1)]
     public RangeFloat Lifetime { get; set; } = new(1f, 3f);
+    [AuraField(since: 1)]
     public RangeVector3 Velocity { get; set; } = new(new(0, 5, 0), new(0, 10, 0));
+    [AuraField(since: 1)]
     public RangeFloat StartSize { get; set; } = new(0.1f, 0.3f);
+    [AuraField(since: 1)]
     public RangeFloat EndSize { get; set; } = new(0.01f, 0.05f);
+    [AuraField(since: 1)]
     public Color StartColor { get; set; } = Color.White;
+    [AuraField(since: 1)]
     public Color EndColor { get; set; } = Color.Transparent;
+    [AuraField(since: 1)]
     public RangeFloat Rotation { get; set; } = new(0f, MathF.PI * 2);
+    [AuraField(since: 1)]
     public RangeFloat AngularVelocity { get; set; } = new(-1f, 1f);
 
     // ---- Physics ----
 
+    [AuraField(since: 1)]
     public Vector3 Gravity { get; set; } = new(0f, -9.8f, 0f);
+    [AuraField(since: 1)]
     public float Damping { get; set; } = 0f;
 
     // ---- Billboard rendering (per-emitter) ----
@@ -38,18 +56,22 @@ public class ParticleEmitter
     /// Texture for billboard particles. When set, the billboard shader samples this texture.
     /// When null, a procedural circle is drawn.
     /// </summary>
+    [AuraField(since: 1)]
+    [AuraReference]
     public ITexture? Texture { get; set; }
 
     /// <summary>
     /// Flipbook grid dimensions for texture animation. Default (1,1) disables flipbook.
     /// Example: (8,8) for a 64-frame fire texture laid out in an 8x8 grid.
     /// </summary>
+    [AuraField(since: 1)]
     public Vector2 FlipbookTiles { get; set; } = Vector2.One;
 
     /// <summary>
     /// Blend mode for this emitter's particles. Each emitter can have a different blend mode,
     /// enabling mixed Opaque/Translucent effects within a single ParticleSystem.
     /// </summary>
+    [AuraField(since: 1)]
     public BlendMode BlendMode { get; set; } = BlendMode.Translucent;
 
     // ---- Mesh rendering (per-emitter) ----
@@ -58,23 +80,29 @@ public class ParticleEmitter
     /// When set, this emitter renders particles as 3D mesh instances instead of billboard quads.
     /// Each emitter can use a different mesh.
     /// </summary>
+    [AuraField(since: 1)]
+    [AuraReference]
     public Mesh? Mesh { get; set; }
 
     /// <summary>
     /// Optional material override for mesh-mode particles on this emitter.
     /// When null, the material from Mesh is used.
     /// </summary>
+    [AuraField(since: 1)]
+    [AuraReference]
     public Material? Material { get; set; }
 
     /// <summary>
     /// Maximum particle count for this emitter. Allocated during Play().
     /// </summary>
+    [AuraField(since: 1)]
     public int MaxParticles { get; set; } = 1000;
 
     /// <summary>
     /// Scale multiplier for mesh-based particles. Applied on top of the per-particle size.
     /// Ignored for billboard particles.
     /// </summary>
+    [AuraField(since: 1)]
     public float MeshScale { get; set; } = 1f;
 
     // ---- Runtime state (managed by ParticleSystem) ----
