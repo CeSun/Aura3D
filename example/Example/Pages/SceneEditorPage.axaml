@@ -284,10 +284,6 @@
               <Border Theme="{StaticResource CardBorder}" Padding="8" IsVisible="{Binding IsMaterialEditable}">
                 <StackPanel Spacing="8">
                   <TextBlock FontWeight="SemiBold" Text="Material" />
-                  <StackPanel Spacing="4">
-                    <TextBlock Text="Base Color" />
-                    <ColorPicker Color="{Binding MaterialBaseColor}" />
-                  </StackPanel>
                   <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
                     <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Blend Mode" />
                     <ComboBox Grid.Row="0" Grid.Column="1" SelectedIndex="{Binding MaterialBlendModeIndex}">
