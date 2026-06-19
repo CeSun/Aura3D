@@ -190,10 +190,7 @@ public partial class PrimitiveTypePage : UserControl
         var material = new Material { BlendMode = BlendMode.Opaque };
         material.SetShaderSource("LightPass", ShaderType.Vertex, SolidColorVertexShader);
         material.SetShaderSource("LightPass", ShaderType.Fragment, SolidColorFragmentShader);
-        material.SetShaderPassParametersCallback("LightPass", pass =>
-        {
-            pass.UniformVector4("uColor", color);
-        });
+        material.SetParameterValue("uColor", color);
         mesh.Material = material;
 
         mesh.LocalTransform = Matrix4x4.CreateTranslation(offset);

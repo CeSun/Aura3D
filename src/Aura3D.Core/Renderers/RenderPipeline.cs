@@ -118,6 +118,10 @@ public abstract partial class RenderPipeline
     /// </summary>
     public HashSet<IGpuResource> GpuResources { get; } = new HashSet<IGpuResource>();
 
+    private HashSet<IGpuState> GpuStates { get; } = new HashSet<IGpuState>();
+
+    private Dictionary<Material, MaterialGpuState> materialGpuStates = new Dictionary<Material, MaterialGpuState>();
+
     /// <summary>
     /// 获取或设置方向光源的最大数量限制。
     /// </summary>
@@ -221,6 +225,18 @@ public abstract partial class RenderPipeline
             resource.NeedsUpload = false;
             GpuResources.Add(resource);
         }
+    }
+
+    public MaterialGpuState GetMaterialGpuState(Material material)
+    {
+        if (materialGpuStates.TryGetValue(material, out var gpuState) == false)
+        {
+            gpuState = new MaterialGpuState(material);
+            materialGpuStates[material] = gpuState;
+            GpuStates.Add(gpuState);
+        }
+
+        return gpuState;
     }
 
     /// <summary>
@@ -544,6 +560,13 @@ public abstract partial class RenderPipeline
         {
             pass.Destroy();
         }
+
+        foreach (var gpuState in GpuStates)
+        {
+            gpuState.Destroy(gl!);
+        }
+        GpuStates.Clear();
+        materialGpuStates.Clear();
 
         Meshes.Clear();
 

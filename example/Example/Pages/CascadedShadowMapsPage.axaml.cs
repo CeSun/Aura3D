@@ -39,13 +39,13 @@ public partial class CascadedShadowMapsPage : UserControl
         var ground = new Mesh
         {
             Geometry = new PlaneGeometry(),
-            Material = new Material
+            Material = new Material()
             {
                 BaseColor = Texture.CreateFromColor(Color.FromArgb(220, 220, 220))
-            }
+            },
+            Scale = new Vector3(80, 1, 80),
+            Position = new Vector3(0, -2, 0)
         };
-        ground.Scale = new Vector3(80, 1, 80);
-        ground.Position = new Vector3(0, -2, 0);
         scene.AddNode(ground);
 
         // 在远近不同距离放置柱子，展示 CSM 级联效果
@@ -61,7 +61,7 @@ public partial class CascadedShadowMapsPage : UserControl
                 var mesh = new Mesh
                 {
                     Geometry = sphereGeo,
-                    Material = new Material
+                    Material = new Material()
                     {
                         BaseColor = Texture.CreateFromColor(
                             d switch
@@ -73,10 +73,10 @@ public partial class CascadedShadowMapsPage : UserControl
                                 4 => Color.FromArgb(60, 120, 220),   // 蓝
                                 _ => Color.FromArgb(180, 100, 220),  // 紫
                             })
-                    }
+                    },
+                    Position = new Vector3(x * 4, 2, z),
+                    Scale = new Vector3(1.5f)
                 };
-                mesh.Position = new Vector3(x * 4, 2, z);
-                mesh.Scale = new Vector3(1.5f);
                 scene.AddNode(mesh);
             }
 
@@ -84,13 +84,13 @@ public partial class CascadedShadowMapsPage : UserControl
             var tallPillar = new Mesh
             {
                 Geometry = new CylinderGeometry(),
-                Material = new Material
+                Material = new Material()
                 {
                     BaseColor = Texture.CreateFromColor(Color.White)
-                }
+                },
+                Position = new Vector3(10, 5, z),
+                Scale = new Vector3(1, 8, 1)
             };
-            tallPillar.Position = new Vector3(10, 5, z);
-            tallPillar.Scale = new Vector3(1, 8, 1);
             scene.AddNode(tallPillar);
         }
 

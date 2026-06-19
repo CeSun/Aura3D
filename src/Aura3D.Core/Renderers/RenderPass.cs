@@ -155,15 +155,7 @@ public partial class RenderPass
         UniformMatrix4("modelMatrix", mesh.WorldTransform);
         renderPipeline.EnsureUploaded(mesh.Geometry!);
         gl.BindVertexArray(mesh.Geometry!.Vao);
-
-        if (mesh != null && mesh.Material != null && mesh.Material.HasShader == true)
-        {
-            var callback = mesh.Material.GetShaderPassParametersCallback(ShaderName);
-            if (callback != null)
-            {
-                callback(this);
-            }
-        }
+        BindMaterialParameters(mesh.Material);
 
         var primitive = GetGLPrimitiveType(mesh.Geometry.PrimitiveType);
 
@@ -182,15 +174,7 @@ public partial class RenderPass
     {
         renderPipeline.EnsureUploaded(instancedMesh);
         gl.BindVertexArray(instancedMesh.Vao);
-
-        if (instancedMesh.Material != null && instancedMesh.Material.HasShader == true)
-        {
-            var callback = instancedMesh.Material.GetShaderPassParametersCallback(ShaderName);
-            if (callback != null)
-            {
-                callback(this);
-            }
-        }
+        BindMaterialParameters(instancedMesh.Material);
 
         var primitive = GetGLPrimitiveType(instancedMesh.PrimitiveType);
 
@@ -203,6 +187,40 @@ public partial class RenderPass
             gl.DrawElementsInstanced(primitive, (uint)instancedMesh.IndicesCount, GLEnum.UnsignedInt, (void*)0, (uint)instancedMesh.InstanceCount);
         else
             gl.DrawArraysInstanced(primitive, 0, (uint)instancedMesh.VertexCount, (uint)instancedMesh.InstanceCount);
+    }
+
+    void BindMaterialParameters(Material? material)
+    {
+        if (material == null)
+            return;
+
+        foreach (var kv in material.EnumerateParameters())
+        {
+            if (kv.Value is int intValue)
+            {
+                UniformInt(kv.Key, intValue);
+            }
+            else if (kv.Value is float floatValue)
+            {
+                UniformFloat(kv.Key, floatValue);
+            }
+            else if (kv.Value is Vector2 vector2Value)
+            {
+                UniformVector2(kv.Key, vector2Value);
+            }
+            else if (kv.Value is Vector3 vector3Value)
+            {
+                UniformVector3(kv.Key, vector3Value);
+            }
+            else if (kv.Value is Vector4 vector4Value)
+            {
+                UniformVector4(kv.Key, vector4Value);
+            }
+            else if (kv.Value is Matrix4x4 matrix4Value)
+            {
+                UniformMatrix4(kv.Key, matrix4Value);
+            }
+        }
     }
 
     /// <summary>

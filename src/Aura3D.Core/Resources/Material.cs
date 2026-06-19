@@ -1,23 +1,21 @@
-﻿using Aura3D.Core.Renderers;
-using System.Drawing;
-
 namespace Aura3D.Core.Resources;
 
 /// <summary>
 /// 材质类，定义物体的表面属性和渲染行为
 /// </summary>
-public class Material : IClone<Material>, IGpuResource
+public class Material : IClone<Material>
 {
-    /// <summary>
-    /// 是否需要上传到GPU
-    /// </summary>
-    public bool NeedsUpload { get; set; } = false;
     /// <summary>
     /// 材质通道列表
     /// </summary>
-    public List<Channel> Channels { get; set; } = [];
+    public List<Channel> Channels { get; } = [];
 
-    private Dictionary<string, object> parameters  { get; set; } = new Dictionary<string, object>();
+    private Dictionary<string, object> parameters { get; set; } = new();
+
+    /// <summary>
+    /// 参数字典（只读）
+    /// </summary>
+    public IReadOnlyDictionary<string, object> Parameters => parameters;
 
     /// <summary>
     /// 混合模式
@@ -27,7 +25,7 @@ public class Material : IClone<Material>, IGpuResource
     /// <summary>
     /// 是否双面渲染
     /// </summary>
-    public bool DoubleSided { get; set; } = false;
+    public bool DoubleSided { get; set; }
 
     /// <summary>
     /// 透明度阈值
@@ -37,25 +35,21 @@ public class Material : IClone<Material>, IGpuResource
     /// <summary>
     /// 是否有自定义着色器
     /// </summary>
-    public bool HasShader { get; set; } = false;
+    public bool HasShader => _vertexShaders.Count > 0 || _fragmentShaders.Count > 0;
+
     /// <summary>
     /// 顶点着色器字典（只读）
     /// </summary>
     public IReadOnlyDictionary<string, string> VertexShaders => _vertexShaders;
 
-    private Dictionary<string, string> _vertexShaders = new Dictionary<string, string>();
+    private Dictionary<string, string> _vertexShaders = new();
 
-    private Dictionary<string, string> _fragmentShaders = new Dictionary<string, string>();
+    private Dictionary<string, string> _fragmentShaders = new();
 
     /// <summary>
     /// 片段着色器字典（只读）
     /// </summary>
     public IReadOnlyDictionary<string, string> FragmentShaders => _fragmentShaders;
-
-    /// <summary>
-    /// 着色器字典
-    /// </summary>
-    public Dictionary<string, Shader> Shaders { get; } = new Dictionary<string, Shader>();
 
     /// <summary>
     /// 尝试获取参数值
@@ -81,7 +75,7 @@ public class Material : IClone<Material>, IGpuResource
             return true;
         }
 
-        value = default;
+        value = default!;
         return false;
     }
 
@@ -93,7 +87,7 @@ public class Material : IClone<Material>, IGpuResource
     /// <param name="value">参数值</param>
     public void SetParameterValue<T>(string key, T value)
     {
-        if(value != null)
+        if (value != null)
         {
             parameters[key] = value;
         }
@@ -108,15 +102,13 @@ public class Material : IClone<Material>, IGpuResource
         parameters.Remove(key);
     }
 
-
     public Material Clone()
     {
         var m = new Material
         {
-            BlendMode = this.BlendMode,
-            DoubleSided = this.DoubleSided,
-            AlphaCutoff = this.AlphaCutoff,
-            HasShader = this.HasShader,
+            BlendMode = BlendMode,
+            DoubleSided = DoubleSided,
+            AlphaCutoff = AlphaCutoff,
         };
 
         foreach (var channel in Channels)
@@ -130,12 +122,13 @@ public class Material : IClone<Material>, IGpuResource
 
         foreach (var kv in _vertexShaders)
             m._vertexShaders[kv.Key] = kv.Value;
+
         foreach (var kv in _fragmentShaders)
             m._fragmentShaders[kv.Key] = kv.Value;
-        foreach (var kv in ShaderPassParametersCallbacks)
-            m.ShaderPassParametersCallbacks[kv.Key] = kv.Value;
+
         foreach (var kv in parameters)
             m.parameters[kv.Key] = kv.Value;
+
         return m;
     }
 
@@ -145,10 +138,9 @@ public class Material : IClone<Material>, IGpuResource
     {
         var material = new Material
         {
-            BlendMode = this.BlendMode,
-            DoubleSided = this.DoubleSided,
-            AlphaCutoff = this.AlphaCutoff,
-            HasShader = this.HasShader,
+            BlendMode = BlendMode,
+            DoubleSided = DoubleSided,
+            AlphaCutoff = AlphaCutoff,
         };
 
         foreach (var channel in Channels)
@@ -164,30 +156,19 @@ public class Material : IClone<Material>, IGpuResource
 
         material._vertexShaders = new Dictionary<string, string>(_vertexShaders);
         material._fragmentShaders = new Dictionary<string, string>(_fragmentShaders);
-        material.ShaderPassParametersCallbacks = new Dictionary<string, Action<RenderPass>>(ShaderPassParametersCallbacks);
         material.parameters = new Dictionary<string, object>(parameters);
 
         return material;
     }
 
-    public Dictionary<string, Action<RenderPass>> ShaderPassParametersCallbacks = [];
-    public void SetShaderPassParametersCallback(string key, Action<RenderPass> callback)
+    public void SetChannels(IEnumerable<Channel> channels)
     {
-        ShaderPassParametersCallbacks[key] = callback;
-    }
+        Channels.Clear();
 
-    public void RemoveShaderPassParametersCallback(string key)
-    {
-        ShaderPassParametersCallbacks.Remove(key);
-    }
-
-    public Action<RenderPass>? GetShaderPassParametersCallback(string key)
-    {
-        Action<RenderPass>? callback = null;
-
-        ShaderPassParametersCallbacks.TryGetValue(key, out callback);
-
-        return callback;
+        foreach (var channel in channels)
+        {
+            Channels.Add(channel);
+        }
     }
 
     public void SetShaderSource(string key, ShaderType shaderType, string shader)
@@ -200,21 +181,14 @@ public class Material : IClone<Material>, IGpuResource
         {
             _vertexShaders[key] = shader;
         }
-        HasShader = true;
     }
 
     public (string? vertexShader, string? fragmentShader) GetShaderSource(string key)
     {
-        string? vertexShader = null;
+        _vertexShaders.TryGetValue(key, out var vertexShader);
+        _fragmentShaders.TryGetValue(key, out var fragmentShader);
 
-        string? fragmentShader = null;
-
-
-        _vertexShaders.TryGetValue(key, out vertexShader);
-
-        _fragmentShaders.TryGetValue(key, out fragmentShader);
-
-       return (vertexShader, fragmentShader);
+        return (vertexShader, fragmentShader);
     }
 
     public void RemoveShader(string key, ShaderType shaderType)
@@ -227,36 +201,6 @@ public class Material : IClone<Material>, IGpuResource
         {
             _vertexShaders.Remove(key);
         }
-        if (_fragmentShaders.Count == 0 && _vertexShaders.Count == 0)
-        {
-            HasShader = false;
-        }
-    }
-
-
-    public void Upload(Silk.NET.OpenGLES.GL gl)
-    {
-    }
-
-    public void Destroy(Silk.NET.OpenGLES.GL gl)
-    {
-        foreach(var shader in Shaders)
-        {
-            gl.DeleteProgram(shader.Value.ProgramId);
-        }
-        Shaders.Clear();
-    }
-
-    public ITexture? BaseColor
-    {
-        get => GetTexture("BaseColor");
-        set => SetTexture("BaseColor", value);
-    }
-
-    public ITexture? Normal
-    {
-        get => GetTexture("Normal");
-        set => SetTexture("Normal", value);
     }
 
     public void SetTexture(string name, ITexture? texture)
@@ -277,15 +221,11 @@ public class Material : IClone<Material>, IGpuResource
         var channel = Channels.FirstOrDefault(c => c.Name == name);
         if (channel != null)
         {
-             return channel.Texture;
+            return channel.Texture;
         }
-        else
-        {
-            return null;
-        }
+
+        return null;
     }
-
-
 }
 
 /// <summary>

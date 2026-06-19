@@ -14,6 +14,7 @@ using System.Drawing;
 using System.Numerics;
 using System.Threading.Tasks;
 using Ursa.Common;
+using Aura3D.Pipeline.PBR;
 
 namespace Example.Pages;
 
@@ -52,22 +53,22 @@ public partial class PbrPipelinePage : UserControl
                 for(int j = 0; j < 7; j++)
                 {
 
-                    var mesh = new Mesh();
+                    var mesh = new Mesh
+                    {
+                        Geometry = new SphereGeometry(),
 
-                    mesh.Geometry = new SphereGeometry();
+                        Material = new Material()
+                        {
+                            BaseColor = Texture.CreateFromColor(Color.FromArgb(255, 0, 0)),
+                            Normal = Texture.CreateFromColor(Color.FromArgb(128, 128, 255)),
+                            MetallicRoughness = Texture.CreateFromColor(Color.FromArgb((255 / 7) * i, (255 / 7) * j, 0))
+                        }
+                    };
 
-                    mesh.Material = new Material();
-
-                    mesh.Material.BaseColor = Texture.CreateFromColor(Color.FromArgb(255, 0, 0));
-
-                    mesh.Material.SetTexture("Normal", Texture.CreateFromColor(Color.FromArgb(128, 128, 255)));
-
-                    mesh.Material.SetTexture("MetallicRoughness", Texture.CreateFromColor(Color.FromArgb((255 / 7) * i, (255 / 7) * j, 0)));
 
                     var v = scene.MainCamera.Position + scene.MainCamera.Forward * 2;
 
                     mesh.Position = new Vector3(i * 3, j * 3, v.Z);
-
 
                     scene.AddNode(mesh);
 

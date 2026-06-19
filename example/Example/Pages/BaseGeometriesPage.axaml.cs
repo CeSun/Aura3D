@@ -62,12 +62,7 @@ public partial class BaseGeometriesPage : UserControl
                 }
             });
 
-            mesh.Material.Channels = [
-                new () {
-                Name = "BaseColor",
-                Texture = texture,
-            }
-            ];
+            mesh.Material.BaseColor = texture;
 
             mesh.Material.BlendMode = BlendMode.Opaque;
 

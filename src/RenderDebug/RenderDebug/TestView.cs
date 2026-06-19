@@ -78,11 +78,9 @@ public class TestView
         var ground = new Mesh
         {
             Geometry = new PlaneGeometry(),
-            Material = new Material
-            {
-                BaseColor = Texture.CreateFromColor(Color.FromArgb(220, 220, 220))
-            }
+            Material = new Material()
         };
+        ground.Material.SetBaseColor(Texture.CreateFromColor(Color.FromArgb(220, 220, 220)));
         ground.Scale = new Vector3(80, 1, 80);
         ground.Position = new Vector3(0, -2, 0);
         scene.AddNode(ground);
@@ -100,7 +98,7 @@ public class TestView
                 var mesh = new Mesh
                 {
                     Geometry = sphereGeo,
-                    Material = new Material
+                    Material = new Material()
                     {
                         BaseColor = Texture.CreateFromColor(
                             d switch
@@ -112,10 +110,10 @@ public class TestView
                                 4 => Color.FromArgb(60, 120, 220),   // 蓝
                                 _ => Color.FromArgb(180, 100, 220),  // 紫
                             })
-                    }
+                    },
+                    Position = new Vector3(x * 4, 2, z),
+                    Scale = new Vector3(1.5f)
                 };
-                mesh.Position = new Vector3(x * 4, 2, z);
-                mesh.Scale = new Vector3(1.5f);
                 scene.AddNode(mesh);
             }
 
@@ -123,13 +121,13 @@ public class TestView
             var tallPillar = new Mesh
             {
                 Geometry = new CylinderGeometry(),
-                Material = new Material
+                Material = new Material()
                 {
                     BaseColor = Texture.CreateFromColor(Color.White)
-                }
+                },
+                Position = new Vector3(10, 5, z),
+                Scale = new Vector3(1, 8, 1)
             };
-            tallPillar.Position = new Vector3(10, 5, z);
-            tallPillar.Scale = new Vector3(1, 8, 1);
             scene.AddNode(tallPillar);
         }
 

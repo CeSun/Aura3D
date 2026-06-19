@@ -61,7 +61,7 @@ public partial class RenderingPerformancePage : UserControl
         _sharedWhiteMat = new Material
         {
             BlendMode = BlendMode.Opaque,
-            Channels = [new Channel { Name = "BaseColor", Texture = Texture.CreateFromColor(Color.White) }]
+            BaseColor = Texture.CreateFromColor(Color.White)
         };
 
         var dl = new DirectionalLight

@@ -224,15 +224,9 @@ public partial class DebugTestPage : UserControl
         {
             Name = "Ground",
             Geometry = new PlaneGeometry(groundSize, groundSize),
-            Material = new Material
+            Material = new Material()
             {
-                Channels = [
-                    new Channel
-                    {
-                        Name = "BaseColor",
-                        Texture = Texture.CreateFromColor(SDColor.DarkGray)
-                    }
-                ]
+                BaseColor = Texture.CreateFromColor(SDColor.DarkGray)
             }
         };
         view.AddNode(_ground);

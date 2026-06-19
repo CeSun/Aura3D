@@ -81,7 +81,9 @@ public partial class RenderPass
 
             if (vertexShader != null || fragmentShader != null)
             {
-                if (material.Shaders.TryGetValue(name, out shader) == false)
+                var gpuState = renderPipeline.GetMaterialGpuState(material);
+
+                if (gpuState.Shaders.TryGetValue(ShaderName + ";" + name, out shader) == false)
                 {
                     if (vertexShader == null)
                         vertexShader = VertexShader;
@@ -90,7 +92,7 @@ public partial class RenderPass
 
                     shader = CreateShaderProgram(defines.ToArray(), vertexShader, fragmentShader);
 
-                    material.Shaders[name] = shader;
+                    gpuState.Shaders[ShaderName + ";" + name] = shader;
                 }
             }
         }

@@ -245,17 +245,12 @@ public partial class AnimationFeaturesPage : UserControl
         var mesh = new Mesh
         {
             Geometry = new Aura3D.Core.Geometries.PlaneGeometry(400, 400),
-            Material = new Material
+            Material = new Material()
             {
-                Channels = [
-                    new Channel()
-                    {
-                        Name = "BaseColor",
-                        Texture = Texture.CreateFromColor(Color.Gray)
-                    }
-                ]
+                BaseColor = Texture.CreateFromColor(Color.Gray)
             }
         };
+        
         view.AddNode(mesh);
 
         // === Add model to scene ===
@@ -473,17 +468,12 @@ public partial class AnimationFeaturesPage : UserControl
             {
                 Name = "TorchHandle",
                 Geometry = new Aura3D.Core.Geometries.CylinderGeometry(1.5f, 1.5f, 30, 16),
-                Material = new Material
+                Material = new Material()
                 {
-                    Channels = [
-                        new Channel()
-                        {
-                            Name = "BaseColor",
-                            Texture = Texture.CreateFromColor(Color.FromArgb(255, 139, 90, 43))
-                        }
-                    ]
+                    BaseColor = Texture.CreateFromColor(Color.FromArgb(255, 139, 90, 43))
                 }
             };
+
             // 火焰粒子系统
             var fire = new ParticleSystem
             {
