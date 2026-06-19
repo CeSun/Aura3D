@@ -7,7 +7,12 @@ internal interface IGpuState
     public void Destroy(GL gl);
 }
 
-internal interface IResourceGpuState<T> : IGpuState
+internal interface IResourceGpuState : IGpuState
+{
+    public bool IsAlive { get; }
+}
+
+internal interface IResourceGpuState<T> : IResourceGpuState where T : class
 {
     public T Resource { get; }
 }

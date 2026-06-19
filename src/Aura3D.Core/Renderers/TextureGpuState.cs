@@ -5,19 +5,32 @@ namespace Aura3D.Core.Renderers;
 
 public class TextureGpuState : IResourceGpuState<Aura3D.Core.Resources.Texture>, Aura3D.Core.Resources.IGpuTexture
 {
-    public Aura3D.Core.Resources.Texture Texture { get; }
+    private WeakReference<Aura3D.Core.Resources.Texture> texture;
 
-    public Aura3D.Core.Resources.Texture Resource => Texture;
+    public Aura3D.Core.Resources.Texture Texture => Resource;
+
+    public Aura3D.Core.Resources.Texture Resource
+    {
+        get
+        {
+            if (texture.TryGetTarget(out var value))
+                return value;
+
+            throw new InvalidOperationException("The CPU resource has already been collected.");
+        }
+    }
+
+    public bool IsAlive => texture.TryGetTarget(out _);
 
     public uint TextureId { get; private set; }
 
-    public uint Width => Texture.Width;
+    public uint Width => Resource.Width;
 
-    public uint Height => Texture.Height;
+    public uint Height => Resource.Height;
 
     public TextureGpuState(Aura3D.Core.Resources.Texture texture)
     {
-        Texture = texture;
+        this.texture = new WeakReference<Aura3D.Core.Resources.Texture>(texture);
     }
 
     public void Destroy(GL gl)
@@ -31,43 +44,45 @@ public class TextureGpuState : IResourceGpuState<Aura3D.Core.Resources.Texture>,
 
     public unsafe void Upload(GL gl)
     {
+        var texture = Resource;
+
         TextureId = gl.GenTexture();
 
         gl.BindTexture(TextureTarget.Texture2D, TextureId);
 
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)Texture.GetGlWarpS());
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)texture.GetGlWarpS());
 
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)Texture.GetGlWarpT());
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)texture.GetGlWarpT());
 
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)Texture.GetGlMagFilter());
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)texture.GetGlMagFilter());
 
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)Texture.GetGlMinFilter());
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)texture.GetGlMinFilter());
 
-        if (Texture.IsHdr == true)
+        if (texture.IsHdr == true)
         {
-            if (Texture.HdrData == null)
+            if (texture.HdrData == null)
             {
-                gl.TexImage2D(GLEnum.Texture2D, 0, Texture.GetGLInternalFormat(), Texture.Width, Texture.Height, 0, Texture.GetGlFormat(), GLEnum.Float, null);
+                gl.TexImage2D(GLEnum.Texture2D, 0, texture.GetGLInternalFormat(), texture.Width, texture.Height, 0, texture.GetGlFormat(), GLEnum.Float, null);
             }
             else
             {
-                fixed (void* p = CollectionsMarshal.AsSpan(Texture.HdrData))
+                fixed (void* p = CollectionsMarshal.AsSpan(texture.HdrData))
                 {
-                    gl.TexImage2D(GLEnum.Texture2D, 0, Texture.GetGLInternalFormat(), Texture.Width, Texture.Height, 0, Texture.GetGlFormat(), GLEnum.Float, p);
+                    gl.TexImage2D(GLEnum.Texture2D, 0, texture.GetGLInternalFormat(), texture.Width, texture.Height, 0, texture.GetGlFormat(), GLEnum.Float, p);
                 }
             }
         }
         else
         {
-            if (Texture.LdrData == null)
+            if (texture.LdrData == null)
             {
-                gl.TexImage2D(GLEnum.Texture2D, 0, Texture.GetGLInternalFormat(), Texture.Width, Texture.Height, 0, Texture.GetGlFormat(), GLEnum.UnsignedByte, null);
+                gl.TexImage2D(GLEnum.Texture2D, 0, texture.GetGLInternalFormat(), texture.Width, texture.Height, 0, texture.GetGlFormat(), GLEnum.UnsignedByte, null);
             }
             else
             {
-                fixed (void* p = CollectionsMarshal.AsSpan(Texture.LdrData))
+                fixed (void* p = CollectionsMarshal.AsSpan(texture.LdrData))
                 {
-                    gl.TexImage2D(GLEnum.Texture2D, 0, Texture.GetGLInternalFormat(), Texture.Width, Texture.Height, 0, Texture.GetGlFormat(), GLEnum.UnsignedByte, p);
+                    gl.TexImage2D(GLEnum.Texture2D, 0, texture.GetGLInternalFormat(), texture.Width, texture.Height, 0, texture.GetGlFormat(), GLEnum.UnsignedByte, p);
                 }
             }
         }

@@ -4,6 +4,7 @@ using Aura3D.Core.Resources;
 using Aura3D.Core.Scenes;
 using Silk.NET.OpenGLES;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace Aura3D.Core.Renderers;
 
@@ -120,9 +121,9 @@ public abstract partial class RenderPipeline
 
     private HashSet<IGpuState> GpuStates { get; } = new HashSet<IGpuState>();
 
-    private Dictionary<Material, MaterialGpuState> materialGpuStates = new Dictionary<Material, MaterialGpuState>();
+    private ConditionalWeakTable<Material, MaterialGpuState> materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
 
-    private Dictionary<Resources.Texture, TextureGpuState> textureGpuStates = new Dictionary<Resources.Texture, TextureGpuState>();
+    private ConditionalWeakTable<Resources.Texture, TextureGpuState> textureGpuStates = new ConditionalWeakTable<Resources.Texture, TextureGpuState>();
 
     /// <summary>
     /// 获取或设置方向光源的最大数量限制。
@@ -234,7 +235,7 @@ public abstract partial class RenderPipeline
         if (materialGpuStates.TryGetValue(material, out var gpuState) == false)
         {
             gpuState = new MaterialGpuState(material);
-            materialGpuStates[material] = gpuState;
+            materialGpuStates.Add(material, gpuState);
             GpuStates.Add(gpuState);
         }
 
@@ -246,11 +247,36 @@ public abstract partial class RenderPipeline
         if (textureGpuStates.TryGetValue(texture, out var gpuState) == false)
         {
             gpuState = new TextureGpuState(texture);
-            textureGpuStates[texture] = gpuState;
+            textureGpuStates.Add(texture, gpuState);
             GpuStates.Add(gpuState);
         }
 
         return gpuState;
+    }
+
+    public void CollectUnusedGpuStates()
+    {
+        if (gl == null)
+            return;
+
+        List<IGpuState> unusedGpuStates = [];
+
+        foreach (var gpuState in GpuStates)
+        {
+            if (gpuState is IResourceGpuState resourceGpuState)
+            {
+                if (resourceGpuState.IsAlive == false)
+                {
+                    unusedGpuStates.Add(gpuState);
+                }
+            }
+        }
+
+        foreach (var gpuState in unusedGpuStates)
+        {
+            gpuState.Destroy(gl);
+            GpuStates.Remove(gpuState);
+        }
     }
 
     public TextureGpuState EnsureUploaded(Resources.Texture texture)
@@ -592,8 +618,8 @@ public abstract partial class RenderPipeline
             gpuState.Destroy(gl!);
         }
         GpuStates.Clear();
-        materialGpuStates.Clear();
-        textureGpuStates.Clear();
+        materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
+        textureGpuStates = new ConditionalWeakTable<Resources.Texture, TextureGpuState>();
 
         Meshes.Clear();
 
