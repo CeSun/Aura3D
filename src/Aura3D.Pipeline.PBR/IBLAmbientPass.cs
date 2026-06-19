@@ -50,7 +50,7 @@ void main() {
 
     public override void Render(Camera camera)
     {
-        var size = new Size((int)camera.RenderTarget.Width, (int)camera.RenderTarget.Height);
+        var size = new Size((int)camera.Width, (int)camera.Height);
         var rt = GetRenderTarget(gbufferRenderTargetName, size);
 
         var gBufferBaseColor = rt.GetTexture("BaseColor");

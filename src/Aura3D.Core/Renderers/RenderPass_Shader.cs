@@ -318,9 +318,17 @@ public partial class RenderPass
         {
             textureId = renderPipeline.EnsureUploaded(textureResource).TextureId;
         }
-        else if (texture is IGpuTexture gpuTexture)
+        else
         {
-            textureId = gpuTexture.TextureId;
+            if (texture is IGpuResource gpuResource)
+            {
+                renderPipeline.EnsureUploaded(gpuResource);
+            }
+
+            if (texture is IGpuTexture gpuTexture)
+            {
+                textureId = gpuTexture.TextureId;
+            }
         }
 
         var location = CurrentShader.GetUniformLocation(name, gl);

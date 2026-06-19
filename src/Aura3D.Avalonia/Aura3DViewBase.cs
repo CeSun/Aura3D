@@ -57,24 +57,21 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
     {
         base.OnOpenGlInit(gl);
 
-        Camera.ControlRenderTarget = controlRenderTarget;
+        UpdateRenderSurfaceSize();
 
-        UpdateControlRenderTargetsSize();
-
-        Scene = new Scene(CreateRenderPipeline, PipelineSettings);
+        Scene = new Scene(CreateRenderPipeline, PipelineSettings, renderSurface);
 
         Scene.RenderPipeline.Initialize(gl.GetProcAddress);
 
         Stopwatch.Start();
 
-        UpdateControlRenderTargetsSize();
+        UpdateRenderSurfaceSize();
 
         OnSceneInitialized();
-        Camera.ControlRenderTarget = null;
     }
 
-    private ControlRenderTarget controlRenderTarget = new ControlRenderTarget();
-    private void UpdateControlRenderTargetsSize()
+    private RenderSurface renderSurface = new RenderSurface();
+    private void UpdateRenderSurfaceSize()
     {
         if (isSizeChanged == true)
         {
@@ -93,9 +90,9 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
                 height = (uint)(Bounds.Height * scale);
             }
 
-            controlRenderTarget.Width = width;
-            controlRenderTarget.Height = height;
-            controlRenderTarget.Scale = scale;
+            renderSurface.Width = width;
+            renderSurface.Height = height;
+            renderSurface.Scale = scale;
 
             isSizeChanged = false;
         }
@@ -110,14 +107,12 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
 
         Stopwatch.Restart();
 
-        Scene.RenderPipeline.DefaultFramebuffer = (uint)fb;
-
-        UpdateControlRenderTargetsSize();
+        UpdateRenderSurfaceSize();
 
         if (this.fb != fb)
         {
             this.fb = fb;
-            controlRenderTarget.FrameBufferId = (uint)fb;
+            renderSurface.FrameBufferId = (uint)fb;
         }
 
         // Update first: process animation + dirty octree nodes,
@@ -126,9 +121,7 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
 
         Scene.RenderPipeline.Render();
 
-        Camera.ControlRenderTarget = controlRenderTarget;
         OnSceneUpdated(deltaTime);
-        Camera.ControlRenderTarget = null;
 
         if (AutoRequestNextFrameRendering)
         {

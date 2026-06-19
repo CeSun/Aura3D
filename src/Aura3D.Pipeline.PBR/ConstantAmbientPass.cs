@@ -37,7 +37,7 @@ internal class ConstantAmbientPass : RenderPass
         gl.ClearColor(0, 0, 0, 0);
         gl.Clear(ClearBufferMask.ColorBufferBit);
 
-        var size = new Size((int)camera.RenderTarget.Width, (int)camera.RenderTarget.Height);
+        var size = new Size((int)camera.Width, (int)camera.Height);
         var rt = GetRenderTarget(GbufferRenderTargetName, size);
 
         var gBufferBaseColor = rt.GetTexture("BaseColor");

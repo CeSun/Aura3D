@@ -134,7 +134,7 @@ public class PBRDeferredPipeline : RenderPipeline, IRenderPipelineCreateInstance
         if (gl == null)
             return;
         SortMeshes(VisibleMeshesInCamera, camera);
-        gl.Viewport(0, 0, camera.RenderTarget.Width, camera.RenderTarget.Height);
+        gl.Viewport(0, 0, camera.Width, camera.Height);
     }
 
     public override void Setup()

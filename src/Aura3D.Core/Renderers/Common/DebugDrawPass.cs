@@ -48,15 +48,15 @@ public class DebugDrawPass : RenderPass
     /// <inheritdoc />
     public override void BeforeRender(Camera camera)
     {
-        int w = (int)camera.RenderTarget.Width;
-        int h = (int)camera.RenderTarget.Height;
+        int w = (int)camera.Width;
+        int h = (int)camera.Height;
 
         // 绑定调试 RenderTarget（带深度附件）
         BindOutPutRenderTarget(camera);
         var debugRT = GetRenderTarget(DebugOutputName, new Size(w, h));
 
         // 1. 拷贝相机 FBO 颜色到调试 RenderTarget（保留场景画面）
-        gl.BindFramebuffer(GLEnum.ReadFramebuffer, camera.RenderTarget.FrameBufferId);
+        gl.BindFramebuffer(GLEnum.ReadFramebuffer, renderPipeline.GetCameraFramebufferId(camera));
         gl.BindFramebuffer(GLEnum.DrawFramebuffer, debugRT.FrameBufferId);
         gl.BlitFramebuffer(0, 0, w, h, 0, 0, w, h,
             ClearBufferMask.ColorBufferBit, GLEnum.Nearest);
@@ -388,7 +388,7 @@ public class DebugDrawPass : RenderPass
             if (cam.ProjectionType == ProjectionType.Perspective)
             {
                 float fovRad = cam.FieldOfView * MathF.PI / 180f;
-                float aspect = cam.RenderTarget.Width / (float)cam.RenderTarget.Height;
+                float aspect = cam.Width / (float)cam.Height;
                 nearHalfHeight = MathF.Tan(fovRad * 0.5f) * nearDist;
                 farHalfHeight = MathF.Tan(fovRad * 0.5f) * farDist;
                 nearHalfWidth = nearHalfHeight * aspect;
@@ -396,7 +396,7 @@ public class DebugDrawPass : RenderPass
             }
             else
             {
-                float aspect = cam.RenderTarget.Width / (float)cam.RenderTarget.Height;
+                float aspect = cam.Width / (float)cam.Height;
                 nearHalfHeight = cam.OrthographicSize * 0.5f;
                 farHalfHeight = cam.OrthographicSize * 0.5f;
                 nearHalfWidth = nearHalfHeight * aspect;
@@ -494,14 +494,14 @@ public class DebugDrawPass : RenderPass
     /// <inheritdoc />
     public override void AfterRender(Camera camera)
     {
-        int w = (int)camera.RenderTarget.Width;
-        int h = (int)camera.RenderTarget.Height;
+        int w = (int)camera.Width;
+        int h = (int)camera.Height;
 
         var debugRT = GetRenderTarget(DebugOutputName, new Size(w, h));
 
         // 将调试 RenderTarget 颜色拷贝回相机 FBO
         gl.BindFramebuffer(GLEnum.ReadFramebuffer, debugRT.FrameBufferId);
-        gl.BindFramebuffer(GLEnum.DrawFramebuffer, camera.RenderTarget.FrameBufferId);
+        gl.BindFramebuffer(GLEnum.DrawFramebuffer, renderPipeline.GetCameraFramebufferId(camera));
         gl.BlitFramebuffer(0, 0, w, h, 0, 0, w, h,
             ClearBufferMask.ColorBufferBit, GLEnum.Nearest);
 

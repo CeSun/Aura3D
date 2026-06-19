@@ -380,7 +380,7 @@ public class ShadowMapPass : RenderPass
     {
         float fovRadians = camera.FieldOfView.DegreeToRadians();
         float tanHalfFov = MathF.Tan(fovRadians / 2.0f);
-        float aspect = camera.RenderTarget.Width / (float)camera.RenderTarget.Height;
+        float aspect = camera.Width / (float)camera.Height;
 
         float nearHalfH = near * tanHalfFov;
         float nearHalfW = nearHalfH * aspect;

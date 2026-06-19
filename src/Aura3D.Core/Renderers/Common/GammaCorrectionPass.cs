@@ -73,7 +73,7 @@ void main()
         BindOutPutRenderTarget(camera);
 
         var rt = GetRenderTarget(inputRenderTargetName,
-            new System.Drawing.Size((int)camera.RenderTarget.Width, (int)camera.RenderTarget.Height));
+            new System.Drawing.Size((int)camera.Width, (int)camera.Height));
 
         gl.Disable(EnableCap.CullFace);
         gl.Disable(EnableCap.DepthTest);

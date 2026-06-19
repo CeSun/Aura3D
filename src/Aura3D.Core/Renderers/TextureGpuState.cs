@@ -46,6 +46,12 @@ public class TextureGpuState : IResourceGpuState<Aura3D.Core.Resources.Texture>,
     {
         var texture = Resource;
 
+        if (TextureId != 0)
+        {
+            gl.DeleteTexture(TextureId);
+            TextureId = 0;
+        }
+
         TextureId = gl.GenTexture();
 
         gl.BindTexture(TextureTarget.Texture2D, TextureId);
@@ -58,9 +64,26 @@ public class TextureGpuState : IResourceGpuState<Aura3D.Core.Resources.Texture>,
 
         gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)texture.GetGlMinFilter());
 
+        if (texture is Aura3D.Core.Resources.WritableTexture writableTexture)
+        {
+            gl.TexImage2D(
+                GLEnum.Texture2D,
+                0,
+                writableTexture.Format.ToGlInternalFormat(),
+                writableTexture.Width,
+                writableTexture.Height,
+                0,
+                (GLEnum)writableTexture.Format.ToGlPixelFormat(),
+                (GLEnum)writableTexture.Format.ToGlPixelType(),
+                null);
+
+            gl.BindTexture(TextureTarget.Texture2D, 0);
+            return;
+        }
+
         if (texture.IsHdr == true)
         {
-            if (texture.HdrData == null)
+            if (texture.HdrData == null || texture.HdrData.Count == 0)
             {
                 gl.TexImage2D(GLEnum.Texture2D, 0, texture.GetGLInternalFormat(), texture.Width, texture.Height, 0, texture.GetGlFormat(), GLEnum.Float, null);
             }
@@ -74,7 +97,7 @@ public class TextureGpuState : IResourceGpuState<Aura3D.Core.Resources.Texture>,
         }
         else
         {
-            if (texture.LdrData == null)
+            if (texture.LdrData == null || texture.LdrData.Count == 0)
             {
                 gl.TexImage2D(GLEnum.Texture2D, 0, texture.GetGLInternalFormat(), texture.Width, texture.Height, 0, texture.GetGlFormat(), GLEnum.UnsignedByte, null);
             }

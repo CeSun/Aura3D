@@ -9,18 +9,17 @@ using Silk.NET.Windowing;
 using Aura3D.Pipeline.PBR;
 
 var window = Window.Create(WindowOptions.Default);
-ControlRenderTarget controlRenderTarget = new ControlRenderTarget();
-Camera.ControlRenderTarget = controlRenderTarget;
-Scene scene = new Scene(scene => new BlinnPhongPipeline(scene), new PipelineSettings());
+RenderSurface renderSurface = new RenderSurface();
+Scene scene = new Scene(scene => new BlinnPhongPipeline(scene), new PipelineSettings(), renderSurface);
 
 
 TestView? testView = null;
 
 window.Load += () =>
 {
-    controlRenderTarget.Width = (uint)(window.Size.X);
-    controlRenderTarget.Height = (uint)(window.Size.Y);
-    controlRenderTarget.FrameBufferId = 0;
+    renderSurface.Width = (uint)(window.Size.X);
+    renderSurface.Height = (uint)(window.Size.Y);
+    renderSurface.FrameBufferId = 0;
 
     scene.RenderPipeline.Initialize(str =>
     {
@@ -43,9 +42,9 @@ window.Render += (delta) =>
     if (window.WindowState == WindowState.Minimized)
         return;
 
-    controlRenderTarget.Width = (uint)(window.Size.X);
-    controlRenderTarget.Height = (uint)(window.Size.Y);
-    scene.RenderPipeline.DefaultFramebuffer = (uint)0;
+    renderSurface.Width = (uint)(window.Size.X);
+    renderSurface.Height = (uint)(window.Size.Y);
+    renderSurface.FrameBufferId = 0;
 
     scene.RenderPipeline.Render();
 

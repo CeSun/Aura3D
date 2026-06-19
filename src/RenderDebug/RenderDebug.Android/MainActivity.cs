@@ -15,22 +15,20 @@ public class MainActivity : SilkActivity
     Scene scene = null;
     protected override void OnRun()
     {
-
-        ControlRenderTarget controlRenderTarget = new ControlRenderTarget();
-        Camera.ControlRenderTarget = controlRenderTarget;
-        Scene scene = new Scene(scene => new PBRDeferredPipeline(scene));
+        RenderSurface renderSurface = new RenderSurface();
+        Scene scene = new Scene(scene => new PBRDeferredPipeline(scene), defaultOutputSurface: renderSurface);
 
         TestView? testView = null;
 
         var view = Silk.NET.Windowing.Window.GetView(ViewOptions.Default with { API = new GraphicsAPI(ContextAPI.OpenGLES, new APIVersion(3, 0))});
 
-        scene = new Scene(scene => new Aura3D.Core.Renderers.BlinnPhongPipeline(scene), new Aura3D.Core.Renderers.PipelineSettings());
+        scene = new Scene(scene => new Aura3D.Core.Renderers.BlinnPhongPipeline(scene), new Aura3D.Core.Renderers.PipelineSettings(), renderSurface);
 
         view.Load += () =>
         {
-            controlRenderTarget.Width = (uint)(view.Size.X);
-            controlRenderTarget.Height = (uint)(view.Size.Y);
-            controlRenderTarget.FrameBufferId = 0;
+            renderSurface.Width = (uint)(view.Size.X);
+            renderSurface.Height = (uint)(view.Size.Y);
+            renderSurface.FrameBufferId = 0;
 
             scene.RenderPipeline.Initialize(str =>
             {
@@ -49,10 +47,9 @@ public class MainActivity : SilkActivity
 
         view.Render += (delta) =>
         {
-
-            controlRenderTarget.Width = (uint)(view.Size.X);
-            controlRenderTarget.Height = (uint)(view.Size.Y);
-            scene.RenderPipeline.DefaultFramebuffer = (uint)0;
+            renderSurface.Width = (uint)(view.Size.X);
+            renderSurface.Height = (uint)(view.Size.Y);
+            renderSurface.FrameBufferId = 0;
 
             scene.RenderPipeline.Render();
 

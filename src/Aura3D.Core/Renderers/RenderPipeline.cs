@@ -94,11 +94,6 @@ public abstract partial class RenderPipeline
     public List<DirectionalLight> DirectionalLights { get; } = new List<DirectionalLight>();
 
     /// <summary>
-    /// 获取或设置默认的帧缓冲对象标识符。
-    /// </summary>
-    public uint DefaultFramebuffer { get; set; }
-
-    /// <summary>
     /// 获取或设置 OpenGL ES 上下文对象。
     /// </summary>
     public GL? gl { get; protected set; }
@@ -124,6 +119,8 @@ public abstract partial class RenderPipeline
     private ConditionalWeakTable<Material, MaterialGpuState> materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
 
     private ConditionalWeakTable<Resources.Texture, TextureGpuState> textureGpuStates = new ConditionalWeakTable<Resources.Texture, TextureGpuState>();
+
+    private readonly Dictionary<Camera, CameraFramebufferState> cameraFramebufferStates = [];
 
     /// <summary>
     /// 获取或设置方向光源的最大数量限制。
@@ -339,6 +336,7 @@ public abstract partial class RenderPipeline
                 break;
             case Camera camera:
                 Cameras.Remove(camera);
+                DestroyCameraFramebufferState(camera);
                 break;
             case PointLight pointLight:
                 PointLights.Remove(pointLight);
@@ -407,7 +405,8 @@ public abstract partial class RenderPipeline
                 renderPass.Render(camera);
                 renderPass.AfterRender(camera);
             }
-            AfterRender();
+            AfterCameraRender(camera);
+            PresentCameraOutput(camera);
         }
         AfterRender();
     }
@@ -531,6 +530,165 @@ public abstract partial class RenderPipeline
     {
     }
 
+    public unsafe uint GetCameraFramebufferId(Camera camera)
+    {
+        if (gl == null)
+            return 0;
+
+        if (camera.OutputTexture == null)
+        {
+            return Scene.DefaultOutputSurface?.FrameBufferId ?? 0;
+        }
+
+        var outputTexture = EnsureCameraOutputTexture(camera);
+        var outputTextureGpuState = EnsureUploaded(outputTexture);
+        var framebufferState = GetOrCreateCameraFramebufferState(camera);
+        EnsureCameraFramebufferSize(framebufferState, camera.Width, camera.Height);
+
+        gl.BindFramebuffer(GLEnum.Framebuffer, framebufferState.FramebufferId);
+        gl.FramebufferTexture2D(
+            GLEnum.Framebuffer,
+            GLEnum.ColorAttachment0,
+            GLEnum.Texture2D,
+            outputTextureGpuState.TextureId,
+            0);
+        gl.FramebufferTexture2D(
+            GLEnum.Framebuffer,
+            Settings.DepthFormat.ToGlAttachment(),
+            GLEnum.Texture2D,
+            framebufferState.DepthTextureId,
+            0);
+        Span<GLEnum> colorAttachments = stackalloc GLEnum[] { GLEnum.ColorAttachment0 };
+        gl.DrawBuffers(colorAttachments);
+
+        var status = gl.CheckFramebufferStatus(GLEnum.Framebuffer);
+        if (status != GLEnum.FramebufferComplete)
+        {
+            throw new InvalidOperationException($"Camera framebuffer creation failed with status: {status}");
+        }
+
+        return framebufferState.FramebufferId;
+    }
+
+    private CameraFramebufferState GetOrCreateCameraFramebufferState(Camera camera)
+    {
+        if (!cameraFramebufferStates.TryGetValue(camera, out var framebufferState))
+        {
+            framebufferState = new CameraFramebufferState();
+            cameraFramebufferStates.Add(camera, framebufferState);
+        }
+
+        if (framebufferState.FramebufferId == 0)
+        {
+            framebufferState.FramebufferId = gl!.GenFramebuffer();
+        }
+
+        if (framebufferState.DepthTextureId == 0)
+        {
+            framebufferState.DepthTextureId = gl!.GenTexture();
+            gl.BindTexture(GLEnum.Texture2D, framebufferState.DepthTextureId);
+            gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Nearest);
+            gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Nearest);
+            gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+            gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+            gl.BindTexture(GLEnum.Texture2D, 0);
+        }
+
+        return framebufferState;
+    }
+
+    private unsafe void EnsureCameraFramebufferSize(CameraFramebufferState framebufferState, uint width, uint height)
+    {
+        if (framebufferState.Width == width && framebufferState.Height == height)
+            return;
+
+        gl!.BindTexture(GLEnum.Texture2D, framebufferState.DepthTextureId);
+        gl.TexImage2D(
+            GLEnum.Texture2D,
+            0,
+            (int)Settings.DepthFormat.ToGlInternalFormat(),
+            width,
+            height,
+            0,
+            Settings.DepthFormat.ToGlPixelFormat(),
+            Settings.DepthFormat.ToGlPixelType(),
+            null);
+        gl.BindTexture(GLEnum.Texture2D, 0);
+
+        framebufferState.Width = width;
+        framebufferState.Height = height;
+    }
+
+    private WritableTexture EnsureCameraOutputTexture(Camera camera)
+    {
+        if (camera.OutputTexture == null)
+        {
+            throw new InvalidOperationException("Camera output texture is not set.");
+        }
+
+        if (camera.OutputTexture.Width == 0 || camera.OutputTexture.Height == 0)
+        {
+            var outputSurface = Scene.DefaultOutputSurface
+                ?? throw new InvalidOperationException("Scene default output surface is not set.");
+
+            camera.OutputTexture.SetSize(outputSurface.Width, outputSurface.Height);
+        }
+
+        return camera.OutputTexture;
+    }
+
+    private void DestroyCameraFramebufferState(Camera camera)
+    {
+        if (gl == null)
+            return;
+
+        if (!cameraFramebufferStates.Remove(camera, out var framebufferState))
+            return;
+
+        framebufferState.Destroy(gl);
+    }
+
+    private void DestroyAllCameraFramebufferStates()
+    {
+        if (gl == null)
+            return;
+
+        foreach (var framebufferState in cameraFramebufferStates.Values)
+        {
+            framebufferState.Destroy(gl);
+        }
+
+        cameraFramebufferStates.Clear();
+    }
+
+    private void PresentCameraOutput(Camera camera)
+    {
+        if (gl == null)
+            return;
+
+        if (camera.OutputTexture == null)
+            return;
+
+        var outputSurface = Scene.DefaultOutputSurface;
+
+        if (outputSurface == null)
+            return;
+
+        uint width = camera.Width;
+        uint height = camera.Height;
+
+        if (width == 0 || height == 0)
+            return;
+
+        gl.BindFramebuffer(GLEnum.ReadFramebuffer, GetCameraFramebufferId(camera));
+        gl.BindFramebuffer(GLEnum.DrawFramebuffer, outputSurface.FrameBufferId);
+        gl.BlitFramebuffer(
+            0, 0, (int)width, (int)height,
+            0, 0, (int)outputSurface.Width, (int)outputSurface.Height,
+            ClearBufferMask.ColorBufferBit,
+            GLEnum.Nearest);
+    }
+
     /// <summary>
     /// 根据网格与相机的距离对网格列表进行排序，用于透明物体的正确渲染。
     /// </summary>
@@ -628,6 +786,36 @@ public abstract partial class RenderPipeline
         PointLights.Clear();
 
         SpotLights.Clear();
+
+        DestroyAllCameraFramebufferStates();
+    }
+    private sealed class CameraFramebufferState
+    {
+        public uint FramebufferId;
+
+        public uint DepthTextureId;
+
+        public uint Width;
+
+        public uint Height;
+
+        public void Destroy(GL gl)
+        {
+            if (DepthTextureId != 0)
+            {
+                gl.DeleteTexture(DepthTextureId);
+                DepthTextureId = 0;
+            }
+
+            if (FramebufferId != 0)
+            {
+                gl.DeleteFramebuffer(FramebufferId);
+                FramebufferId = 0;
+            }
+
+            Width = 0;
+            Height = 0;
+        }
     }
 }
 

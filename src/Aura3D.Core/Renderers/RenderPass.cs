@@ -125,15 +125,15 @@ public partial class RenderPass
         if (outputRenderTargetName != null)
         {
             var rt = GetRenderTarget(outputRenderTargetName,
-                new System.Drawing.Size((int)camera.RenderTarget.Width, (int)camera.RenderTarget.Height));
+                new System.Drawing.Size((int)camera.Width, (int)camera.Height));
             fbo = rt.FrameBufferId;
         }
         else
         {
-            fbo = camera.RenderTarget.FrameBufferId;
+            fbo = renderPipeline.GetCameraFramebufferId(camera);
         }
         gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
-        gl.Viewport(0, 0, camera.RenderTarget.Width, camera.RenderTarget.Height);
+        gl.Viewport(0, 0, camera.Width, camera.Height);
     }
 
     /// <summary>

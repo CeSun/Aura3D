@@ -70,14 +70,23 @@ public class Scene
     public PipelineSettings PipelineSettings { get; }
 
     /// <summary>
+    /// 获取场景默认的输出面。
+    /// 当相机未指定 <see cref="Camera.OutputTexture"/> 时，会直接渲染到该输出面。
+    /// </summary>
+    public RenderSurface? DefaultOutputSurface { get; }
+
+    /// <summary>
     /// 初始化 <see cref="Scene"/> 类的新实例。
     /// </summary>
     /// <param name="createRenderPipeline">用于创建渲染管线的委托函数。</param>
     /// <param name="pipelineSettings">渲染管线配置，为 <c>null</c> 时使用默认值。</param>
+    /// <param name="defaultOutputSurface">场景默认输出面，未指定输出纹理的相机会直接渲染到该输出面。</param>
     public Scene(Func<Scene, RenderPipeline> createRenderPipeline,
-                PipelineSettings? pipelineSettings = null)
+                PipelineSettings? pipelineSettings = null,
+                RenderSurface? defaultOutputSurface = null)
     {
         PipelineSettings = pipelineSettings ?? new PipelineSettings();
+        DefaultOutputSurface = defaultOutputSurface;
         RenderPipeline = createRenderPipeline(this);
 
         MeshOctree = new Octree<Mesh>(new System.Numerics.Vector3(100, 100, 100), 5);
@@ -92,11 +101,6 @@ public class Scene
         AxisGizmo = new AxisGizmo();
         Grid = new Grid();
     }
-
-    /// <summary>
-    /// 获取场景中所有控制渲染目标的集合。
-    /// </summary>
-    public HashSet<ControlRenderTarget> ControlRenderTargets { get; } = new HashSet<ControlRenderTarget>();
 
     /// <summary>
     /// 获取场景中内置的方向轴可视化节点。
@@ -182,14 +186,6 @@ public class Scene
 
         RenderPipeline.RemoveNode(node);
 
-
-        if (node is Camera camera)
-        {
-            if (camera.RenderTarget != null && camera.RenderTarget is ControlRenderTarget controlRenderTarget)
-            {
-                ControlRenderTargets.Remove(controlRenderTarget);
-            }
-        }
 
         if (node is IOctreeObject otreeObject)
         {
@@ -321,8 +317,8 @@ public class Scene
     /// </summary>
     private static Ray? ScreenToRay(float screenX, float screenY, Camera camera)
     {
-        float width = camera.RenderTarget.Width;
-        float height = camera.RenderTarget.Height;
+        float width = camera.Width;
+        float height = camera.Height;
 
         if (width <= 0 || height <= 0)
             return null;

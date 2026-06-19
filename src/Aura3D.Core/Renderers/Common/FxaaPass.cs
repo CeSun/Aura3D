@@ -262,8 +262,8 @@ void main()
 
     public override void Render(Camera camera)
     {
-        var size = new System.Drawing.Size((int)camera.RenderTarget.Width, (int)camera.RenderTarget.Height);
-        gl.BindFramebuffer(GLEnum.Framebuffer, camera.RenderTarget.FrameBufferId);
+        var size = new System.Drawing.Size((int)camera.Width, (int)camera.Height);
+        gl.BindFramebuffer(GLEnum.Framebuffer, renderPipeline.GetCameraFramebufferId(camera));
 
         var rt = GetRenderTarget(inputRenderTargetName, size);
 

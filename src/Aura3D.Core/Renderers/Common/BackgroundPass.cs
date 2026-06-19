@@ -60,7 +60,7 @@ public class BackgroundPass: RenderPass
                 UseShader("SKYBOX", "ORTHOGRAPHIC");
                 UniformMatrix4("viewRot", camera.View);
                 UniformFloat("farPlane", camera.FarPlane);
-                float aspectRatio = camera.RenderTarget.Width / (float)camera.RenderTarget.Height;
+                float aspectRatio = camera.Width / (float)camera.Height;
                 UniformVector2("orthoSize", new Vector2(100 * aspectRatio, 100));
                 projection = camera.Projection;
 
@@ -71,7 +71,7 @@ public class BackgroundPass: RenderPass
 
                 var fovRadians = camera.FieldOfView.DegreeToRadians();
 
-                var aspectRatio = camera.RenderTarget.Width / (float)camera.RenderTarget.Height;
+                var aspectRatio = camera.Width / (float)camera.Height;
 
                 projection = Matrix4x4.CreatePerspectiveFieldOfView(fovRadians, aspectRatio, 10, 100);
 

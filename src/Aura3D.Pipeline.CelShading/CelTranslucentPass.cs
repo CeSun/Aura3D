@@ -24,7 +24,7 @@ public class CelTranslucentPass : LightPass
     {
 
         var rt = GetRenderTarget("BaseRenderTarget",
-            new System.Drawing.Size((int)camera.RenderTarget.Width, (int)camera.RenderTarget.Height));
+            new System.Drawing.Size((int)camera.Width, (int)camera.Height));
 
 
         gl.BindFramebuffer(GLEnum.Framebuffer, rt.FrameBufferId);

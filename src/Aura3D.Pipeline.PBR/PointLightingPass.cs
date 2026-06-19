@@ -32,7 +32,7 @@ public class PointLightingPass : RenderPass
 
     public override void Render(Camera camera)
     {
-        var size = new System.Drawing.Size((int)camera.RenderTarget.Width, (int)camera.RenderTarget.Height);
+        var size = new System.Drawing.Size((int)camera.Width, (int)camera.Height);
         var rt = GetRenderTarget(GbufferRenderTargetName, size);
 
         var gBufferBaseColor = rt.GetTexture("BaseColor");

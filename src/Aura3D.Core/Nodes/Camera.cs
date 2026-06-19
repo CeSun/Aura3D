@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Numerics;
-using Aura3D.Core.Renderers;
 using Aura3D.Core.Math;
+using Aura3D.Core.Renderers;
 using Aura3D.Core.Resources;
 
 namespace Aura3D.Core.Nodes;
@@ -11,21 +11,6 @@ namespace Aura3D.Core.Nodes;
 /// </summary>
 public class Camera : Node
 {
-    /// <summary>
-    /// 默认的控件渲染目标。
-    /// </summary>
-    public static ControlRenderTarget? ControlRenderTarget;
-
-    /// <summary>
-    /// 初始化 <see cref="Camera"/> 类的新实例。
-    /// </summary>
-    public Camera()
-    {
-        if (ControlRenderTarget == null)
-            throw new InvalidOperationException("ControlRenderTarget is null. Please set Camera.ControlRenderTarget before creating a Camera instance.");
-        RenderTarget = ControlRenderTarget;
-    }
-
     /// <summary>
     /// 获取或设置近裁剪面距离。
     /// </summary>
@@ -71,7 +56,7 @@ public class Camera : Node
             {
                 var fovRadians = FieldOfView.DegreeToRadians();
 
-                var aspectRatio = RenderTarget.Width / (float)RenderTarget.Height;
+                var aspectRatio = Width / (float)Height;
 
                 var projection =  Matrix4x4.CreatePerspectiveFieldOfView(fovRadians, aspectRatio, NearPlane, FarPlane);
 
@@ -79,7 +64,7 @@ public class Camera : Node
             }
             else // Orthographic
             {
-                float aspectRatio = RenderTarget.Width / (float)RenderTarget.Height;
+                float aspectRatio = Width / (float)Height;
                 return Matrix4x4.CreateOrthographic(
                     OrthographicSize * aspectRatio, // 宽度
                     OrthographicSize, // 高度
@@ -107,8 +92,8 @@ public class Camera : Node
         float ndcX = clip.X / clip.W;
         float ndcY = clip.Y / clip.W;
 
-        float screenX = (ndcX + 1f) * 0.5f * RenderTarget.Width / RenderTarget.Scale;
-        float screenY = (1f - ndcY) * 0.5f * RenderTarget.Height / RenderTarget.Scale;
+        float screenX = (ndcX + 1f) * 0.5f * Width / ScreenScale;
+        float screenY = (1f - ndcY) * 0.5f * Height / ScreenScale;
 
         return new Vector2(screenX, screenY);
     }
@@ -119,18 +104,48 @@ public class Camera : Node
     public ProjectionType ProjectionType { get; set; } = ProjectionType.Perspective; // 投影类型
 
     /// <summary>
-    /// 获取或设置渲染目标。
+    /// 获取当前相机输出纹理的宽度。
     /// </summary>
-    public IRenderTarget RenderTarget
+    public uint Width => OutputTexture != null
+        ? OutputTexture.Width
+        : GetDefaultOutputSurfaceOrThrow().Width;
+
+    /// <summary>
+    /// 获取当前相机输出纹理的高度。
+    /// </summary>
+    public uint Height => OutputTexture != null
+        ? OutputTexture.Height
+        : GetDefaultOutputSurfaceOrThrow().Height;
+
+    /// <summary>
+    /// 获取屏幕空间与像素空间的缩放比。
+    /// </summary>
+    public float ScreenScale => OutputTexture != null ? 1f : GetDefaultOutputSurfaceOrThrow().Scale;
+
+    /// <summary>
+    /// 获取或设置相机最终颜色输出对应的可写纹理。
+    /// 该纹理是相机默认渲染路径的唯一颜色输出。
+    /// </summary>
+    public WritableTexture? OutputTexture
     {
-        get => _renderTarget;
-        set
-        {
-            if (_renderTarget == value) return;
-            _renderTarget = value;
-        }
+        get => _outputTexture;
+        set => _outputTexture = value;
     }
-    private IRenderTarget _renderTarget = new ControlRenderTarget();
+
+    private WritableTexture? _outputTexture;
+
+    private RenderSurface? DefaultOutputSurface => CurrentScene?.DefaultOutputSurface;
+
+    private RenderSurface GetDefaultOutputSurfaceOrThrow()
+    {
+        if (CurrentScene == null)
+        {
+            throw new InvalidOperationException("Camera must be added to a scene before querying Width or Height when OutputTexture is not set.");
+        }
+
+        return CurrentScene.DefaultOutputSurface
+               ?? throw new InvalidOperationException("Scene default output surface is not set.");
+    }
 
     /// <summary>
     /// 是否渲染背景。
@@ -197,7 +212,7 @@ public class Camera : Node
         Vector3 boxSize = aabb.Size;
 
         float fovRadians = camera.FieldOfView.DegreeToRadians();
-        float aspectRatio = camera.RenderTarget.Width / (float)camera.RenderTarget.Height;
+        float aspectRatio = camera.Width / (float)camera.Height;
 
         float maxExtent = MathF.Max(boxSize.X, MathF.Max(boxSize.Y, boxSize.Z)) / 2f;
 

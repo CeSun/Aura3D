@@ -33,7 +33,7 @@ internal class TranslucentConstantAmbientPass : RenderPass<PBRDeferredPipeline>
             throw new InvalidOperationException("Output render target is not set.");
 
         var gbuffer = GetRenderTarget(GbufferRenderTargetName,
-                new System.Drawing.Size((int)camera.RenderTarget.Width, (int)camera.RenderTarget.Height));
+                new System.Drawing.Size((int)camera.Width, (int)camera.Height));
 
         gl.FramebufferTexture2D(GLEnum.Framebuffer, gbuffer.DepthTextureFormat.ToGlAttachment(), GLEnum.Texture2D, gbuffer.DepthStencilTexture.TextureId, 0);
 
@@ -55,7 +55,7 @@ internal class TranslucentConstantAmbientPass : RenderPass<PBRDeferredPipeline>
         if (outputRenderTargetName == null)
             throw new InvalidOperationException("Output render target is not set.");
         var outputRt = GetRenderTarget(outputRenderTargetName,
-                new System.Drawing.Size((int)camera.RenderTarget.Width, (int)camera.RenderTarget.Height));
+                new System.Drawing.Size((int)camera.Width, (int)camera.Height));
 
         gl.BindFramebuffer(GLEnum.Framebuffer, outputRt.FrameBufferId);
         gl.FramebufferTexture2D(GLEnum.Framebuffer, outputRt.DepthTextureFormat.ToGlAttachment(), GLEnum.Texture2D, outputRt.DepthStencilTexture.TextureId, 0);
