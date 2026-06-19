@@ -7,12 +7,15 @@ using System.Threading.Tasks;
 namespace Aura3D.Core.Resources;
 
 public interface ITexture
-{
-    public uint TextureId { get; }
-    
+{    
     public uint Width { get; }
 
     public uint Height { get; }
+}
+
+public interface IGpuTexture : ITexture
+{
+    public uint TextureId { get; }
 }
 
 public interface ICubeTexture

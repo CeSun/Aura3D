@@ -122,6 +122,8 @@ public abstract partial class RenderPipeline
 
     private Dictionary<Material, MaterialGpuState> materialGpuStates = new Dictionary<Material, MaterialGpuState>();
 
+    private Dictionary<Resources.Texture, TextureGpuState> textureGpuStates = new Dictionary<Resources.Texture, TextureGpuState>();
+
     /// <summary>
     /// 获取或设置方向光源的最大数量限制。
     /// </summary>
@@ -234,6 +236,30 @@ public abstract partial class RenderPipeline
             gpuState = new MaterialGpuState(material);
             materialGpuStates[material] = gpuState;
             GpuStates.Add(gpuState);
+        }
+
+        return gpuState;
+    }
+
+    public TextureGpuState GetTextureGpuState(Resources.Texture texture)
+    {
+        if (textureGpuStates.TryGetValue(texture, out var gpuState) == false)
+        {
+            gpuState = new TextureGpuState(texture);
+            textureGpuStates[texture] = gpuState;
+            GpuStates.Add(gpuState);
+        }
+
+        return gpuState;
+    }
+
+    public TextureGpuState EnsureUploaded(Resources.Texture texture)
+    {
+        var gpuState = GetTextureGpuState(texture);
+
+        if (gpuState.TextureId == 0)
+        {
+            gpuState.Upload(gl!);
         }
 
         return gpuState;
@@ -567,6 +593,7 @@ public abstract partial class RenderPipeline
         }
         GpuStates.Clear();
         materialGpuStates.Clear();
+        textureGpuStates.Clear();
 
         Meshes.Clear();
 

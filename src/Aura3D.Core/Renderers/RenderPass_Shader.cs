@@ -311,14 +311,24 @@ public partial class RenderPass
             return;
         if (CurrentShader == null)
             return;
-        if (texture is IGpuResource gpuRes)
-            renderPipeline.EnsureUploaded(gpuRes);
+
+        uint textureId = 0;
+
+        if (texture is Resources.Texture textureResource)
+        {
+            textureId = renderPipeline.EnsureUploaded(textureResource).TextureId;
+        }
+        else if (texture is IGpuTexture gpuTexture)
+        {
+            textureId = gpuTexture.TextureId;
+        }
+
         var location = CurrentShader.GetUniformLocation(name, gl);
         if (location == -1)
             return;
         var textureUnit = GLEnum.Texture0 + currentTextureUnit;
         gl.ActiveTexture(textureUnit);
-        gl.BindTexture(GLEnum.Texture2D, texture.TextureId);
+        gl.BindTexture(GLEnum.Texture2D, textureId);
         gl.Uniform1(location, currentTextureUnit);
 
         currentTextureUnit++;

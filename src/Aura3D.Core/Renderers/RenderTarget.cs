@@ -38,7 +38,7 @@ public class RenderTarget : IRenderTarget
     protected RenderTexture depthStencilTexture { get;  set; }
 
     /// <inheritedoc />
-    public ITexture DepthStencilTexture => depthStencilTexture;
+    public IGpuTexture DepthStencilTexture => depthStencilTexture;
 
     /// <summary>
     /// 获取或设置一个值，指示是否需要上传 GPU 数据。
@@ -184,7 +184,7 @@ public class RenderTarget : IRenderTarget
     /// </summary>
     /// <param name="index">纹理索引。</param>
     /// <returns>纹理实例，如果索引无效则返回 null。</returns>
-    public ITexture? GetTexture(int index)
+    public IGpuTexture? GetTexture(int index)
     {
         if (index < 0)
             return null;
@@ -199,7 +199,7 @@ public class RenderTarget : IRenderTarget
     /// <param name="name">纹理名称。</param>
     /// <returns>纹理实例。</returns>
     /// <exception cref="KeyNotFoundException">当纹理不存在时抛出。</exception>
-    public ITexture GetTexture(string name)
+    public IGpuTexture GetTexture(string name)
     {
         if (renderTexturesMap.TryGetValue(name, out var texture))
         {
@@ -230,7 +230,7 @@ public class RenderTarget : IRenderTarget
     /// <summary>
     /// 渲染目标内部的纹理实现类。
     /// </summary>
-    protected class RenderTexture : ITexture
+    protected class RenderTexture : IGpuTexture
     {
 
         /// <summary>

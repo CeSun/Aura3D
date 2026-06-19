@@ -3,9 +3,11 @@ using Silk.NET.OpenGLES;
 
 namespace Aura3D.Core.Renderers;
 
-public class MaterialGpuState : IGpuState
+public class MaterialGpuState : IResourceGpuState<Material>
 {
     public Material Material { get; }
+
+    public Material Resource => Material;
 
     public Dictionary<string, Shader> Shaders { get; } = new Dictionary<string, Shader>();
 
