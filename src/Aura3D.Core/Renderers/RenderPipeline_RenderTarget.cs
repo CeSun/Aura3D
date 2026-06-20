@@ -7,13 +7,13 @@ namespace Aura3D.Core.Renderers;
 /// </summary>
 public abstract partial class RenderPipeline
 {
-    Dictionary<string, Dictionary<Size, (RenderTarget, DateTime)>> RenderTargets = new();
+    private readonly Dictionary<string, Dictionary<Size, (RenderTarget, DateTime)>> renderTargets = [];
 
-    Dictionary<string, RenderTargetConf> RenderTargetConfs = new();
+    private readonly Dictionary<string, RenderTargetHandle> renderTargetHandles = [];
 
     private void UpdateRenderTargetsLRU()
     {
-        foreach (var (name, rtMap) in RenderTargets)
+        foreach (var (name, rtMap) in renderTargets)
         {
             var expiredSizes = new List<Size>();
             foreach (var (rtSize, (rt, dateTime)) in rtMap)
@@ -32,19 +32,29 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 注册一个具有指定名称的渲染目标，并返回其配置对象。
+    /// 获取相机最终输出引用。
+    /// </summary>
+    public RenderOutputRef CameraOutput => CameraOutputRef.Instance;
+
+    /// <summary>
+    /// 注册一个具有指定名称的渲染目标，并返回其引用与配置对象。
     /// </summary>
     /// <param name="name">渲染目标的名称。</param>
-    /// <returns>渲染目标配置对象。</returns>
-    public RenderTargetConf RegisterRenderTarget(string name)
+    /// <returns>渲染目标引用与配置对象。</returns>
+    public RenderTargetHandle RegisterRenderTarget(string name)
     {
-        if (RenderTargetConfs.ContainsKey(name) == false)
+        return GetOrCreateRenderTargetHandle(name);
+    }
+
+    internal RenderTargetHandle GetOrCreateRenderTargetHandle(string name)
+    {
+        if (!renderTargetHandles.TryGetValue(name, out var renderTargetHandle))
         {
-            var rtc = new RenderTargetConf();
-            RenderTargetConfs.Add(name, rtc);
-            return rtc;
+            renderTargetHandle = new RenderTargetHandle(this, name);
+            renderTargetHandles.Add(name, renderTargetHandle);
         }
-        return RenderTargetConfs[name];
+
+        return renderTargetHandle;
     }
 
     /// <summary>
@@ -56,12 +66,22 @@ public abstract partial class RenderPipeline
     /// <exception cref="KeyNotFoundException">当渲染目标未注册时抛出。</exception>
     public RenderTarget GetRenderTarget(string name, Size size)
     {
-        if (RenderTargetConfs.TryGetValue(name, out var rtConf))
+        return GetRenderTarget(GetOrCreateRenderTargetHandle(name), size);
+    }
+
+    public RenderTarget GetRenderTarget(RenderTargetHandle renderTargetHandle, Size size)
+    {
+        if (!ReferenceEquals(renderTargetHandle.OwnerPipeline, this))
         {
-            if (RenderTargets.TryGetValue(name, out var rtMap) == false)
+            throw new InvalidOperationException("Render target handle does not belong to the current render pipeline.");
+        }
+
+        if (renderTargetHandles.TryGetValue(renderTargetHandle.Name, out var rtConf))
+        {
+            if (renderTargets.TryGetValue(renderTargetHandle.Name, out var rtMap) == false)
             {
-                rtMap = new Dictionary<Size, (RenderTarget, DateTime)>();
-                RenderTargets.Add(name, rtMap);
+                rtMap = [];
+                renderTargets.Add(renderTargetHandle.Name, rtMap);
             }
 
             if (rtMap.TryGetValue(size, out var rt) == false)
@@ -70,7 +90,7 @@ public abstract partial class RenderPipeline
                     .SetSize((uint)size.Width, (uint)size.Height)
                     .SetDepthTexture(rtConf.DepthTextureFormat), DateTime.Now);
 
-                foreach(var (textureName, textureFormat) in rtConf.Textures)
+                foreach (var (textureName, textureFormat) in rtConf.Textures)
                 {
                     rt.Item1.AddRenderTexture(textureName, textureFormat);
                 }
@@ -85,51 +105,6 @@ public abstract partial class RenderPipeline
             return rt.Item1;
         }
 
-        throw new KeyNotFoundException($"RenderTarget '{name}' not found. Ensure the render target is registered before use.");
-    }
-}
-
-/// <summary>
-/// 渲染目标配置类，用于定义渲染目标所包含的颜色纹理和深度纹理格式。
-/// </summary>
-public class RenderTargetConf
-{
-    /// <summary>
-    /// 获取渲染目标中所有颜色纹理的列表。
-    /// </summary>
-    public List<(string, TextureFormat)> Textures = new ();
-
-    HashSet<string> TextureNames = new HashSet<string>();
-
-    /// <summary>
-    /// 获取或设置深度纹理的格式。
-    /// </summary>
-    public TextureFormat DepthTextureFormat;
-
-    /// <summary>
-    /// 向渲染目标添加一个颜色纹理。
-    /// </summary>
-    /// <param name="name">纹理名称。</param>
-    /// <param name="internalFormat">纹理内部格式。</param>
-    /// <returns>当前的 <see cref="RenderTargetConf"/> 实例。</returns>
-    /// <exception cref="ArgumentException">当同名纹理已存在时抛出。</exception>
-    public RenderTargetConf AddTexture(string name, TextureFormat internalFormat)
-    {
-        if (TextureNames.Contains(name))
-            throw new ArgumentException($"Texture '{name}' already exists in render target configuration.", nameof(name));
-        Textures.Add((name, internalFormat));
-        TextureNames.Add(name);
-        return this;
-    }
-
-    /// <summary>
-    /// 设置渲染目标的深度纹理格式。
-    /// </summary>
-    /// <param name="textureFormat">深度纹理格式。</param>
-    /// <returns>当前的 <see cref="RenderTargetConf"/> 实例。</returns>
-    public RenderTargetConf SetDepthTexture(TextureFormat textureFormat)
-    {
-        DepthTextureFormat = textureFormat;
-        return this;
+        throw new KeyNotFoundException($"RenderTarget '{renderTargetHandle.Name}' not found. Ensure the render target is registered before use.");
     }
 }

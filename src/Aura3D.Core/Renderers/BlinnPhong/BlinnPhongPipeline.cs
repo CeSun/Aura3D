@@ -19,39 +19,37 @@ public class BlinnPhongPipeline : RenderPipeline, IRenderPipelineCreateInstance
     /// <param name="scene">场景对象</param>
     public BlinnPhongPipeline(Scene scene) : base(scene)
     {
+        var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
+            .AddTexture("Color", TextureFormat.Rgba16f)
+            .SetDepthTexture(Settings.DepthFormat);
+
+        var gammaOutput = RegisterRenderTarget("GammaOutput")
+            .AddTexture("Color", TextureFormat.Rgba8)
+            .SetDepthTexture(Settings.DepthFormat);
+
         var shadowMapPass = new ShadowMapPass(this);
         RegisterRenderPass(shadowMapPass, RenderPassGroup.Once);
 
         
-        RegisterRenderPass(new BackgroundPass(this).SetOutPutRenderTarget("BaseRenderTarget"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new BackgroundPass(this).SetOutput(baseRenderTarget), RenderPassGroup.EveryCamera);
 
-        var basePass = (LightPass)new LightPass(this).SetOutPutRenderTarget("BaseRenderTarget");
+        var basePass = (LightPass)new LightPass(this).SetOutput(baseRenderTarget);
         LightLimitChangedEvent += basePass.UpdateLightNumLimit;
         RegisterRenderPass(basePass, RenderPassGroup.EveryCamera);
 
 
-        var translucentPass = (TranslucentPass)new TranslucentPass(this).SetOutPutRenderTarget("BaseRenderTarget");
+        var translucentPass = (TranslucentPass)new TranslucentPass(this).SetOutput(baseRenderTarget);
         RegisterRenderPass(translucentPass, RenderPassGroup.EveryCamera);
         LightLimitChangedEvent += translucentPass.UpdateLightNumLimit;
 
         // Particle pass
-        RegisterRenderPass(new ParticlePass(this).SetOutPutRenderTarget("BaseRenderTarget"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new ParticlePass(this).SetOutput(baseRenderTarget), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new GammaCorrectionPass(this, "BaseRenderTarget", "Color").SetOutPutRenderTarget("GammaOutput"), RenderPassGroup.EveryCamera);
-        RegisterRenderPass(new FxaaPass(this, "GammaOutput", "Color"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new GammaCorrectionPass(this, baseRenderTarget.GetTexture("Color")).SetOutput(gammaOutput), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new FxaaPass(this, gammaOutput.GetTexture("Color")).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
 
         // 调试绘制通道（方向轴、网格等），最后渲染以覆盖在所有内容之上
-        RegisterRenderPass(new DebugDrawPass(this, "BaseRenderTarget"), RenderPassGroup.EveryCamera);
-
-        RegisterRenderTarget("BaseRenderTarget")
-            .AddTexture("Color", TextureFormat.Rgba16f)
-            .SetDepthTexture(Settings.DepthFormat);
-
-        RegisterRenderTarget("GammaOutput")
-            .AddTexture("Color", TextureFormat.Rgba8)
-            .SetDepthTexture(Settings.DepthFormat);
-
-
+        RegisterRenderPass(new DebugDrawPass(this, baseRenderTarget).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
     }
 
     public override void BeforeCameraRender(Camera camera)

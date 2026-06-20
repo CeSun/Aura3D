@@ -9,21 +9,16 @@ namespace Aura3D.Core.Renderers;
 /// </summary>
 public class GammaCorrectionPass : RenderPass
 {
-    protected string inputRenderTargetName;
-
-    protected string inputRenderTargetTextureName;
+    protected RenderTargetTextureHandle inputTexture;
 
     /// <summary>
     /// 初始化伽马校正渲染通道
     /// </summary>
     /// <param name="renderPipeline">渲染管线</param>
-    /// <param name="inputRenderTargetName">输入渲染目标名称</param>
-    /// <param name="inputRenderTargetTextureName">输入渲染目标纹理名称</param>
-    public GammaCorrectionPass(RenderPipeline renderPipeline, string inputRenderTargetName, string inputRenderTargetTextureName) : base(renderPipeline)
+    /// <param name="inputTexture">输入渲染目标纹理引用</param>
+    public GammaCorrectionPass(RenderPipeline renderPipeline, RenderTargetTextureHandle inputTexture) : base(renderPipeline)
     {
-
-        this.inputRenderTargetName = inputRenderTargetName;
-        this.inputRenderTargetTextureName = inputRenderTargetTextureName;
+        this.inputTexture = inputTexture;
         ShaderName = nameof(GammaCorrectionPass);
 
         VertexShader = @"#version 300 es
@@ -71,9 +66,7 @@ void main()
     public override void Render(Camera camera)
     {
         BindOutPutRenderTarget(camera);
-
-        var rt = GetRenderTarget(inputRenderTargetName,
-            new System.Drawing.Size((int)camera.Width, (int)camera.Height));
+        var source = GetTexture(inputTexture, camera);
 
         gl.Disable(EnableCap.CullFace);
         gl.Disable(EnableCap.DepthTest);
@@ -82,7 +75,7 @@ void main()
         UseShader();
         ClearTextureUnit();
         UseShader_Internal();
-        UniformTexture("colorTexture", rt.GetTexture(inputRenderTargetTextureName));
+        UniformTexture("colorTexture", source);
         RenderQuad();
 
 

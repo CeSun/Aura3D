@@ -8,34 +8,34 @@ public class PointCloudPipeline : RenderPipeline, IRenderPipelineCreateInstance
 {
     public PointCloudPipeline(Scene scene) : base(scene)
     {
-        RegisterRenderPass(
-            new BackgroundPass(this).SetOutPutRenderTarget("BaseRenderTarget"),
-            RenderPassGroup.EveryCamera);
-
-        var pointCloudPass = new PointCloudPass(this)
-            .SetOutPutRenderTarget("BaseRenderTarget");
-        RegisterRenderPass(pointCloudPass, RenderPassGroup.EveryCamera);
-
-        RegisterRenderPass(
-            new GammaCorrectionPass(this, "BaseRenderTarget", "Color")
-                .SetOutPutRenderTarget("GammaOutput"),
-            RenderPassGroup.EveryCamera);
-
-        RegisterRenderPass(
-            new FxaaPass(this, "GammaOutput", "Color"),
-            RenderPassGroup.EveryCamera);
-
-        RegisterRenderPass(
-            new DebugDrawPass(this, "BaseRenderTarget"),
-            RenderPassGroup.EveryCamera);
-
-        RegisterRenderTarget("BaseRenderTarget")
+        var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
             .AddTexture("Color", TextureFormat.Rgba16f)
             .SetDepthTexture(Settings.DepthFormat);
 
-        RegisterRenderTarget("GammaOutput")
+        var gammaOutput = RegisterRenderTarget("GammaOutput")
             .AddTexture("Color", TextureFormat.Rgba8)
             .SetDepthTexture(Settings.DepthFormat);
+
+        RegisterRenderPass(
+            new BackgroundPass(this).SetOutput(baseRenderTarget),
+            RenderPassGroup.EveryCamera);
+
+        var pointCloudPass = new PointCloudPass(this)
+            .SetOutput(baseRenderTarget);
+        RegisterRenderPass(pointCloudPass, RenderPassGroup.EveryCamera);
+
+        RegisterRenderPass(
+            new GammaCorrectionPass(this, baseRenderTarget.GetTexture("Color"))
+                .SetOutput(gammaOutput),
+            RenderPassGroup.EveryCamera);
+
+        RegisterRenderPass(
+            new FxaaPass(this, gammaOutput.GetTexture("Color")).SetOutput(CameraOutput),
+            RenderPassGroup.EveryCamera);
+
+        RegisterRenderPass(
+            new DebugDrawPass(this, baseRenderTarget).SetOutput(CameraOutput),
+            RenderPassGroup.EveryCamera);
     }
 
     public override void BeforeCameraRender(Camera camera)

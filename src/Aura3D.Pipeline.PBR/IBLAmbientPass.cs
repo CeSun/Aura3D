@@ -10,8 +10,8 @@ namespace Aura3D.Pipeline.PBR;
 
 internal class IBLAmbientPass : RenderPass<PBRDeferredPipeline>
 {
-    string gbufferRenderTargetName;
-    public IBLAmbientPass(RenderPipeline renderPipeline, string gbufferRenderTarget) : base(renderPipeline)
+    readonly RenderTargetHandle gbufferRenderTarget;
+    public IBLAmbientPass(RenderPipeline renderPipeline, RenderTargetHandle gbufferRenderTarget) : base(renderPipeline)
     {
         VertexShader = @"#version 300 es
 precision highp float;
@@ -29,7 +29,7 @@ void main() {
 }";
 
         FragmentShader = ShaderResource.pbr_ibl_ambient_frag;
-        gbufferRenderTargetName = gbufferRenderTarget;
+        this.gbufferRenderTarget = gbufferRenderTarget;
     }
 
 
@@ -50,8 +50,7 @@ void main() {
 
     public override void Render(Camera camera)
     {
-        var size = new Size((int)camera.Width, (int)camera.Height);
-        var rt = GetRenderTarget(gbufferRenderTargetName, size);
+        var rt = GetRenderTarget(gbufferRenderTarget, camera);
 
         var gBufferBaseColor = rt.GetTexture("BaseColor");
         var gBufferNormalRoughness = rt.GetTexture("NormalRoughness");

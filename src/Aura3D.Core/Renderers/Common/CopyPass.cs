@@ -15,19 +15,15 @@ namespace Aura3D.Core.Renderers.Common;
 /// </summary>
 public class CopyPass : RenderPass
 {
-    string _inputRenderTargetName;
-
-    string _inputRenderTargetTextureName;
+    RenderTargetTextureHandle _inputTexture;
     /// <summary>
     /// 初始化复制渲染通道
     /// </summary>
     /// <param name="renderPipeline">渲染管线</param>
-    /// <param name="inputRenderTargetName">输入渲染目标名称</param>
-    /// <param name="inputRenderTargetTextureName">输入渲染目标纹理名称</param>
-    public CopyPass(RenderPipeline renderPipeline, string inputRenderTargetName, string inputRenderTargetTextureName) : base(renderPipeline)
+    /// <param name="inputTexture">输入渲染目标纹理引用</param>
+    public CopyPass(RenderPipeline renderPipeline, RenderTargetTextureHandle inputTexture) : base(renderPipeline)
     {
-        _inputRenderTargetName = inputRenderTargetName;
-        _inputRenderTargetTextureName = inputRenderTargetTextureName;
+        _inputTexture = inputTexture;
         VertexShader = @"#version 300 es
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec2 a_texCoord;
@@ -72,10 +68,7 @@ void main()
     {
         BindOutPutRenderTarget(camera);
 
-        var inputrt = GetRenderTarget(_inputRenderTargetName, new System.Drawing.Size((int)camera.Width, (int)camera.Height));
-        var source = inputrt.GetTexture(_inputRenderTargetTextureName);
-        if (source == null)
-            throw new InvalidOperationException($"Source texture '{_inputRenderTargetTextureName}' not found in render target '{_inputRenderTargetName}'.");
+        var source = GetTexture(_inputTexture, camera);
         
         UseShader_Internal();
         ClearTextureUnit(); 

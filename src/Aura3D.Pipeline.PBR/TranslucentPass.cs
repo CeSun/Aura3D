@@ -20,10 +20,10 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
     Core.Resources.Texture defaultEmissive => RenderPipeline.DefaultEmissive;
 
     Core.Resources.Texture defaultOcclusion => RenderPipeline.DefaultOcclusion;
-    string GbufferRenderTargetName;
-    public TranslucentPass(RenderPipeline renderPipeline, string gbufferRendertarget) : base(renderPipeline)
+    readonly RenderTargetHandle gbufferRenderTarget;
+    public TranslucentPass(RenderPipeline renderPipeline, RenderTargetHandle gbufferRendertarget) : base(renderPipeline)
     {
-        GbufferRenderTargetName = gbufferRendertarget;
+        gbufferRenderTarget = gbufferRendertarget;
 
         VertexShader = ShaderResource.MeshVert;
 
@@ -34,13 +34,9 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
 
     public override void BeforeRender(Camera camera)
     {
-        BindOutPutRenderTarget(camera);
+        BindOutput(camera);
 
-        if (outputRenderTargetName == null)
-            throw new InvalidOperationException("Output render target is not set.");
-
-        var gbuffer = GetRenderTarget(GbufferRenderTargetName,
-                new System.Drawing.Size((int)camera.Width, (int)camera.Height));
+        var gbuffer = GetRenderTarget(gbufferRenderTarget, camera);
 
         gl.FramebufferTexture2D(GLEnum.Framebuffer, gbuffer.DepthTextureFormat.ToGlAttachment(), GLEnum.Texture2D, gbuffer.DepthStencilTexture.TextureId, 0);
 
@@ -59,10 +55,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
     }
     public override void AfterRender(Camera camera)
     {
-        if (outputRenderTargetName == null)
-            throw new InvalidOperationException("Output render target is not set.");
-        var outputRt = GetRenderTarget(outputRenderTargetName,
-                new System.Drawing.Size((int)camera.Width, (int)camera.Height));
+        var outputRt = GetOutputRenderTargetOrThrow(camera);
 
         gl.BindFramebuffer(GLEnum.Framebuffer, outputRt.FrameBufferId);
         gl.FramebufferTexture2D(GLEnum.Framebuffer, outputRt.DepthTextureFormat.ToGlAttachment(), GLEnum.Texture2D, outputRt.DepthStencilTexture.TextureId, 0);

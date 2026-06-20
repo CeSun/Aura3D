@@ -101,16 +101,18 @@ public partial class RenderPass
 
     }
 
-    protected string? outputRenderTargetName;
+    protected RenderOutputRef? outputRenderTarget;
+
+    protected RenderOutputRef CameraOutput => renderPipeline.CameraOutput;
 
     /// <summary>
     /// 设置当前渲染通道的输出渲染目标。
     /// </summary>
-    /// <param name="renderTargetName">渲染目标的名称，若为 <c>null</c> 则输出到默认目标。</param>
+    /// <param name="output">输出引用，若为 <c>null</c> 则输出到相机默认目标。</param>
     /// <returns>当前的 <see cref="RenderPass"/> 实例。</returns>
-    public RenderPass SetOutPutRenderTarget(string? renderTargetName)
+    public RenderPass SetOutput(RenderOutputRef? output)
     {
-        this.outputRenderTargetName = renderTargetName;
+        outputRenderTarget = output;
         return this;
     }
 
@@ -118,22 +120,21 @@ public partial class RenderPass
     /// 绑定当前渲染通道的输出渲染目标到指定相机的帧缓冲。
     /// </summary>
     /// <param name="camera">当前渲染的相机。</param>
+    public void BindOutput(Camera camera)
+    {
+        var resolvedOutput = (outputRenderTarget ?? CameraOutput).Resolve(renderPipeline, camera);
+        gl.BindFramebuffer(FramebufferTarget.Framebuffer, resolvedOutput.FramebufferId);
+        gl.Viewport(0, 0, resolvedOutput.Width, resolvedOutput.Height);
+    }
+
+    protected uint GetOutputFramebufferId(Camera camera)
+    {
+        return (outputRenderTarget ?? CameraOutput).Resolve(renderPipeline, camera).FramebufferId;
+    }
+
     public void BindOutPutRenderTarget(Camera camera)
     {
-        uint fbo = 0;
-
-        if (outputRenderTargetName != null)
-        {
-            var rt = GetRenderTarget(outputRenderTargetName,
-                new System.Drawing.Size((int)camera.Width, (int)camera.Height));
-            fbo = rt.FrameBufferId;
-        }
-        else
-        {
-            fbo = renderPipeline.GetCameraFramebufferId(camera);
-        }
-        gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
-        gl.Viewport(0, 0, camera.Width, camera.Height);
+        BindOutput(camera);
     }
 
     /// <summary>
@@ -143,6 +144,23 @@ public partial class RenderPass
     /// <param name="size">渲染目标尺寸。</param>
     /// <returns>渲染目标实例。</returns>
     public RenderTarget GetRenderTarget(string name, Size size) => renderPipeline.GetRenderTarget(name, size);
+
+    protected RenderTarget GetRenderTarget(RenderTargetHandle renderTargetHandle, Size size)
+        => renderPipeline.GetRenderTarget(renderTargetHandle, size);
+
+    protected RenderTarget GetRenderTarget(RenderTargetHandle renderTargetHandle, Camera camera)
+        => renderPipeline.GetRenderTarget(renderTargetHandle, new Size((int)camera.Width, (int)camera.Height));
+
+    protected IGpuTexture GetTexture(RenderTargetTextureHandle renderTargetTextureHandle, Camera camera)
+        => renderTargetTextureHandle.ResolveTexture(renderPipeline, camera);
+
+    protected RenderTarget GetOutputRenderTargetOrThrow(Camera camera)
+    {
+        if (outputRenderTarget == null)
+            throw new InvalidOperationException("Output render target is not set.");
+
+        return outputRenderTarget.ResolveRenderTarget(renderPipeline, camera);
+    }
 
     /// <summary>
     /// 渲染单个网格，并设置模型矩阵与材质相关的着色器参数。

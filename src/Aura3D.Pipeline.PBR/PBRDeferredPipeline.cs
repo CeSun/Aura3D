@@ -54,6 +54,24 @@ public class PBRDeferredPipeline : RenderPipeline, IRenderPipelineCreateInstance
             BrdfLutTexture = Core.TextureLoader.LoadHdrTexture(ms);
         }
 
+        var gBuffer = RegisterRenderTarget("GBuffer")
+            .AddTexture("BaseColor", TextureFormat.Rgba8)
+            .AddTexture("NormalRoughness", TextureFormat.Rgba8)
+            .AddTexture("MetallicEmissive", TextureFormat.Rgba8)
+            .SetDepthTexture(Settings.DepthFormat);
+
+        var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
+            .AddTexture("Color", TextureFormat.Rgba32f)
+            .SetDepthTexture(Settings.DepthFormat);
+
+        var backgroundRenderTarget = RegisterRenderTarget("BackgroundRenderTarget")
+            .AddTexture("Color", TextureFormat.Rgba32f)
+            .SetDepthTexture(Settings.DepthFormat);
+
+        var gammaOutput = RegisterRenderTarget("GammaOutput")
+            .AddTexture("Color", TextureFormat.Rgba32f)
+            .SetDepthTexture(Settings.DepthFormat);
+
         var shadowPass = new ShadowMapPass(this);
         RegisterRenderPass(shadowPass, RenderPassGroup.Once);
 
@@ -61,55 +79,35 @@ public class PBRDeferredPipeline : RenderPipeline, IRenderPipelineCreateInstance
 
         RegisterRenderPass(new PrefilteredEnvironmentMapPass(this), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new BasePass(this).SetOutPutRenderTarget("GBuffer"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new BasePass(this).SetOutput(gBuffer), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new IBLAmbientPass(this, "GBuffer").SetOutPutRenderTarget("BaseRenderTarget"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new IBLAmbientPass(this, gBuffer).SetOutput(baseRenderTarget), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new DirectionalLightingPass(this, "GBuffer").SetOutPutRenderTarget("BaseRenderTarget"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new DirectionalLightingPass(this, gBuffer).SetOutput(baseRenderTarget), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new SpotLightingPass(this, "GBuffer").SetOutPutRenderTarget("BaseRenderTarget"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new SpotLightingPass(this, gBuffer).SetOutput(baseRenderTarget), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new PointLightingPass(this, "GBuffer").SetOutPutRenderTarget("BaseRenderTarget"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new PointLightingPass(this, gBuffer).SetOutput(baseRenderTarget), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new BackgroundPass(this).SetOutPutRenderTarget("BackgroundRenderTarget"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new BackgroundPass(this).SetOutput(backgroundRenderTarget), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new CopyPass(this, "BaseRenderTarget", "Color").SetOutPutRenderTarget("BackgroundRenderTarget"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new CopyPass(this, baseRenderTarget.GetTexture("Color")).SetOutput(backgroundRenderTarget), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new TranslucentIBLAmbientPass(this, "GBuffer").SetOutPutRenderTarget("BackgroundRenderTarget"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new TranslucentIBLAmbientPass(this, gBuffer).SetOutput(backgroundRenderTarget), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new TranslucentPass(this, "GBuffer").SetOutPutRenderTarget("BackgroundRenderTarget"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new TranslucentPass(this, gBuffer).SetOutput(backgroundRenderTarget), RenderPassGroup.EveryCamera);
 
         // Particle pass
-        RegisterRenderPass(new ParticlePass(this).SetOutPutRenderTarget("BackgroundRenderTarget"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new ParticlePass(this).SetOutput(backgroundRenderTarget), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new ToneMappingPass(this, "BackgroundRenderTarget", "Color").SetOutPutRenderTarget("GammaOutput"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new ToneMappingPass(this, backgroundRenderTarget.GetTexture("Color")).SetOutput(gammaOutput), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new GammaCorrectionPass(this, "GammaOutput", "Color").SetOutPutRenderTarget("BackgroundRenderTarget"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new GammaCorrectionPass(this, gammaOutput.GetTexture("Color")).SetOutput(backgroundRenderTarget), RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(new FxaaPass(this, "BackgroundRenderTarget", "Color"), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new FxaaPass(this, backgroundRenderTarget.GetTexture("Color")).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
 
         // 调试绘制通道（方向轴、网格等），最后渲染以覆盖在所有内容之上
-        RegisterRenderPass(new DebugDrawPass(this, "BackgroundRenderTarget"), RenderPassGroup.EveryCamera);
-
-        RegisterRenderTarget("GBuffer")
-            .AddTexture("BaseColor", TextureFormat.Rgba8)
-            .AddTexture("NormalRoughness", TextureFormat.Rgba8)
-            .AddTexture("MetallicEmissive", TextureFormat.Rgba8)
-            .SetDepthTexture(Settings.DepthFormat);
-
-
-        RegisterRenderTarget("BaseRenderTarget")
-            .AddTexture("Color", TextureFormat.Rgba32f)
-            .SetDepthTexture(Settings.DepthFormat);
-
-        RegisterRenderTarget("BackgroundRenderTarget")
-            .AddTexture("Color", TextureFormat.Rgba32f)
-            .SetDepthTexture(Settings.DepthFormat);
-
-
-        RegisterRenderTarget("GammaOutput")
-            .AddTexture("Color", TextureFormat.Rgba32f)
-            .SetDepthTexture(Settings.DepthFormat);
+        RegisterRenderPass(new DebugDrawPass(this, backgroundRenderTarget).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
 
         DefaultBaseColor = Texture.CreateFromColor(Color.White);
 

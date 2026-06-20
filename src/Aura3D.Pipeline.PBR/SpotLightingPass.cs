@@ -11,10 +11,10 @@ namespace Aura3D.Pipeline.PBR;
 
 internal class SpotLightingPass : RenderPass
 {
-    string GbufferRenderTargetName;
-    public SpotLightingPass(RenderPipeline renderPipeline, string gbufferRendertarget) : base(renderPipeline)
+    readonly RenderTargetHandle gbufferRenderTarget;
+    public SpotLightingPass(RenderPipeline renderPipeline, RenderTargetHandle gbufferRendertarget) : base(renderPipeline)
     {
-        GbufferRenderTargetName = gbufferRendertarget;
+        gbufferRenderTarget = gbufferRendertarget;
 
         this.VertexShader = ShaderResource.pbr_directionallight_lighting_pass_vert;
 
@@ -29,8 +29,7 @@ internal class SpotLightingPass : RenderPass
 
     public override void Render(Camera camera)
     {
-        var size = new System.Drawing.Size((int)camera.Width, (int)camera.Height);
-        var rt = GetRenderTarget(GbufferRenderTargetName, size);
+        var rt = GetRenderTarget(gbufferRenderTarget, camera);
 
         var gBufferBaseColor = rt.GetTexture("BaseColor");
         var gBufferNormalRoughness = rt.GetTexture("NormalRoughness");

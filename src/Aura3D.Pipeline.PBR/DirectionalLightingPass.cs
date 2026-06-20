@@ -9,10 +9,10 @@ namespace Aura3D.Pipeline.PBR;
 
 internal class DirectionalLightingPass : RenderPass
 {
-    string gbufferRenderTargetName;
-    public DirectionalLightingPass(RenderPipeline renderPipeline, string gbufferRenderTarget) : base(renderPipeline)
+    readonly RenderTargetHandle gbufferRenderTarget;
+    public DirectionalLightingPass(RenderPipeline renderPipeline, RenderTargetHandle gbufferRenderTarget) : base(renderPipeline)
     {
-        gbufferRenderTargetName = gbufferRenderTarget;
+        this.gbufferRenderTarget = gbufferRenderTarget;
 
         this.VertexShader = ShaderResource.pbr_directionallight_lighting_pass_vert;
 
@@ -28,8 +28,7 @@ internal class DirectionalLightingPass : RenderPass
 
     public override void Render(Camera camera)
     {
-        var size = new System.Drawing.Size((int)camera.Width, (int)camera.Height);
-        var rt = GetRenderTarget(gbufferRenderTargetName, size);
+        var rt = GetRenderTarget(gbufferRenderTarget, camera);
 
         var gBufferBaseColor = rt.GetTexture("BaseColor");
         var gBufferNormalRoughness = rt.GetTexture("NormalRoughness");

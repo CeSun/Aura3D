@@ -17,28 +17,27 @@ namespace Aura3D.Core.Renderers;
 public class DebugDrawPass : RenderPass
 {
     private const string DebugOutputName = "DebugOutput";
-    private readonly string? _depthRenderTargetName;
+    private readonly RenderTargetHandle _debugOutput;
+    private readonly RenderTargetHandle? _depthRenderTarget;
 
     /// <summary>
     /// 初始化 <see cref="DebugDrawPass"/> 类的新实例。
     /// </summary>
     /// <param name="renderPipeline">所属的渲染管线。</param>
-    /// <param name="depthRenderTargetName">
-    /// 深度缓冲源渲染目标名称（如 "BaseRenderTarget"）。
+    /// <param name="depthRenderTarget">
+    /// 深度缓冲源渲染目标引用（如 BaseRenderTarget）。
     /// 传入非 null 值时，会将场景深度缓冲拷贝到调试 RenderTarget，
     /// 使网格等调试元素能被场景几何体正确遮挡。
     /// 传入 null 时仅清除深度缓冲。
     /// </param>
-    public DebugDrawPass(RenderPipeline renderPipeline, string? depthRenderTargetName = null)
+    public DebugDrawPass(RenderPipeline renderPipeline, RenderTargetHandle? depthRenderTarget = null)
         : base(renderPipeline)
     {
-        _depthRenderTargetName = depthRenderTargetName;
+        _depthRenderTarget = depthRenderTarget;
 
-        renderPipeline.RegisterRenderTarget(DebugOutputName)
+        _debugOutput = renderPipeline.RegisterRenderTarget(DebugOutputName)
             .AddTexture("Color", TextureFormat.Rgba8)
             .SetDepthTexture(renderPipeline.Settings.DepthFormat);
-
-        SetOutPutRenderTarget(DebugOutputName);
 
         this.VertexShader = ShaderResource.DebugVert;
         this.FragmentShader = ShaderResource.DebugFrag;
@@ -51,21 +50,19 @@ public class DebugDrawPass : RenderPass
         int w = (int)camera.Width;
         int h = (int)camera.Height;
 
-        // 绑定调试 RenderTarget（带深度附件）
-        BindOutPutRenderTarget(camera);
-        var debugRT = GetRenderTarget(DebugOutputName, new Size(w, h));
+        var debugRT = GetRenderTarget(_debugOutput, new Size(w, h));
+        gl.BindFramebuffer(GLEnum.Framebuffer, debugRT.FrameBufferId);
 
-        // 1. 拷贝相机 FBO 颜色到调试 RenderTarget（保留场景画面）
-        gl.BindFramebuffer(GLEnum.ReadFramebuffer, renderPipeline.GetCameraFramebufferId(camera));
+        // 1. 拷贝当前输出颜色到调试 RenderTarget（保留场景画面）
+        gl.BindFramebuffer(GLEnum.ReadFramebuffer, GetOutputFramebufferId(camera));
         gl.BindFramebuffer(GLEnum.DrawFramebuffer, debugRT.FrameBufferId);
         gl.BlitFramebuffer(0, 0, w, h, 0, 0, w, h,
             ClearBufferMask.ColorBufferBit, GLEnum.Nearest);
 
         // 2. 拷贝场景深度到调试 RenderTarget
-        if (_depthRenderTargetName != null)
+        if (_depthRenderTarget != null)
         {
-            var size = new Size(w, h);
-            var sourceRT = GetRenderTarget(_depthRenderTargetName, size);
+            var sourceRT = GetRenderTarget(_depthRenderTarget, camera);
             gl.BindFramebuffer(GLEnum.ReadFramebuffer, sourceRT.FrameBufferId);
             gl.BindFramebuffer(GLEnum.DrawFramebuffer, debugRT.FrameBufferId);
             gl.BlitFramebuffer(0, 0, w, h, 0, 0, w, h,
@@ -497,11 +494,11 @@ public class DebugDrawPass : RenderPass
         int w = (int)camera.Width;
         int h = (int)camera.Height;
 
-        var debugRT = GetRenderTarget(DebugOutputName, new Size(w, h));
+        var debugRT = GetRenderTarget(_debugOutput, new Size(w, h));
 
-        // 将调试 RenderTarget 颜色拷贝回相机 FBO
+        // 将调试 RenderTarget 颜色拷贝回当前输出
         gl.BindFramebuffer(GLEnum.ReadFramebuffer, debugRT.FrameBufferId);
-        gl.BindFramebuffer(GLEnum.DrawFramebuffer, renderPipeline.GetCameraFramebufferId(camera));
+        gl.BindFramebuffer(GLEnum.DrawFramebuffer, GetOutputFramebufferId(camera));
         gl.BlitFramebuffer(0, 0, w, h, 0, 0, w, h,
             ClearBufferMask.ColorBufferBit, GLEnum.Nearest);
 

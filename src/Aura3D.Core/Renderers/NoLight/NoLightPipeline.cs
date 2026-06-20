@@ -19,28 +19,27 @@ public class NoLightPipeline : RenderPipeline, IRenderPipelineCreateInstance
     /// <param name="scene">场景对象</param>
     public NoLightPipeline(Scene scene) : base(scene)
     {
-        var noLightPass = new NoLightPass(this);
-
-        RegisterRenderPass(new BackgroundPass(this).SetOutPutRenderTarget("BaseRenderTarget"), RenderPassGroup.EveryCamera);
-        RegisterRenderPass(noLightPass.SetOutPutRenderTarget("BaseRenderTarget"), RenderPassGroup.EveryCamera);
-
-        // Particle pass
-        RegisterRenderPass(new ParticlePass(this).SetOutPutRenderTarget("BaseRenderTarget"), RenderPassGroup.EveryCamera);
-
-        RegisterRenderPass(new GammaCorrectionPass(this, "BaseRenderTarget", "Color").SetOutPutRenderTarget("GammaOutput"), RenderPassGroup.EveryCamera);
-        RegisterRenderPass(new FxaaPass(this, "GammaOutput", "Color"), RenderPassGroup.EveryCamera);
-
-        // 调试绘制通道（方向轴、网格等），最后渲染以覆盖在所有内容之上
-        RegisterRenderPass(new DebugDrawPass(this, "BaseRenderTarget"), RenderPassGroup.EveryCamera);
-
-        RegisterRenderTarget("BaseRenderTarget")
+        var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
             .AddTexture("Color", TextureFormat.Rgba16f)
             .SetDepthTexture(Settings.DepthFormat);
 
-
-        RegisterRenderTarget("GammaOutput")
+        var gammaOutput = RegisterRenderTarget("GammaOutput")
             .AddTexture("Color", TextureFormat.Rgba8)
             .SetDepthTexture(Settings.DepthFormat);
+
+        var noLightPass = new NoLightPass(this);
+
+        RegisterRenderPass(new BackgroundPass(this).SetOutput(baseRenderTarget), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(noLightPass.SetOutput(baseRenderTarget), RenderPassGroup.EveryCamera);
+
+        // Particle pass
+        RegisterRenderPass(new ParticlePass(this).SetOutput(baseRenderTarget), RenderPassGroup.EveryCamera);
+
+        RegisterRenderPass(new GammaCorrectionPass(this, baseRenderTarget.GetTexture("Color")).SetOutput(gammaOutput), RenderPassGroup.EveryCamera);
+        RegisterRenderPass(new FxaaPass(this, gammaOutput.GetTexture("Color")).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
+
+        // 调试绘制通道（方向轴、网格等），最后渲染以覆盖在所有内容之上
+        RegisterRenderPass(new DebugDrawPass(this, baseRenderTarget).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
     }
 
     /// <summary>

@@ -9,10 +9,10 @@ namespace Aura3D.Pipeline.PBR;
 
 internal class ConstantAmbientPass : RenderPass
 {
-    string GbufferRenderTargetName;
-    public ConstantAmbientPass(RenderPipeline renderPipeline, string gbufferRendertarget) : base(renderPipeline)
+    readonly RenderTargetHandle gbufferRenderTarget;
+    public ConstantAmbientPass(RenderPipeline renderPipeline, RenderTargetHandle gbufferRendertarget) : base(renderPipeline)
     {
-        GbufferRenderTargetName = gbufferRendertarget;
+        gbufferRenderTarget = gbufferRendertarget;
 
         this.VertexShader = ShaderResource.pbr_directionallight_lighting_pass_vert;
 
@@ -37,8 +37,7 @@ internal class ConstantAmbientPass : RenderPass
         gl.ClearColor(0, 0, 0, 0);
         gl.Clear(ClearBufferMask.ColorBufferBit);
 
-        var size = new Size((int)camera.Width, (int)camera.Height);
-        var rt = GetRenderTarget(GbufferRenderTargetName, size);
+        var rt = GetRenderTarget(gbufferRenderTarget, camera);
 
         var gBufferBaseColor = rt.GetTexture("BaseColor");
         var gBufferNormalRoughness = rt.GetTexture("NormalRoughness");

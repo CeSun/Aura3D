@@ -14,12 +14,10 @@ public class FxaaPass : RenderPass
     /// 初始化 FXAA 抗锯齿渲染通道
     /// </summary>
     /// <param name="renderPipeline">渲染管线</param>
-    /// <param name="inputRenderTargetName">输入渲染目标名称</param>
-    /// <param name="inputRenderTargetTextureName">输入渲染目标纹理名称</param>
-    public FxaaPass(RenderPipeline renderPipeline, string inputRenderTargetName, string inputRenderTargetTextureName) : base(renderPipeline)
+    /// <param name="inputTexture">输入渲染目标纹理引用</param>
+    public FxaaPass(RenderPipeline renderPipeline, RenderTargetTextureHandle inputTexture) : base(renderPipeline)
     {
-        this.inputRenderTargetName = inputRenderTargetName;
-        this.inputRenderTargetTextureName = inputRenderTargetTextureName;
+        this.inputTexture = inputTexture;
         ShaderName = nameof(FxaaPass);
         VertexShader = @"#version 300 es
 layout(location = 0) in vec3 a_position;
@@ -262,10 +260,8 @@ void main()
 
     public override void Render(Camera camera)
     {
-        var size = new System.Drawing.Size((int)camera.Width, (int)camera.Height);
-        gl.BindFramebuffer(GLEnum.Framebuffer, renderPipeline.GetCameraFramebufferId(camera));
-
-        var rt = GetRenderTarget(inputRenderTargetName, size);
+        BindOutput(camera);
+        var source = GetTexture(inputTexture, camera);
 
         gl.Disable(EnableCap.DepthTest);
         gl.Disable(EnableCap.Blend);
@@ -276,8 +272,8 @@ void main()
             UseShader();
             ClearTextureUnit();
             UseShader_Internal();
-            UniformTexture("u_texture", rt.GetTexture(inputRenderTargetTextureName));
-            UniformVector2("u_textureSize", new Vector2(rt.GetTexture(inputRenderTargetTextureName).Width, rt.GetTexture(inputRenderTargetTextureName).Height));
+            UniformTexture("u_texture", source);
+            UniformVector2("u_textureSize", new Vector2(source.Width, source.Height));
         }
         else
         {
@@ -285,15 +281,11 @@ void main()
             UseShader("FXAA_DISABLED");
             ClearTextureUnit();
             UseShader_Internal();
-            UniformTexture("u_texture", rt.GetTexture(inputRenderTargetTextureName));
+            UniformTexture("u_texture", source);
         }
 
         RenderQuad();
     }
 
-
-
-    protected string inputRenderTargetName;
-
-    protected string inputRenderTargetTextureName;
+    protected RenderTargetTextureHandle inputTexture;
 }
