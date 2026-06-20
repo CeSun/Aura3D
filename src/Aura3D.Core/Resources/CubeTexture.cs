@@ -1,23 +1,13 @@
 using Silk.NET.OpenGLES;
 using System.Numerics;
-using System.Runtime.InteropServices;
 
 namespace Aura3D.Core.Resources;
 
 /// <summary>
 /// 立方体纹理类，用于天空盒等需要6面纹理的场景
 /// </summary>
-public class CubeTexture : BaseTexture<CubeTexture>, IGpuResource, ICubeTexture, IClone<CubeTexture>
+public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
 {
-    /// <summary>
-    /// 是否需要上传到GPU
-    /// </summary>
-    public bool NeedsUpload { get; set; } = true;
-    /// <summary>
-    /// 纹理ID
-    /// </summary>
-    public uint TextureId { get; set; }
-
     public uint Width { get; set; }
 
     public uint Height { get; set; }
@@ -25,61 +15,10 @@ public class CubeTexture : BaseTexture<CubeTexture>, IGpuResource, ICubeTexture,
     public List<byte>[] LdrData { get; set; } = [[], [], [], [], [], []];
    public List<float>[] HdrData { get; set; } = [[], [], [], [], [], []];
 
-    public unsafe void Upload(GL gl)
-    {
-        TextureId = gl.GenTexture();
-        gl.BindTexture(GLEnum.TextureCubeMap, TextureId);
-
-        for (int i = 0; i < 6; i++)
-        {
-            unsafe
-            {
-                if (IsHdr == false)
-                {
-                    fixed (void* p = CollectionsMarshal.AsSpan(LdrData[i]))
-                    {
-                        gl.TexImage2D(GLEnum.TextureCubeMapPositiveX + i, 0, GLInternalFormat, Width, Height, 0, GlFormat, GLEnum.UnsignedByte, p);
-                    }
-                }
-                else
-                {
-
-                    fixed (void* p = CollectionsMarshal.AsSpan(HdrData[i]))
-                    {
-                        gl.TexImage2D(GLEnum.TextureCubeMapPositiveX + i, 0, GLInternalFormat, Width, Height, 0, GlFormat, GLEnum.Float, p);
-                    }
-                }
-
-            }
-
-        }
-
-        gl.TexParameter(GLEnum.TextureCubeMap, TextureParameterName.TextureWrapR, (int)GlWarpR);
-
-        gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int)GlWarpS);
-
-        gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int)GlWarpT);
-
-        gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int)GlMagFilter);
-
-        gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int)GlMinFilter);
-
-    }
-
-    public void Destroy(GL gl)
-    {
-        if (TextureId != 0)
-        {
-            gl.DeleteTexture(TextureId);
-            TextureId = 0;
-        }
-    }
-
     public CubeTexture Clone()
     {
         return new CubeTexture
         {
-            TextureId = 0,
             Width = Width,
             Height = Height,
             LdrData = LdrData,
@@ -123,6 +62,41 @@ public class CubeTexture : BaseTexture<CubeTexture>, IGpuResource, ICubeTexture,
         TextureWrapMode.ClampToBorder => GLEnum.ClampToBorder,
         _ => GLEnum.False
     };
+
+    internal InternalFormat GetGLInternalFormat()
+    {
+        return GLInternalFormat;
+    }
+
+    internal GLEnum GetGlFormat()
+    {
+        return GlFormat;
+    }
+
+    internal GLEnum GetGlWarpS()
+    {
+        return GlWarpS;
+    }
+
+    internal GLEnum GetGlWarpT()
+    {
+        return GlWarpT;
+    }
+
+    internal GLEnum GetGlWarpR()
+    {
+        return GlWarpR;
+    }
+
+    internal GLEnum GetGlMagFilter()
+    {
+        return GlMagFilter;
+    }
+
+    internal GLEnum GetGlMinFilter()
+    {
+        return GlMinFilter;
+    }
 
 }
 

@@ -120,6 +120,7 @@ public abstract partial class RenderPipeline
 
     private ConditionalWeakTable<Resources.Texture, TextureGpuState> textureGpuStates = new ConditionalWeakTable<Resources.Texture, TextureGpuState>();
     private ConditionalWeakTable<WritableTexture, WritableTextureGpuState> writableTextureGpuStates = new ConditionalWeakTable<WritableTexture, WritableTextureGpuState>();
+    private ConditionalWeakTable<CubeTexture, CubeTextureGpuState> cubeTextureGpuStates = new ConditionalWeakTable<CubeTexture, CubeTextureGpuState>();
 
     private RenderTargetHandle? debugOutputHandle;
 
@@ -298,6 +299,29 @@ public abstract partial class RenderPipeline
         return gpuState;
     }
 
+    internal CubeTextureGpuState GetCubeTextureGpuState(CubeTexture texture)
+    {
+        if (texture is CubeRenderTarget.RenderCubeTexture renderTexture)
+        {
+            return GetRenderTargetCubeTextureGpuState(renderTexture);
+        }
+
+        if (cubeTextureGpuStates.TryGetValue(texture, out var gpuState) == false)
+        {
+            gpuState = new CubeTextureGpuState(texture);
+            cubeTextureGpuStates.Add(texture, gpuState);
+            GpuStates.Add(gpuState);
+        }
+
+        return gpuState;
+    }
+
+    internal CubeTextureGpuState GetRenderTargetCubeTextureGpuState(CubeRenderTarget.RenderCubeTexture texture)
+    {
+        texture.CachedGpuState ??= new CubeRenderTargetTextureGpuState(texture);
+        return texture.CachedGpuState;
+    }
+
     public void CollectUnusedGpuStates()
     {
         if (gl == null)
@@ -326,6 +350,18 @@ public abstract partial class RenderPipeline
     public uint EnsureUploaded(Resources.Texture texture)
     {
         var gpuState = GetTextureGpuState(texture);
+
+        if (gpuState.TextureId == 0)
+        {
+            gpuState.Upload(gl!);
+        }
+
+        return gpuState.TextureId;
+    }
+
+    public uint EnsureUploaded(CubeTexture texture)
+    {
+        var gpuState = GetCubeTextureGpuState(texture);
 
         if (gpuState.TextureId == 0)
         {
@@ -736,6 +772,7 @@ public abstract partial class RenderPipeline
         materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
         textureGpuStates = new ConditionalWeakTable<Resources.Texture, TextureGpuState>();
         writableTextureGpuStates = new ConditionalWeakTable<WritableTexture, WritableTextureGpuState>();
+        cubeTextureGpuStates = new ConditionalWeakTable<CubeTexture, CubeTextureGpuState>();
 
         Meshes.Clear();
 

@@ -18,7 +18,7 @@ public class CubeRenderTarget : IRenderTarget
 
     protected RenderCubeTexture depthStencilTexture;
 
-    public ICubeTexture DepthStencilTexture => depthStencilTexture;
+    public RenderCubeTexture DepthStencilTexture => depthStencilTexture;
 
     public bool NeedsUpload { get; set; } = false;
 
@@ -68,6 +68,7 @@ public class CubeRenderTarget : IRenderTarget
     {
         Width = width;
         Height = height;
+        SyncTextureSizes();
         NeedsUpload = true;
         return this;
     }
@@ -84,7 +85,7 @@ public class CubeRenderTarget : IRenderTarget
     }
 
 
-    public ICubeTexture? GetTexture(int index)
+    public RenderCubeTexture? GetTexture(int index)
     {
         if (index < 0)
             return null;
@@ -93,7 +94,7 @@ public class CubeRenderTarget : IRenderTarget
         return renderTextures[index];
     }
 
-    public ICubeTexture? GetTexture(string name)
+    public RenderCubeTexture? GetTexture(string name)
     {
         if (renderTexturesMap.TryGetValue(name, out var texture))
         {
@@ -174,24 +175,41 @@ public class CubeRenderTarget : IRenderTarget
         {
             throw new Exception("create framebuffer error: " + state);
         }
+
+        SyncTextureSizes();
     }
 
 
-    protected class RenderCubeTexture : ICubeTexture
+    private void SyncTextureSizes()
+    {
+        foreach (var texture in renderTextures)
+        {
+            texture.Width = Width;
+            texture.Height = Height;
+        }
+
+        depthStencilTexture.Width = Width;
+        depthStencilTexture.Height = Height;
+    }
+
+    public sealed class RenderCubeTexture : CubeTexture
     {
 
         public RenderCubeTexture(CubeRenderTarget rt)
         {
             RenderTarget = rt;
+            WrapS = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
+            WrapT = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
+            WrapR = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
+            MinFilter = Aura3D.Core.Resources.TextureFilterMode.Linear;
+            MagFilter = Aura3D.Core.Resources.TextureFilterMode.Linear;
         }
 
         CubeRenderTarget RenderTarget { get; set; }
 
+        internal CubeTextureGpuState? CachedGpuState { get; set; }
+
         public uint TextureId { get; set; }
-
-        public uint Width => RenderTarget.Width;
-
-        public uint Height => RenderTarget.Height;
 
         public TextureFormat InternalFormat { get; set; }
     }

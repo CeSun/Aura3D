@@ -141,11 +141,11 @@ void main()
             
             UniformInt("environmentMap", 0);
 
-            renderPipeline.EnsureUploaded(ibl);
+            var iblTextureId = renderPipeline.EnsureUploaded(ibl);
 
             gl.ActiveTexture(TextureUnit.Texture0);
 
-            gl.BindTexture(TextureTarget.TextureCubeMap, ibl.TextureId);
+            gl.BindTexture(TextureTarget.TextureCubeMap, iblTextureId);
 
             RenderCube();
 

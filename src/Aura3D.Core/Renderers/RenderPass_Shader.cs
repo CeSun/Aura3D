@@ -284,19 +284,18 @@ public partial class RenderPass
     /// </summary>
     /// <param name="name">Uniform 变量名称。</param>
     /// <param name="texture">立方体贴图资源。</param>
-    public void UniformTextureCubeMap(string name, ICubeTexture texture)
+    public void UniformTextureCubeMap(string name, Aura3D.Core.Resources.CubeTexture texture)
     {
         if (CurrentShader == null)
             return;
-        if (texture is IGpuResource gpuRes)
-            renderPipeline.EnsureUploaded(gpuRes);
+        uint textureId = renderPipeline.EnsureUploaded(texture);
         var location = CurrentShader.GetUniformLocation(name, gl);
         if (location == -1)
             return;
         var textureUnit = GLEnum.Texture0 + currentTextureUnit;
         gl.Uniform1(location, currentTextureUnit);
         gl.ActiveTexture(textureUnit);
-        gl.BindTexture(GLEnum.TextureCubeMap, texture.TextureId);
+        gl.BindTexture(GLEnum.TextureCubeMap, textureId);
         currentTextureUnit++;
     }
 
