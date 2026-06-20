@@ -118,6 +118,7 @@ public abstract partial class RenderPipeline
 
     private ConditionalWeakTable<Material, MaterialGpuState> materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
     private ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState> boneMatrixBufferGpuStates = new ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState>();
+    private ConditionalWeakTable<Geometry, GeometryGpuState> geometryGpuStates = new ConditionalWeakTable<Geometry, GeometryGpuState>();
 
     private ConditionalWeakTable<Resources.Texture, TextureGpuState> textureGpuStates = new ConditionalWeakTable<Resources.Texture, TextureGpuState>();
     private ConditionalWeakTable<WritableTexture, WritableTextureGpuState> writableTextureGpuStates = new ConditionalWeakTable<WritableTexture, WritableTextureGpuState>();
@@ -272,6 +273,18 @@ public abstract partial class RenderPipeline
         return gpuState;
     }
 
+    internal GeometryGpuState GetGeometryGpuState(Geometry geometry)
+    {
+        if (geometryGpuStates.TryGetValue(geometry, out var gpuState) == false)
+        {
+            gpuState = new GeometryGpuState(geometry);
+            geometryGpuStates.Add(geometry, gpuState);
+            GpuStates.Add(gpuState);
+        }
+
+        return gpuState;
+    }
+
     internal TextureGpuState GetTextureGpuState(Resources.Texture texture)
     {
         if (texture is WritableTexture writableTexture)
@@ -382,6 +395,19 @@ public abstract partial class RenderPipeline
         }
 
         return gpuState.TextureId;
+    }
+
+    internal GeometryGpuState EnsureUploaded(Geometry geometry)
+    {
+        var gpuState = GetGeometryGpuState(geometry);
+
+        if (gpuState.Vao == 0 || geometry.NeedsUpload)
+        {
+            gpuState.Upload(gl!);
+            geometry.NeedsUpload = false;
+        }
+
+        return gpuState;
     }
 
     public void BindBoneMatrixBuffer(BoneMatrixBuffer boneMatrixBuffer)
@@ -797,6 +823,7 @@ public abstract partial class RenderPipeline
         GpuStates.Clear();
         materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
         boneMatrixBufferGpuStates = new ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState>();
+        geometryGpuStates = new ConditionalWeakTable<Geometry, GeometryGpuState>();
         textureGpuStates = new ConditionalWeakTable<Resources.Texture, TextureGpuState>();
         writableTextureGpuStates = new ConditionalWeakTable<WritableTexture, WritableTextureGpuState>();
         cubeTextureGpuStates = new ConditionalWeakTable<CubeTexture, CubeTextureGpuState>();

@@ -1,0 +1,108 @@
+using Aura3D.Core.Resources;
+using Silk.NET.OpenGLES;
+using System.Runtime.InteropServices;
+
+namespace Aura3D.Core.Renderers;
+
+internal class GeometryGpuState : IResourceGpuState<Geometry>
+{
+    private readonly WeakReference<Geometry> geometry;
+    private readonly List<uint> vboIds = [];
+
+    public GeometryGpuState(Geometry geometry)
+    {
+        this.geometry = new WeakReference<Geometry>(geometry);
+    }
+
+    public Geometry Resource
+    {
+        get
+        {
+            if (geometry.TryGetTarget(out var value))
+                return value;
+
+            throw new InvalidOperationException("The CPU resource has already been collected.");
+        }
+    }
+
+    public bool IsAlive => geometry.TryGetTarget(out _);
+
+    public uint Vao { get; protected set; }
+
+    public uint Ebo { get; protected set; }
+
+    public virtual void Destroy(GL gl)
+    {
+        foreach (var vbo in vboIds)
+        {
+            gl.DeleteBuffer(vbo);
+        }
+        vboIds.Clear();
+
+        if (Ebo != 0)
+        {
+            gl.DeleteBuffer(Ebo);
+            Ebo = 0;
+        }
+
+        if (Vao != 0)
+        {
+            gl.DeleteVertexArray(Vao);
+            Vao = 0;
+        }
+    }
+
+    public virtual unsafe void Upload(GL gl)
+    {
+        var geometry = Resource;
+
+        if (Vao == 0)
+        {
+            Vao = gl.GenVertexArray();
+        }
+        else
+        {
+            foreach (var vbo in vboIds)
+            {
+                gl.DeleteBuffer(vbo);
+            }
+            vboIds.Clear();
+        }
+
+        gl.BindVertexArray(Vao);
+
+        foreach (var (_, attribute) in geometry.VertexAttributes)
+        {
+            if (!attribute.Enabled)
+                continue;
+
+            uint vbo = gl.GenBuffer();
+            vboIds.Add(vbo);
+
+            gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo);
+
+            fixed (float* dataPtr = CollectionsMarshal.AsSpan(attribute.Data))
+            {
+                gl.BufferData(GLEnum.ArrayBuffer, (nuint)(attribute.Data.Count * sizeof(float)), dataPtr, GLEnum.StaticDraw);
+            }
+
+            gl.EnableVertexAttribArray(attribute.Location);
+            gl.VertexAttribPointer(attribute.Location, attribute.Size, GLEnum.Float, false, (uint)(sizeof(float) * attribute.Size), (void*)0);
+        }
+
+        if (geometry.Indices.Count > 0)
+        {
+            if (Ebo == 0)
+            {
+                Ebo = gl.GenBuffer();
+            }
+
+            gl.BindBuffer(GLEnum.ElementArrayBuffer, Ebo);
+
+            fixed (uint* indexPtr = CollectionsMarshal.AsSpan(geometry.Indices))
+            {
+                gl.BufferData(GLEnum.ElementArrayBuffer, (nuint)(geometry.Indices.Count * sizeof(uint)), indexPtr, GLEnum.StaticDraw);
+            }
+        }
+    }
+}

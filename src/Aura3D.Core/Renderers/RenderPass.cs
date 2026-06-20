@@ -163,8 +163,8 @@ public partial class RenderPass
     public unsafe virtual void RenderMesh(Mesh mesh, Matrix4x4 view, Matrix4x4 projection)
     {
         UniformMatrix4("modelMatrix", mesh.WorldTransform);
-        renderPipeline.EnsureUploaded(mesh.Geometry!);
-        gl.BindVertexArray(mesh.Geometry!.Vao);
+        var geometryGpuState = renderPipeline.EnsureUploaded(mesh.Geometry!);
+        gl.BindVertexArray(geometryGpuState.Vao);
         BindMaterialParameters(mesh.Material);
 
         var primitive = GetGLPrimitiveType(mesh.Geometry.PrimitiveType);

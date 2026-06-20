@@ -1,23 +1,21 @@
 using Aura3D.Core.Math;
-using Silk.NET.OpenGLES;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.InteropServices;
 
 namespace Aura3D.Core.Resources;
 
 /// <summary>
 /// 几何体类，存储顶点数据和索引数据
 /// </summary>
-public class Geometry : IGpuResource, IClone<Geometry>
+public class Geometry : IClone<Geometry>
 {
-
     /// <summary>
-    /// 是否需要上传到GPU
+    /// 是否需要上传到 GPU。
+    /// 当前仅保留现有的脏语义，后续若统一处理更新策略再进一步收口。
     /// </summary>
     public bool NeedsUpload { get; set; } = true;
 
-    protected Dictionary<string, VertexAttribute> VertexAttributes = new();
+    internal Dictionary<string, VertexAttribute> VertexAttributes { get; private protected set; } = new();
 
     private BoundingBox? boundingBox;
 
@@ -39,10 +37,6 @@ public class Geometry : IGpuResource, IClone<Geometry>
     /// </summary>
     public List<uint> Indices { get; protected set; } = [];
 
-    protected HashSet<uint> VertexAttributeLocations = new();
-
-    protected List<uint> VboIds = new();
-
     /// <summary>
     /// 索引数量
     /// </summary>
@@ -62,16 +56,6 @@ public class Geometry : IGpuResource, IClone<Geometry>
     }
 
     /// <summary>
-    /// 顶点数组对象ID
-    /// </summary>
-    public uint Vao;
-
-    /// <summary>
-    /// 元素缓冲对象ID
-    /// </summary>
-    public uint Ebo;
-
-    /// <summary>
     /// 图元类型，默认为 Triangles。
     /// </summary>
     public PrimitiveType PrimitiveType { get; set; } = PrimitiveType.Triangles;
@@ -84,7 +68,6 @@ public class Geometry : IGpuResource, IClone<Geometry>
         if (VertexAttributes.TryGetValue(name, out var vertexAttribute))
         {
             VertexAttributes.Remove(name);
-            VertexAttributeLocations.Remove(vertexAttribute.Location);
         }
 
         VertexAttributes.Add(name, new VertexAttribute
@@ -95,7 +78,6 @@ public class Geometry : IGpuResource, IClone<Geometry>
             Data = data,
             Enabled = (location <= 7)
         });
-        VertexAttributeLocations.Add(location);
 
         NeedsUpload = true;
 
@@ -112,6 +94,7 @@ public class Geometry : IGpuResource, IClone<Geometry>
     public void SetIndices(List<uint> indices)
     {
         Indices = indices;
+        NeedsUpload = true;
     }
 
     public List<float>? GetAttributeData(string name)
@@ -167,88 +150,14 @@ public class Geometry : IGpuResource, IClone<Geometry>
         }
     }
 
-    public void Destroy(GL gl)
-    {
-        foreach (var vbo in VboIds)
-        {
-            gl.DeleteBuffer(vbo);
-        }
-        VboIds.Clear();
-        if (Ebo != 0)
-        {
-            gl.DeleteBuffer(Ebo);
-            Ebo = 0;
-        }
-        if (Vao != 0)
-        {
-            gl.DeleteVertexArray(Vao);
-            Vao = 0;
-        }
-    }
-
-    public unsafe void Upload(GL gl)
-    {
-        if (Vao == 0)
-        {
-            Vao = gl.GenVertexArray();
-        }
-        else
-        {
-            // 重新上传时清理旧 VBO，避免重复申请导致泄漏
-            foreach (var vbo in VboIds)
-            {
-                gl.DeleteBuffer(vbo);
-            }
-            VboIds.Clear();
-        }
-
-        gl.BindVertexArray(Vao);
-
-        foreach (var(_, attribute) in VertexAttributes)
-        {
-            if (!attribute.Enabled)
-                continue;
-
-            uint vbo = gl.GenBuffer();
-            VboIds.Add(vbo);
-            gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo);
-            unsafe
-            {
-                fixed (float* dataPtr = CollectionsMarshal.AsSpan(attribute.Data))
-                {
-                    gl.BufferData(GLEnum.ArrayBuffer, (nuint)(attribute.Data.Count * sizeof(float)), dataPtr, GLEnum.StaticDraw);
-                }
-            }
-            gl.EnableVertexAttribArray(attribute.Location);
-            gl.VertexAttribPointer(attribute.Location, attribute.Size, GLEnum.Float, false, (uint)(sizeof(float) * attribute.Size), (void*)0);
-        }
-
-        if (Indices.Count > 0)
-        {
-            if (Ebo == 0)
-            {
-                Ebo = gl.GenBuffer();
-            }
-            gl.BindBuffer(GLEnum.ElementArrayBuffer, Ebo);
-
-            fixed (uint* indexPtr = CollectionsMarshal.AsSpan(Indices))
-            {
-                // 上传索引数据到 GPU
-                gl.BufferData(GLEnum.ElementArrayBuffer, (nuint)(Indices.Count * sizeof(uint)), indexPtr, GLEnum.StaticDraw);
-            }
-        }
-
-
-    }
-
     public Geometry Clone()
     {
         return new Geometry
         {
             Indices = Indices,
             VertexAttributes = VertexAttributes,
-            VertexAttributeLocations = VertexAttributeLocations,
-            PrimitiveType = PrimitiveType
+            PrimitiveType = PrimitiveType,
+            NeedsUpload = true
         };
     }
 
@@ -267,8 +176,8 @@ public class Geometry : IGpuResource, IClone<Geometry>
                     Data = new List<float>(kv.Value.Data),
                     Enabled = kv.Value.Enabled
                 }),
-            VertexAttributeLocations = new HashSet<uint>(VertexAttributeLocations),
-            PrimitiveType = PrimitiveType
+            PrimitiveType = PrimitiveType,
+            NeedsUpload = true
         };
     }
 }
