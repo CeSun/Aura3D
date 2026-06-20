@@ -9,12 +9,16 @@ namespace Aura3D.Core.Renderers;
 /// </summary>
 public class TranslucentPass : LightPass
 {
+    private readonly RenderTargetHandle _baseRenderTarget;
+
     /// <summary>
     /// 初始化透明物体渲染通道
     /// </summary>
     /// <param name="renderPipeline">渲染管线</param>
-    public TranslucentPass(RenderPipeline renderPipeline) : base(renderPipeline)
+    /// <param name="baseRenderTarget">透明物体写入的目标渲染目标。</param>
+    public TranslucentPass(RenderPipeline renderPipeline, RenderTargetHandle baseRenderTarget) : base(renderPipeline)
     {
+        _baseRenderTarget = baseRenderTarget;
         ShaderName = nameof(TranslucentPass);
     }
 
@@ -27,9 +31,7 @@ public class TranslucentPass : LightPass
 
     public override void Render(Camera camera)
     {
-
-        var rt = GetRenderTarget("BaseRenderTarget",
-            new System.Drawing.Size((int)camera.Width, (int)camera.Height));
+        var rt = GetRenderTarget(_baseRenderTarget, camera);
 
         gl.BindFramebuffer(GLEnum.Framebuffer, rt.FrameBufferId);
 

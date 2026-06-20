@@ -38,8 +38,7 @@ public class NoLightPipeline : RenderPipeline, IRenderPipelineCreateInstance
         RegisterRenderPass(new GammaCorrectionPass(this, baseRenderTarget.GetTexture("Color")).SetOutput(gammaOutput), RenderPassGroup.EveryCamera);
         RegisterRenderPass(new FxaaPass(this, gammaOutput.GetTexture("Color")).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
 
-        // 调试绘制通道（方向轴、网格等），最后渲染以覆盖在所有内容之上
-        RegisterRenderPass(new DebugDrawPass(this, baseRenderTarget).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
+        RegisterDebugPass(baseRenderTarget);
     }
 
     /// <summary>

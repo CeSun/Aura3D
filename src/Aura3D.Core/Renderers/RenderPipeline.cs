@@ -121,6 +121,7 @@ public abstract partial class RenderPipeline
     private ConditionalWeakTable<Resources.Texture, TextureGpuState> textureGpuStates = new ConditionalWeakTable<Resources.Texture, TextureGpuState>();
 
     private readonly Dictionary<Camera, CameraFramebufferState> cameraFramebufferStates = [];
+    private RenderTargetHandle? debugOutputHandle;
 
     /// <summary>
     /// 获取或设置方向光源的最大数量限制。
@@ -174,6 +175,24 @@ public abstract partial class RenderPipeline
             EveryCameraRenderPasses.Add(renderPass);
         else if (renderPassGroup == RenderPassGroup.Once)
             OnceRenderPasses.Add(renderPass);
+    }
+
+    /// <summary>
+    /// 注册调试绘制通道。调试通道会在每个相机渲染的最后执行，并默认输出到相机最终输出。
+    /// </summary>
+    /// <param name="depthRenderTarget">
+    /// 需要拷贝深度的渲染目标。
+    /// 传入后，调试元素会与该渲染目标中的场景深度正确混合；传入 <c>null</c> 则仅清空调试深度。
+    /// </param>
+    protected void RegisterDebugPass(RenderTargetHandle? depthRenderTarget = null)
+    {
+        debugOutputHandle ??= RegisterRenderTarget("DebugOutput")
+            .AddTexture("Color", TextureFormat.Rgba8)
+            .SetDepthTexture(Settings.DepthFormat);
+
+        RegisterRenderPass(
+            new DebugDrawPass(this, debugOutputHandle, depthRenderTarget).SetOutput(CameraOutput),
+            RenderPassGroup.EveryCamera);
     }
 
     /// <summary>

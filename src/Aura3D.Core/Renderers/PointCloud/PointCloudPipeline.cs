@@ -33,9 +33,7 @@ public class PointCloudPipeline : RenderPipeline, IRenderPipelineCreateInstance
             new FxaaPass(this, gammaOutput.GetTexture("Color")).SetOutput(CameraOutput),
             RenderPassGroup.EveryCamera);
 
-        RegisterRenderPass(
-            new DebugDrawPass(this, baseRenderTarget).SetOutput(CameraOutput),
-            RenderPassGroup.EveryCamera);
+        RegisterDebugPass(baseRenderTarget);
     }
 
     public override void BeforeCameraRender(Camera camera)

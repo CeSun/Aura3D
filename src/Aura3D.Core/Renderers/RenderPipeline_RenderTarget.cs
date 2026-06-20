@@ -34,14 +34,14 @@ public abstract partial class RenderPipeline
     /// <summary>
     /// 获取相机最终输出引用。
     /// </summary>
-    public RenderOutputRef CameraOutput => CameraOutputRef.Instance;
+    protected internal RenderOutputRef CameraOutput => CameraOutputRef.Instance;
 
     /// <summary>
     /// 注册一个具有指定名称的渲染目标，并返回其引用与配置对象。
     /// </summary>
     /// <param name="name">渲染目标的名称。</param>
     /// <returns>渲染目标引用与配置对象。</returns>
-    public RenderTargetHandle RegisterRenderTarget(string name)
+    protected RenderTargetHandle RegisterRenderTarget(string name)
     {
         return GetOrCreateRenderTargetHandle(name);
     }
@@ -64,12 +64,12 @@ public abstract partial class RenderPipeline
     /// <param name="size">渲染目标的尺寸。</param>
     /// <returns>渲染目标实例。</returns>
     /// <exception cref="KeyNotFoundException">当渲染目标未注册时抛出。</exception>
-    public RenderTarget GetRenderTarget(string name, Size size)
+    internal RenderTarget GetRenderTarget(string name, Size size)
     {
         return GetRenderTarget(GetOrCreateRenderTargetHandle(name), size);
     }
 
-    public RenderTarget GetRenderTarget(RenderTargetHandle renderTargetHandle, Size size)
+    internal RenderTarget GetRenderTarget(RenderTargetHandle renderTargetHandle, Size size)
     {
         if (!ReferenceEquals(renderTargetHandle.OwnerPipeline, this))
         {

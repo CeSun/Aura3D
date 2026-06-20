@@ -137,14 +137,6 @@ public partial class RenderPass
         BindOutput(camera);
     }
 
-    /// <summary>
-    /// 获取指定名称和大小的渲染目标。
-    /// </summary>
-    /// <param name="name">渲染目标名称。</param>
-    /// <param name="size">渲染目标尺寸。</param>
-    /// <returns>渲染目标实例。</returns>
-    public RenderTarget GetRenderTarget(string name, Size size) => renderPipeline.GetRenderTarget(name, size);
-
     protected RenderTarget GetRenderTarget(RenderTargetHandle renderTargetHandle, Size size)
         => renderPipeline.GetRenderTarget(renderTargetHandle, size);
 

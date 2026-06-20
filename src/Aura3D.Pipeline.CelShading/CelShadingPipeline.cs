@@ -33,7 +33,7 @@ public class CelShadingPipeline : RenderPipeline, IRenderPipelineCreateInstance
         RegisterRenderPass(outlinePass, RenderPassGroup.EveryCamera);
 
 
-        var translucentPass = (CelTranslucentPass)new CelTranslucentPass(this).SetOutput(baseRenderTarget);
+        var translucentPass = (CelTranslucentPass)new CelTranslucentPass(this, baseRenderTarget).SetOutput(baseRenderTarget);
         RegisterRenderPass(translucentPass, RenderPassGroup.EveryCamera);
 		LightLimitChangedEvent += translucentPass.UpdateLightNumLimit;
 
@@ -44,8 +44,7 @@ public class CelShadingPipeline : RenderPipeline, IRenderPipelineCreateInstance
         RegisterRenderPass(new GammaCorrectionPass(this, baseRenderTarget.GetTexture("Color")).SetOutput(gammaOutput), RenderPassGroup.EveryCamera);
         RegisterRenderPass(new FxaaPass(this, gammaOutput.GetTexture("Color")).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
 
-        // Debug draw pass
-        RegisterRenderPass(new DebugDrawPass(this, baseRenderTarget).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
+        RegisterDebugPass(baseRenderTarget);
     }
 
     public override void BeforeCameraRender(Camera camera)

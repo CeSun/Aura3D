@@ -8,8 +8,11 @@ namespace Aura3D.Pipeline.CelShading;
 
 public class CelTranslucentPass : LightPass
 {
-    public CelTranslucentPass(RenderPipeline renderPipeline) : base(renderPipeline)
+    private readonly RenderTargetHandle _baseRenderTarget;
+
+    public CelTranslucentPass(RenderPipeline renderPipeline, RenderTargetHandle baseRenderTarget) : base(renderPipeline)
     {
+        _baseRenderTarget = baseRenderTarget;
         ShaderName = nameof(CelTranslucentPass);
     }
 
@@ -22,10 +25,7 @@ public class CelTranslucentPass : LightPass
 
     public override void Render(Camera camera)
     {
-
-        var rt = GetRenderTarget("BaseRenderTarget",
-            new System.Drawing.Size((int)camera.Width, (int)camera.Height));
-
+        var rt = GetRenderTarget(_baseRenderTarget, camera);
 
         gl.BindFramebuffer(GLEnum.Framebuffer, rt.FrameBufferId);
 

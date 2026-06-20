@@ -106,8 +106,7 @@ public class PBRDeferredPipeline : RenderPipeline, IRenderPipelineCreateInstance
 
         RegisterRenderPass(new FxaaPass(this, backgroundRenderTarget.GetTexture("Color")).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
 
-        // 调试绘制通道（方向轴、网格等），最后渲染以覆盖在所有内容之上
-        RegisterRenderPass(new DebugDrawPass(this, backgroundRenderTarget).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
+        RegisterDebugPass(backgroundRenderTarget);
 
         DefaultBaseColor = Texture.CreateFromColor(Color.White);
 

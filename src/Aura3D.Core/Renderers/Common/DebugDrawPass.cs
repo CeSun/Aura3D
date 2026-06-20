@@ -16,7 +16,6 @@ namespace Aura3D.Core.Renderers;
 /// </summary>
 public class DebugDrawPass : RenderPass
 {
-    private const string DebugOutputName = "DebugOutput";
     private readonly RenderTargetHandle _debugOutput;
     private readonly RenderTargetHandle? _depthRenderTarget;
 
@@ -24,20 +23,18 @@ public class DebugDrawPass : RenderPass
     /// 初始化 <see cref="DebugDrawPass"/> 类的新实例。
     /// </summary>
     /// <param name="renderPipeline">所属的渲染管线。</param>
+    /// <param name="debugOutput">调试绘制使用的中间渲染目标。</param>
     /// <param name="depthRenderTarget">
     /// 深度缓冲源渲染目标引用（如 BaseRenderTarget）。
     /// 传入非 null 值时，会将场景深度缓冲拷贝到调试 RenderTarget，
     /// 使网格等调试元素能被场景几何体正确遮挡。
     /// 传入 null 时仅清除深度缓冲。
     /// </param>
-    public DebugDrawPass(RenderPipeline renderPipeline, RenderTargetHandle? depthRenderTarget = null)
+    public DebugDrawPass(RenderPipeline renderPipeline, RenderTargetHandle debugOutput, RenderTargetHandle? depthRenderTarget = null)
         : base(renderPipeline)
     {
+        _debugOutput = debugOutput;
         _depthRenderTarget = depthRenderTarget;
-
-        _debugOutput = renderPipeline.RegisterRenderTarget(DebugOutputName)
-            .AddTexture("Color", TextureFormat.Rgba8)
-            .SetDepthTexture(renderPipeline.Settings.DepthFormat);
 
         this.VertexShader = ShaderResource.DebugVert;
         this.FragmentShader = ShaderResource.DebugFrag;
