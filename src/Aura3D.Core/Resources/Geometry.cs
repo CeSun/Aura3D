@@ -156,8 +156,7 @@ public class Geometry : IClone<Geometry>
         {
             Indices = Indices,
             VertexAttributes = VertexAttributes,
-            PrimitiveType = PrimitiveType,
-            NeedsUpload = true
+            PrimitiveType = PrimitiveType
         };
     }
 
@@ -176,8 +175,7 @@ public class Geometry : IClone<Geometry>
                     Data = new List<float>(kv.Value.Data),
                     Enabled = kv.Value.Enabled
                 }),
-            PrimitiveType = PrimitiveType,
-            NeedsUpload = true
+            PrimitiveType = PrimitiveType
         };
     }
 }

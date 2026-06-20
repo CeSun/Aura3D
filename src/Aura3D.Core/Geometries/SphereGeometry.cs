@@ -157,6 +157,5 @@ public class SphereGeometry : Geometry
         SetVertexAttribute(BuildInVertexAttribute.Tangent, 3, tangents);
         SetVertexAttribute(BuildInVertexAttribute.Bitangent, 3, bitangents);
 
-        NeedsUpload = true;
     }
 }

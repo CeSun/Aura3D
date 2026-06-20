@@ -151,8 +151,6 @@ public class BoxGeometry : Geometry
 
         SetVertexAttribute(BuildInVertexAttribute.Bitangent, 3, bitangents);
 
-        // 标记需要上传到 GPU（Geometry 构造时默认 true，但明确设置更可读）
-        NeedsUpload = true;
     }
 
     // 若需要，可返回一个浅拷贝（保留引用）或深拷贝方法；基类已提供 Clone/DeepClone。

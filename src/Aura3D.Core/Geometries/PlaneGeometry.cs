@@ -123,6 +123,5 @@ public class PlaneGeometry : Geometry
 
         SetVertexAttribute(BuildInVertexAttribute.Bitangent, 3, bitangents);
 
-        NeedsUpload = true;
     }
 }
