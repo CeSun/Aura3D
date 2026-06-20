@@ -38,7 +38,7 @@ public class ParticleEmitter
     /// Texture for billboard particles. When set, the billboard shader samples this texture.
     /// When null, a procedural circle is drawn.
     /// </summary>
-    public ITexture? Texture { get; set; }
+    public Texture? Texture { get; set; }
 
     /// <summary>
     /// Flipbook grid dimensions for texture animation. Default (1,1) disables flipbook.

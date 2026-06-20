@@ -4,7 +4,7 @@ namespace Aura3D.Core.Resources;
 
 /// <summary>
 /// 可作为渲染输出目标的单张 2D 纹理。
-/// CPU 侧资源与普通 <see cref="Texture"/> 一致，GPU 侧由 <see cref="Renderers.TextureGpuState"/> 管理。
+/// CPU 侧资源与普通 <see cref="Texture"/> 一致，GPU 侧由 <see cref="Renderers.WritableTextureGpuState"/> 管理。
 /// </summary>
 public class WritableTexture : Texture
 {

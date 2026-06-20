@@ -203,7 +203,7 @@ public class Material : IClone<Material>
         }
     }
 
-    public void SetTexture(string name, ITexture? texture)
+    public void SetTexture(string name, Texture? texture)
     {
         var channel = Channels.FirstOrDefault(c => c.Name == name);
         if (channel != null)
@@ -216,7 +216,7 @@ public class Material : IClone<Material>
         }
     }
 
-    public ITexture? GetTexture(string name)
+    public Texture? GetTexture(string name)
     {
         var channel = Channels.FirstOrDefault(c => c.Name == name);
         if (channel != null)
@@ -239,7 +239,7 @@ public class Channel
 {
     public string Name { get; set; } = string.Empty;
 
-    public ITexture? Texture { get; set; }
+    public Texture? Texture { get; set; }
 }
 
 public enum BlendMode

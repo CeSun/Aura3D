@@ -58,7 +58,7 @@ public partial class EmitterViewModel : ObservableObject
     [ObservableProperty] private string _texturePath = "";
     [ObservableProperty] private float _flipbookTilesX = 1f;
     [ObservableProperty] private float _flipbookTilesY = 1f;
-    public ITexture? LoadedTexture { get; set; }
+    public Texture? LoadedTexture { get; set; }
 
     // Mesh rendering
     [ObservableProperty] private string _meshPath = "";

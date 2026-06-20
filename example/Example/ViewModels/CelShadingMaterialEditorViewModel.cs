@@ -42,10 +42,10 @@ public class NodeItem
 public class ChannelItem
 {
     public string Name { get; }
-    public ITexture? Texture { get; }
+    public Texture? Texture { get; }
     public IImage? Thumbnail { get; }
 
-    public ChannelItem(string name, ITexture? texture, IImage? thumbnail)
+    public ChannelItem(string name, Texture? texture, IImage? thumbnail)
     {
         Name = name;
         Texture = texture;

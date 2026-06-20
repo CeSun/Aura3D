@@ -14,7 +14,7 @@ public static class MaterialExtensions
         /// <summary>
         /// 获取或设置 BaseColor（基础颜色）纹理。
         /// </summary>
-        public ITexture? BaseColor
+        public Texture? BaseColor
         {
             get => material.GetTexture("BaseColor");
             set => material.SetTexture("BaseColor", value);
@@ -23,7 +23,7 @@ public static class MaterialExtensions
         /// <summary>
         /// 获取或设置 Normal（法线）纹理。
         /// </summary>
-        public ITexture? Normal
+        public Texture? Normal
         {
             get => material.GetTexture("Normal");
             set => material.SetTexture("Normal", value);
@@ -37,7 +37,7 @@ public static class MaterialExtensions
 #if NET10_0_OR_GREATER
     [Obsolete("Use the BaseColor extension property instead.", false)]
 #endif
-    public static ITexture? GetBaseColor(this Material material) => material.GetTexture("BaseColor");
+    public static Texture? GetBaseColor(this Material material) => material.GetTexture("BaseColor");
 
     /// <summary>
     /// 设置 BaseColor（基础颜色）纹理。
@@ -45,7 +45,7 @@ public static class MaterialExtensions
 #if NET10_0_OR_GREATER
     [Obsolete("Use the BaseColor extension property instead.", false)]
 #endif
-    public static void SetBaseColor(this Material material, ITexture? texture) => material.SetTexture("BaseColor", texture);
+    public static void SetBaseColor(this Material material, Texture? texture) => material.SetTexture("BaseColor", texture);
 
     /// <summary>
     /// 获取 Normal（法线）纹理。
@@ -53,7 +53,7 @@ public static class MaterialExtensions
 #if NET10_0_OR_GREATER
     [Obsolete("Use the Normal extension property instead.", false)]
 #endif
-    public static ITexture? GetNormal(this Material material) => material.GetTexture("Normal");
+    public static Texture? GetNormal(this Material material) => material.GetTexture("Normal");
 
     /// <summary>
     /// 设置 Normal（法线）纹理。
@@ -61,5 +61,5 @@ public static class MaterialExtensions
 #if NET10_0_OR_GREATER
     [Obsolete("Use the Normal extension property instead.", false)]
 #endif
-    public static void SetNormal(this Material material, ITexture? texture) => material.SetTexture("Normal", texture);
+    public static void SetNormal(this Material material, Texture? texture) => material.SetTexture("Normal", texture);
 }

@@ -29,6 +29,12 @@ public class MaterialGpuState : IResourceGpuState<Material>
         this.material = new WeakReference<Material>(material);
     }
 
+    public void Upload(GL gl)
+    {
+        // MaterialGpuState currently only caches compiled shader programs.
+        // Shader compilation is still triggered lazily by RenderPass_Shader.
+    }
+
     public void Destroy(GL gl)
     {
         foreach (var shader in Shaders)

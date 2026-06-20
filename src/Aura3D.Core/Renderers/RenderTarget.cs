@@ -38,7 +38,7 @@ public class RenderTarget : IRenderTarget
     protected RenderTexture depthStencilTexture { get;  set; }
 
     /// <inheritedoc />
-    public IGpuTexture DepthStencilTexture => depthStencilTexture;
+    public RenderTexture DepthStencilTexture => depthStencilTexture;
 
     /// <summary>
     /// 获取或设置一个值，指示是否需要上传 GPU 数据。
@@ -73,6 +73,7 @@ public class RenderTarget : IRenderTarget
     {
         Width = width;
         Height = height;
+        SyncTextureSizes();
         NeedsUpload = true;
         return this;
     }
@@ -159,6 +160,8 @@ public class RenderTarget : IRenderTarget
         {
             throw new InvalidOperationException($"Framebuffer creation failed with status: {state}");
         }
+
+        SyncTextureSizes();
     }
 
     /// <summary>
@@ -184,7 +187,7 @@ public class RenderTarget : IRenderTarget
     /// </summary>
     /// <param name="index">纹理索引。</param>
     /// <returns>纹理实例，如果索引无效则返回 null。</returns>
-    public IGpuTexture? GetTexture(int index)
+    public RenderTexture? GetTexture(int index)
     {
         if (index < 0)
             return null;
@@ -199,7 +202,7 @@ public class RenderTarget : IRenderTarget
     /// <param name="name">纹理名称。</param>
     /// <returns>纹理实例。</returns>
     /// <exception cref="KeyNotFoundException">当纹理不存在时抛出。</exception>
-    public IGpuTexture GetTexture(string name)
+    public RenderTexture GetTexture(string name)
     {
         if (renderTexturesMap.TryGetValue(name, out var texture))
         {
@@ -225,12 +228,24 @@ public class RenderTarget : IRenderTarget
         return this;
     }
 
+    private void SyncTextureSizes()
+    {
+        foreach (var texture in renderTextures)
+        {
+            texture.Width = Width;
+            texture.Height = Height;
+        }
+
+        depthStencilTexture.Width = Width;
+        depthStencilTexture.Height = Height;
+    }
+
 
 
     /// <summary>
     /// 渲染目标内部的纹理实现类。
     /// </summary>
-    protected class RenderTexture : IGpuTexture
+    public sealed class RenderTexture : Aura3D.Core.Resources.Texture
     {
 
         /// <summary>
@@ -240,18 +255,18 @@ public class RenderTarget : IRenderTarget
         public RenderTexture(RenderTarget rt)
         {
             RenderTarget = rt;
+            WrapS = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
+            WrapT = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
+            MinFilter = Aura3D.Core.Resources.TextureFilterMode.Linear;
+            MagFilter = Aura3D.Core.Resources.TextureFilterMode.Linear;
         }
 
         RenderTarget RenderTarget { get; set; }
 
+        internal TextureGpuState? CachedGpuState { get; set; }
+
         /// <inheritedoc />
         public uint TextureId { get; set; }
-
-        /// <inheritedoc />
-        public uint Width => RenderTarget.Width;
-
-        /// <inheritedoc />
-        public uint Height => RenderTarget.Height;
 
         /// <summary>
         /// 获取或设置纹理的内部格式。

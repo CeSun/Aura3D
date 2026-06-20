@@ -305,31 +305,14 @@ public partial class RenderPass
     /// </summary>
     /// <param name="name">Uniform 变量名称。</param>
     /// <param name="texture">2D 纹理资源。</param>
-    public void UniformTexture(string name, ITexture texture)
+    public void UniformTexture(string name, Aura3D.Core.Resources.Texture texture)
     {
         if (texture == null)
             return;
         if (CurrentShader == null)
             return;
 
-        uint textureId = 0;
-
-        if (texture is Resources.Texture textureResource)
-        {
-            textureId = renderPipeline.EnsureUploaded(textureResource).TextureId;
-        }
-        else
-        {
-            if (texture is IGpuResource gpuResource)
-            {
-                renderPipeline.EnsureUploaded(gpuResource);
-            }
-
-            if (texture is IGpuTexture gpuTexture)
-            {
-                textureId = gpuTexture.TextureId;
-            }
-        }
+        uint textureId = renderPipeline.EnsureUploaded(texture);
 
         var location = CurrentShader.GetUniformLocation(name, gl);
         if (location == -1)

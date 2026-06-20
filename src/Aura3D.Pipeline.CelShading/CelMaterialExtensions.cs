@@ -18,7 +18,7 @@ public static class CelMaterialExtensions
         /// <summary>
         /// 获取或设置 ILM（Indirect Light Map，间接光照贴图）纹理。
         /// </summary>
-        public ITexture? ILM
+        public Texture? ILM
         {
             get => material.GetTexture("ILM");
             set => material.SetTexture("ILM", value);
@@ -27,7 +27,7 @@ public static class CelMaterialExtensions
         /// <summary>
         /// 获取或设置 SDF（Signed Distance Field，脸部阴影距离场）纹理。
         /// </summary>
-        public ITexture? SDF
+        public Texture? SDF
         {
             get => material.GetTexture("SDF");
             set => material.SetTexture("SDF", value);
@@ -36,7 +36,7 @@ public static class CelMaterialExtensions
         /// <summary>
         /// 获取或设置 ShadowRamp（阴影渐变）纹理。
         /// </summary>
-        public ITexture? ShadowRamp
+        public Texture? ShadowRamp
         {
             get => material.GetTexture("ShadowRamp");
             set => material.SetTexture("ShadowRamp", value);
@@ -45,7 +45,7 @@ public static class CelMaterialExtensions
         /// <summary>
         /// 获取或设置 SpecularRamp（高光渐变）纹理。
         /// </summary>
-        public ITexture? SpecularRamp
+        public Texture? SpecularRamp
         {
             get => material.GetTexture("SpecularRamp");
             set => material.SetTexture("SpecularRamp", value);
@@ -383,7 +383,7 @@ public static class CelMaterialExtensions
 #if NET10_0_OR_GREATER
     [Obsolete("Use the ILM extension property instead.", false)]
 #endif
-    public static ITexture? GetILM(this Material material) => material.GetTexture("ILM");
+    public static Texture? GetILM(this Material material) => material.GetTexture("ILM");
 
     /// <summary>
     /// 设置 ILM（Indirect Light Map，间接光照贴图）纹理。
@@ -391,7 +391,7 @@ public static class CelMaterialExtensions
 #if NET10_0_OR_GREATER
     [Obsolete("Use the ILM extension property instead.", false)]
 #endif
-    public static void SetILM(this Material material, ITexture? texture) => material.SetTexture("ILM", texture);
+    public static void SetILM(this Material material, Texture? texture) => material.SetTexture("ILM", texture);
 
     /// <summary>
     /// 获取 SDF（Signed Distance Field，脸部阴影距离场）纹理。
@@ -399,7 +399,7 @@ public static class CelMaterialExtensions
 #if NET10_0_OR_GREATER
     [Obsolete("Use the SDF extension property instead.", false)]
 #endif
-    public static ITexture? GetSDF(this Material material) => material.GetTexture("SDF");
+    public static Texture? GetSDF(this Material material) => material.GetTexture("SDF");
 
     /// <summary>
     /// 设置 SDF（Signed Distance Field，脸部阴影距离场）纹理。
@@ -407,7 +407,7 @@ public static class CelMaterialExtensions
 #if NET10_0_OR_GREATER
     [Obsolete("Use the SDF extension property instead.", false)]
 #endif
-    public static void SetSDF(this Material material, ITexture? texture) => material.SetTexture("SDF", texture);
+    public static void SetSDF(this Material material, Texture? texture) => material.SetTexture("SDF", texture);
 
     /// <summary>
     /// 获取 ShadowRamp（阴影渐变）纹理。
@@ -415,7 +415,7 @@ public static class CelMaterialExtensions
 #if NET10_0_OR_GREATER
     [Obsolete("Use the ShadowRamp extension property instead.", false)]
 #endif
-    public static ITexture? GetShadowRamp(this Material material) => material.GetTexture("ShadowRamp");
+    public static Texture? GetShadowRamp(this Material material) => material.GetTexture("ShadowRamp");
 
     /// <summary>
     /// 设置 ShadowRamp（阴影渐变）纹理。
@@ -423,7 +423,7 @@ public static class CelMaterialExtensions
 #if NET10_0_OR_GREATER
     [Obsolete("Use the ShadowRamp extension property instead.", false)]
 #endif
-    public static void SetShadowRamp(this Material material, ITexture? texture) => material.SetTexture("ShadowRamp", texture);
+    public static void SetShadowRamp(this Material material, Texture? texture) => material.SetTexture("ShadowRamp", texture);
 
     /// <summary>
     /// 获取 SpecularRamp（高光渐变）纹理。
@@ -431,7 +431,7 @@ public static class CelMaterialExtensions
 #if NET10_0_OR_GREATER
     [Obsolete("Use the SpecularRamp extension property instead.", false)]
 #endif
-    public static ITexture? GetSpecularRamp(this Material material) => material.GetTexture("SpecularRamp");
+    public static Texture? GetSpecularRamp(this Material material) => material.GetTexture("SpecularRamp");
 
     /// <summary>
     /// 设置 SpecularRamp（高光渐变）纹理。
@@ -439,7 +439,7 @@ public static class CelMaterialExtensions
 #if NET10_0_OR_GREATER
     [Obsolete("Use the SpecularRamp extension property instead.", false)]
 #endif
-    public static void SetSpecularRamp(this Material material, ITexture? texture) => material.SetTexture("SpecularRamp", texture);
+    public static void SetSpecularRamp(this Material material, Texture? texture) => material.SetTexture("SpecularRamp", texture);
 
     #endregion
 

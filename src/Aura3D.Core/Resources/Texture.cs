@@ -7,7 +7,7 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 纹理类，支持2D纹理的加载、上传和渲染
 /// </summary>
-public class Texture : BaseTexture<Texture>, IClone<Texture>, ITexture
+public class Texture : BaseTexture<Texture>, IClone<Texture>
 {
     /// <summary>
     /// 从颜色创建纯色纹理
