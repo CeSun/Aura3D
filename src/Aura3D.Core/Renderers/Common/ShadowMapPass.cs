@@ -55,6 +55,8 @@ public class ShadowMapPass : RenderPass
             if (rt == null)
             {
                 rt = new CubeRenderTarget().SetDepthTexture(TextureFormat.DepthComponent24).SetSize(1024, 1024);
+                renderPipeline.EnsureUploaded(rt);
+                pointLight.SetPipelineGpuResource("ShadowMapRenderTarget", rt);
             }
 
             gl.Viewport(0, 0, rt.Width, rt.Height);
