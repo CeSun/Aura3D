@@ -40,10 +40,10 @@ public class DirectionalLight : Light
 }
 
 /// <summary>
-/// CSM（级联阴影贴图）运行时数据。作为 IGpuResource 缓存在方向光节点上，
+/// CSM（级联阴影贴图）运行时数据。作为 IGpuState 缓存在方向光节点上，
 /// 由 ShadowMapPass 创建和填充，各光照 Pass 读取。
 /// </summary>
-public class CsmShadowData : IGpuResource
+public class CsmShadowData : IGpuState
 {
     /// <summary>CSM 级联的 lightViewProj 矩阵数组。</summary>
     public System.Numerics.Matrix4x4[] CascadeMatrices { get; set; } = [];
@@ -62,8 +62,6 @@ public class CsmShadowData : IGpuResource
 
     /// <summary>级联数量。</summary>
     public int CascadeCount { get; set; }
-
-    public bool NeedsUpload { get; set; } = true;
 
     public void Upload(GL gl)
     {

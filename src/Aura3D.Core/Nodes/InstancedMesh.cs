@@ -9,7 +9,7 @@ namespace Aura3D.Core.Nodes;
 /// <summary>
 /// 表示一个可用于实例化渲染的网格节点。
 /// </summary>
-public class InstancedMesh : Node, IGpuResource
+public class InstancedMesh : Node, IGpuState
 {
     /// <summary>
     /// 添加一个新的实例。
@@ -19,8 +19,6 @@ public class InstancedMesh : Node, IGpuResource
     public unsafe int AddInstance(Matrix4x4 transform)
     {
         _instanceCount = geometry.AddInstance(transform) + 1;
-        NeedsUpload = true;
-
         // 更新每个实例的世界包围盒
         UpdateInstanceWorldBoundingBox(_instanceCount - 1, transform);
 
@@ -32,8 +30,6 @@ public class InstancedMesh : Node, IGpuResource
     {
         geometry.RemoveInstance(index);
         _instanceCount = geometry.InstanceCount;
-        NeedsUpload = true;
-
         // 移除对应的世界包围盒
         if (index < _instanceWorldBoundingBoxes.Count)
         {
@@ -45,8 +41,6 @@ public class InstancedMesh : Node, IGpuResource
     public unsafe void UpdateInstance(int index, Matrix4x4 transform)
     {
         geometry.UpdateInstance(index, transform);
-        NeedsUpload = true;
-
         // 更新每个实例的世界包围盒
         UpdateInstanceWorldBoundingBox(index, transform);
     }
@@ -64,8 +58,6 @@ public class InstancedMesh : Node, IGpuResource
             _material = value;
         }
     }
-
-    public bool NeedsUpload { get; set; }
 
     private InstancedGeometry geometry { get; set; } = null!;
 
@@ -284,7 +276,6 @@ public class InstancedMesh : Node, IGpuResource
     public void SetAttributeEnabled(string name, bool enabled)
     {
         geometry.SetAttributeEnabled(name, enabled);
-        NeedsUpload = true;
     }
 
     /// <summary>
@@ -298,7 +289,6 @@ public class InstancedMesh : Node, IGpuResource
         where T : unmanaged
     {
         geometry.SetInstanceAttribute(attribute, componentCount, data);
-        NeedsUpload = true;
     }
 
     /// <summary>
@@ -313,7 +303,6 @@ public class InstancedMesh : Node, IGpuResource
 
         _worldBoundingBoxDirty = true;
 
-        NeedsUpload = true;
     }
 
     /// <summary>
@@ -342,10 +331,9 @@ public class InstancedMesh : Node, IGpuResource
 
         geometryGpuState ??= new InstancedGeometryGpuState(geometry);
 
-        if (geometryGpuState.Vao == 0 || geometry.NeedsUpload)
+        if (geometryGpuState.Vao == 0)
         {
             geometryGpuState.Upload(gl);
-            geometry.NeedsUpload = false;
         }
     }
 }

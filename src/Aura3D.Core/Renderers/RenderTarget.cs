@@ -6,7 +6,7 @@ namespace Aura3D.Core.Renderers;
 /// <summary>
 /// 渲染目标类，用于管理帧缓冲对象及其关联的颜色纹理和深度/模板纹理。
 /// </summary>
-public class RenderTarget : IRenderTarget
+public class RenderTarget : IGpuState
 {
     /// <summary>
     /// 初始化 <see cref="RenderTarget"/> 类的新实例。
@@ -41,11 +41,6 @@ public class RenderTarget : IRenderTarget
     public RenderTexture DepthStencilTexture => depthStencilTexture;
 
     /// <summary>
-    /// 获取或设置一个值，指示是否需要上传 GPU 数据。
-    /// </summary>
-    public bool NeedsUpload { get; set; } = true;
-
-    /// <summary>
     /// 获取或设置帧缓冲对象的 ID。
     /// </summary>
     public uint FrameBufferId { get; set; }
@@ -74,7 +69,6 @@ public class RenderTarget : IRenderTarget
         Width = width;
         Height = height;
         SyncTextureSizes();
-        NeedsUpload = true;
         return this;
     }
 

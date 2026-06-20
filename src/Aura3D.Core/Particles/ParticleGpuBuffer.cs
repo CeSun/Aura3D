@@ -1,4 +1,5 @@
 using Aura3D.Core.Resources;
+using Aura3D.Core.Renderers;
 using Silk.NET.OpenGLES;
 
 namespace Aura3D.Core.Particles;
@@ -6,12 +7,10 @@ namespace Aura3D.Core.Particles;
 /// <summary>
 /// Manages GPU buffers for particle instanced rendering.
 /// Single interleaved VBO per ParticleEmitter, with grow-only capacity.
-/// Implements IGpuResource so the render pipeline manages its upload/destroy lifecycle.
+/// Implements IGpuState and is uploaded lazily on first use.
 /// </summary>
-public unsafe class ParticleGpuBuffer : IGpuResource
+public unsafe class ParticleGpuBuffer : IGpuState
 {
-    public bool NeedsUpload { get; set; }
-
     /// <summary>Floats per instance: posRot(4) + color(4) + sizeAge(2) = 10</summary>
     private const int FloatsPerInstance = 10;
     private const int BytesPerInstance = FloatsPerInstance * sizeof(float);
@@ -46,11 +45,10 @@ public unsafe class ParticleGpuBuffer : IGpuResource
             _dataDirty = true;
         }
 
-        NeedsUpload = true;
     }
 
     /// <summary>
-    /// IGpuResource.Upload — called by the render pipeline to upload data to GPU.
+    /// Upload — called by the render pipeline to upload data to GPU.
     /// All GL operations happen here.
     /// </summary>
     public void Upload(GL gl)
@@ -184,13 +182,12 @@ public unsafe class ParticleGpuBuffer : IGpuResource
 /// <summary>
 /// Shared quad geometry for particle billboard rendering.
 /// Owned by each ParticlePass instance so multiple controls/render pipelines work correctly.
-/// Implements IGpuResource so the render pipeline manages its upload/destroy lifecycle.
+/// Implements IGpuState and is uploaded lazily on first use.
 /// </summary>
-internal unsafe class ParticleQuadGeometry : IGpuResource
+internal unsafe class ParticleQuadGeometry : IGpuState
 {
     public uint QuadVbo { get; private set; }
     public uint QuadEbo { get; private set; }
-    public bool NeedsUpload { get; set; } = true;
 
     public void Upload(GL gl)
     {
@@ -226,6 +223,5 @@ internal unsafe class ParticleQuadGeometry : IGpuResource
     {
         if (QuadVbo != 0) { gl.DeleteBuffer(QuadVbo); QuadVbo = 0; }
         if (QuadEbo != 0) { gl.DeleteBuffer(QuadEbo); QuadEbo = 0; }
-        NeedsUpload = true;
     }
 }

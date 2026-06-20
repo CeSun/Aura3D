@@ -109,12 +109,8 @@ public abstract partial class RenderPipeline
     /// </summary>
     public List<RenderPass> OnceRenderPasses { get; } = new List<RenderPass>();
 
-    /// <summary>
-    /// 管线追踪的所有已上传 GPU 资源，用于管线销毁时统一清理。
-    /// </summary>
-    public HashSet<IGpuResource> GpuResources { get; } = new HashSet<IGpuResource>();
-
     private HashSet<IGpuState> GpuStates { get; } = new HashSet<IGpuState>();
+    private HashSet<IGpuState> uploadedGpuStates = new HashSet<IGpuState>();
 
     private ConditionalWeakTable<Material, MaterialGpuState> materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
     private ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState> boneMatrixBufferGpuStates = new ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState>();
@@ -236,17 +232,22 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 确保指定 GPU 资源已上传到 GPU。若 NeedsUpload 为 true 则执行 Upload 并清标记。
-    /// 所有渲染通道使用资源前必须通过此方法，实现懒上传。
+    /// 确保指定 GPU 状态已完成首次上传。
+    /// 当前仅处理首次上传，不处理后续资源更新。
     /// </summary>
-    public void EnsureUploaded(IGpuResource resource)
+    public void EnsureUploaded(IGpuState resource)
     {
-        if (resource.NeedsUpload)
+        if (uploadedGpuStates.Add(resource))
         {
             resource.Upload(gl!);
-            resource.NeedsUpload = false;
-            GpuResources.Add(resource);
+            GpuStates.Add(resource);
         }
+    }
+
+    internal void RemoveGpuState(IGpuState gpuState)
+    {
+        uploadedGpuStates.Remove(gpuState);
+        GpuStates.Remove(gpuState);
     }
 
     public MaterialGpuState GetMaterialGpuState(Material material)
@@ -773,7 +774,11 @@ public abstract partial class RenderPipeline
         {
             _internalCube = new InternalCube();
         }
-        EnsureUploaded(_internalCube);
+        GpuStates.Add(_internalCube);
+        if (_internalCube.Vao == 0)
+        {
+            _internalCube.Upload(gl);
+        }
         gl.BindVertexArray(_internalCube.Vao);
         gl.DrawArrays(GLEnum.Triangles, 0, 36);
     }
@@ -789,7 +794,11 @@ public abstract partial class RenderPipeline
         {
             _internalQuad = new InternalQuad();
         }
-        EnsureUploaded(_internalQuad);
+        GpuStates.Add(_internalQuad);
+        if (_internalQuad.Vao == 0)
+        {
+            _internalQuad.Upload(gl);
+        }
         gl.BindVertexArray(_internalQuad.Vao);
         gl.DrawElements(GLEnum.Triangles, 6, GLEnum.UnsignedInt, (void*)0);
     }
@@ -799,14 +808,6 @@ public abstract partial class RenderPipeline
     /// </summary>
     public virtual void Destroy()
     {
-        foreach(var gpuResource in GpuResources)
-        {
-            gpuResource.Destroy(gl!);
-            gpuResource.NeedsUpload = true;
-        }
-
-        GpuResources.Clear();
-
         foreach (var pass in OnceRenderPasses)
         {
             pass.Destroy();
@@ -821,6 +822,7 @@ public abstract partial class RenderPipeline
             gpuState.Destroy(gl!);
         }
         GpuStates.Clear();
+        uploadedGpuStates.Clear();
         materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
         boneMatrixBufferGpuStates = new ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState>();
         geometryGpuStates = new ConditionalWeakTable<Geometry, GeometryGpuState>();
@@ -838,13 +840,11 @@ public abstract partial class RenderPipeline
     }
 }
 
-class InternalCube : IGpuResource
+class InternalCube : IGpuState
 {
     public uint Vao;
 
     public uint Vbo;
-
-    public bool NeedsUpload { get; set; } = true;
 
     public void Destroy(GL gl)
     {
@@ -928,15 +928,13 @@ class InternalCube : IGpuResource
     }
 }
 
-class InternalQuad : IGpuResource
+class InternalQuad : IGpuState
 {
     public uint Vao;
 
     public uint Vbo;
 
     public uint Ebo;
-
-    public bool NeedsUpload { get; set; } = true;
 
     struct QuadVertex
     {

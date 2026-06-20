@@ -156,7 +156,7 @@ public class ShadowMapPass : RenderPass
                     mainCamera.NearPlane, mainCamera.FarPlane,
                     cascades, csmSplitLambda, csmSplits);
 
-                // 获取或创建 CSM 资源（通过管线缓存，IGpuResource 生命周期由管线管理）
+                // 获取或创建 CSM 资源（通过管线缓存，由渲染管线统一销毁）
                 var csmData = directionalLight.GetPipelineGpuResource<CsmShadowData>(nameof(CsmShadowData));
                 if (csmData == null ||
                     csmData.Resolution != csmRes ||
@@ -237,7 +237,7 @@ public class ShadowMapPass : RenderPass
                 var oldRt = directionalLight.GetPipelineGpuResource<RenderTarget>("ShadowMapRenderTarget");
                 if (oldRt != null)
                 {
-                    renderPipeline.GpuResources.Remove(oldRt);
+                    renderPipeline.RemoveGpuState(oldRt);
                     oldRt.Destroy(gl);
                     directionalLight.RemovePipelineGpuResource("ShadowMapRenderTarget");
                 }

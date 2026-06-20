@@ -2,6 +2,7 @@ using Aura3D.Core.Scenes;
 using Aura3D.Core.Resources;
 using System.Numerics;
 using Aura3D.Core.Math;
+using Aura3D.Core.Renderers;
 
 namespace Aura3D.Core.Nodes;
 
@@ -509,15 +510,15 @@ public partial class Node
 
     #endregion
 
-    public Dictionary<string, IGpuResource> _pipelineGpuResources = new Dictionary<string, IGpuResource>();
+    public Dictionary<string, IGpuState> _pipelineGpuResources = new Dictionary<string, IGpuState>();
 
     /// <summary>
     /// 按名称获取渲染管线中的 GPU 资源。
     /// </summary>
-    /// <typeparam name="T">GPU 资源类型。</typeparam>
+    /// <typeparam name="T">GPU 状态类型。</typeparam>
     /// <param name="name">资源名称。</param>
-    /// <returns>匹配类型的 GPU 资源，若不存在则返回默认值。</returns>
-    public T? GetPipelineGpuResource<T>(string name) where T : IGpuResource
+    /// <returns>匹配类型的 GPU 状态，若不存在则返回默认值。</returns>
+    public T? GetPipelineGpuResource<T>(string name) where T : class, IGpuState
     {
         if (_pipelineGpuResources.TryGetValue(name, out var resource))
         {
@@ -548,8 +549,8 @@ public partial class Node
     /// <summary>
     /// 查询渲染管线中的所有 GPU 资源。
     /// </summary>
-    /// <returns>GPU 资源的可查询集合。</returns>
-    public IQueryable<IGpuResource> QueryPipelineGpuResources()
+    /// <returns>GPU 状态的可查询集合。</returns>
+    public IQueryable<IGpuState> QueryPipelineGpuResources()
     {
         return _pipelineGpuResources.Values.AsQueryable();
     }
@@ -567,8 +568,8 @@ public partial class Node
     /// 设置渲染管线中的 GPU 资源。
     /// </summary>
     /// <param name="name">资源名称。</param>
-    /// <param name="resource">GPU 资源。</param>
-    public void SetPipelineGpuResource(string name, IGpuResource resource)
+    /// <param name="resource">GPU 状态。</param>
+    public void SetPipelineGpuResource(string name, IGpuState resource)
     {
         _pipelineGpuResources[name] = resource;
     }

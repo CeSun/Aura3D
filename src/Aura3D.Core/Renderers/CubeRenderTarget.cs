@@ -3,7 +3,7 @@ using Silk.NET.OpenGLES;
 
 namespace Aura3D.Core.Renderers;
 
-public class CubeRenderTarget : IRenderTarget
+public class CubeRenderTarget : IGpuState
 {
 
     public CubeRenderTarget()
@@ -19,8 +19,6 @@ public class CubeRenderTarget : IRenderTarget
     protected RenderCubeTexture depthStencilTexture;
 
     public RenderCubeTexture DepthStencilTexture => depthStencilTexture;
-
-    public bool NeedsUpload { get; set; } = false;
 
     public uint FrameBufferId { get; set; }
 
@@ -69,7 +67,6 @@ public class CubeRenderTarget : IRenderTarget
         Width = width;
         Height = height;
         SyncTextureSizes();
-        NeedsUpload = true;
         return this;
     }
 

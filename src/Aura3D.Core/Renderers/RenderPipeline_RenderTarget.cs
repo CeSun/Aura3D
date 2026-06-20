@@ -20,6 +20,7 @@ public abstract partial class RenderPipeline
             {
                 if (DateTime.Now - dateTime > TimeSpan.FromSeconds(1))
                 {
+                    RemoveGpuState(rt);
                     rt.Destroy(gl!);
                     expiredSizes.Add(rtSize);
                 }

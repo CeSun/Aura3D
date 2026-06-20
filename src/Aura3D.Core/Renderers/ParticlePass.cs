@@ -10,7 +10,7 @@ namespace Aura3D.Core;
 /// <summary>
 /// Particle render pass using billboard quads + GPU instancing.
 /// Renders directly from ParticleSystem nodes, bypassing the InstancedMesh pipeline.
-/// GPU buffer upload is managed by the render pipeline via IGpuResource.
+/// GPU buffer upload is managed by the render pipeline on first use.
 /// </summary>
 public class ParticlePass : RenderPass
 {
