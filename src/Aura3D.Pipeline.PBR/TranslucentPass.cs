@@ -267,9 +267,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
 
         if (mesh.IsSkinnedMesh)
         {
-            var boneBuffer = mesh.AnimationSampler?.BoneMatrixBuffer ?? mesh.Skeleton.BoneMatrixBuffer;
-            renderPipeline.EnsureUploaded(boneBuffer);
-            boneBuffer.Bind();
+            BindBoneMatrixBuffer(mesh);
         }
     }
 

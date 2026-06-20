@@ -352,9 +352,7 @@ public class ShadowMapPass : RenderPass
 
         if (mesh.IsSkinnedMesh)
         {
-            var boneBuffer = mesh.AnimationSampler?.BoneMatrixBuffer ?? mesh.Skeleton.BoneMatrixBuffer;
-            renderPipeline.EnsureUploaded(boneBuffer);
-            boneBuffer.Bind();
+            BindBoneMatrixBuffer(mesh);
         }
         base.RenderMesh(mesh, view, projection);
     }

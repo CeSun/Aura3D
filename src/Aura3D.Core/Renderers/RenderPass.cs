@@ -199,6 +199,15 @@ public partial class RenderPass
             gl.DrawArraysInstanced(primitive, 0, (uint)instancedMesh.VertexCount, (uint)instancedMesh.InstanceCount);
     }
 
+    protected void BindBoneMatrixBuffer(Mesh mesh)
+    {
+        if (mesh.IsSkinnedMesh == false)
+            return;
+
+        var boneBuffer = mesh.AnimationSampler?.BoneMatrixBuffer ?? mesh.Skeleton!.BoneMatrixBuffer;
+        renderPipeline.BindBoneMatrixBuffer(boneBuffer);
+    }
+
     void BindMaterialParameters(Material? material)
     {
         if (material == null)
