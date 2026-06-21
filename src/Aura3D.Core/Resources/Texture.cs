@@ -131,35 +131,6 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
         return new List<byte>(MemoryMarshal.AsBytes(data).ToArray());
     }
 
-    internal InternalFormat GetGLInternalFormat()
-    {
-        return GLInternalFormat;
-    }
-
-    internal GLEnum GetGlFormat()
-    {
-        return GlFormat;
-    }
-
-    internal GLEnum GetGlWarpS()
-    {
-        return GlWarpS;
-    }
-
-    internal GLEnum GetGlWarpT()
-    {
-        return GlWarpT;
-    }
-
-    internal GLEnum GetGlMagFilter()
-    {
-        return GlMagFilter;
-    }
-
-    internal GLEnum GetGlMinFilter()
-    {
-        return GlMinFilter;
-    }
 }
 
 /// <summary>

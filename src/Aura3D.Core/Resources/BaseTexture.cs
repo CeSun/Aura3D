@@ -192,7 +192,7 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
         IsGammaSpace = isGamma;
         return (T)this;
     }
-    protected InternalFormat GLInternalFormat => IsHdr switch
+    internal InternalFormat GLInternalFormat => IsHdr switch
     {
         true when ColorFormat == ColorFormat.RGB => InternalFormat.Rgb16f,
         true when ColorFormat == ColorFormat.RGBA => InternalFormat.Rgba16f,
@@ -201,13 +201,13 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
         _ => InternalFormat.Rgb8
     };
 
-    protected GLEnum GlFormat => ColorFormat switch
+    internal GLEnum GlFormat => ColorFormat switch
     {
         ColorFormat.RGB => GLEnum.Rgb,
         ColorFormat.RGBA => GLEnum.Rgba,
         _ => GLEnum.False
     };
-    protected GLEnum GlWarpS => WrapS switch
+    internal GLEnum GlWarpS => WrapS switch
     {
         TextureWrapMode.Repeat => GLEnum.Repeat,
         TextureWrapMode.MirroredRepeat => GLEnum.MirroredRepeat,
@@ -216,7 +216,7 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
         _ => GLEnum.False
     };
 
-    protected GLEnum GlWarpT => WrapT switch
+    internal GLEnum GlWarpT => WrapT switch
     {
         TextureWrapMode.Repeat => GLEnum.Repeat,
         TextureWrapMode.MirroredRepeat => GLEnum.MirroredRepeat,
@@ -225,7 +225,7 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
         _ => GLEnum.False
     };
 
-    protected GLEnum GlMinFilter => MinFilter switch
+    internal GLEnum GlMinFilter => MinFilter switch
     {
         TextureFilterMode.Nearest => GLEnum.Nearest,
         TextureFilterMode.Linear => GLEnum.Linear,
@@ -233,7 +233,7 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     };
 
 
-    protected GLEnum GlMagFilter => MagFilter switch
+    internal GLEnum GlMagFilter => MagFilter switch
     {
         TextureFilterMode.Nearest => GLEnum.Nearest,
         TextureFilterMode.Linear => GLEnum.Linear,

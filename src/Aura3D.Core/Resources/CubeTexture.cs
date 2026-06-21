@@ -111,7 +111,7 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
         }
     }
 
-    protected GLEnum GlWarpR => WrapR switch
+    internal GLEnum GlWarpR => WrapR switch
     {
         TextureWrapMode.Repeat => GLEnum.Repeat,
         TextureWrapMode.MirroredRepeat => GLEnum.MirroredRepeat,
@@ -119,41 +119,6 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
         TextureWrapMode.ClampToBorder => GLEnum.ClampToBorder,
         _ => GLEnum.False
     };
-
-    internal InternalFormat GetGLInternalFormat()
-    {
-        return GLInternalFormat;
-    }
-
-    internal GLEnum GetGlFormat()
-    {
-        return GlFormat;
-    }
-
-    internal GLEnum GetGlWarpS()
-    {
-        return GlWarpS;
-    }
-
-    internal GLEnum GetGlWarpT()
-    {
-        return GlWarpT;
-    }
-
-    internal GLEnum GetGlWarpR()
-    {
-        return GlWarpR;
-    }
-
-    internal GLEnum GetGlMagFilter()
-    {
-        return GlMagFilter;
-    }
-
-    internal GLEnum GetGlMinFilter()
-    {
-        return GlMinFilter;
-    }
 
     internal void SetFaceBuffers(List<byte>[] data)
     {
