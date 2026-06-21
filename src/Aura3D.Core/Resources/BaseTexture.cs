@@ -1,5 +1,3 @@
-using Silk.NET.OpenGLES;
-
 namespace Aura3D.Core.Resources;
 
 /// <summary>
@@ -192,53 +190,4 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
         IsGammaSpace = isGamma;
         return (T)this;
     }
-    internal InternalFormat GLInternalFormat => IsHdr switch
-    {
-        true when ColorFormat == ColorFormat.RGB => InternalFormat.Rgb16f,
-        true when ColorFormat == ColorFormat.RGBA => InternalFormat.Rgba16f,
-        false when ColorFormat == ColorFormat.RGB => IsGammaSpace ? InternalFormat.Srgb8 : InternalFormat.Rgb8,
-        false when ColorFormat == ColorFormat.RGBA => IsGammaSpace ? InternalFormat.Srgb8Alpha8 : InternalFormat.Rgba8,
-        _ => InternalFormat.Rgb8
-    };
-
-    internal GLEnum GlFormat => ColorFormat switch
-    {
-        ColorFormat.RGB => GLEnum.Rgb,
-        ColorFormat.RGBA => GLEnum.Rgba,
-        _ => GLEnum.False
-    };
-    internal GLEnum GlWarpS => WrapS switch
-    {
-        TextureWrapMode.Repeat => GLEnum.Repeat,
-        TextureWrapMode.MirroredRepeat => GLEnum.MirroredRepeat,
-        TextureWrapMode.ClampToEdge => GLEnum.ClampToEdge,
-        TextureWrapMode.ClampToBorder => GLEnum.ClampToBorder,
-        _ => GLEnum.False
-    };
-
-    internal GLEnum GlWarpT => WrapT switch
-    {
-        TextureWrapMode.Repeat => GLEnum.Repeat,
-        TextureWrapMode.MirroredRepeat => GLEnum.MirroredRepeat,
-        TextureWrapMode.ClampToEdge => GLEnum.ClampToEdge,
-        TextureWrapMode.ClampToBorder => GLEnum.ClampToBorder,
-        _ => GLEnum.False
-    };
-
-    internal GLEnum GlMinFilter => MinFilter switch
-    {
-        TextureFilterMode.Nearest => GLEnum.Nearest,
-        TextureFilterMode.Linear => GLEnum.Linear,
-        _ => GLEnum.False
-    };
-
-
-    internal GLEnum GlMagFilter => MagFilter switch
-    {
-        TextureFilterMode.Nearest => GLEnum.Nearest,
-        TextureFilterMode.Linear => GLEnum.Linear,
-        _ => GLEnum.False
-    };
-
-
 }

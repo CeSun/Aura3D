@@ -1,4 +1,3 @@
-using Silk.NET.OpenGLES;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
@@ -110,15 +109,6 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
             MarkModified();
         }
     }
-
-    internal GLEnum GlWarpR => WrapR switch
-    {
-        TextureWrapMode.Repeat => GLEnum.Repeat,
-        TextureWrapMode.MirroredRepeat => GLEnum.MirroredRepeat,
-        TextureWrapMode.ClampToEdge => GLEnum.ClampToEdge,
-        TextureWrapMode.ClampToBorder => GLEnum.ClampToBorder,
-        _ => GLEnum.False
-    };
 
     internal void SetFaceBuffers(List<byte>[] data)
     {

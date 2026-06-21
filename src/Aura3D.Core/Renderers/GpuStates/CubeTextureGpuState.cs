@@ -58,11 +58,11 @@ internal class CubeTextureGpuState : IResourceGpuState
 
     protected void ApplyTextureParameters(GL gl, CubeTexture texture)
     {
-        gl.TexParameter(GLEnum.TextureCubeMap, TextureParameterName.TextureWrapR, (int)texture.GlWarpR);
-        gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int)texture.GlWarpS);
-        gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int)texture.GlWarpT);
-        gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int)texture.GlMagFilter);
-        gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int)texture.GlMinFilter);
+        gl.TexParameter(GLEnum.TextureCubeMap, TextureParameterName.TextureWrapR, (int)texture.WrapR.ToGlWrap());
+        gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int)texture.WrapS.ToGlWrap());
+        gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int)texture.WrapT.ToGlWrap());
+        gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int)texture.MagFilter.ToGlFilter());
+        gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int)texture.MinFilter.ToGlFilter());
     }
 
     protected virtual unsafe void UploadTextureStorage(GL gl, CubeTexture texture)
@@ -74,7 +74,7 @@ internal class CubeTextureGpuState : IResourceGpuState
                 var ldrData = texture.AsLdrData(i);
                 fixed (byte* p = ldrData)
                 {
-                    gl.TexImage2D(GLEnum.TextureCubeMapPositiveX + i, 0, texture.GLInternalFormat, texture.Width, texture.Height, 0, texture.GlFormat, GLEnum.UnsignedByte, p);
+                    gl.TexImage2D(GLEnum.TextureCubeMapPositiveX + i, 0, texture.ToGlInternalFormat(), texture.Width, texture.Height, 0, texture.ColorFormat.ToGlFormat(), GLEnum.UnsignedByte, p);
                 }
             }
             else
@@ -82,7 +82,7 @@ internal class CubeTextureGpuState : IResourceGpuState
                 var hdrData = texture.AsHdrData(i);
                 fixed (float* p = hdrData)
                 {
-                    gl.TexImage2D(GLEnum.TextureCubeMapPositiveX + i, 0, texture.GLInternalFormat, texture.Width, texture.Height, 0, texture.GlFormat, GLEnum.Float, p);
+                    gl.TexImage2D(GLEnum.TextureCubeMapPositiveX + i, 0, texture.ToGlInternalFormat(), texture.Width, texture.Height, 0, texture.ColorFormat.ToGlFormat(), GLEnum.Float, p);
                 }
             }
         }
