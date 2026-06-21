@@ -1,5 +1,4 @@
 using Silk.NET.OpenGLES;
-using System.Runtime.InteropServices;
 
 namespace Aura3D.Core.Renderers;
 
@@ -8,6 +7,8 @@ internal class TextureGpuState : IResourceGpuState
     private WeakReference<Aura3D.Core.Resources.Texture> texture;
 
     public bool IsAlive => texture.TryGetTarget(out _);
+    public ulong Version => GetResource().Version;
+    public ulong SyncedVersion { get; protected set; }
 
     public virtual uint TextureId { get; protected set; }
 
@@ -35,6 +36,7 @@ internal class TextureGpuState : IResourceGpuState
         UploadTextureStorage(gl, texture);
 
         gl.BindTexture(TextureTarget.Texture2D, 0);
+        SyncedVersion = texture.Version;
     }
 
     protected Aura3D.Core.Resources.Texture GetResource()
@@ -66,13 +68,14 @@ internal class TextureGpuState : IResourceGpuState
     {
         if (texture.IsHdr == true)
         {
-            if (texture.HdrData == null || texture.HdrData.Count == 0)
+            var hdrData = texture.AsHdrData();
+            if (hdrData.IsEmpty)
             {
                 gl.TexImage2D(GLEnum.Texture2D, 0, texture.GetGLInternalFormat(), texture.Width, texture.Height, 0, texture.GetGlFormat(), GLEnum.Float, null);
             }
             else
             {
-                fixed (void* p = CollectionsMarshal.AsSpan(texture.HdrData))
+                fixed (float* p = hdrData)
                 {
                     gl.TexImage2D(GLEnum.Texture2D, 0, texture.GetGLInternalFormat(), texture.Width, texture.Height, 0, texture.GetGlFormat(), GLEnum.Float, p);
                 }
@@ -80,13 +83,14 @@ internal class TextureGpuState : IResourceGpuState
         }
         else
         {
-            if (texture.LdrData == null || texture.LdrData.Count == 0)
+            var ldrData = texture.AsLdrData();
+            if (ldrData.IsEmpty)
             {
                 gl.TexImage2D(GLEnum.Texture2D, 0, texture.GetGLInternalFormat(), texture.Width, texture.Height, 0, texture.GetGlFormat(), GLEnum.UnsignedByte, null);
             }
             else
             {
-                fixed (void* p = CollectionsMarshal.AsSpan(texture.LdrData))
+                fixed (byte* p = ldrData)
                 {
                     gl.TexImage2D(GLEnum.Texture2D, 0, texture.GetGLInternalFormat(), texture.Width, texture.Height, 0, texture.GetGlFormat(), GLEnum.UnsignedByte, p);
                 }

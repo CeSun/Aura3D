@@ -510,17 +510,17 @@ public partial class Node
 
     #endregion
 
-    public Dictionary<string, IGpuState> _pipelineGpuResources = new Dictionary<string, IGpuState>();
+    public Dictionary<string, IRuntimeGpuState> _pipelineGpuStates = new Dictionary<string, IRuntimeGpuState>();
 
     /// <summary>
-    /// 按名称获取渲染管线中的 GPU 资源。
+    /// 按名称获取渲染管线中的运行时 GPU 状态。
     /// </summary>
     /// <typeparam name="T">GPU 状态类型。</typeparam>
-    /// <param name="name">资源名称。</param>
+    /// <param name="name">状态名称。</param>
     /// <returns>匹配类型的 GPU 状态，若不存在则返回默认值。</returns>
-    public T? GetPipelineGpuResource<T>(string name) where T : class, IGpuState
+    public T? GetPipelineGpuState<T>(string name) where T : class, IRuntimeGpuState
     {
-        if (_pipelineGpuResources.TryGetValue(name, out var resource))
+        if (_pipelineGpuStates.TryGetValue(name, out var resource))
         {
             if (resource is T typedResource)
             {
@@ -528,7 +528,7 @@ public partial class Node
             }
             else
             {
-                throw new InvalidCastException($"GPU资源 '{name}' 的类型不匹配，无法转换为 {typeof(T).Name}");
+                throw new InvalidCastException($"GPU 状态 '{name}' 的类型不匹配，无法转换为 {typeof(T).Name}");
             }
         }
         else
@@ -538,40 +538,40 @@ public partial class Node
     }
 
     /// <summary>
-    /// 移除渲染管线中指定名称的 GPU 资源。
+    /// 移除渲染管线中指定名称的运行时 GPU 状态。
     /// </summary>
-    /// <param name="name">资源名称。</param>
-    public void RemovePipelineGpuResource(string name)
+    /// <param name="name">状态名称。</param>
+    public void RemovePipelineGpuState(string name)
     {
-        _pipelineGpuResources.Remove(name);
+        _pipelineGpuStates.Remove(name);
     }
 
     /// <summary>
-    /// 查询渲染管线中的所有 GPU 资源。
+    /// 查询渲染管线中的所有运行时 GPU 状态。
     /// </summary>
     /// <returns>GPU 状态的可查询集合。</returns>
-    public IQueryable<IGpuState> QueryPipelineGpuResources()
+    public IQueryable<IRuntimeGpuState> QueryPipelineGpuStates()
     {
-        return _pipelineGpuResources.Values.AsQueryable();
+        return _pipelineGpuStates.Values.AsQueryable();
     }
 
     /// <summary>
-    /// 清空渲染管线中的所有 GPU 资源。
+    /// 清空渲染管线中的所有运行时 GPU 状态。
     /// </summary>
-    public void ClearPipelineGpuResources()
+    public void ClearPipelineGpuStates()
     {
-        _pipelineGpuResources.Clear();
+        _pipelineGpuStates.Clear();
     }
 
 
     /// <summary>
-    /// 设置渲染管线中的 GPU 资源。
+    /// 设置渲染管线中的运行时 GPU 状态。
     /// </summary>
-    /// <param name="name">资源名称。</param>
+    /// <param name="name">状态名称。</param>
     /// <param name="resource">GPU 状态。</param>
-    public void SetPipelineGpuResource(string name, IGpuState resource)
+    public void SetPipelineGpuState(string name, IRuntimeGpuState resource)
     {
-        _pipelineGpuResources[name] = resource;
+        _pipelineGpuStates[name] = resource;
     }
 
     /// <summary>

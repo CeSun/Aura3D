@@ -6,40 +6,124 @@ namespace Aura3D.Core.Resources;
 /// 纹理基类，提供纹理的通用属性和方法
 /// </summary>
 /// <typeparam name="T">纹理类型</typeparam>
-public abstract class BaseTexture<T> where T : BaseTexture<T>
+public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<T>
 {
+    public ulong Version { get; protected set; } = 1;
+
+    protected void MarkModified()
+    {
+        Version++;
+    }
+
     /// <summary>
     /// 是否为 HDR 纹理
     /// </summary>
-    public bool IsHdr { get; set; } = false;
+    private bool _isHdr;
+    public bool IsHdr
+    {
+        get => _isHdr;
+        set
+        {
+            if (_isHdr == value)
+                return;
+            _isHdr = value;
+            MarkModified();
+        }
+    }
     /// <summary>
     /// S 方向环绕模式
     /// </summary>
-    public TextureWrapMode WrapS { get; set; } = TextureWrapMode.ClampToEdge;
+    private TextureWrapMode _wrapS = TextureWrapMode.ClampToEdge;
+    public TextureWrapMode WrapS
+    {
+        get => _wrapS;
+        set
+        {
+            if (_wrapS == value)
+                return;
+            _wrapS = value;
+            MarkModified();
+        }
+    }
 
     /// <summary>
     /// T 方向环绕模式
     /// </summary>
-    public TextureWrapMode WrapT { get; set; } = TextureWrapMode.ClampToEdge;
+    private TextureWrapMode _wrapT = TextureWrapMode.ClampToEdge;
+    public TextureWrapMode WrapT
+    {
+        get => _wrapT;
+        set
+        {
+            if (_wrapT == value)
+                return;
+            _wrapT = value;
+            MarkModified();
+        }
+    }
 
     /// <summary>
     /// 缩小过滤模式
     /// </summary>
-    public TextureFilterMode MinFilter { get; set; } = TextureFilterMode.Linear;
+    private TextureFilterMode _minFilter = TextureFilterMode.Linear;
+    public TextureFilterMode MinFilter
+    {
+        get => _minFilter;
+        set
+        {
+            if (_minFilter == value)
+                return;
+            _minFilter = value;
+            MarkModified();
+        }
+    }
 
     /// <summary>
     /// 放大过滤模式
     /// </summary>
-    public TextureFilterMode MagFilter { get; set; } = TextureFilterMode.Linear;
+    private TextureFilterMode _magFilter = TextureFilterMode.Linear;
+    public TextureFilterMode MagFilter
+    {
+        get => _magFilter;
+        set
+        {
+            if (_magFilter == value)
+                return;
+            _magFilter = value;
+            MarkModified();
+        }
+    }
     /// <summary>
     /// 颜色格式
     /// </summary>
-    public ColorFormat ColorFormat { get; set; }
+    private ColorFormat _colorFormat;
+    public ColorFormat ColorFormat
+    {
+        get => _colorFormat;
+        set
+        {
+            if (_colorFormat == value)
+                return;
+            _colorFormat = value;
+            MarkModified();
+        }
+    }
 
     /// <summary>
     /// 是否在伽马空间
     /// </summary>
-    public bool IsGammaSpace { get; set; } = false;
+    private bool _isGammaSpace;
+    public bool IsGammaSpace
+    {
+        get => _isGammaSpace;
+        set
+        {
+            if (_isGammaSpace == value)
+                return;
+            _isGammaSpace = value;
+            MarkModified();
+        }
+    }
 
 
     /// <summary>

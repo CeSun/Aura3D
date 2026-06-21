@@ -26,6 +26,8 @@ internal class GeometryGpuState : IResourceGpuState<Geometry>
     }
 
     public bool IsAlive => geometry.TryGetTarget(out _);
+    public ulong Version => Resource.Version;
+    public ulong SyncedVersion { get; protected set; }
 
     public uint Vao { get; protected set; }
 
@@ -90,7 +92,8 @@ internal class GeometryGpuState : IResourceGpuState<Geometry>
             gl.VertexAttribPointer(attribute.Location, attribute.Size, GLEnum.Float, false, (uint)(sizeof(float) * attribute.Size), (void*)0);
         }
 
-        if (geometry.Indices.Count > 0)
+        var indices = geometry.GetIndicesBuffer();
+        if (indices.Count > 0)
         {
             if (Ebo == 0)
             {
@@ -99,10 +102,12 @@ internal class GeometryGpuState : IResourceGpuState<Geometry>
 
             gl.BindBuffer(GLEnum.ElementArrayBuffer, Ebo);
 
-            fixed (uint* indexPtr = CollectionsMarshal.AsSpan(geometry.Indices))
+            fixed (uint* indexPtr = CollectionsMarshal.AsSpan(indices))
             {
-                gl.BufferData(GLEnum.ElementArrayBuffer, (nuint)(geometry.Indices.Count * sizeof(uint)), indexPtr, GLEnum.StaticDraw);
+                gl.BufferData(GLEnum.ElementArrayBuffer, (nuint)(indices.Count * sizeof(uint)), indexPtr, GLEnum.StaticDraw);
             }
         }
+
+        SyncedVersion = geometry.Version;
     }
 }

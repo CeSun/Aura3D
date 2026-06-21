@@ -95,7 +95,7 @@ public abstract partial class RenderPipeline
                 {
                     rt.Item1.AddRenderTexture(textureName, textureFormat);
                 }
-                EnsureUploaded(rt.Item1);
+                EnsureSynced(rt.Item1);
                 rtMap.Add(size, rt);
             }
             else

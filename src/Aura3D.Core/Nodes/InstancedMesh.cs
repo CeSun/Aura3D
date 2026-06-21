@@ -9,8 +9,11 @@ namespace Aura3D.Core.Nodes;
 /// <summary>
 /// 表示一个可用于实例化渲染的网格节点。
 /// </summary>
-public class InstancedMesh : Node, IGpuState
+public class InstancedMesh : Node, IRuntimeGpuState
 {
+    public ulong Version => geometry.Version;
+    public ulong SyncedVersion { get; private set; }
+
     /// <summary>
     /// 添加一个新的实例。
     /// </summary>
@@ -320,20 +323,25 @@ public class InstancedMesh : Node, IGpuState
     {
         geometryGpuState?.Destroy(gl);
         geometryGpuState = null;
-        geometry.NeedsUpload = true;
+        SyncedVersion = 0;
     }
 
 
     public unsafe void Upload(GL gl)
     {
         if (_instanceCount == 0)
+        {
+            SyncedVersion = Version;
             return;
+        }
 
         geometryGpuState ??= new InstancedGeometryGpuState(geometry);
 
-        if (geometryGpuState.Vao == 0)
+        if (geometryGpuState.Vao == 0 || geometryGpuState.SyncedVersion != geometry.Version)
         {
             geometryGpuState.Upload(gl);
         }
+
+        SyncedVersion = Version;
     }
 }

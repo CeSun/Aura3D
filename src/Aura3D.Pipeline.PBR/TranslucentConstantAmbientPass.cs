@@ -125,7 +125,7 @@ internal class TranslucentConstantAmbientPass : RenderPass<PBRDeferredPipeline>
 
         if (mesh.IsSkinnedMesh)
         {
-            BindBoneMatrixBuffer(mesh);
+            SyncAndBindBoneMatrixBuffer(mesh);
         }
     }
 

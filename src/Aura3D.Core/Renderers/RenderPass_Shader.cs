@@ -288,7 +288,7 @@ public partial class RenderPass
     {
         if (CurrentShader == null)
             return;
-        uint textureId = renderPipeline.EnsureUploaded(texture);
+        uint textureId = renderPipeline.EnsureSynced(texture);
         var location = CurrentShader.GetUniformLocation(name, gl);
         if (location == -1)
             return;
@@ -311,7 +311,7 @@ public partial class RenderPass
         if (CurrentShader == null)
             return;
 
-        uint textureId = renderPipeline.EnsureUploaded(texture);
+        uint textureId = renderPipeline.EnsureSynced(texture);
 
         var location = CurrentShader.GetUniformLocation(name, gl);
         if (location == -1)

@@ -77,7 +77,7 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRDeferredPipeline>
     {
 
 
-        var perfilteredEnvMap = camera.GetPipelineGpuResource<CubeRenderTarget>("PrefilteredEnvironmentMap");
+        var perfilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap");
         var u_prefilterMap = perfilteredEnvMap.GetTexture(0);
 
         int nearestPowerOfTwo = (int)MathF.Pow(2, MathF.Floor(MathF.Log2(u_prefilterMap.Width)));
@@ -128,10 +128,10 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRDeferredPipeline>
         var u_brdfLUT = RenderPipeline.BrdfLutTexture;
 
 
-        var irradianceMap = camera.GetPipelineGpuResource<CubeRenderTarget>("IrradianceMap");
+        var irradianceMap = camera.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap");
         var u_irradianceMap = irradianceMap.GetTexture(0);
 
-        var perfilteredEnvMap = camera.GetPipelineGpuResource<CubeRenderTarget>("PrefilteredEnvironmentMap");
+        var perfilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap");
         var u_prefilterMap = perfilteredEnvMap.GetTexture(0);
 
 
@@ -178,7 +178,7 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRDeferredPipeline>
 
         if (mesh.IsSkinnedMesh)
         {
-            BindBoneMatrixBuffer(mesh);
+            SyncAndBindBoneMatrixBuffer(mesh);
         }
     }
 
@@ -186,10 +186,10 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRDeferredPipeline>
     {
         var u_brdfLUT = RenderPipeline.BrdfLutTexture;
 
-        var irradianceMap = camera.GetPipelineGpuResource<CubeRenderTarget>("IrradianceMap");
+        var irradianceMap = camera.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap");
         var u_irradianceMap = irradianceMap.GetTexture(0);
 
-        var perfilteredEnvMap = camera.GetPipelineGpuResource<CubeRenderTarget>("PrefilteredEnvironmentMap");
+        var perfilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap");
         var u_prefilterMap = perfilteredEnvMap.GetTexture(0);
 
         UniformMatrix4("viewMatrix", view);

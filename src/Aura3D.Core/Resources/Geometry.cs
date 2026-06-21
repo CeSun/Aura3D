@@ -7,13 +7,16 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 几何体类，存储顶点数据和索引数据
 /// </summary>
-public class Geometry : IClone<Geometry>
+public class Geometry : IClone<Geometry>, IVersionedResource
 {
-    /// <summary>
-    /// 是否需要上传到 GPU。
-    /// 当前仅保留现有的脏语义，后续若统一处理更新策略再进一步收口。
-    /// </summary>
-    public bool NeedsUpload { get; set; } = true;
+    private List<uint> _indices = [];
+
+    public ulong Version { get; protected set; } = 1;
+
+    protected void MarkModified()
+    {
+        Version++;
+    }
 
     internal Dictionary<string, VertexAttribute> VertexAttributes { get; private protected set; } = new();
 
@@ -35,7 +38,7 @@ public class Geometry : IClone<Geometry>
     /// <summary>
     /// 索引列表
     /// </summary>
-    public List<uint> Indices { get; protected set; } = [];
+    public IReadOnlyList<uint> Indices => _indices.AsReadOnly();
 
     /// <summary>
     /// 索引数量
@@ -58,7 +61,18 @@ public class Geometry : IClone<Geometry>
     /// <summary>
     /// 图元类型，默认为 Triangles。
     /// </summary>
-    public PrimitiveType PrimitiveType { get; set; } = PrimitiveType.Triangles;
+    private PrimitiveType _primitiveType = PrimitiveType.Triangles;
+    public PrimitiveType PrimitiveType
+    {
+        get => _primitiveType;
+        set
+        {
+            if (_primitiveType == value)
+                return;
+            _primitiveType = value;
+            MarkModified();
+        }
+    }
 
     public void SetVertexAttribute(string name, uint location, int size, List<float> data)
     {
@@ -79,7 +93,7 @@ public class Geometry : IClone<Geometry>
             Enabled = (location <= 7)
         });
 
-        NeedsUpload = true;
+        MarkModified();
 
         // Position 属性变更时清空局部包围盒缓存，下次访问时重建
         if (name == BuildInVertexAttribute.Position.ToString())
@@ -91,20 +105,27 @@ public class Geometry : IClone<Geometry>
         SetVertexAttribute(attribute.ToString(), (uint)attribute, (int)size, data);
     }
 
-    public void SetIndices(List<uint> indices)
+    public void SetIndices(IReadOnlyList<uint> indices)
     {
-        Indices = indices;
-        NeedsUpload = true;
+        SetIndicesBuffer(new List<uint>(indices));
+        MarkModified();
     }
 
-    public List<float>? GetAttributeData(string name)
+    internal List<uint> GetIndicesBuffer() => _indices;
+
+    private protected void SetIndicesBuffer(List<uint> indices)
+    {
+        _indices = indices;
+    }
+
+    public IReadOnlyList<float>? GetAttributeData(string name)
     {
         if (!VertexAttributes.ContainsKey(name))
             return null;
-        return VertexAttributes[name].Data;
+        return VertexAttributes[name].Data.AsReadOnly();
     }
 
-    public List<float>? GetAttributeData(BuildInVertexAttribute attribute)
+    public IReadOnlyList<float>? GetAttributeData(BuildInVertexAttribute attribute)
     {
         return GetAttributeData(attribute.ToString());
     }
@@ -146,25 +167,25 @@ public class Geometry : IClone<Geometry>
         {
             attr.Enabled = enabled;
             VertexAttributes[name] = attr;
-            NeedsUpload = true;
+            MarkModified();
         }
     }
 
     public Geometry Clone()
     {
-        return new Geometry
+        var geometry = new Geometry
         {
-            Indices = Indices,
             VertexAttributes = VertexAttributes,
             PrimitiveType = PrimitiveType
         };
+        geometry.SetIndicesBuffer(_indices);
+        return geometry;
     }
 
     public Geometry DeepClone()
     {
-        return new Geometry
+        var geometry = new Geometry
         {
-            Indices = new List<uint>(Indices),
             VertexAttributes = VertexAttributes.ToDictionary(
                 kv => kv.Key,
                 kv => new VertexAttribute
@@ -177,6 +198,8 @@ public class Geometry : IClone<Geometry>
                 }),
             PrimitiveType = PrimitiveType
         };
+        geometry.SetIndicesBuffer(new List<uint>(_indices));
+        return geometry;
     }
 }
 
@@ -235,27 +258,29 @@ public class InstanceAttribute
     /// <summary>
     /// 属性名称。
     /// </summary>
-    public string Name = string.Empty;
+    public string Name { get; init; } = string.Empty;
     /// <summary>
     /// 逐实例打包的浮点数据。
     /// </summary>
-    public List<float> Data = new();
+    public IReadOnlyList<float> Data => DataBuffer.AsReadOnly();
+    internal List<float> DataBuffer { get; set; } = new();
     /// <summary>
     /// 单个实例的字节步长。
     /// </summary>
-    public int Stride;
+    public int Stride { get; init; }
     /// <summary>
     /// GPU 缓冲区 ID。
     /// </summary>
-    public uint Vbo;
+    public uint Vbo { get; internal set; }
     /// <summary>
     /// 是否启用上传。
     /// </summary>
-    public bool Enabled = true;
+    public bool Enabled { get; internal set; } = true;
     /// <summary>
     /// 该 VBO 上的顶点属性指针列表。
     /// </summary>
-    public List<InstanceAttributePointer> Pointers = new();
+    public IReadOnlyList<InstanceAttributePointer> Pointers => PointersBuffer.AsReadOnly();
+    internal List<InstanceAttributePointer> PointersBuffer { get; set; } = new();
 }
 
 /// <summary>

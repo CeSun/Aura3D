@@ -38,7 +38,7 @@ public class NoLightPass : RenderPass
 
     public override void Setup()
     {
-        renderPipeline.EnsureUploaded(defaultBaseColor);
+        renderPipeline.EnsureSynced(defaultBaseColor);
     }
     public override void Render(Camera camera)
     {
@@ -131,7 +131,7 @@ public class NoLightPass : RenderPass
 
         if (mesh.IsSkinnedMesh)
         {
-            BindBoneMatrixBuffer(mesh);
+            SyncAndBindBoneMatrixBuffer(mesh);
         }
         base.RenderMesh(mesh, view, projection);
     }

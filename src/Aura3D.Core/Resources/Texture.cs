@@ -9,6 +9,8 @@ namespace Aura3D.Core.Resources;
 /// </summary>
 public class Texture : BaseTexture<Texture>, IClone<Texture>
 {
+    private List<byte> _data = [];
+
     /// <summary>
     /// 从颜色创建纯色纹理
     /// </summary>
@@ -17,13 +19,13 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
     public static Texture CreateFromColor(Color color)
     {
         var texture = new Resources.Texture();
-        texture.SetLdrData(new List<byte> 
-        { 
+        texture.SetLdrData(
+        [
             color.R, color.G, color.B, color.A,
             color.R, color.G, color.B, color.A,
             color.R, color.G, color.B, color.A,
             color.R, color.G, color.B, color.A,
-        }, 2, 2);
+        ], 2, 2);
         texture.SetIsGammaSpace(false);
         texture.SetColorFormat(ColorFormat.RGBA);
         texture.MagFilter = TextureFilterMode.Nearest;
@@ -35,42 +37,62 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
 
 
     }
-    public uint Width { get; set; }
-
-    public uint Height { get; set; }
-
-    public List<byte> LdrData { get; set; } = [];
-
-    public List<float> HdrData { get; set; } = [];
-
-    public Texture SetLdrData(List<byte> data, uint width, uint height)
+    private uint _width;
+    public uint Width
     {
-        LdrData = data;
+        get => _width;
+        set
+        {
+            if (_width == value)
+                return;
+            _width = value;
+            MarkModified();
+        }
+    }
+
+    private uint _height;
+    public uint Height
+    {
+        get => _height;
+        set
+        {
+            if (_height == value)
+                return;
+            _height = value;
+            MarkModified();
+        }
+    }
+
+    public ReadOnlySpan<byte> AsLdrData() => IsHdr ? [] : CollectionsMarshal.AsSpan(_data);
+
+    public ReadOnlySpan<float> AsHdrData() => IsHdr ? MemoryMarshal.Cast<byte, float>(CollectionsMarshal.AsSpan(_data)) : [];
+
+    public Texture SetLdrData(ReadOnlySpan<byte> data, uint width, uint height)
+    {
+        _data = new List<byte>(data.ToArray());
         Width = width;
         Height = height;
         IsHdr = false;
-        HdrData = [];
+        MarkModified();
         return this;
     }
 
-    public Texture SetHdrData(List<float> data, uint width, uint height)
+    public Texture SetHdrData(ReadOnlySpan<float> data, uint width, uint height)
     {
-        HdrData = data;
+        _data = ConvertHdrDataToBytes(data);
         Width = width;
         Height = height;
         IsHdr = true;
-        LdrData = [];
+        MarkModified();
         return this;
     }
 
     public Texture Clone()
     {
-        return new Texture
+        var texture = new Texture
         {
             Width = Width,
             Height = Height,
-            LdrData = LdrData,
-            HdrData = HdrData,
             IsHdr = IsHdr,
             WrapS = WrapS,
             WrapT = WrapT,
@@ -79,20 +101,34 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
             ColorFormat = ColorFormat,
             IsGammaSpace = IsGammaSpace,
         };
+
+        texture.SetPixelBuffer(_data);
+        return texture;
     }
 
     public Texture DeepClone()
     {
         var texture = Clone();
-        if (LdrData != null)
-        {
-            texture.LdrData = new List<byte>(LdrData);
-        }
-        if (HdrData != null)
-        {
-            texture.HdrData = new List<float>(HdrData);
-        }
+        texture.SetPixelBuffer(new List<byte>(_data));
         return texture;
+    }
+
+    protected void SetPixelBuffer(List<byte> data)
+    {
+        _data = data;
+    }
+
+    protected void ClearPixelData()
+    {
+        _data = [];
+    }
+
+    private static List<byte> ConvertHdrDataToBytes(ReadOnlySpan<float> data)
+    {
+        if (data.IsEmpty)
+            return [];
+
+        return new List<byte>(MemoryMarshal.AsBytes(data).ToArray());
     }
 
     internal InternalFormat GetGLInternalFormat()

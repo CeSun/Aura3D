@@ -37,7 +37,7 @@ public class PBRDeferredPipeline : RenderPipeline, IRenderPipelineCreateInstance
                 var texture = Texture.CreateFromColor(Color.White);
                 var cube = HDRIToCubeTextureConverter.ConvertFromTexture(texture, 16);
                 _defaultIblAmbientCubeTexture = cube;
-                EnsureUploaded(cube);
+                EnsureSynced(cube);
             }
             return _defaultIblAmbientCubeTexture;
         }
@@ -138,12 +138,12 @@ public class PBRDeferredPipeline : RenderPipeline, IRenderPipelineCreateInstance
     {
         if (gl == null)
             return;
-        EnsureUploaded(DefaultBaseColor);
-        EnsureUploaded(DefaultNormal);
-        EnsureUploaded(DefaultMetallicRoughness);
-        EnsureUploaded(DefaultEmissive);
-        EnsureUploaded(DefaultOcclusion);
-        EnsureUploaded(BrdfLutTexture);
+        EnsureSynced(DefaultBaseColor);
+        EnsureSynced(DefaultNormal);
+        EnsureSynced(DefaultMetallicRoughness);
+        EnsureSynced(DefaultEmissive);
+        EnsureSynced(DefaultOcclusion);
+        EnsureSynced(BrdfLutTexture);
     }
 
     public override void Destroy()

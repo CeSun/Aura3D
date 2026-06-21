@@ -122,7 +122,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
             UniformColor("dirLightColor", dl.LightColor);
             UniformFloat("dirLightIntensity", dl.Intensity);
 
-            var rt = dl.GetPipelineGpuResource<RenderTarget>("ShadowMapRenderTarget");
+            var rt = dl.GetPipelineGpuState<RenderTarget>("ShadowMapRenderTarget");
             if (dl.CastShadow == true && rt != null)
             {
                 var shadowView = Matrix4x4.CreateLookAt(dl.WorldTransform.Translation, dl.WorldTransform.Translation + dl.WorldTransform.ForwardVector(), dl.WorldTransform.UpVector());
@@ -159,7 +159,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
             UniformFloat("radius", pl.AttenuationRadius);
             UniformFloat("softRatio", pl.SoftRatio);
 
-            var shadowmap = pl.GetPipelineGpuResource<CubeRenderTarget>("ShadowMapRenderTarget");
+            var shadowmap = pl.GetPipelineGpuState<CubeRenderTarget>("ShadowMapRenderTarget");
 
             if (pl.CastShadow && shadowmap != null)
             {
@@ -211,7 +211,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
             UniformFloat("radius", sl.AttenuationRadius);
             UniformFloat("softRatio", sl.SoftRatio);
 
-            var rt = sl.GetPipelineGpuResource<RenderTarget>("ShadowMapRenderTarget");
+            var rt = sl.GetPipelineGpuState<RenderTarget>("ShadowMapRenderTarget");
 
             if (sl.CastShadow && rt != null)
             {
@@ -267,7 +267,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
 
         if (mesh.IsSkinnedMesh)
         {
-            BindBoneMatrixBuffer(mesh);
+            SyncAndBindBoneMatrixBuffer(mesh);
         }
     }
 
@@ -315,7 +315,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
             UniformColor("dirLightColor", dl.LightColor);
             UniformFloat("dirLightIntensity", dl.Intensity);
 
-            var rt = dl.GetPipelineGpuResource<RenderTarget>("ShadowMapRenderTarget");
+            var rt = dl.GetPipelineGpuState<RenderTarget>("ShadowMapRenderTarget");
             if (dl.CastShadow == true && rt != null)
             {
                 var shadowView = Matrix4x4.CreateLookAt(dl.WorldTransform.Translation, dl.WorldTransform.Translation + dl.WorldTransform.ForwardVector(), dl.WorldTransform.UpVector());
@@ -349,7 +349,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
             UniformFloat("radius", pl.AttenuationRadius);
             UniformFloat("softRatio", pl.SoftRatio);
 
-            var shadowmap = pl.GetPipelineGpuResource<CubeRenderTarget>("ShadowMapRenderTarget");
+            var shadowmap = pl.GetPipelineGpuState<CubeRenderTarget>("ShadowMapRenderTarget");
 
             if (pl.CastShadow && shadowmap != null)
             {
@@ -396,7 +396,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
             UniformFloat("radius", sl.AttenuationRadius);
             UniformFloat("softRatio", sl.SoftRatio);
 
-            var rt = sl.GetPipelineGpuResource<RenderTarget>("ShadowMapRenderTarget");
+            var rt = sl.GetPipelineGpuState<RenderTarget>("ShadowMapRenderTarget");
 
             if (sl.CastShadow && rt != null)
             {

@@ -110,7 +110,6 @@ public abstract partial class RenderPipeline
     public List<RenderPass> OnceRenderPasses { get; } = new List<RenderPass>();
 
     private HashSet<IGpuState> GpuStates { get; } = new HashSet<IGpuState>();
-    private HashSet<IGpuState> uploadedGpuStates = new HashSet<IGpuState>();
 
     private ConditionalWeakTable<Material, MaterialGpuState> materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
     private ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState> boneMatrixBufferGpuStates = new ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState>();
@@ -232,21 +231,20 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 确保指定 GPU 状态已完成首次上传。
-    /// 当前仅处理首次上传，不处理后续资源更新。
+    /// 确保指定 GPU 状态已与当前版本同步。
     /// </summary>
-    public void EnsureUploaded(IGpuState resource)
+    public void EnsureSynced(IGpuState resource)
     {
-        if (uploadedGpuStates.Add(resource))
+        GpuStates.Add(resource);
+
+        if (resource.SyncedVersion != resource.Version)
         {
             resource.Upload(gl!);
-            GpuStates.Add(resource);
         }
     }
 
     internal void RemoveGpuState(IGpuState gpuState)
     {
-        uploadedGpuStates.Remove(gpuState);
         GpuStates.Remove(gpuState);
     }
 
@@ -257,6 +255,12 @@ public abstract partial class RenderPipeline
             gpuState = new MaterialGpuState(material);
             materialGpuStates.Add(material, gpuState);
             GpuStates.Add(gpuState);
+        }
+
+        if (gl != null && gpuState.SyncedVersion != material.Version)
+        {
+            gpuState.Destroy(gl);
+            gpuState.Upload(gl);
         }
 
         return gpuState;
@@ -374,11 +378,11 @@ public abstract partial class RenderPipeline
         }
     }
 
-    public uint EnsureUploaded(Resources.Texture texture)
+    public uint EnsureSynced(Resources.Texture texture)
     {
         var gpuState = GetTextureGpuState(texture);
 
-        if (gpuState.TextureId == 0)
+        if (gpuState.TextureId == 0 || gpuState.SyncedVersion != texture.Version)
         {
             gpuState.Upload(gl!);
         }
@@ -386,11 +390,11 @@ public abstract partial class RenderPipeline
         return gpuState.TextureId;
     }
 
-    public uint EnsureUploaded(CubeTexture texture)
+    public uint EnsureSynced(CubeTexture texture)
     {
         var gpuState = GetCubeTextureGpuState(texture);
 
-        if (gpuState.TextureId == 0)
+        if (gpuState.TextureId == 0 || gpuState.SyncedVersion != texture.Version)
         {
             gpuState.Upload(gl!);
         }
@@ -398,27 +402,25 @@ public abstract partial class RenderPipeline
         return gpuState.TextureId;
     }
 
-    internal GeometryGpuState EnsureUploaded(Geometry geometry)
+    internal GeometryGpuState EnsureSynced(Geometry geometry)
     {
         var gpuState = GetGeometryGpuState(geometry);
 
-        if (gpuState.Vao == 0 || geometry.NeedsUpload)
+        if (gpuState.Vao == 0 || gpuState.SyncedVersion != geometry.Version)
         {
             gpuState.Upload(gl!);
-            geometry.NeedsUpload = false;
         }
 
         return gpuState;
     }
 
-    public void BindBoneMatrixBuffer(BoneMatrixBuffer boneMatrixBuffer)
+    public void SyncAndBindBoneMatrixBuffer(BoneMatrixBuffer boneMatrixBuffer)
     {
         var gpuState = GetBoneMatrixBufferGpuState(boneMatrixBuffer);
 
-        if (gpuState.BufferId == 0 || boneMatrixBuffer.NeedsUpload)
+        if (gpuState.BufferId == 0 || gpuState.SyncedVersion != boneMatrixBuffer.Version)
         {
             gpuState.Upload(gl!);
-            boneMatrixBuffer.NeedsUpload = false;
         }
 
         gpuState.Bind(gl!);
@@ -822,7 +824,6 @@ public abstract partial class RenderPipeline
             gpuState.Destroy(gl!);
         }
         GpuStates.Clear();
-        uploadedGpuStates.Clear();
         materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
         boneMatrixBufferGpuStates = new ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState>();
         geometryGpuStates = new ConditionalWeakTable<Geometry, GeometryGpuState>();
@@ -837,161 +838,5 @@ public abstract partial class RenderPipeline
         PointLights.Clear();
 
         SpotLights.Clear();
-    }
-}
-
-class InternalCube : IGpuState
-{
-    public uint Vao;
-
-    public uint Vbo;
-
-    public void Destroy(GL gl)
-    {
-        if (Vao != 0)
-        {
-            gl.DeleteVertexArray(Vao);
-            Vao = 0;
-        }
-        if (Vbo != 0)
-        {
-            gl.DeleteBuffer(Vbo);
-            Vbo = 0;
-        }
-    }
-
-    public unsafe void Upload(GL gl)
-    {
-        float[] vertices =
-            [
-                // back face
-                -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-                 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-                 1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
-                 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-                -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-                -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
-                // front face
-                -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-                 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
-                 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-                 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-                -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
-                -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-                // left face
-                -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-                -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
-                -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-                -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-                -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-                -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-                // right face
-                 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-                 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-                 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
-                 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-                 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-                 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
-                // bottom face
-                -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-                 1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
-                 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-                 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-                -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-                -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-                // top face
-                -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-                 1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-                 1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
-                 1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-                -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-                -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
-            ];
-        Vao = gl.GenVertexArray();
-        Vbo = gl.GenBuffer();
-        // fill buffer
-        gl.BindVertexArray(Vao);
-        gl.BindBuffer(GLEnum.ArrayBuffer, Vbo);
-        fixed (void* p = vertices)
-        {
-            gl.BufferData(GLEnum.ArrayBuffer, (nuint)vertices.Length * sizeof(float), p, GLEnum.StaticDraw);
-        }
-        // link vertex attributes
-        gl.EnableVertexAttribArray(0);
-        gl.VertexAttribPointer(0, 3, GLEnum.Float, false, 8 * sizeof(float), (void*)0);
-        gl.EnableVertexAttribArray(1);
-        gl.VertexAttribPointer(1, 3, GLEnum.Float, false, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-        gl.EnableVertexAttribArray(2);
-        gl.VertexAttribPointer(2, 2, GLEnum.Float, false, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-        gl.BindBuffer(GLEnum.ArrayBuffer, 0);
-        gl.BindVertexArray(0);
-    }
-}
-
-class InternalQuad : IGpuState
-{
-    public uint Vao;
-
-    public uint Vbo;
-
-    public uint Ebo;
-
-    struct QuadVertex
-    {
-        public Vector3 Location;
-        public Vector2 TexCoord;
-    }
-
-    public void Destroy(GL gl)
-    {
-        if (Vao != 0)
-        {
-            gl.DeleteVertexArray(Vao);
-            Vao = 0;
-        }
-        if (Vbo != 0)
-        {
-            gl.DeleteBuffer(Vbo);
-            Vbo = 0;
-        }
-        if (Ebo != 0)
-        {
-            gl.DeleteBuffer(Ebo);
-            Ebo = 0;
-        }
-    }
-
-    public unsafe void Upload(GL gl)
-    {
-        QuadVertex* vertices = stackalloc QuadVertex[4] {
-            new () {Location = new Vector3(-1, 1, 0), TexCoord = new Vector2(0, 1) },
-            new () {Location = new Vector3(-1, -1, 0), TexCoord = new Vector2(0, 0) },
-            new () {Location = new Vector3(1, -1, 0), TexCoord = new Vector2(1, 0) },
-            new () {Location = new Vector3(1, 1, 0), TexCoord = new Vector2(1, 1) },
-        };
-
-        uint* indices = stackalloc uint[6]
-        {
-            0, 1, 2, 2, 3,0
-        };
-
-        Vao = gl.GenVertexArray();
-        Vbo = gl.GenBuffer();
-        Ebo = gl.GenBuffer();
-
-        gl.BindVertexArray(Vao);
-        gl.BindBuffer(GLEnum.ArrayBuffer, Vbo);
-        gl.BufferData(GLEnum.ArrayBuffer, (nuint)(4 * sizeof(QuadVertex)), vertices, GLEnum.StaticDraw);
-        
-        gl.BindBuffer(GLEnum.ElementArrayBuffer, Ebo);
-        gl.BufferData(GLEnum.ElementArrayBuffer, 6 * sizeof(uint), indices, GLEnum.StaticDraw);
-        
-        // Location
-        gl.EnableVertexAttribArray(0);
-        gl.VertexAttribPointer(0, 3, GLEnum.Float, false, (uint)sizeof(QuadVertex), (void*)0);
-        // TexCoord
-        gl.EnableVertexAttribArray(1);
-        gl.VertexAttribPointer(1, 2, GLEnum.Float, false, (uint)sizeof(QuadVertex), (void*)sizeof(Vector3));
-        gl.BindVertexArray(0);
     }
 }

@@ -48,12 +48,12 @@ internal sealed class InstancedGeometryGpuState : GeometryGpuState
 
             gl.BindBuffer(GLEnum.ArrayBuffer, vbo);
 
-            fixed (float* p = CollectionsMarshal.AsSpan(attr.Data))
+            fixed (float* p = CollectionsMarshal.AsSpan(attr.DataBuffer))
             {
-                gl.BufferData(GLEnum.ArrayBuffer, (nuint)(attr.Data.Count * sizeof(float)), p, GLEnum.DynamicDraw);
+                gl.BufferData(GLEnum.ArrayBuffer, (nuint)(attr.DataBuffer.Count * sizeof(float)), p, GLEnum.DynamicDraw);
             }
 
-            foreach (var ptr in attr.Pointers)
+            foreach (var ptr in attr.PointersBuffer)
             {
                 gl.EnableVertexAttribArray(ptr.Location);
                 gl.VertexAttribPointer(ptr.Location, ptr.ComponentCount, GLEnum.Float, false, (uint)attr.Stride, (void*)ptr.Offset);

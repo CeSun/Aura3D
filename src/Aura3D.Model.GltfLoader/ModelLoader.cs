@@ -334,12 +334,12 @@ public static class ModelLoader
         {
             if (channelMap.TryGetValue(gltfChannel, out var existingChannel))
             {
-                mat.Channels.Add(existingChannel);
+                mat.SetChannel(existingChannel);
                 continue;
             }
 
             var channel = CreateChannelFromGltf(gltfChannel, textureMap);
-            mat.Channels.Add(channel);
+            mat.SetChannel(channel);
             channelMap[gltfChannel] = channel;
         }
     }
@@ -348,35 +348,35 @@ public static class ModelLoader
         MaterialChannel gltfChannel,
         Dictionary<SharpGLTF.Schema2.Texture, Texture> textureMap)
     {
-        var channel = new Channel
+        Texture? texture = null;
+        if (gltfChannel.Texture != null && textureMap.TryGetValue(gltfChannel.Texture, out var mappedTexture))
         {
-            Name = gltfChannel.Key
-        };
-
-        if (gltfChannel.Texture != null && textureMap.TryGetValue(gltfChannel.Texture, out var texture))
-        {
-            channel.Texture = texture;
-            ConfigureTextureForChannel(channel, texture, gltfChannel);
+            texture = mappedTexture;
+            ConfigureTextureForChannel(gltfChannel.Key, texture, gltfChannel);
         }
         else
         {
-            TryCreateFallbackTexture(channel, gltfChannel);
+            texture = TryCreateFallbackTexture(gltfChannel);
         }
 
-        return channel;
+        return new Channel
+        {
+            Name = gltfChannel.Key,
+            Texture = texture
+        };
     }
 
     private static void ConfigureTextureForChannel(
-        Channel channel,
+        string channelName,
         Texture texture,
         MaterialChannel gltfChannel)
     {
-        if (channel.Name == "BaseColor")
+        if (channelName == "BaseColor")
         {
             texture.SetIsGammaSpace(true);
         }
 
-        if (channel.Name == "MetallicRoughness")
+        if (channelName == "MetallicRoughness")
         {
             ApplyMetallicRoughnessFactors(texture, gltfChannel);
         }
@@ -393,23 +393,30 @@ public static class ModelLoader
         var roughnessFactor = gltfChannel.GetFactor("RoughnessFactor");
 
         int step = texture.ColorFormat == ColorFormat.RGB ? 3 : 4;
-        for (int i = 0; i < texture.Width * texture.Height * step; i += step)
+        if (texture.IsHdr == true)
         {
-            if (texture.IsHdr == true)
+            var data = texture.AsHdrData().ToArray();
+            for (int i = 0; i < texture.Width * texture.Height * step; i += step)
             {
-                var r = texture.HdrData[i + 2];
-                texture.HdrData[i + 2] = r * metallicFactor;
-                var g = texture.HdrData[i + 1];
-                texture.HdrData[i + 1] = g * roughnessFactor;
+                var r = data[i + 2];
+                data[i + 2] = r * metallicFactor;
+                var g = data[i + 1];
+                data[i + 1] = g * roughnessFactor;
             }
-            else
+            texture.SetHdrData(data, texture.Width, texture.Height);
+        }
+        else
+        {
+            var data = texture.AsLdrData().ToArray();
+            for (int i = 0; i < texture.Width * texture.Height * step; i += step)
             {
-                var r = texture.LdrData[i + 2];
-                texture.LdrData[i + 2] = (byte)(r * metallicFactor);
+                var r = data[i + 2];
+                data[i + 2] = (byte)(r * metallicFactor);
 
-                var g = texture.LdrData[i + 1];
-                texture.LdrData[i + 1] = (byte)(g * roughnessFactor);
+                var g = data[i + 1];
+                data[i + 1] = (byte)(g * roughnessFactor);
             }
+            texture.SetLdrData(data, texture.Width, texture.Height);
         }
     }
 
@@ -446,15 +453,16 @@ public static class ModelLoader
         });
     }
 
-    private static void TryCreateFallbackTexture(Channel channel, MaterialChannel gltfChannel)
+    private static Texture? TryCreateFallbackTexture(MaterialChannel gltfChannel)
     {
         try
         {
-            channel.Texture = Texture.CreateFromColor(gltfChannel.Color.ToColor());
+            return Texture.CreateFromColor(gltfChannel.Color.ToColor());
         }
         catch
         {
             // 忽略颜色创建失败的情况
+            return null;
         }
     }
 

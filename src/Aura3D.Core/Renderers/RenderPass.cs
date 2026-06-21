@@ -163,7 +163,7 @@ public partial class RenderPass
     public unsafe virtual void RenderMesh(Mesh mesh, Matrix4x4 view, Matrix4x4 projection)
     {
         UniformMatrix4("modelMatrix", mesh.WorldTransform);
-        var geometryGpuState = renderPipeline.EnsureUploaded(mesh.Geometry!);
+        var geometryGpuState = renderPipeline.EnsureSynced(mesh.Geometry!);
         gl.BindVertexArray(geometryGpuState.Vao);
         BindMaterialParameters(mesh.Material);
 
@@ -182,7 +182,7 @@ public partial class RenderPass
 
     public unsafe virtual void RenderInstancedMesh(InstancedMesh instancedMesh, Matrix4x4 view, Matrix4x4 projection)
     {
-        renderPipeline.EnsureUploaded(instancedMesh);
+        renderPipeline.EnsureSynced(instancedMesh);
         gl.BindVertexArray(instancedMesh.Vao);
         BindMaterialParameters(instancedMesh.Material);
 
@@ -199,13 +199,13 @@ public partial class RenderPass
             gl.DrawArraysInstanced(primitive, 0, (uint)instancedMesh.VertexCount, (uint)instancedMesh.InstanceCount);
     }
 
-    protected void BindBoneMatrixBuffer(Mesh mesh)
+    protected void SyncAndBindBoneMatrixBuffer(Mesh mesh)
     {
         if (mesh.IsSkinnedMesh == false)
             return;
 
         var boneBuffer = mesh.AnimationSampler?.BoneMatrixBuffer ?? mesh.Skeleton!.BoneMatrixBuffer;
-        renderPipeline.BindBoneMatrixBuffer(boneBuffer);
+        renderPipeline.SyncAndBindBoneMatrixBuffer(boneBuffer);
     }
 
     void BindMaterialParameters(Material? material)

@@ -97,7 +97,7 @@ public static class TextureLoader
 
             }
 
-            cubeTexture.LdrData[i].AddRange(imageResult.Data);
+            cubeTexture.SetLdrFaceData(i, imageResult.Data);
 
             if (i == 0)
             {
@@ -150,7 +150,7 @@ public static class TextureLoader
 
         }
 
-        texture.SetHdrData([.. imageResult.Data], (uint)imageResult.Width, (uint)imageResult.Height)
+        texture.SetHdrData(imageResult.Data, (uint)imageResult.Width, (uint)imageResult.Height)
             .SetColorFormat(imageResult.Comp switch
             {
                 ColorComponents.RedGreenBlue => ColorFormat.RGB,

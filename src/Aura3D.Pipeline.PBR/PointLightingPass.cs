@@ -68,7 +68,7 @@ public class PointLightingPass : RenderPass
             UniformFloat("radius", pl.AttenuationRadius);
             UniformFloat("softRatio", pl.SoftRatio);
 
-            var shadowmap = pl.GetPipelineGpuResource<CubeRenderTarget>("ShadowMapRenderTarget");
+            var shadowmap = pl.GetPipelineGpuState<CubeRenderTarget>("ShadowMapRenderTarget");
 
             if (pl.CastShadow && shadowmap != null)
             {

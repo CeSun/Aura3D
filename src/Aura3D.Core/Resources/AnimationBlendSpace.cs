@@ -118,7 +118,7 @@ public class AnimationBlendSpace : IAnimationSampler
     public void Update(double deltaTime)
     {
         computeBlend(deltaTime);
-        BoneMatrixBuffer.NeedsUpload = true;
+        BoneMatrixBuffer.MarkModified();
     }
 
     private void computeBlend(double deltaTime)

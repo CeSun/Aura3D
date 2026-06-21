@@ -24,14 +24,16 @@ public class InstancedGeometry : Geometry
         new() { Location = (uint)BuildInVertexAttribute.InstancedNormalTransformColumn3, ComponentCount = 4, Offset = sizeof(float) * 12 },
     ];
 
-    public Dictionary<string, InstanceAttribute> InstanceAttributes { get; } = [];
+    private readonly Dictionary<string, InstanceAttribute> instanceAttributes = [];
+
+    public IReadOnlyDictionary<string, InstanceAttribute> InstanceAttributes => instanceAttributes;
 
     public int InstanceCount { get; private set; }
 
     public InstancedGeometry(Geometry source)
     {
         PrimitiveType = source.PrimitiveType;
-        Indices = new List<uint>(source.Indices);
+        SetIndicesBuffer(new List<uint>(source.Indices));
         VertexAttributes = source.VertexAttributes.ToDictionary(
             kv => kv.Key,
             kv => new VertexAttribute
@@ -48,81 +50,81 @@ public class InstancedGeometry : Geometry
     {
         EnsureDefaultAttributes();
 
-        var transformAttr = InstanceAttributes["InstanceTransform"];
-        var normalAttr = InstanceAttributes["InstanceNormalTransform"];
+        var transformAttr = instanceAttributes["InstanceTransform"];
+        var normalAttr = instanceAttributes["InstanceNormalTransform"];
 
         float* p = (float*)&transform;
         for (int i = 0; i < 16; i++)
-            transformAttr.Data.Add(p[i]);
+            transformAttr.DataBuffer.Add(p[i]);
 
         Matrix4x4.Invert(transform, out var inverseTransform);
         var normalMatrix = Matrix4x4.Transpose(inverseTransform);
         p = (float*)&normalMatrix;
         for (int i = 0; i < 16; i++)
-            normalAttr.Data.Add(p[i]);
+            normalAttr.DataBuffer.Add(p[i]);
 
         InstanceCount++;
-        NeedsUpload = true;
+        MarkModified();
         return InstanceCount - 1;
     }
 
     public void RemoveInstance(int index)
     {
-        foreach (var attr in InstanceAttributes.Values)
+        foreach (var attr in instanceAttributes.Values)
         {
             int floatsPerInstance = attr.Stride / sizeof(float);
-            attr.Data.RemoveRange(index * floatsPerInstance, floatsPerInstance);
+            attr.DataBuffer.RemoveRange(index * floatsPerInstance, floatsPerInstance);
         }
 
         InstanceCount--;
-        NeedsUpload = true;
+        MarkModified();
     }
 
     public unsafe void UpdateInstance(int index, Matrix4x4 transform)
     {
         EnsureDefaultAttributes();
 
-        var transformAttr = InstanceAttributes["InstanceTransform"];
-        var normalAttr = InstanceAttributes["InstanceNormalTransform"];
+        var transformAttr = instanceAttributes["InstanceTransform"];
+        var normalAttr = instanceAttributes["InstanceNormalTransform"];
 
         int baseIndex = index * 16;
 
         float* p = (float*)&transform;
         for (int i = 0; i < 16; i++)
-            transformAttr.Data[baseIndex + i] = p[i];
+            transformAttr.DataBuffer[baseIndex + i] = p[i];
 
         Matrix4x4.Invert(transform, out var inverseTransform);
         var normalMatrix = Matrix4x4.Transpose(inverseTransform);
         p = (float*)&normalMatrix;
         for (int i = 0; i < 16; i++)
-            normalAttr.Data[baseIndex + i] = p[i];
+            normalAttr.DataBuffer[baseIndex + i] = p[i];
 
-        NeedsUpload = true;
+        MarkModified();
     }
 
     public unsafe Matrix4x4? GetInstanceTransform(int index)
     {
-        if (!InstanceAttributes.TryGetValue("InstanceTransform", out var attr))
+        if (!instanceAttributes.TryGetValue("InstanceTransform", out var attr))
             return null;
 
         int baseIdx = index * 16;
-        if (baseIdx < 0 || baseIdx + 15 >= attr.Data.Count)
+        if (baseIdx < 0 || baseIdx + 15 >= attr.DataBuffer.Count)
             return null;
 
         var m = new Matrix4x4();
         float* p = (float*)&m;
         for (int i = 0; i < 16; i++)
-            p[i] = attr.Data[baseIdx + i];
+            p[i] = attr.DataBuffer[baseIdx + i];
 
         return m;
     }
 
     public void SetAttributeEnabled(string name, bool enabled)
     {
-        if (InstanceAttributes.TryGetValue(name, out var attr))
+        if (instanceAttributes.TryGetValue(name, out var attr))
         {
             attr.Enabled = enabled;
-            NeedsUpload = true;
+            MarkModified();
         }
     }
 
@@ -146,33 +148,33 @@ public class InstancedGeometry : Geometry
             }
         }
 
-        InstanceAttributes[name] = new InstanceAttribute
+        instanceAttributes[name] = new InstanceAttribute
         {
             Name = name,
             Stride = stride,
-            Data = floatData,
-            Pointers =
+            DataBuffer = floatData,
+            PointersBuffer =
             [
                 new() { Location = (uint)attribute, ComponentCount = componentCount, Offset = 0 }
             ]
         };
 
-        NeedsUpload = true;
+        MarkModified();
     }
 
     public unsafe void SetInstances(IReadOnlyList<Matrix4x4> transforms)
     {
         EnsureDefaultAttributes();
 
-        var transformAttr = InstanceAttributes["InstanceTransform"];
-        var normalAttr = InstanceAttributes["InstanceNormalTransform"];
+        var transformAttr = instanceAttributes["InstanceTransform"];
+        var normalAttr = instanceAttributes["InstanceNormalTransform"];
 
-        transformAttr.Data.Clear();
-        normalAttr.Data.Clear();
+        transformAttr.DataBuffer.Clear();
+        normalAttr.DataBuffer.Clear();
 
         int count = transforms.Count;
-        transformAttr.Data.Capacity = count * 16;
-        normalAttr.Data.Capacity = count * 16;
+        transformAttr.DataBuffer.Capacity = count * 16;
+        normalAttr.DataBuffer.Capacity = count * 16;
 
         for (int i = 0; i < count; i++)
         {
@@ -180,38 +182,38 @@ public class InstancedGeometry : Geometry
 
             float* p = (float*)&t;
             for (int j = 0; j < 16; j++)
-                transformAttr.Data.Add(p[j]);
+                transformAttr.DataBuffer.Add(p[j]);
 
             Matrix4x4.Invert(t, out var inv);
             var normalMatrix = Matrix4x4.Transpose(inv);
             p = (float*)&normalMatrix;
             for (int j = 0; j < 16; j++)
-                normalAttr.Data.Add(p[j]);
+                normalAttr.DataBuffer.Add(p[j]);
         }
 
         InstanceCount = count;
-        NeedsUpload = true;
+        MarkModified();
     }
 
     private void EnsureDefaultAttributes()
     {
-        if (!InstanceAttributes.ContainsKey("InstanceTransform"))
+        if (!instanceAttributes.ContainsKey("InstanceTransform"))
         {
-            InstanceAttributes["InstanceTransform"] = new InstanceAttribute
+            instanceAttributes["InstanceTransform"] = new InstanceAttribute
             {
                 Name = "InstanceTransform",
                 Stride = 16 * sizeof(float),
-                Pointers = new List<InstanceAttributePointer>(DefaultTransformPointers)
+                PointersBuffer = new List<InstanceAttributePointer>(DefaultTransformPointers)
             };
         }
 
-        if (!InstanceAttributes.ContainsKey("InstanceNormalTransform"))
+        if (!instanceAttributes.ContainsKey("InstanceNormalTransform"))
         {
-            InstanceAttributes["InstanceNormalTransform"] = new InstanceAttribute
+            instanceAttributes["InstanceNormalTransform"] = new InstanceAttribute
             {
                 Name = "InstanceNormalTransform",
                 Stride = 16 * sizeof(float),
-                Pointers = new List<InstanceAttributePointer>(DefaultNormalTransformPointers)
+                PointersBuffer = new List<InstanceAttributePointer>(DefaultNormalTransformPointers)
             };
         }
     }

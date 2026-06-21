@@ -1,5 +1,6 @@
 using Silk.NET.OpenGLES;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 namespace Aura3D.Core.Resources;
 
@@ -8,21 +9,70 @@ namespace Aura3D.Core.Resources;
 /// </summary>
 public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
 {
-    public uint Width { get; set; }
+    private List<byte>[] _data = [[], [], [], [], [], []];
 
-    public uint Height { get; set; }
+    private uint _width;
+    public uint Width
+    {
+        get => _width;
+        set
+        {
+            if (_width == value)
+                return;
+            _width = value;
+            MarkModified();
+        }
+    }
 
-    public List<byte>[] LdrData { get; set; } = [[], [], [], [], [], []];
-   public List<float>[] HdrData { get; set; } = [[], [], [], [], [], []];
+    private uint _height;
+    public uint Height
+    {
+        get => _height;
+        set
+        {
+            if (_height == value)
+                return;
+            _height = value;
+            MarkModified();
+        }
+    }
+
+    public ReadOnlySpan<byte> AsLdrData(int faceIndex)
+    {
+        ValidateFaceIndex(faceIndex);
+        return IsHdr ? [] : CollectionsMarshal.AsSpan(_data[faceIndex]);
+    }
+
+    public ReadOnlySpan<float> AsHdrData(int faceIndex)
+    {
+        ValidateFaceIndex(faceIndex);
+        return IsHdr ? MemoryMarshal.Cast<byte, float>(CollectionsMarshal.AsSpan(_data[faceIndex])) : [];
+    }
+
+    public CubeTexture SetLdrFaceData(int faceIndex, ReadOnlySpan<byte> data)
+    {
+        ValidateFaceIndex(faceIndex);
+        _data[faceIndex] = new List<byte>(data.ToArray());
+        IsHdr = false;
+        MarkModified();
+        return this;
+    }
+
+    public CubeTexture SetHdrFaceData(int faceIndex, ReadOnlySpan<float> data)
+    {
+        ValidateFaceIndex(faceIndex);
+        _data[faceIndex] = ConvertHdrDataToBytes(data);
+        IsHdr = true;
+        MarkModified();
+        return this;
+    }
 
     public CubeTexture Clone()
     {
-        return new CubeTexture
+        var texture = new CubeTexture
         {
             Width = Width,
             Height = Height,
-            LdrData = LdrData,
-            HdrData = HdrData,
             IsHdr = IsHdr,
             WrapS = WrapS,
             WrapT = WrapT,
@@ -32,27 +82,34 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
             ColorFormat = ColorFormat,
             IsGammaSpace = IsGammaSpace,
         };
+        texture.SetFaceBuffers(_data);
+        return texture;
     }
 
     public CubeTexture DeepClone()
     {
         var texture = Clone();
-        texture.LdrData = new List<byte>[6];
-        texture.HdrData = new List<float>[6];
-        if (IsHdr == false)
+        var data = new List<byte>[6];
+        for (int i = 0; i < 6; i++)
         {
-            for (int i = 0; i < 6; i++)
-                texture.LdrData[i] = new List<byte>(LdrData[i]);
+            data[i] = new List<byte>(_data[i]);
         }
-        else
-        {
-            for (int i = 0; i < 6; i++)
-                texture.HdrData[i] = new List<float>(HdrData[i]);
-        }
+        texture.SetFaceBuffers(data);
         return texture;
     }
 
-    public TextureWrapMode WrapR { get; set; } = TextureWrapMode.ClampToEdge;
+    private TextureWrapMode _wrapR = TextureWrapMode.ClampToEdge;
+    public TextureWrapMode WrapR
+    {
+        get => _wrapR;
+        set
+        {
+            if (_wrapR == value)
+                return;
+            _wrapR = value;
+            MarkModified();
+        }
+    }
 
     protected GLEnum GlWarpR => WrapR switch
     {
@@ -98,6 +155,28 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
         return GlMinFilter;
     }
 
+    internal void SetFaceBuffers(List<byte>[] data)
+    {
+        if (data.Length != 6)
+            throw new ArgumentException("Cube texture must contain exactly 6 faces.");
+
+        _data = data;
+    }
+
+    private static void ValidateFaceIndex(int faceIndex)
+    {
+        if (faceIndex < 0 || faceIndex >= 6)
+            throw new ArgumentOutOfRangeException(nameof(faceIndex));
+    }
+
+    private static List<byte> ConvertHdrDataToBytes(ReadOnlySpan<float> data)
+    {
+        if (data.IsEmpty)
+            return [];
+
+        return new List<byte>(MemoryMarshal.AsBytes(data).ToArray());
+    }
+
 }
 
 
@@ -131,64 +210,79 @@ public class HDRIToCubeTextureConverter
 
         if (texture.IsHdr)
         {
-
-            for (int i = 0; i < cubeTexture.HdrData.Length; i++)
+            var hdrFaces = new List<float>[6];
+            for (int i = 0; i < 6; i++)
             {
-                cubeTexture.HdrData[i].Clear();
-                cubeTexture.HdrData[i].Capacity = (int)(cubeFaceSize * cubeFaceSize * channels);
+                hdrFaces[i] = new List<float>((int)(cubeFaceSize * cubeFaceSize * channels));
             }
 
-        }
-        else
-        {
-            for (int i = 0; i < cubeTexture.LdrData.Length; i++)
+            foreach (CubeFace face in Enum.GetValues(typeof(CubeFace)))
             {
-                cubeTexture.LdrData[i].Clear();
-                cubeTexture.LdrData[i].Capacity = (int)(cubeFaceSize * cubeFaceSize * channels);
-            }
-        }
-
-        foreach (CubeFace face in Enum.GetValues(typeof(CubeFace)))
-        {
-            int faceIndex = (int)face;
-            for (uint y = 0; y < cubeFaceSize; y++)
-            {
-                for (uint x = 0; x < cubeFaceSize; x++)
+                int faceIndex = (int)face;
+                for (uint y = 0; y < cubeFaceSize; y++)
                 {
-                    Vector2 uv = new Vector2(
-                        (float)x / cubeFaceSize * 2 - 1,
-                        (float)y / cubeFaceSize * 2 - 1);
-
-                    Vector3 direction = GetCubeFaceDirection(face, uv);
-                    direction = Vector3.Normalize(direction);
-
-                    Vector2 panoramaUV = DirectionToPanoramaUV(direction);
-
-                    Vector4 rgba = SamplePanoramaTexture(texture, panoramaUV);
-
-                    if (texture.IsHdr)
+                    for (uint x = 0; x < cubeFaceSize; x++)
                     {
-                        cubeTexture.HdrData[faceIndex].Add(rgba.X); // R
-                        cubeTexture.HdrData[faceIndex].Add(rgba.Y); // G
-                        cubeTexture.HdrData[faceIndex].Add(rgba.Z); // B
-                        if (channels == 4)
-                        {
-                            cubeTexture.HdrData[faceIndex].Add(rgba.W); // A
-                        }
-                    }
-                    else
-                    {
-                        cubeTexture.LdrData[faceIndex].Add((byte)(rgba.X * 255)); // R
-                        cubeTexture.LdrData[faceIndex].Add((byte)(rgba.Y * 255)); // G
-                        cubeTexture.LdrData[faceIndex].Add((byte)(rgba.Z * 255)); // B
-                        if (channels == 4)
-                        {
-                            cubeTexture.LdrData[faceIndex].Add((byte)(rgba.W * 255)); // A
-                        }
+                        Vector2 uv = new Vector2(
+                            (float)x / cubeFaceSize * 2 - 1,
+                            (float)y / cubeFaceSize * 2 - 1);
 
+                        Vector3 direction = GetCubeFaceDirection(face, uv);
+                        direction = Vector3.Normalize(direction);
+
+                        Vector2 panoramaUV = DirectionToPanoramaUV(direction);
+
+                        Vector4 rgba = SamplePanoramaTexture(texture, panoramaUV);
+
+                        hdrFaces[faceIndex].Add(rgba.X);
+                        hdrFaces[faceIndex].Add(rgba.Y);
+                        hdrFaces[faceIndex].Add(rgba.Z);
+                        if (channels == 4)
+                            hdrFaces[faceIndex].Add(rgba.W);
                     }
                 }
             }
+
+            for (int i = 0; i < 6; i++)
+                cubeTexture.SetHdrFaceData(i, CollectionsMarshal.AsSpan(hdrFaces[i]));
+        }
+        else
+        {
+            var ldrFaces = new List<byte>[6];
+            for (int i = 0; i < 6; i++)
+            {
+                ldrFaces[i] = new List<byte>((int)(cubeFaceSize * cubeFaceSize * channels));
+            }
+
+            foreach (CubeFace face in Enum.GetValues(typeof(CubeFace)))
+            {
+                int faceIndex = (int)face;
+                for (uint y = 0; y < cubeFaceSize; y++)
+                {
+                    for (uint x = 0; x < cubeFaceSize; x++)
+                    {
+                        Vector2 uv = new Vector2(
+                            (float)x / cubeFaceSize * 2 - 1,
+                            (float)y / cubeFaceSize * 2 - 1);
+
+                        Vector3 direction = GetCubeFaceDirection(face, uv);
+                        direction = Vector3.Normalize(direction);
+
+                        Vector2 panoramaUV = DirectionToPanoramaUV(direction);
+
+                        Vector4 rgba = SamplePanoramaTexture(texture, panoramaUV);
+
+                        ldrFaces[faceIndex].Add((byte)(rgba.X * 255));
+                        ldrFaces[faceIndex].Add((byte)(rgba.Y * 255));
+                        ldrFaces[faceIndex].Add((byte)(rgba.Z * 255));
+                        if (channels == 4)
+                            ldrFaces[faceIndex].Add((byte)(rgba.W * 255));
+                    }
+                }
+            }
+
+            for (int i = 0; i < 6; i++)
+                cubeTexture.SetLdrFaceData(i, CollectionsMarshal.AsSpan(ldrFaces[i]));
         }
         return cubeTexture;
 
@@ -259,10 +353,10 @@ public class HDRIToCubeTextureConverter
         float ty = y - y0;
         bool hasAlpha = panorama.ColorFormat == ColorFormat.RGBA;
 
-        Vector4 c00 = panorama.IsHdr ? GetPixel(panorama.HdrData, width, x0, y0, hasAlpha) : GetPixel(panorama.LdrData, width, x0, y0, hasAlpha);
-        Vector4 c01 = panorama.IsHdr ? GetPixel(panorama.HdrData, width, x0, y1, hasAlpha) : GetPixel(panorama.LdrData, width, x0, y1, hasAlpha);
-        Vector4 c10 = panorama.IsHdr ? GetPixel(panorama.HdrData, width, x1, y0, hasAlpha) : GetPixel(panorama.LdrData, width, x1, y0, hasAlpha);
-        Vector4 c11 = panorama.IsHdr ? GetPixel(panorama.HdrData, width, x1, y1, hasAlpha) : GetPixel(panorama.LdrData, width, x1, y1, hasAlpha);
+        Vector4 c00 = panorama.IsHdr ? GetPixel(panorama.AsHdrData(), width, x0, y0, hasAlpha) : GetPixel(panorama.AsLdrData(), width, x0, y0, hasAlpha);
+        Vector4 c01 = panorama.IsHdr ? GetPixel(panorama.AsHdrData(), width, x0, y1, hasAlpha) : GetPixel(panorama.AsLdrData(), width, x0, y1, hasAlpha);
+        Vector4 c10 = panorama.IsHdr ? GetPixel(panorama.AsHdrData(), width, x1, y0, hasAlpha) : GetPixel(panorama.AsLdrData(), width, x1, y0, hasAlpha);
+        Vector4 c11 = panorama.IsHdr ? GetPixel(panorama.AsHdrData(), width, x1, y1, hasAlpha) : GetPixel(panorama.AsLdrData(), width, x1, y1, hasAlpha);
 
         Vector4 c0 = Vector4.Lerp(c00, c01, ty);
         Vector4 c1 = Vector4.Lerp(c10, c11, ty);
@@ -271,11 +365,11 @@ public class HDRIToCubeTextureConverter
         return finalColor;
     }
 
-    private static Vector4 GetPixel(List<float> data, uint width, int x, int y, bool alpha)
+    private static Vector4 GetPixel(ReadOnlySpan<float> data, uint width, int x, int y, bool alpha)
     {
         int pixelIndex = (y * (int)width + x) * (alpha ? 4 : 3);
 
-        if (pixelIndex + (alpha ? 3 : 2) >= data.Count)
+        if (pixelIndex + (alpha ? 3 : 2) >= data.Length)
             return Vector4.Zero;
 
         float r = data[pixelIndex];
@@ -290,11 +384,11 @@ public class HDRIToCubeTextureConverter
         return new Vector4(r, g, b, a);
     }
 
-    private static Vector4 GetPixel(List<byte> data, uint width, int x, int y, bool alpha)
+    private static Vector4 GetPixel(ReadOnlySpan<byte> data, uint width, int x, int y, bool alpha)
     {
         int pixelIndex = (y * (int)width + x) * (alpha ? 4 : 3);
 
-        if (pixelIndex + (alpha ? 3 : 2) >= data.Count)
+        if (pixelIndex + (alpha ? 3 : 2) >= data.Length)
             return Vector4.Zero;
 
         float r = data[pixelIndex] / (float)255;

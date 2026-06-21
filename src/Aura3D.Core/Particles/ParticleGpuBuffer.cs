@@ -9,8 +9,11 @@ namespace Aura3D.Core.Particles;
 /// Single interleaved VBO per ParticleEmitter, with grow-only capacity.
 /// Implements IGpuState and is uploaded lazily on first use.
 /// </summary>
-public unsafe class ParticleGpuBuffer : IGpuState
+public unsafe class ParticleGpuBuffer : IRuntimeGpuState
 {
+    public ulong Version { get; private set; } = 1;
+    public ulong SyncedVersion { get; private set; }
+
     /// <summary>Floats per instance: posRot(4) + color(4) + sizeAge(2) = 10</summary>
     private const int FloatsPerInstance = 10;
     private const int BytesPerInstance = FloatsPerInstance * sizeof(float);
@@ -44,7 +47,7 @@ public unsafe class ParticleGpuBuffer : IGpuState
             PackInstanceData(particles, activeCount);
             _dataDirty = true;
         }
-
+        Version++;
     }
 
     /// <summary>
@@ -61,6 +64,7 @@ public unsafe class ParticleGpuBuffer : IGpuState
             UploadInstanceData(gl);
             _dataDirty = false;
         }
+        SyncedVersion = Version;
     }
 
     /// <summary>
@@ -81,6 +85,7 @@ public unsafe class ParticleGpuBuffer : IGpuState
         if (_instanceVbo != 0) { gl.DeleteBuffer(_instanceVbo); _instanceVbo = 0; }
         _bufferCapacityInstances = 0;
         _activeCount = 0;
+        SyncedVersion = 0;
     }
 
     // ---- Internal ----
@@ -177,51 +182,4 @@ public unsafe class ParticleGpuBuffer : IGpuState
         gl.BindVertexArray(0);
     }
 
-}
-
-/// <summary>
-/// Shared quad geometry for particle billboard rendering.
-/// Owned by each ParticlePass instance so multiple controls/render pipelines work correctly.
-/// Implements IGpuState and is uploaded lazily on first use.
-/// </summary>
-internal unsafe class ParticleQuadGeometry : IGpuState
-{
-    public uint QuadVbo { get; private set; }
-    public uint QuadEbo { get; private set; }
-
-    public void Upload(GL gl)
-    {
-        QuadVbo = gl.GenBuffer();
-        QuadEbo = gl.GenBuffer();
-
-        float[] vertices =
-        [
-            -0.5f, -0.5f, 0f,  0f, 1f,
-             0.5f, -0.5f, 0f,  1f, 1f,
-             0.5f,  0.5f, 0f,  1f, 0f,
-            -0.5f,  0.5f, 0f,  0f, 0f,
-        ];
-        uint[] indices = [0, 1, 2, 2, 3, 0];
-
-        gl.BindBuffer(GLEnum.ArrayBuffer, QuadVbo);
-        fixed (float* p = vertices)
-            gl.BufferData(GLEnum.ArrayBuffer, (nuint)(vertices.Length * sizeof(float)), p, GLEnum.StaticDraw);
-
-        // Use temp VAO so EBO binding doesn't pollute other VAOs
-        uint tempVao = gl.GenVertexArray();
-        gl.BindVertexArray(tempVao);
-        gl.BindBuffer(GLEnum.ElementArrayBuffer, QuadEbo);
-        fixed (uint* p = indices)
-            gl.BufferData(GLEnum.ElementArrayBuffer, (nuint)(indices.Length * sizeof(uint)), p, GLEnum.StaticDraw);
-        gl.BindVertexArray(0);
-        gl.DeleteVertexArray(tempVao);
-
-        gl.BindBuffer(GLEnum.ArrayBuffer, 0);
-    }
-
-    public void Destroy(GL gl)
-    {
-        if (QuadVbo != 0) { gl.DeleteBuffer(QuadVbo); QuadVbo = 0; }
-        if (QuadEbo != 0) { gl.DeleteBuffer(QuadEbo); QuadEbo = 0; }
-    }
 }

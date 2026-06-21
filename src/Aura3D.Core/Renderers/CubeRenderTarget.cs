@@ -3,8 +3,10 @@ using Silk.NET.OpenGLES;
 
 namespace Aura3D.Core.Renderers;
 
-public class CubeRenderTarget : IGpuState
+public class CubeRenderTarget : IRuntimeGpuState
 {
+    public ulong Version { get; private set; } = 1;
+    public ulong SyncedVersion { get; private set; }
 
     public CubeRenderTarget()
     {
@@ -37,7 +39,11 @@ public class CubeRenderTarget : IGpuState
 
     public CubeRenderTarget SetEnableMipMapLevel(bool enableMipMap)
     {
+        if (EnableMipMap == enableMipMap)
+            return this;
+
         EnableMipMap = enableMipMap;
+        Version++;
 
         return this;
     }
@@ -59,14 +65,20 @@ public class CubeRenderTarget : IGpuState
         {
             gl.DeleteFramebuffer(FrameBufferId);
         }
+
+        SyncedVersion = 0;
     }
 
 
     public CubeRenderTarget SetSize(uint width, uint height)
     {
+        if (Width == width && Height == height)
+            return this;
+
         Width = width;
         Height = height;
         SyncTextureSizes();
+        Version++;
         return this;
     }
 
@@ -77,6 +89,7 @@ public class CubeRenderTarget : IGpuState
             InternalFormat = internalFormat
         });
         renderTexturesMap.Add(name, renderTextures.Last());
+        Version++;
 
         return this;
     }
@@ -103,7 +116,11 @@ public class CubeRenderTarget : IGpuState
 
     public CubeRenderTarget SetDepthTexture(TextureFormat textureFormat)
     {
+        if (depthStencilTexture.InternalFormat == textureFormat)
+            return this;
+
         depthStencilTexture.InternalFormat = textureFormat;
+        Version++;
 
         return this;
     }
@@ -174,6 +191,7 @@ public class CubeRenderTarget : IGpuState
         }
 
         SyncTextureSizes();
+        SyncedVersion = Version;
     }
 
 

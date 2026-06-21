@@ -32,8 +32,7 @@ public class WritableTexture : Texture
 
         Width = width;
         Height = height;
-        LdrData = [];
-        HdrData = [];
+        ClearPixelData();
         return this;
     }
 
@@ -56,8 +55,7 @@ public class WritableTexture : Texture
 
         Format = format;
         ApplyFormatSettings(format);
-        LdrData = [];
-        HdrData = [];
+        ClearPixelData();
         return this;
     }
 

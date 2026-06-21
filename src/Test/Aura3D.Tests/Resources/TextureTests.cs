@@ -14,7 +14,7 @@ public class TextureTests
         Assert.Equal((uint)2, texture.Width);
         Assert.Equal((uint)2, texture.Height);
         Assert.False(texture.IsHdr);
-        Assert.Equal(16, texture.LdrData.Count);
+        Assert.Equal(16, texture.AsLdrData().Length);
     }
 
     [Fact]
@@ -24,7 +24,11 @@ public class TextureTests
         var clone = original.DeepClone();
 
         Assert.NotSame(original, clone);
-        Assert.NotSame(original.LdrData, clone.LdrData);
-        Assert.Equal(original.LdrData, clone.LdrData);
+        Assert.Equal(original.AsLdrData().ToArray(), clone.AsLdrData().ToArray());
+
+        var modified = original.AsLdrData().ToArray();
+        modified[0] = 1;
+        original.SetLdrData(modified, original.Width, original.Height);
+        Assert.NotEqual(original.AsLdrData().ToArray(), clone.AsLdrData().ToArray());
     }
 }

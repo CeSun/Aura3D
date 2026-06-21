@@ -170,7 +170,7 @@ public static class ModelHelper
     /// <param name="uvs">纹理坐标列表。</param>
     /// <param name="tangents">输出的切线列表。</param>
     /// <param name="bitangents">输出的副切线列表。</param>
-    public static void CalcVerticsTbn(List<uint> indices, List<float> vertexNormals, List<float> uvs, out List<float> tangents, out List<float> bitangents)
+    public static void CalcVerticsTbn(IReadOnlyList<uint> indices, IReadOnlyList<float> vertexNormals, IReadOnlyList<float> uvs, out List<float> tangents, out List<float> bitangents)
     {
         tangents = new List<float>();
         bitangents = new List<float>();
@@ -341,5 +341,4 @@ public static class ModelHelper
         }
     }
 }
-
 

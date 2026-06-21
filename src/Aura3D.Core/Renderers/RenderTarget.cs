@@ -6,8 +6,11 @@ namespace Aura3D.Core.Renderers;
 /// <summary>
 /// 渲染目标类，用于管理帧缓冲对象及其关联的颜色纹理和深度/模板纹理。
 /// </summary>
-public class RenderTarget : IGpuState
+public class RenderTarget : IRuntimeGpuState
 {
+    public ulong Version { get; private set; } = 1;
+    public ulong SyncedVersion { get; private set; }
+
     /// <summary>
     /// 初始化 <see cref="RenderTarget"/> 类的新实例。
     /// </summary>
@@ -26,7 +29,11 @@ public class RenderTarget : IGpuState
     /// <returns>当前的 <see cref="RenderTarget"/> 实例。</returns>
     public RenderTarget SetMipMapLevel(int mipmapLevel)
     {
+        if (MipmapLevel == mipmapLevel)
+            return this;
+
         MipmapLevel = mipmapLevel;
+        Version++;
 
         return this;
     }
@@ -66,9 +73,13 @@ public class RenderTarget : IGpuState
     /// <returns>当前的 <see cref="RenderTarget"/> 实例。</returns>
     public RenderTarget SetSize(uint width, uint height)
     {
+        if (Width == width && Height == height)
+            return this;
+
         Width = width;
         Height = height;
         SyncTextureSizes();
+        Version++;
         return this;
     }
 
@@ -95,6 +106,7 @@ public class RenderTarget : IGpuState
             gl.DeleteFramebuffer(FrameBufferId);
         }
 
+        SyncedVersion = 0;
 
     }
 
@@ -156,6 +168,7 @@ public class RenderTarget : IGpuState
         }
 
         SyncTextureSizes();
+        SyncedVersion = Version;
     }
 
     /// <summary>
@@ -171,6 +184,7 @@ public class RenderTarget : IGpuState
             InternalFormat = internalFormat
         });
         renderTexturesMap.Add(name, renderTextures.Last());
+        Version++;
 
         return this;
     }
@@ -217,8 +231,12 @@ public class RenderTarget : IGpuState
     /// <returns>当前的 <see cref="RenderTarget"/> 实例。</returns>
     public RenderTarget SetDepthTexture(TextureFormat textureFormat)
     {
+        if (DepthTextureFormat == textureFormat)
+            return this;
+
         depthStencilTexture.InternalFormat = textureFormat;
         DepthTextureFormat = textureFormat;
+        Version++;
         return this;
     }
 

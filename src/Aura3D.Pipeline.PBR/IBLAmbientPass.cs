@@ -60,10 +60,10 @@ void main() {
         var u_brdfLUT = RenderPipeline.BrdfLutTexture;
 
 
-        var irradianceMap = camera.GetPipelineGpuResource<CubeRenderTarget>("IrradianceMap");
+        var irradianceMap = camera.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap");
         var u_irradianceMap = irradianceMap.GetTexture(0);
 
-        var perfilteredEnvMap = camera.GetPipelineGpuResource<CubeRenderTarget>("PrefilteredEnvironmentMap");
+        var perfilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap");
         var u_prefilterMap = perfilteredEnvMap.GetTexture(0);
 
         UseShader("ENBALE_DEFERRED_SHADING");

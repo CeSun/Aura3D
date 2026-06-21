@@ -43,11 +43,16 @@ public class MaterialTests
         var deepTextureClone = Assert.IsType<Texture>(material.DeepClone(deepCopyTextures: true).GetTexture("BaseColor"));
 
         Assert.NotSame(texture, shallowTextureClone);
-        Assert.Same(texture.LdrData, shallowTextureClone.LdrData);
+        Assert.Equal(texture.AsLdrData().ToArray(), shallowTextureClone.AsLdrData().ToArray());
 
         Assert.NotSame(texture, deepTextureClone);
-        Assert.NotSame(texture.LdrData, deepTextureClone.LdrData);
-        Assert.Equal(texture.LdrData, deepTextureClone.LdrData);
+        Assert.Equal(texture.AsLdrData().ToArray(), deepTextureClone.AsLdrData().ToArray());
+
+        var modified = texture.AsLdrData().ToArray();
+        modified[0] = 123;
+        texture.SetLdrData(modified, texture.Width, texture.Height);
+        Assert.Equal(texture.AsLdrData().ToArray(), shallowTextureClone.AsLdrData().ToArray());
+        Assert.NotEqual(texture.AsLdrData().ToArray(), deepTextureClone.AsLdrData().ToArray());
     }
 
     [Fact]

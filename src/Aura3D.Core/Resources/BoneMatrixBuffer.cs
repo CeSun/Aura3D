@@ -6,7 +6,7 @@ namespace Aura3D.Core.Resources;
 /// 骨骼矩阵的 CPU 侧资源，由 <see cref="IAnimationSampler"/> 或 <see cref="Skeleton"/> 持有。
 /// GPU 侧的 UBO 由独立的 BoneMatrixBufferGpuState 管理。
 /// </summary>
-public class BoneMatrixBuffer
+public class BoneMatrixBuffer : IVersionedResource
 {
     /// <summary>
     /// 与 shader 中 <c>#define MAX_BONES 256</c> 一致，也是 GLES 3.0 UBO 最小保证值（16KB ÷ 64B）。
@@ -21,17 +21,17 @@ public class BoneMatrixBuffer
 
     public Skeleton Skeleton { get; }
     public IAnimationSampler? AnimationSampler { get; }
-
-    /// <summary>
-    /// 是否需要重新上传到 GPU。
-    /// 这里只保留现有更新语义，不在本次改造中引入新的更新机制。
-    /// </summary>
-    public bool NeedsUpload { get; set; } = true;
+    public ulong Version { get; protected set; } = 1;
 
     public BoneMatrixBuffer(Skeleton skeleton, IAnimationSampler? animationSampler = null)
     {
         Skeleton = skeleton;
         AnimationSampler = animationSampler;
+    }
+
+    public void MarkModified()
+    {
+        Version++;
     }
 
 }

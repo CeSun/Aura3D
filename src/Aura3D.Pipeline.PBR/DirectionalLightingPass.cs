@@ -42,7 +42,7 @@ internal class DirectionalLightingPass : RenderPass
             if (dl.Enable == false)
                 continue;
 
-            var csmData = dl.GetPipelineGpuResource<CsmShadowData>(nameof(CsmShadowData));
+            var csmData = dl.GetPipelineGpuState<CsmShadowData>(nameof(CsmShadowData));
             bool useCsm = dl.CastShadow && csmData != null;
 
             if (dl.CastShadow == false)
@@ -79,7 +79,7 @@ internal class DirectionalLightingPass : RenderPass
             }
             else
             {
-                var shadowmap = dl.GetPipelineGpuResource<RenderTarget>("ShadowMapRenderTarget");
+                var shadowmap = dl.GetPipelineGpuState<RenderTarget>("ShadowMapRenderTarget");
                 if (dl.CastShadow == true && shadowmap != null)
                 {
                     var shadowView = Matrix4x4.CreateLookAt(dl.WorldTransform.Translation,

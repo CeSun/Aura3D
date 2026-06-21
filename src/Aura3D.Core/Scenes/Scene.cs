@@ -202,7 +202,7 @@ public class Scene
         {
             RemoveNode(child);
         }
-        node.ClearPipelineGpuResources();
+        node.ClearPipelineGpuStates();
     }
 
     /// <summary>
@@ -499,7 +499,7 @@ public class Scene
     /// <param name="localRay">局部空间中的射线。</param>
     /// <param name="geometry">要检测的几何体，提供索引和顶点数据。</param>
     /// <param name="positions">顶点位置数据。为 null 时使用几何体自带的位置数据。</param>
-    private static float? RayIntersectTriangles(Ray localRay, Resources.Geometry geometry, List<float>? positions = null)
+    private static float? RayIntersectTriangles(Ray localRay, Resources.Geometry geometry, IReadOnlyList<float>? positions = null)
     {
         positions ??= geometry.GetAttributeData(BuildInVertexAttribute.Position);
         if (positions == null || positions.Count < 9)
@@ -549,7 +549,7 @@ public class Scene
         return anyHit ? closestT : null;
     }
 
-    private static void ReadVertex(List<float> positions, uint index, out Vector3 vertex)
+    private static void ReadVertex(IReadOnlyList<float> positions, uint index, out Vector3 vertex)
     {
         int i = (int)index * 3;
         vertex = new Vector3(positions[i], positions[i + 1], positions[i + 2]);

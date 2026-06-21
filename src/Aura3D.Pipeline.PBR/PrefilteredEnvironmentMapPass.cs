@@ -106,7 +106,7 @@ internal class PrefilteredEnvironmentMapPass : RenderPass<PBRDeferredPipeline>
         }
 
 
-        var perfilteredEnvMap = camera.GetPipelineGpuResource<CubeRenderTarget>("PrefilteredEnvironmentMap");
+        var perfilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap");
         if (perfilteredEnvMap != null)
              return;
         else
@@ -119,11 +119,11 @@ internal class PrefilteredEnvironmentMapPass : RenderPass<PBRDeferredPipeline>
 
             perfilteredEnvMap.SetSize(PREFILTER_WIDTH, PREFILTER_WIDTH);
 
-            renderPipeline.EnsureUploaded(perfilteredEnvMap);
+            renderPipeline.EnsureSynced(perfilteredEnvMap);
 
             perfilteredEnvMap.SetDepthTexture(TextureFormat.DepthComponent16);
 
-            camera.SetPipelineGpuResource("PrefilteredEnvironmentMap", perfilteredEnvMap);
+            camera.SetPipelineGpuState("PrefilteredEnvironmentMap", perfilteredEnvMap);
 
         }
 
@@ -149,7 +149,7 @@ internal class PrefilteredEnvironmentMapPass : RenderPass<PBRDeferredPipeline>
 
         UniformInt("environmentMap", 0);
 
-        var iblTextureId = renderPipeline.EnsureUploaded(iblTexture);
+        var iblTextureId = renderPipeline.EnsureSynced(iblTexture);
 
         gl.ActiveTexture(TextureUnit.Texture0);
 

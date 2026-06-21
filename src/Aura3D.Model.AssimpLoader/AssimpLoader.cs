@@ -7,6 +7,7 @@ using Aura3D.Core.Resources;
 using StbImageSharp;
 using System.Drawing;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using Node = Assimp.Node;
 
 namespace Aura3D.Model;
@@ -331,7 +332,7 @@ public static class AssimpLoader
 
             texture.IsGammaSpace = true;
 
-            material.Channels.Add(new Channel
+            material.SetChannel(new Channel
             {
                 Name = "BaseColor",
                 Texture = texture,
@@ -349,7 +350,7 @@ public static class AssimpLoader
                 normalTexture = Texture.CreateFromColor(Color.FromArgb(255, 128, 128, 255));
             }
 
-            material.Channels.Add(new Channel
+            material.SetChannel(new Channel
             {
                 Name = "Normal",
                 Texture = normalTexture,
@@ -392,13 +393,6 @@ public static class AssimpLoader
                 var texture = new Core.Resources.Texture();
 
 
-                texture.Width = (uint)assimpTexture.Width;
-                texture.Height = (uint)assimpTexture.Height;
-
-                texture.IsHdr = false;
-
-                texture.ColorFormat = ColorFormat.RGBA;
-
                 List<byte> data = [];
                 for (int i = 0; i < assimpTexture.NonCompressedDataSize; i++)
                 {
@@ -407,7 +401,8 @@ public static class AssimpLoader
                     data.Add(assimpTexture.NonCompressedData[i].B);
                     data.Add(assimpTexture.NonCompressedData[i].A);
                 }
-                texture.LdrData = data;
+                texture.SetColorFormat(ColorFormat.RGBA);
+                texture.SetLdrData(CollectionsMarshal.AsSpan(data), (uint)assimpTexture.Width, (uint)assimpTexture.Height);
                 return texture;
             }
             else

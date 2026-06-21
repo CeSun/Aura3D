@@ -66,7 +66,7 @@ internal class SpotLightingPass : RenderPass
             UniformFloat("radius", sl.AttenuationRadius);
             UniformFloat("softRatio", sl.SoftRatio);
 
-            var shadowmap = sl.GetPipelineGpuResource<RenderTarget>("ShadowMapRenderTarget");
+            var shadowmap = sl.GetPipelineGpuState<RenderTarget>("ShadowMapRenderTarget");
             if (sl.CastShadow && shadowmap != null)
             {
                 var position = sl.WorldTransform.Translation;

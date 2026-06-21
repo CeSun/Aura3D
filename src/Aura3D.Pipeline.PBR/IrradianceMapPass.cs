@@ -87,7 +87,7 @@ void main()
             ibl = Scene.Background.AsT0;
         }
 
-        var irradianceMap = camera.GetPipelineGpuResource<CubeRenderTarget>("IrradianceMap");
+        var irradianceMap = camera.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap");
 
         if (irradianceMap != null)
             return;
@@ -98,11 +98,11 @@ void main()
             .AddRenderTexture("Irradiance", TextureFormat.Rgb16f)
             .SetDepthTexture(TextureFormat.DepthComponent16);
 
-            renderPipeline.EnsureUploaded(irradianceMap);
+            renderPipeline.EnsureSynced(irradianceMap);
         }
 
 
-        camera.SetPipelineGpuResource("IrradianceMap", irradianceMap);
+        camera.SetPipelineGpuState("IrradianceMap", irradianceMap);
 
         var texture = irradianceMap.GetTexture(0)!;
 
@@ -141,7 +141,7 @@ void main()
             
             UniformInt("environmentMap", 0);
 
-            var iblTextureId = renderPipeline.EnsureUploaded(ibl);
+            var iblTextureId = renderPipeline.EnsureSynced(ibl);
 
             gl.ActiveTexture(TextureUnit.Texture0);
 

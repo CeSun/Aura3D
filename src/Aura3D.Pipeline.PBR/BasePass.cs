@@ -147,7 +147,7 @@ internal class BasePass : RenderPass <PBRDeferredPipeline>
 
         if (mesh.IsSkinnedMesh)
         {
-            BindBoneMatrixBuffer(mesh);
+            SyncAndBindBoneMatrixBuffer(mesh);
         }
 
         base.RenderMesh(mesh, view, projection);

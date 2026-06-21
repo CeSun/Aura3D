@@ -209,8 +209,8 @@ public class ParticlePass : RenderPass
             {
                 em.GpuBuffer.SetParticleData(em.Particles, em.ActiveCount);
                 em.GpuBuffer.QuadGeometry = _quadGeometry;
-                renderPipeline.EnsureUploaded(_quadGeometry);
-                renderPipeline.EnsureUploaded(em.GpuBuffer);
+                renderPipeline.EnsureSynced(_quadGeometry);
+                renderPipeline.EnsureSynced(em.GpuBuffer);
                 em.GpuBuffer.Draw(gl!);
             }
         }

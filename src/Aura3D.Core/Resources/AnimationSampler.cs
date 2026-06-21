@@ -99,7 +99,7 @@ public class AnimationSampler : IAnimationSampler
 
         processBoneTransform(Skeleton.Root, time);
 
-        BoneMatrixBuffer.NeedsUpload = true;
+        BoneMatrixBuffer.MarkModified();
     }
 
     private void processBoneTransform(Bone bone, float time)

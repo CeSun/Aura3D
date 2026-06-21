@@ -1,6 +1,5 @@
 using Aura3D.Core.Resources;
 using Silk.NET.OpenGLES;
-using System.Runtime.InteropServices;
 
 namespace Aura3D.Core.Renderers;
 
@@ -9,6 +8,8 @@ internal class CubeTextureGpuState : IResourceGpuState
     private readonly WeakReference<CubeTexture> texture;
 
     public bool IsAlive => texture.TryGetTarget(out _);
+    public ulong Version => GetResource().Version;
+    public ulong SyncedVersion { get; protected set; }
 
     public virtual uint TextureId { get; protected set; }
 
@@ -35,6 +36,7 @@ internal class CubeTextureGpuState : IResourceGpuState
         UploadTextureStorage(gl, texture);
 
         gl.BindTexture(GLEnum.TextureCubeMap, 0);
+        SyncedVersion = texture.Version;
     }
 
     protected CubeTexture GetResource()
@@ -69,14 +71,16 @@ internal class CubeTextureGpuState : IResourceGpuState
         {
             if (texture.IsHdr == false)
             {
-                fixed (void* p = CollectionsMarshal.AsSpan(texture.LdrData[i]))
+                var ldrData = texture.AsLdrData(i);
+                fixed (byte* p = ldrData)
                 {
                     gl.TexImage2D(GLEnum.TextureCubeMapPositiveX + i, 0, texture.GetGLInternalFormat(), texture.Width, texture.Height, 0, texture.GetGlFormat(), GLEnum.UnsignedByte, p);
                 }
             }
             else
             {
-                fixed (void* p = CollectionsMarshal.AsSpan(texture.HdrData[i]))
+                var hdrData = texture.AsHdrData(i);
+                fixed (float* p = hdrData)
                 {
                     gl.TexImage2D(GLEnum.TextureCubeMapPositiveX + i, 0, texture.GetGLInternalFormat(), texture.Width, texture.Height, 0, texture.GetGlFormat(), GLEnum.Float, p);
                 }

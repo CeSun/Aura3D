@@ -145,7 +145,7 @@ public class CelLightPass : RenderPass
                 UniformVector3($"DirectionalLights[{i}].color", new Vector3(directionalLight.LightColor.R / 255f * directionalLight.Intensity, directionalLight.LightColor.G / 255f * directionalLight.Intensity, directionalLight.LightColor.B / 255f * directionalLight.Intensity));
                 UniformFloat($"DirectionalLights[{i}].castShadow", directionalLight.CastShadow ? 1.0f : 0.0f);
 
-                var rt = directionalLight.GetPipelineGpuResource<RenderTarget>("ShadowMapRenderTarget");
+                var rt = directionalLight.GetPipelineGpuState<RenderTarget>("ShadowMapRenderTarget");
                 if (directionalLight.CastShadow && rt != null)
                 {
                     var dlview = Matrix4x4.CreateLookAt(directionalLight.WorldTransform.Translation, directionalLight.WorldTransform.Translation + directionalLight.WorldTransform.ForwardVector(), directionalLight.WorldTransform.UpVector());
@@ -326,7 +326,7 @@ public class CelLightPass : RenderPass
 
         if (mesh.IsSkinnedMesh)
         {
-            BindBoneMatrixBuffer(mesh);
+            SyncAndBindBoneMatrixBuffer(mesh);
         }
 
         base.RenderMesh(mesh, view, projection);

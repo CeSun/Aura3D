@@ -245,7 +245,8 @@ public partial class CelShadingMaterialEditorPage : UserControl
 
     private static WriteableBitmap? TextureToThumbnail(Texture tex)
     {
-        if (tex.LdrData == null || tex.LdrData.Count == 0 || tex.Width == 0 || tex.Height == 0)
+        var ldrData = tex.AsLdrData();
+        if (ldrData.IsEmpty || tex.Width == 0 || tex.Height == 0)
             return null;
 
         try
@@ -255,7 +256,7 @@ public partial class CelShadingMaterialEditorPage : UserControl
             var bitmap = new WriteableBitmap(new PixelSize(width, height), new AvaloniaVector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Unpremul);
 
             using var fb = bitmap.Lock();
-            var srcData = tex.LdrData.ToArray();
+            var srcData = ldrData.ToArray();
             var dstRowBytes = fb.RowBytes;
             var srcChannels = tex.ColorFormat == ColorFormat.RGBA ? 4 : 3;
 

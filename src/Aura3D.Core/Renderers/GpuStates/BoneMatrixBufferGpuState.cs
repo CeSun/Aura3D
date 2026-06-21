@@ -26,6 +26,8 @@ internal sealed class BoneMatrixBufferGpuState : IResourceGpuState<BoneMatrixBuf
     }
 
     public bool IsAlive => boneMatrixBuffer.TryGetTarget(out _);
+    public ulong Version => Resource.Version;
+    public ulong SyncedVersion { get; protected set; }
 
     public uint BufferId { get; private set; }
 
@@ -66,6 +68,8 @@ internal sealed class BoneMatrixBufferGpuState : IResourceGpuState<BoneMatrixBuf
             gl.BindBuffer(GLEnum.UniformBuffer, BufferId);
             gl.BufferSubData(GLEnum.UniformBuffer, 0, (nuint)(uploadCount * 64), ptr);
         }
+
+        SyncedVersion = resource.Version;
     }
 
     public void Bind(GL gl)

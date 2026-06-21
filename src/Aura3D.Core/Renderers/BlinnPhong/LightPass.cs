@@ -160,8 +160,8 @@ public class LightPass : RenderPass
     }
     public override void Setup()
     {
-        renderPipeline.EnsureUploaded(defaultBaseColor);
-        renderPipeline.EnsureUploaded(defaultNormal);
+        renderPipeline.EnsureSynced(defaultBaseColor);
+        renderPipeline.EnsureSynced(defaultNormal);
     }
 
     public override void Destroy()
@@ -273,7 +273,7 @@ public class LightPass : RenderPass
                 continue;
             if (!light.CastShadow)
                 continue;
-            var csmData = light.GetPipelineGpuResource<CsmShadowData>(nameof(CsmShadowData));
+            var csmData = light.GetPipelineGpuState<CsmShadowData>(nameof(CsmShadowData));
             if (csmData != null)
                 return true;
         }
@@ -294,7 +294,7 @@ public class LightPass : RenderPass
         UniformVector3(_directionalLightColorUniforms[index], new Vector3(light.LightColor.R / 255f * light.Intensity, light.LightColor.G / 255f * light.Intensity, light.LightColor.B / 255f * light.Intensity));
         UniformFloat(_directionalLightCastShadowUniforms[index], light.CastShadow ? 1.0f : 0.0f);
 
-        var csmData = light.GetPipelineGpuResource<CsmShadowData>(nameof(CsmShadowData));
+        var csmData = light.GetPipelineGpuState<CsmShadowData>(nameof(CsmShadowData));
         bool useCsm = light.CastShadow && csmData != null;
 
         if (useCsm)
@@ -320,7 +320,7 @@ public class LightPass : RenderPass
         }
         else
         {
-            var rt = light.GetPipelineGpuResource<RenderTarget>("ShadowMapRenderTarget");
+            var rt = light.GetPipelineGpuState<RenderTarget>("ShadowMapRenderTarget");
 
             if (light.CastShadow && rt != null)
             {
@@ -377,7 +377,7 @@ public class LightPass : RenderPass
         UniformFloat(_pointLightSoftRatioUniforms[index], light.SoftRatio);
         UniformFloat(_pointLightCastShadowUniforms[index], light.CastShadow ? 1.0f : 0.0f);
 
-        var rt = light.GetPipelineGpuResource<CubeRenderTarget>("ShadowMapRenderTarget");
+        var rt = light.GetPipelineGpuState<CubeRenderTarget>("ShadowMapRenderTarget");
 
         if (light.CastShadow && rt != null)
         {
@@ -447,7 +447,7 @@ public class LightPass : RenderPass
         UniformFloat(_spotLightSoftRatioUniforms[index], light.SoftRatio);
         UniformFloat(_spotLightCastShadowUniforms[index], light.CastShadow ? 1.0f : 0.0f);
 
-        var rt = light.GetPipelineGpuResource<RenderTarget>("ShadowMapRenderTarget");
+        var rt = light.GetPipelineGpuState<RenderTarget>("ShadowMapRenderTarget");
 
         if (light.CastShadow && rt != null)
         {
@@ -488,7 +488,7 @@ public class LightPass : RenderPass
 
         if (mesh.IsSkinnedMesh)
         {
-            BindBoneMatrixBuffer(mesh);
+            SyncAndBindBoneMatrixBuffer(mesh);
         }
 
         base.RenderMesh(mesh, view, projection);

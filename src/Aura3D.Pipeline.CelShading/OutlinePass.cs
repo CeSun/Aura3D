@@ -92,7 +92,7 @@ public class OutlinePass : RenderPass
 
         if (mesh.IsSkinnedMesh)
         {
-            BindBoneMatrixBuffer(mesh);
+            SyncAndBindBoneMatrixBuffer(mesh);
         }
         base.RenderMesh(mesh, view, projection);
     }

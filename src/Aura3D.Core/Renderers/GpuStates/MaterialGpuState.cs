@@ -6,6 +6,8 @@ namespace Aura3D.Core.Renderers;
 public class MaterialGpuState : IResourceGpuState<Material>
 {
     private WeakReference<Material> material;
+    public ulong Version => Resource.Version;
+    public ulong SyncedVersion { get; protected set; }
 
     public Material Material => Resource;
 
@@ -33,6 +35,7 @@ public class MaterialGpuState : IResourceGpuState<Material>
     {
         // MaterialGpuState currently only caches compiled shader programs.
         // Shader compilation is still triggered lazily by RenderPass_Shader.
+        SyncedVersion = Resource.Version;
     }
 
     public void Destroy(GL gl)

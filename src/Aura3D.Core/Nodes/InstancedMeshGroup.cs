@@ -13,7 +13,7 @@ namespace Aura3D.Core.Nodes;
 /// （旧分组移除、新分组挂载），GPU 上传由 RenderPipeline 自动处理。</para>
 ///
 /// <para>增量更新：当 <see cref="UpdateInstance"/> 发现实例仍在原空间分组内时，
-/// 原地修改 InstancedMesh 的 VBO 数据（标记 NeedsUpload），不触发重建；
+/// 原地修改 InstancedMesh 的实例数据并递增资源版本，不触发重建；
 /// 仅在实例跨分组移动、增删实例时才回退到全量重建。</para>
 ///
 /// 使用方式：

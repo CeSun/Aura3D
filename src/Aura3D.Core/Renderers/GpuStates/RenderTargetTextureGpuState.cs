@@ -2,9 +2,9 @@ using Silk.NET.OpenGLES;
 
 namespace Aura3D.Core.Renderers;
 
-internal sealed class CubeRenderTargetTextureGpuState : CubeTextureGpuState
+internal sealed class RenderTargetTextureGpuState : TextureGpuState
 {
-    public CubeRenderTargetTextureGpuState(CubeRenderTarget.RenderCubeTexture texture)
+    public RenderTargetTextureGpuState(RenderTarget.RenderTexture texture)
         : base(texture)
     {
     }
@@ -15,7 +15,7 @@ internal sealed class CubeRenderTargetTextureGpuState : CubeTextureGpuState
         protected set => RenderTexture.TextureId = value;
     }
 
-    private CubeRenderTarget.RenderCubeTexture RenderTexture => (CubeRenderTarget.RenderCubeTexture)GetResource();
+    private RenderTarget.RenderTexture RenderTexture => (RenderTarget.RenderTexture)GetResource();
 
     public override void Destroy(GL gl)
     {
@@ -23,5 +23,6 @@ internal sealed class CubeRenderTargetTextureGpuState : CubeTextureGpuState
 
     public override void Upload(GL gl)
     {
+        SyncedVersion = RenderTexture.Version;
     }
 }

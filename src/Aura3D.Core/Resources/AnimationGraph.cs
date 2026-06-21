@@ -123,7 +123,7 @@ public class AnimationGraph : IAnimationSampler
             }
         }
 
-        BoneMatrixBuffer.NeedsUpload = true;
+        BoneMatrixBuffer.MarkModified();
     }
 
     /// <summary>

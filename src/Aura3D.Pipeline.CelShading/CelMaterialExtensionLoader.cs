@@ -59,12 +59,13 @@ public class CelMaterialExtensionLoader : MaterialExtensionLoaderBase
                     ++i;
                     continue;
                 }
-                var channel = new Core.Resources.Channel();
-                channel.Texture = texture;
-                channel.Name = texturesNames[i];
-                logicMaterial.Channels.Add(channel);
-                ++i;
-            }
+                    logicMaterial.SetChannel(new Core.Resources.Channel
+                    {
+                        Name = texturesNames[i],
+                        Texture = texture
+                    });
+                    ++i;
+                }
             logicMaterial.SetParameterValue<int>("RenderType", celExt.RenderType);
 
             logicMaterial.SetParameterValue<float>("_RampIndex0", celExt.RampIndex0);
@@ -197,10 +198,11 @@ public class Aura3DCelExtraProperties : ExtraProperties
                         ++i;
                         continue;
                     }
-                    var channel = new Core.Resources.Channel();
-                    channel.Texture = texture;
-                    channel.Name = texturesNames[i];
-                    channels.Add(channel);
+                    channels.Add(new Core.Resources.Channel
+                    {
+                        Name = texturesNames[i],
+                        Texture = texture
+                    });
                     ++i;
                 }
             }
