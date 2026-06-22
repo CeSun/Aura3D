@@ -40,7 +40,7 @@ public class OutlinePass : RenderPass
 
     public override void Render(Camera camera)
     {
-        BindOutPutRenderTarget(camera);
+        BindOutputRenderTarget(camera);
 
         UseShader();
         RenderVisibleMeshesInCamera(mesh => IsMaterialBlendMode(mesh, BlendMode.Opaque) && mesh.IsStaticMesh, camera.View, camera.Projection);

@@ -23,7 +23,7 @@ internal class DirectionalLightingPass : RenderPass
 
     public override void BeforeRender(Camera camera)
     {
-        BindOutPutRenderTarget(camera);
+        BindOutputRenderTarget(camera);
     }
 
     public override void Render(Camera camera)

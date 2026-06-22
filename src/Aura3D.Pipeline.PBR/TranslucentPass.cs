@@ -207,7 +207,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
             UniformColor("spotLightColor", sl.LightColor);
             UniformFloat("spotLightIntensity", sl.Intensity);
             UniformFloat("spotLightCutOff", MathF.Cos(sl.InnerConeAngleDegree.DegreeToRadians()));
-            UniformFloat("spotLightOuterCutOff", MathF.Cos(sl.OuterAngleDegree.DegreeToRadians()));
+            UniformFloat("spotLightOuterCutOff", MathF.Cos(sl.OuterConeAngleDegree.DegreeToRadians()));
             UniformFloat("radius", sl.AttenuationRadius);
             UniformFloat("softRatio", sl.SoftRatio);
 
@@ -217,7 +217,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
             {
                 var position = sl.WorldTransform.Translation;
                 var shadowView = Matrix4x4.CreateLookAt(position, position + sl.WorldTransform.ForwardVector(), sl.WorldTransform.UpVector());
-                var shadowProjection = Matrix4x4.CreatePerspectiveFieldOfView(sl.OuterAngleDegree.DegreeToRadians(), rt.Width / (float)rt.Height, sl.ShadowConfig.NearPlane, sl.ShadowConfig.FarPlane);
+                var shadowProjection = Matrix4x4.CreatePerspectiveFieldOfView(sl.OuterConeAngleDegree.DegreeToRadians(), rt.Width / (float)rt.Height, sl.ShadowConfig.NearPlane, sl.ShadowConfig.FarPlane);
 
                 UniformTexture($"spotLightshadowMap", rt.DepthStencilTexture);
                 UniformMatrix4($"spotLightshadowMapMatrix", shadowView * shadowProjection);
@@ -392,7 +392,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
             UniformColor("spotLightColor", sl.LightColor);
             UniformFloat("spotLightIntensity", sl.Intensity);
             UniformFloat("spotLightCutOff", MathF.Cos(sl.InnerConeAngleDegree.DegreeToRadians()));
-            UniformFloat("spotLightOuterCutOff", MathF.Cos(sl.OuterAngleDegree.DegreeToRadians()));
+            UniformFloat("spotLightOuterCutOff", MathF.Cos(sl.OuterConeAngleDegree.DegreeToRadians()));
             UniformFloat("radius", sl.AttenuationRadius);
             UniformFloat("softRatio", sl.SoftRatio);
 
@@ -402,7 +402,7 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
             {
                 var position = sl.WorldTransform.Translation;
                 var shadowView = Matrix4x4.CreateLookAt(position, position + sl.WorldTransform.ForwardVector(), sl.WorldTransform.UpVector());
-                var shadowProjection = Matrix4x4.CreatePerspectiveFieldOfView(sl.OuterAngleDegree.DegreeToRadians(), rt.Width / (float)rt.Height, sl.ShadowConfig.NearPlane, sl.ShadowConfig.FarPlane);
+                var shadowProjection = Matrix4x4.CreatePerspectiveFieldOfView(sl.OuterConeAngleDegree.DegreeToRadians(), rt.Width / (float)rt.Height, sl.ShadowConfig.NearPlane, sl.ShadowConfig.FarPlane);
 
                 UniformTexture($"spotLightshadowMap", rt.DepthStencilTexture);
                 UniformMatrix4($"spotLightshadowMapMatrix", shadowView * shadowProjection);

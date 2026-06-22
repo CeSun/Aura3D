@@ -179,7 +179,7 @@ public class LightPass : RenderPass
 
     public override void Render(Camera camera)
     {
-        BindOutPutRenderTarget(camera);
+        BindOutputRenderTarget(camera);
 
         var csm = CheckCsmEnabled() ? new[] { "ENABLE_CSM" } : [];
 
@@ -442,7 +442,7 @@ public class LightPass : RenderPass
         UniformVector3(_spotLightPositionUniforms[index], light.WorldTransform.Translation);
         UniformVector3(_spotLightDirectionUniforms[index], light.Forward);
         UniformFloat(_spotLightInnerConeCosUniforms[index], MathF.Cos(light.InnerConeAngleDegree.DegreeToRadians()));
-        UniformFloat(_spotLightOuterConeCosUniforms[index], MathF.Cos(light.OuterAngleDegree.DegreeToRadians()));
+        UniformFloat(_spotLightOuterConeCosUniforms[index], MathF.Cos(light.OuterConeAngleDegree.DegreeToRadians()));
         UniformFloat(_spotLightRadiusUniforms[index], light.AttenuationRadius);
         UniformFloat(_spotLightSoftRatioUniforms[index], light.SoftRatio);
         UniformFloat(_spotLightCastShadowUniforms[index], light.CastShadow ? 1.0f : 0.0f);
@@ -453,7 +453,7 @@ public class LightPass : RenderPass
         {
             var position = light.WorldTransform.Translation;
             var shadowView = Matrix4x4.CreateLookAt(position, position + light.WorldTransform.ForwardVector(), light.WorldTransform.UpVector());
-            var shadowProjection = Matrix4x4.CreatePerspectiveFieldOfView(light.OuterAngleDegree.DegreeToRadians(), rt.Width / (float)rt.Height, light.ShadowConfig.NearPlane, light.ShadowConfig.FarPlane);
+            var shadowProjection = Matrix4x4.CreatePerspectiveFieldOfView(light.OuterConeAngleDegree.DegreeToRadians(), rt.Width / (float)rt.Height, light.ShadowConfig.NearPlane, light.ShadowConfig.FarPlane);
 
             UniformTexture(_spotLightShadowMapUniforms[index], rt.DepthStencilTexture);
             UniformMatrix4(_spotLightShadowMapMatrixUniforms[index], shadowView * shadowProjection);

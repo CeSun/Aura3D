@@ -132,7 +132,7 @@ public partial class RenderPass
         return (outputRenderTarget ?? CameraOutput).Resolve(renderPipeline, camera).FramebufferId;
     }
 
-    public void BindOutPutRenderTarget(Camera camera)
+    public void BindOutputRenderTarget(Camera camera)
     {
         BindOutput(camera);
     }

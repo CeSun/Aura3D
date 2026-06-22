@@ -422,7 +422,7 @@ public static class ModelLoader
 
     private static void ConfigureTextureSampler(Texture texture, TextureSampler sampler)
     {
-        texture.SetWarpS(sampler.WrapS switch
+        texture.SetWrapS(sampler.WrapS switch
         {
             SharpGLTF.Schema2.TextureWrapMode.REPEAT => TextureWrapMode.Repeat,
             SharpGLTF.Schema2.TextureWrapMode.CLAMP_TO_EDGE => TextureWrapMode.ClampToEdge,
@@ -430,7 +430,7 @@ public static class ModelLoader
             _ => TextureWrapMode.Repeat,
         });
 
-        texture.SetWarpT(sampler.WrapT switch
+        texture.SetWrapT(sampler.WrapT switch
         {
             SharpGLTF.Schema2.TextureWrapMode.REPEAT => TextureWrapMode.Repeat,
             SharpGLTF.Schema2.TextureWrapMode.CLAMP_TO_EDGE => TextureWrapMode.ClampToEdge,

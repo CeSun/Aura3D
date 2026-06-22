@@ -498,7 +498,7 @@ public class  Shader
     /// <summary>
     /// 获取 Uniform 变量名称到其位置索引的字典缓存。
     /// </summary>
-    public Dictionary<string, int> UniformLocation = new Dictionary<string, int>();
+    public Dictionary<string, int> UniformLocation { get; } = new Dictionary<string, int>();
 
     /// <summary>
     /// 获取指定 Uniform 变量在当前着色器程序中的位置，若未缓存则向 OpenGL 查询。

@@ -67,7 +67,7 @@ public class PointCloudPass : RenderPass
 
     public override void BeforeRender(Camera camera)
     {
-        BindOutPutRenderTarget(camera);
+        BindOutputRenderTarget(camera);
 
         gl.Disable(EnableCap.Blend);
         gl.Enable(EnableCap.DepthTest);

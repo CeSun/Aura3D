@@ -115,7 +115,7 @@ public class ShadowMapPass : RenderPass
 
             var position = spotLight.WorldTransform.Translation;
             var view = Matrix4x4.CreateLookAt(position, position + spotLight.WorldTransform.ForwardVector(), spotLight.WorldTransform.UpVector());
-            var projection = Matrix4x4.CreatePerspectiveFieldOfView(spotLight.OuterAngleDegree.DegreeToRadians(), rt.Width / (float)rt.Height, spotLight.ShadowConfig.NearPlane, spotLight.ShadowConfig.FarPlane);
+            var projection = Matrix4x4.CreatePerspectiveFieldOfView(spotLight.OuterConeAngleDegree.DegreeToRadians(), rt.Width / (float)rt.Height, spotLight.ShadowConfig.NearPlane, spotLight.ShadowConfig.FarPlane);
 
             RenderMesh(view, projection);
         }

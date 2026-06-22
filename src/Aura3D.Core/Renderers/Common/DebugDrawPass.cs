@@ -326,7 +326,7 @@ public class DebugDrawPass : RenderPass
             var color = light.LightColor;
             UniformVector3("uColor", new Vector3(color.R / 255f, color.G / 255f, color.B / 255f));
 
-            float outerAngleRad = light.OuterAngleDegree * MathF.PI / 180f;
+            float outerAngleRad = light.OuterConeAngleDegree * MathF.PI / 180f;
             float coneLength = MathF.Min(light.AttenuationRadius, 50f);
 
             Begin();

@@ -27,7 +27,7 @@ public class BackgroundPass: RenderPass
     public override void BeforeRender(Camera camera)
     {
 
-        BindOutPutRenderTarget(camera);
+        BindOutputRenderTarget(camera);
 
         gl.DepthMask(true);
 

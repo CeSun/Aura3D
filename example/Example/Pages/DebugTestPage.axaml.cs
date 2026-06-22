@@ -209,7 +209,7 @@ public partial class DebugTestPage : UserControl
             LightColor = ToSystemColor(_vm.SpotLightColor),
             LuminousIntensity = _vm.SpotLightIntensity,
             InnerConeAngleDegree = _vm.SpotLightInnerAngle,
-            OuterAngleDegree = _vm.SpotLightOuterAngle,
+            OuterConeAngleDegree = _vm.SpotLightOuterAngle,
             AttenuationRadius = _vm.SpotLightRadius
         };
         view.AddNode(_spotLight);
@@ -515,7 +515,7 @@ public partial class DebugTestPage : UserControl
             _spotLight.LuminousIntensity = _vm.SpotLightIntensity;
             _spotLight.LightColor = ToSystemColor(_vm.SpotLightColor);
             _spotLight.InnerConeAngleDegree = _vm.SpotLightInnerAngle;
-            _spotLight.OuterAngleDegree = _vm.SpotLightOuterAngle;
+            _spotLight.OuterConeAngleDegree = _vm.SpotLightOuterAngle;
             _spotLight.AttenuationRadius = _vm.SpotLightRadius;
         }
     }
@@ -649,7 +649,7 @@ public partial class DebugTestPage : UserControl
                 aura3DView.RequestNextFrameRendering();
                 break;
             case nameof(DebugTestViewModel.SpotLightOuterAngle):
-                if (_spotLight != null) _spotLight.OuterAngleDegree = _vm.SpotLightOuterAngle;
+                if (_spotLight != null) _spotLight.OuterConeAngleDegree = _vm.SpotLightOuterAngle;
                 aura3DView.RequestNextFrameRendering();
                 break;
             case nameof(DebugTestViewModel.SpotLightRadius):

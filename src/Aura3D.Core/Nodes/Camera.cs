@@ -148,9 +148,9 @@ public class Camera : Node
     }
 
     /// <summary>
-    /// 是否渲染背景。
+    /// 获取或设置是否渲染背景。
     /// </summary>
-    public bool IsRenderBackground = true;
+    public bool IsRenderBackground { get; set; } = true;
 
     /// <summary>
     /// 使相机朝向指定目标点。

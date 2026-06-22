@@ -113,7 +113,7 @@ public class ParticlePass : RenderPass
 
     public override void BeforeRender(Camera camera)
     {
-        BindOutPutRenderTarget(camera);
+        BindOutputRenderTarget(camera);
         gl.Enable(EnableCap.DepthTest);
         gl.DepthFunc(DepthFunction.Less);
         gl.Disable(EnableCap.CullFace);

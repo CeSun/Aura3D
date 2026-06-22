@@ -24,7 +24,7 @@ internal class SpotLightingPass : RenderPass
     }
     public override void BeforeRender(Camera camera)
     {
-        BindOutPutRenderTarget(camera);
+        BindOutputRenderTarget(camera);
     }
 
     public override void Render(Camera camera)
@@ -62,7 +62,7 @@ internal class SpotLightingPass : RenderPass
             UniformColor("spotLightColor", sl.LightColor);
             UniformFloat("spotLightIntensity", sl.Intensity);
             UniformFloat("spotLightCutOff", MathF.Cos(sl.InnerConeAngleDegree.DegreeToRadians()));
-            UniformFloat("spotLightOuterCutOff", MathF.Cos(sl.OuterAngleDegree.DegreeToRadians()));
+            UniformFloat("spotLightOuterCutOff", MathF.Cos(sl.OuterConeAngleDegree.DegreeToRadians()));
             UniformFloat("radius", sl.AttenuationRadius);
             UniformFloat("softRatio", sl.SoftRatio);
 
@@ -71,7 +71,7 @@ internal class SpotLightingPass : RenderPass
             {
                 var position = sl.WorldTransform.Translation;
                 var shadowView = Matrix4x4.CreateLookAt(position, position + sl.WorldTransform.ForwardVector(), sl.WorldTransform.UpVector());
-                var shadowProjection = Matrix4x4.CreatePerspectiveFieldOfView(sl.OuterAngleDegree.DegreeToRadians(), shadowmap.Width / (float)shadowmap.Height, sl.ShadowConfig.NearPlane, sl.ShadowConfig.FarPlane);
+                var shadowProjection = Matrix4x4.CreatePerspectiveFieldOfView(sl.OuterConeAngleDegree.DegreeToRadians(), shadowmap.Width / (float)shadowmap.Height, sl.ShadowConfig.NearPlane, sl.ShadowConfig.FarPlane);
 
                 UniformTexture($"spotLightshadowMap", shadowmap.DepthStencilTexture);
                 UniformMatrix4($"spotLightshadowMapMatrix", shadowView * shadowProjection);

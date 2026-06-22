@@ -129,7 +129,7 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     /// </summary>
     /// <param name="mode">环绕模式</param>
     /// <returns>当前纹理对象</returns>
-    public T SetWarpS(TextureWrapMode mode)
+    public T SetWrapS(TextureWrapMode mode)
     {
         WrapS = mode;
         return (T)this;
@@ -140,7 +140,7 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     /// </summary>
     /// <param name="mode">环绕模式</param>
     /// <returns>当前纹理对象</returns>
-    public T SetWarpT(TextureWrapMode mode)
+    public T SetWrapT(TextureWrapMode mode)
     {
         WrapT = mode;
         return (T)this;

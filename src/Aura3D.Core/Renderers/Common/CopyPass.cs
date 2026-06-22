@@ -66,7 +66,7 @@ void main()
     }
     public override void Render(Camera camera)
     {
-        BindOutPutRenderTarget(camera);
+        BindOutputRenderTarget(camera);
 
         var source = GetTexture(_inputTexture, camera);
         

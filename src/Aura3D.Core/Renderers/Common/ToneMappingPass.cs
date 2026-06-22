@@ -85,7 +85,7 @@ void main()
     {
         var source = GetTexture(_inputTexture, camera);
 
-        BindOutPutRenderTarget(camera);
+        BindOutputRenderTarget(camera);
 
         UseShader_Internal();
         ClearTextureUnit();

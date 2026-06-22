@@ -159,12 +159,12 @@ public abstract partial class RenderPipeline
     /// <summary>
     /// 获取或设置当前相机视锥体中可见的网格列表。
     /// </summary>
-    public List<Mesh> VisibleMeshesInCamera = [];
+    public List<Mesh> VisibleMeshesInCamera { get; } = [];
 
     /// <summary>
-    /// 当前相机视锥体中可见的实例化网格列表。
+    /// 获取当前相机视锥体中可见的实例化网格列表。
     /// </summary>
-    public List<InstancedMesh> VisibleInstancedMeshesInCamera = [];
+    public List<InstancedMesh> VisibleInstancedMeshesInCamera { get; } = [];
 
 
     protected void RegisterRenderPass(RenderPass renderPass, RenderPassGroup renderPassGroup)

@@ -510,7 +510,7 @@ public partial class Node
 
     #endregion
 
-    public Dictionary<string, IRuntimeGpuState> _pipelineGpuStates = new Dictionary<string, IRuntimeGpuState>();
+    private readonly Dictionary<string, IRuntimeGpuState> _pipelineGpuStates = new Dictionary<string, IRuntimeGpuState>();
 
     /// <summary>
     /// 按名称获取渲染管线中的运行时 GPU 状态。

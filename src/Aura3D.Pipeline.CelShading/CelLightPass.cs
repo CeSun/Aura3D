@@ -80,7 +80,7 @@ public class CelLightPass : RenderPass
 
     public override void Render(Camera camera)
     {
-        BindOutPutRenderTarget(camera);
+        BindOutputRenderTarget(camera);
 
         // Render Body
         UseShader();

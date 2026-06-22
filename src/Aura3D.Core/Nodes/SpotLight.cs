@@ -33,7 +33,7 @@ public class SpotLight : Light
     /// <summary>
     /// 获取或设置外锥角（度数）。
     /// </summary>
-    public float OuterAngleDegree { get; set; } = 15;
+    public float OuterConeAngleDegree { get; set; } = 15;
 
     /// <summary>
     /// 获取或设置发光强度（单位：坎德拉）。

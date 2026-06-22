@@ -42,7 +42,7 @@ internal class BasePass : RenderPass <PBRDeferredPipeline>
 
     public override void Render(Camera camera)
     {
-        BindOutPutRenderTarget(camera);
+        BindOutputRenderTarget(camera);
         gl.DepthMask(true);
 
         gl.ClearDepth(1.0f);
