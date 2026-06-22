@@ -19,7 +19,7 @@ public class DirectionalLight : Light
     /// <summary>
     /// 阴影贴图配置。
     /// </summary>
-    public DirectionalLightShadowMapConfig ShadowConfig = new DirectionalLightShadowMapConfig
+    public DirectionalLightShadowMapConfig ShadowConfig { get; set; } = new()
     {
         Width = 50,
         Height = 50,

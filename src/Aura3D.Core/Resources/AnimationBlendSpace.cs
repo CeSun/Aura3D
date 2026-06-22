@@ -16,7 +16,7 @@ public class AnimationBlendSpace : IAnimationSampler
     /// </summary>
     public void Reset()
     {
-        AxisValue = new(0, 0);
+        _axisValue = new(0, 0);
     }
 
     /// <summary>
@@ -27,19 +27,19 @@ public class AnimationBlendSpace : IAnimationSampler
     {
         Skeleton = skeleton;
 
-        bonesTransform = new Matrix4x4[skeleton.Bones.Count];
+        _bonesTransform = new Matrix4x4[skeleton.Bones.Count];
         BoneMatrixBuffer = new BoneMatrixBuffer(Skeleton, this);
 
-        for (var i = 0; i < bonesTransform.Length; i++)
+        for (var i = 0; i < _bonesTransform.Length; i++)
         {
-            bonesTransform[i] = skeleton.Bones[i].WorldMatrix;
+            _bonesTransform[i] = skeleton.Bones[i].WorldMatrix;
         }
     }
 
     /// <summary>
     /// 获取骨骼数据。
     /// </summary>
-    public Skeleton Skeleton { get; private set; }
+    public Skeleton Skeleton { get; }
 
     /// <inheritdoc />
     public BoneMatrixBuffer BoneMatrixBuffer { get; }
@@ -50,16 +50,16 @@ public class AnimationBlendSpace : IAnimationSampler
     public bool ExternalUpdate { get; set; } = false;
 
     /// <inheritdoc />
-    public IReadOnlyList<Matrix4x4> BonesTransform => bonesTransform;
+    public IReadOnlyList<Matrix4x4> BonesTransform => _bonesTransform;
 
     /// <summary>
     /// 骨骼变换矩阵数组。
     /// </summary>
-    public Matrix4x4[] bonesTransform;
+    private readonly Matrix4x4[] _bonesTransform;
 
-    List <(Vector2, IAnimationSampler)> animationSamplers = [];
+    private readonly List<(Vector2 Point, IAnimationSampler Sampler)> _animationSamplers = [];
 
-    List<float> weights = new List<float>();
+    private readonly List<float> _weights = [];
 
     /// <summary>
     /// 添加动画采样器到混合空间。
@@ -75,11 +75,11 @@ public class AnimationBlendSpace : IAnimationSampler
         if (point.Y > 1 || point.Y < -1)
             throw new ArgumentOutOfRangeException(nameof(point), "Animation sampler point Y must be in range [-1, 1].");
 
-        animationSamplers.Add((point, animationSampler));
-        weights.Add(0);
+        _animationSamplers.Add((point, animationSampler));
+        _weights.Add(0);
 
     }
-    Vector2 AxisValue = default;
+    private Vector2 _axisValue;
 
     /// <summary>
     /// 设置混合空间的轴值。
@@ -91,8 +91,8 @@ public class AnimationBlendSpace : IAnimationSampler
     {
         if (x < -1 || y < -1 || x > 1 || y > 1)
             throw new ArgumentOutOfRangeException(nameof(x), "Axis values must be in range [-1, 1].");
-        AxisValue.X = x;
-        AxisValue.Y = y;
+        _axisValue.X = x;
+        _axisValue.Y = y;
     }
 
     /// <summary>
@@ -106,7 +106,7 @@ public class AnimationBlendSpace : IAnimationSampler
     /// </summary>
     public void InitializePose()
     {
-        if (animationSamplers.Count == 0)
+        if (_animationSamplers.Count == 0)
             return;
         computeBlend(0);
     }
@@ -126,50 +126,50 @@ public class AnimationBlendSpace : IAnimationSampler
         float totalRawWeight = 0f;
 
         int index = 0;
-        foreach (var (point, anim) in animationSamplers)
+        foreach (var (point, _) in _animationSamplers)
         {
-            float distance = CalculateDistance(AxisValue.X, AxisValue.Y, point.X, point.Y);
+            float distance = CalculateDistance(_axisValue.X, _axisValue.Y, point.X, point.Y);
 
             if (distance < 0.000001)
             {
                 // Exact match: clear all previous weights and assign full weight
-                for (int j = 0; j < weights.Count; j++)
-                    weights[j] = 0f;
-                weights[index] = 1f;
+                for (int j = 0; j < _weights.Count; j++)
+                    _weights[j] = 0f;
+                _weights[index] = 1f;
                 totalRawWeight = 1f;
                 index++;
                 break;
             }
 
-            weights[index] = 1f / (float)MathF.Pow(distance, IdwPower);
-            totalRawWeight += weights[index];
+            _weights[index] = 1f / (float)MathF.Pow(distance, IdwPower);
+            totalRawWeight += _weights[index];
             index++;
         }
 
         index = 0;
-        for (int i = 0; i < weights.Count; i ++)
+        for (int i = 0; i < _weights.Count; i++)
         {
-            float weight = weights[i] / totalRawWeight;
+            float weight = _weights[i] / totalRawWeight;
             if (weight < 0.0001)
                 weight = 0;
             if (weight > 0.9999)
                 weight = 1;
-            weights[i] = weight;
+            _weights[i] = weight;
         }
 
         index = 0;
         bool firstContributor = true;
-        foreach (var weight in weights)
+        foreach (var weight in _weights)
         {
             if (weight > 0)
             {
-                animationSamplers[index].Item2.Update(deltaTime);
+                _animationSamplers[index].Sampler.Update(deltaTime);
                 for (int j = 0; j < BonesTransform.Count; j++)
                 {
                     if (firstContributor)
-                        bonesTransform[j] = animationSamplers[index].Item2.BonesTransform[j] * weight;
+                        _bonesTransform[j] = _animationSamplers[index].Sampler.BonesTransform[j] * weight;
                     else
-                        bonesTransform[j] += animationSamplers[index].Item2.BonesTransform[j] * weight;
+                        _bonesTransform[j] += _animationSamplers[index].Sampler.BonesTransform[j] * weight;
                 }
                 firstContributor = false;
             }

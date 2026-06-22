@@ -4,17 +4,17 @@ namespace Aura3D.Core.Particles;
 
 public struct ParticleData
 {
-    public Vector3 Position;
-    public float Age;
-    public Vector3 Velocity;
-    public float Lifetime;
-    public float StartSize;
-    public float EndSize;
-    public Vector4 StartColor;
-    public Vector4 EndColor;
-    public float Rotation;
-    public float AngularVelocity;
-    public int EmitterIndex;
+    public Vector3 Position { get; set; }
+    public float Age { get; set; }
+    public Vector3 Velocity { get; set; }
+    public float Lifetime { get; set; }
+    public float StartSize { get; set; }
+    public float EndSize { get; set; }
+    public Vector4 StartColor { get; set; }
+    public Vector4 EndColor { get; set; }
+    public float Rotation { get; set; }
+    public float AngularVelocity { get; set; }
+    public int EmitterIndex { get; set; }
 
     public readonly bool IsDead => Age >= Lifetime;
 
@@ -34,16 +34,16 @@ public struct ParticleData
 
 public struct RangeFloat
 {
-    public float Min;
-    public float Max;
+    public float Min { get; set; }
+    public float Max { get; set; }
     public RangeFloat(float min, float max) { Min = min; Max = max; }
     public readonly float Random(Random rng) => Min + (float)rng.NextDouble() * (Max - Min);
 }
 
 public struct RangeVector3
 {
-    public Vector3 Min;
-    public Vector3 Max;
+    public Vector3 Min { get; set; }
+    public Vector3 Max { get; set; }
     public RangeVector3(Vector3 min, Vector3 max) { Min = min; Max = max; }
     public RangeVector3(float minX, float minY, float minZ, float maxX, float maxY, float maxZ)
     { Min = new Vector3(minX, minY, minZ); Max = new Vector3(maxX, maxY, maxZ); }

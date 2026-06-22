@@ -15,7 +15,7 @@ public class AnimationGraph : IAnimationSampler
     public AnimationGraph(Skeleton skeleton, AnimationGraphNode root)
     {
         Skeleton = skeleton;
-        bonesTransform = new Matrix4x4[skeleton.Bones.Count];
+        _bonesTransform = new Matrix4x4[skeleton.Bones.Count];
         BoneMatrixBuffer = new BoneMatrixBuffer(Skeleton, this);
 
         Root = root;
@@ -25,9 +25,9 @@ public class AnimationGraph : IAnimationSampler
 
         // Copy the initial pose from the root node's sampler to avoid
         // showing T-pose before the first Update() call.
-        for (var i = 0; i < bonesTransform.Length; i++)
+        for (var i = 0; i < _bonesTransform.Length; i++)
         {
-            bonesTransform[i] = currentNode.Sampler.BonesTransform[i];
+            _bonesTransform[i] = currentNode.Sampler.BonesTransform[i];
         }
     }
 
@@ -52,7 +52,7 @@ public class AnimationGraph : IAnimationSampler
     /// <summary>
     /// 获取当前混合权重。
     /// </summary>
-    public float currentWeight = 1;
+    public float CurrentWeight { get; private set; } = 1f;
 
     /// <summary>
     /// 获取或设置是否由外部更新动画。
@@ -62,9 +62,9 @@ public class AnimationGraph : IAnimationSampler
     private DateTime startTime { get; set; } = default;
 
     /// <inheritdoc />
-    public IReadOnlyList<Matrix4x4> BonesTransform => bonesTransform;
+    public IReadOnlyList<Matrix4x4> BonesTransform => _bonesTransform;
 
-    private Matrix4x4[] bonesTransform;
+    private readonly Matrix4x4[] _bonesTransform;
 
     /// <summary>
     /// 更新动画图状态。
@@ -80,34 +80,34 @@ public class AnimationGraph : IAnimationSampler
 
         if (timeSpan.TotalSeconds > currentNode.BlendTime)
         {
-            currentWeight = 1;
+            CurrentWeight = 1;
         }
         else
         {
-            currentWeight = (float)(elapsedSeconds / currentNode.BlendTime);
+            CurrentWeight = (float)(elapsedSeconds / currentNode.BlendTime);
 
         }
 
-        if (currentWeight < 1)
+        if (CurrentWeight < 1)
         {
             lastNode.Sampler.Update(deltaTime);
             currentNode.Sampler.Update(deltaTime);
-            for(int i = 0; i < bonesTransform.Length; i++)
+            for (int i = 0; i < _bonesTransform.Length; i++)
             {
-                bonesTransform[i] = Matrix4x4.Lerp(lastNode.Sampler.BonesTransform[i], currentNode.Sampler.BonesTransform[i], currentWeight);
+                _bonesTransform[i] = Matrix4x4.Lerp(lastNode.Sampler.BonesTransform[i], currentNode.Sampler.BonesTransform[i], CurrentWeight);
             }
         }
         else
         {
             currentNode.Sampler.Update(deltaTime);
-            for (int i = 0; i < bonesTransform.Length; i++)
+            for (int i = 0; i < _bonesTransform.Length; i++)
             {
-                bonesTransform[i] = currentNode.Sampler.BonesTransform[i];
+                _bonesTransform[i] = currentNode.Sampler.BonesTransform[i];
             }
         }
 
         // Only check transitions when the current blend is complete
-        if (currentWeight >= 1)
+        if (CurrentWeight >= 1)
         {
             foreach(var (fun, nextNode) in currentNode.NextNodes)
             {
@@ -117,7 +117,7 @@ public class AnimationGraph : IAnimationSampler
                     currentNode = nextNode;
                     currentNode.Sampler.Reset();
                     startTime = DateTime.Now;
-                    currentWeight = 0;
+                    CurrentWeight = 0;
                     break;
                 }
             }
@@ -159,7 +159,7 @@ public class AnimationGraphNode
     /// <summary>
     /// 获取节点的动画采样器。
     /// </summary>
-    public IAnimationSampler Sampler {  get; private set; }
+    public IAnimationSampler Sampler { get; }
 
     /// <summary>
     /// 添加下一个可能的节点。
@@ -177,6 +177,6 @@ public class AnimationGraphNode
     /// <summary>
     /// 获取下一个节点的列表。
     /// </summary>
-    internal List<(Func<IAnimationSampler, double, bool>, AnimationGraphNode)> NextNodes { get; private set; } = [];
+    internal List<(Func<IAnimationSampler, double, bool>, AnimationGraphNode)> NextNodes { get; } = [];
 
 }

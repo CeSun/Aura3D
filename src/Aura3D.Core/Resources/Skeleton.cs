@@ -15,12 +15,12 @@ public class Skeleton
     /// <summary>
     /// 所有骨骼的列表
     /// </summary>
-    public List<Bone> Bones = new List<Bone>();
+    public List<Bone> Bones { get; } = new();
 
     /// <summary>
     /// 根骨骼
     /// </summary>
-    public Bone Root = new Bone();
+    public Bone Root { get; set; } = new();
 
     /// <summary>
     /// 骨骼名称到索引的映射缓存，用于快速查找
@@ -81,36 +81,36 @@ public class Bone
     /// <summary>
     /// 骨骼名称
     /// </summary>
-    public string Name = string.Empty;
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// 骨骼索引
     /// </summary>
-    public int Index = -1;
+    public int Index { get; set; } = -1;
 
     /// <summary>
     /// 逆世界矩阵，用于蒙皮
     /// </summary>
-    public Matrix4x4 InverseWorldMatrix = Matrix4x4.Identity;
+    public Matrix4x4 InverseWorldMatrix { get; set; } = Matrix4x4.Identity;
 
     /// <summary>
     /// 局部矩阵
     /// </summary>
-    public Matrix4x4 LocalMatrix = Matrix4x4.Identity;
+    public Matrix4x4 LocalMatrix { get; set; } = Matrix4x4.Identity;
 
     /// <summary>
     /// 世界矩阵
     /// </summary>
-    public Matrix4x4 WorldMatrix = Matrix4x4.Identity;
+    public Matrix4x4 WorldMatrix { get; set; } = Matrix4x4.Identity;
 
     /// <summary>
     /// 父骨骼
     /// </summary>
-    public Bone? Parent = null;
+    public Bone? Parent { get; set; }
 
     /// <summary>
     /// 子骨骼列表
     /// </summary>
-    public List<Bone> Children = new List<Bone>();
+    public List<Bone> Children { get; } = new();
 }
 

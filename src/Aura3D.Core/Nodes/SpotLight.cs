@@ -19,7 +19,7 @@ public class SpotLight : Light
     /// <summary>
     /// 阴影配置。
     /// </summary>
-    public ShadowConfig ShadowConfig = new ShadowConfig
+    public ShadowConfig ShadowConfig { get; set; } = new()
     {
         NearPlane = 1,
         FarPlane = 100

@@ -11,22 +11,22 @@ public class Animation
     /// <summary>
     /// 动画名称
     /// </summary>
-    public string Name = string.Empty;
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// 动画持续时间（秒）
     /// </summary>
-    public float Duration; // in seconds
+    public float Duration { get; set; } // in seconds
 
     /// <summary>
     /// 动画通道字典，键为骨骼名称
     /// </summary>
-    public Dictionary<string, AnimationChannel> Channels = new();
+    public Dictionary<string, AnimationChannel> Channels { get; } = new();
 
     /// <summary>
     /// 关联的骨骼系统
     /// </summary>
-    public Skeleton? Skeleton;
+    public Skeleton? Skeleton { get; set; }
     /// <summary>
     /// 在指定时间采样动画通道的变换矩阵
     /// </summary>
@@ -60,15 +60,15 @@ public class AnimationChannel
     /// <summary>
     /// 位置关键帧列表
     /// </summary>
-    public List<Keyframe<Vector3>> PositionKeyframes = new();
+    public List<Keyframe<Vector3>> PositionKeyframes { get; } = new();
     /// <summary>
     /// 旋转关键帧列表
     /// </summary>
-    public List<Keyframe<Quaternion>> RotationKeyframes = new();
+    public List<Keyframe<Quaternion>> RotationKeyframes { get; } = new();
     /// <summary>
     /// 缩放关键帧列表
     /// </summary>
-    public List<Keyframe<Vector3>> ScaleKeyframes = new();
+    public List<Keyframe<Vector3>> ScaleKeyframes { get; } = new();
 
 }
 /// <summary>
@@ -80,11 +80,11 @@ public struct Keyframe<T> where T : struct
     /// <summary>
     /// 关键帧时间
     /// </summary>
-    public float Time;
+    public float Time { get; set; }
     /// <summary>
     /// 关键帧值
     /// </summary>
-    public T Value;
+    public T Value { get; set; }
 }
 
 
