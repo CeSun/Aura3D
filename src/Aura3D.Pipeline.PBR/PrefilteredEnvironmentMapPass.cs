@@ -147,13 +147,8 @@ internal class PrefilteredEnvironmentMapPass : RenderPass<PBRDeferredPipeline>
 
 
 
-        UniformInt("environmentMap", 0);
-
-        var iblTextureId = renderPipeline.EnsureSynced(iblTexture);
-
-        gl.ActiveTexture(TextureUnit.Texture0);
-
-        gl.BindTexture(TextureTarget.TextureCubeMap, iblTextureId);
+        ClearTextureUnit();
+        UniformTextureCubeMap("environmentMap", iblTexture);
 
         UniformMatrix4("projection", projection);
 

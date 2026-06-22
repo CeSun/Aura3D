@@ -3,7 +3,7 @@ using Silk.NET.OpenGLES;
 
 namespace Aura3D.Core.Renderers;
 
-internal class CubeTextureGpuState : IResourceGpuState
+public class CubeTextureGpuState : IResourceGpuState
 {
     private readonly WeakReference<CubeTexture> texture;
 
@@ -13,7 +13,7 @@ internal class CubeTextureGpuState : IResourceGpuState
 
     public virtual uint TextureId { get; protected set; }
 
-    public CubeTextureGpuState(CubeTexture texture)
+    internal CubeTextureGpuState(CubeTexture texture)
     {
         this.texture = new WeakReference<CubeTexture>(texture);
     }

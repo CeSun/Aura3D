@@ -2,7 +2,7 @@ using Silk.NET.OpenGLES;
 
 namespace Aura3D.Core.Renderers;
 
-internal class TextureGpuState : IResourceGpuState
+public class TextureGpuState : IResourceGpuState
 {
     private WeakReference<Aura3D.Core.Resources.Texture> texture;
 
@@ -12,7 +12,7 @@ internal class TextureGpuState : IResourceGpuState
 
     public virtual uint TextureId { get; protected set; }
 
-    public TextureGpuState(Aura3D.Core.Resources.Texture texture)
+    internal TextureGpuState(Aura3D.Core.Resources.Texture texture)
     {
         this.texture = new WeakReference<Aura3D.Core.Resources.Texture>(texture);
     }

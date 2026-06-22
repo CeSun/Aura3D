@@ -378,7 +378,7 @@ public abstract partial class RenderPipeline
         }
     }
 
-    public uint EnsureSynced(Resources.Texture texture)
+    public TextureGpuState EnsureSynced(Resources.Texture texture)
     {
         var gpuState = GetTextureGpuState(texture);
 
@@ -387,10 +387,10 @@ public abstract partial class RenderPipeline
             gpuState.Upload(gl!);
         }
 
-        return gpuState.TextureId;
+        return gpuState;
     }
 
-    public uint EnsureSynced(CubeTexture texture)
+    public CubeTextureGpuState EnsureSynced(CubeTexture texture)
     {
         var gpuState = GetCubeTextureGpuState(texture);
 
@@ -399,7 +399,7 @@ public abstract partial class RenderPipeline
             gpuState.Upload(gl!);
         }
 
-        return gpuState.TextureId;
+        return gpuState;
     }
 
     internal GeometryGpuState EnsureSynced(Geometry geometry)

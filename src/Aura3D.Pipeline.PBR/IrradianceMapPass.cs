@@ -139,13 +139,8 @@ void main()
             
             UniformMatrix4("view", views[i]);
             
-            UniformInt("environmentMap", 0);
-
-            var iblTextureId = renderPipeline.EnsureSynced(ibl);
-
-            gl.ActiveTexture(TextureUnit.Texture0);
-
-            gl.BindTexture(TextureTarget.TextureCubeMap, iblTextureId);
+            ClearTextureUnit();
+            UniformTextureCubeMap("environmentMap", ibl);
 
             RenderCube();
 
