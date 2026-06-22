@@ -3,130 +3,27 @@ using Silk.NET.OpenGLES;
 
 namespace Aura3D.Core.Renderers;
 
-public class CubeRenderTarget : IRuntimeGpuState
+public class CubeRenderTarget : RenderTargetBase<RenderCubeTexture, CubeRenderTarget>
 {
-    public ulong Version { get; private set; } = 1;
-    public ulong SyncedVersion { get; private set; }
-
     public CubeRenderTarget()
     {
         depthStencilTexture = new RenderCubeTexture(this);
     }
 
-
-    protected List<RenderCubeTexture> renderTextures = new List<RenderCubeTexture>();
-
-    protected Dictionary<string, RenderCubeTexture> renderTexturesMap = new Dictionary<string, RenderCubeTexture>();
-
-    protected RenderCubeTexture depthStencilTexture;
-
-    public RenderCubeTexture DepthStencilTexture => depthStencilTexture;
-
-    public uint FrameBufferId { get; set; }
-
-    public uint Height { get; set; }
-
-    public uint Width { get; set; }
-
-    public float Scale { get; set; } = 1.0f;
-
-    public bool EnableMipMap 
-    { 
-        get; 
-        set; 
-    }
-
-
-    public CubeRenderTarget SetEnableMipMapLevel(bool enableMipMap)
-    {
-        if (EnableMipMap == enableMipMap)
-            return this;
-
-        EnableMipMap = enableMipMap;
-        Version++;
-
-        return this;
-    }
-
-    public void Destroy(GL gl)
-    {
-        foreach (var texture in renderTextures)
-        {
-            if (texture.TextureId != 0)
-            {
-                gl.DeleteTexture(texture.TextureId);
-                texture.TextureId = 0;
-            }
-        }
-        if (depthStencilTexture.TextureId != 0)
-            gl.DeleteTexture(depthStencilTexture.TextureId);
-
-        if (FrameBufferId != 0)
-        {
-            gl.DeleteFramebuffer(FrameBufferId);
-        }
-
-        SyncedVersion = 0;
-    }
-
-
-    public CubeRenderTarget SetSize(uint width, uint height)
-    {
-        if (Width == width && Height == height)
-            return this;
-
-        Width = width;
-        Height = height;
-        SyncTextureSizes();
-        Version++;
-        return this;
-    }
-
-    public CubeRenderTarget AddRenderTexture(string name, TextureFormat internalFormat)
+    public override CubeRenderTarget AddRenderTexture(string name, TextureFormat internalFormat)
     {
         renderTextures.Add(new RenderCubeTexture(this)
         {
             InternalFormat = internalFormat
         });
-        renderTexturesMap.Add(name, renderTextures.Last());
+        renderTexturesMap.Add(name, renderTextures[^1]);
         Version++;
 
         return this;
     }
 
 
-    public RenderCubeTexture? GetTexture(int index)
-    {
-        if (index < 0)
-            return null;
-        if (index >= renderTextures.Count)
-            return null;
-        return renderTextures[index];
-    }
-
-    public RenderCubeTexture? GetTexture(string name)
-    {
-        if (renderTexturesMap.TryGetValue(name, out var texture))
-        {
-            return texture;
-        }
-        return null;
-    }
-
-
-    public CubeRenderTarget SetDepthTexture(TextureFormat textureFormat)
-    {
-        if (depthStencilTexture.InternalFormat == textureFormat)
-            return this;
-
-        depthStencilTexture.InternalFormat = textureFormat;
-        Version++;
-
-        return this;
-    }
-
-
-    public unsafe void Upload(GL gl)
+    public override unsafe void Upload(GL gl)
     {
 
         FrameBufferId = gl.GenFramebuffer();
@@ -144,7 +41,7 @@ public class CubeRenderTarget : IRuntimeGpuState
             texture.TextureId = gl.GenTexture();
 
             gl.BindTexture(GLEnum.TextureCubeMap, texture.TextureId);
-            
+
 
 
             for (int i = 0; i < 6; i++)
@@ -160,6 +57,8 @@ public class CubeRenderTarget : IRuntimeGpuState
             gl.TexParameter(GLEnum.TextureCubeMap, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
             gl.TexParameter(GLEnum.TextureCubeMap, GLEnum.TextureWrapR, (int)GLEnum.ClampToEdge);
 
+            if (EnableMipMap)
+                gl.GenerateMipmap(GLEnum.TextureCubeMap);
 
             gl.FramebufferTexture2D(GLEnum.Framebuffer, GLEnum.ColorAttachment0 + index, GLEnum.TextureCubeMapPositiveX, texture.TextureId, 0);
             ColorAttachmentSet[index] = GLEnum.ColorAttachment0 + index;
@@ -173,7 +72,8 @@ public class CubeRenderTarget : IRuntimeGpuState
             gl.TexImage2D(GLEnum.TextureCubeMapPositiveX + i, 0, (int)depthStencilTexture.InternalFormat.ToGlInternalFormat(), (uint)Width, (uint)Height, 0, depthStencilTexture.InternalFormat.ToGlPixelFormat(), depthStencilTexture.InternalFormat.ToGlPixelType(), (void*)0);
 
         }
-      
+
+
 
         gl.TexParameter(GLEnum.TextureCubeMap, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
         gl.TexParameter(GLEnum.TextureCubeMap, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
@@ -193,39 +93,30 @@ public class CubeRenderTarget : IRuntimeGpuState
         SyncTextureSizes();
         SyncedVersion = Version;
     }
+}
 
 
-    private void SyncTextureSizes()
+/// <summary>
+/// 渲染目标内部的 Cube 纹理实现类。
+/// </summary>
+public sealed class RenderCubeTexture : CubeTexture, IRenderTargetTexture
+{
+
+    public RenderCubeTexture(CubeRenderTarget rt)
     {
-        foreach (var texture in renderTextures)
-        {
-            texture.Width = Width;
-            texture.Height = Height;
-        }
-
-        depthStencilTexture.Width = Width;
-        depthStencilTexture.Height = Height;
+        RenderTarget = rt;
+        WrapS = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
+        WrapT = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
+        WrapR = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
+        MinFilter = Aura3D.Core.Resources.TextureFilterMode.Linear;
+        MagFilter = Aura3D.Core.Resources.TextureFilterMode.Linear;
     }
 
-    public sealed class RenderCubeTexture : CubeTexture
-    {
+    CubeRenderTarget RenderTarget { get; set; }
 
-        public RenderCubeTexture(CubeRenderTarget rt)
-        {
-            RenderTarget = rt;
-            WrapS = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
-            WrapT = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
-            WrapR = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
-            MinFilter = Aura3D.Core.Resources.TextureFilterMode.Linear;
-            MagFilter = Aura3D.Core.Resources.TextureFilterMode.Linear;
-        }
+    internal CubeTextureGpuState? CachedGpuState { get; set; }
 
-        CubeRenderTarget RenderTarget { get; set; }
+    public uint TextureId { get; set; }
 
-        internal CubeTextureGpuState? CachedGpuState { get; set; }
-
-        public uint TextureId { get; set; }
-
-        public TextureFormat InternalFormat { get; set; }
-    }
+    public TextureFormat InternalFormat { get; set; }
 }

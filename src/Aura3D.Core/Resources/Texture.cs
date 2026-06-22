@@ -37,31 +37,6 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
 
 
     }
-    private uint _width;
-    public uint Width
-    {
-        get => _width;
-        set
-        {
-            if (_width == value)
-                return;
-            _width = value;
-            MarkModified();
-        }
-    }
-
-    private uint _height;
-    public uint Height
-    {
-        get => _height;
-        set
-        {
-            if (_height == value)
-                return;
-            _height = value;
-            MarkModified();
-        }
-    }
 
     public ReadOnlySpan<byte> AsLdrData() => IsHdr ? [] : CollectionsMarshal.AsSpan(_data);
 
@@ -121,14 +96,6 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
     protected void ClearPixelData()
     {
         _data = [];
-    }
-
-    private static List<byte> ConvertHdrDataToBytes(ReadOnlySpan<float> data)
-    {
-        if (data.IsEmpty)
-            return [];
-
-        return new List<byte>(MemoryMarshal.AsBytes(data).ToArray());
     }
 
 }

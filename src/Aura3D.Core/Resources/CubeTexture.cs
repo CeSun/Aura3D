@@ -10,32 +10,6 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
 {
     private List<byte>[] _data = [[], [], [], [], [], []];
 
-    private uint _width;
-    public uint Width
-    {
-        get => _width;
-        set
-        {
-            if (_width == value)
-                return;
-            _width = value;
-            MarkModified();
-        }
-    }
-
-    private uint _height;
-    public uint Height
-    {
-        get => _height;
-        set
-        {
-            if (_height == value)
-                return;
-            _height = value;
-            MarkModified();
-        }
-    }
-
     public ReadOnlySpan<byte> AsLdrData(int faceIndex)
     {
         ValidateFaceIndex(faceIndex);
@@ -122,14 +96,6 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
     {
         if (faceIndex < 0 || faceIndex >= 6)
             throw new ArgumentOutOfRangeException(nameof(faceIndex));
-    }
-
-    private static List<byte> ConvertHdrDataToBytes(ReadOnlySpan<float> data)
-    {
-        if (data.IsEmpty)
-            return [];
-
-        return new List<byte>(MemoryMarshal.AsBytes(data).ToArray());
     }
 
 }

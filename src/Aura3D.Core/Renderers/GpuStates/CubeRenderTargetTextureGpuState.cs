@@ -4,7 +4,7 @@ namespace Aura3D.Core.Renderers;
 
 internal sealed class CubeRenderTargetTextureGpuState : CubeTextureGpuState
 {
-    public CubeRenderTargetTextureGpuState(CubeRenderTarget.RenderCubeTexture texture)
+    public CubeRenderTargetTextureGpuState(RenderCubeTexture texture)
         : base(texture)
     {
     }
@@ -15,7 +15,7 @@ internal sealed class CubeRenderTargetTextureGpuState : CubeTextureGpuState
         protected set => RenderTexture.TextureId = value;
     }
 
-    private CubeRenderTarget.RenderCubeTexture RenderTexture => (CubeRenderTarget.RenderCubeTexture)GetResource();
+    private RenderCubeTexture RenderTexture => (RenderCubeTexture)GetResource();
 
     public override void Destroy(GL gl)
     {

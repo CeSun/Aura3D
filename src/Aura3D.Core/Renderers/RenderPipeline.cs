@@ -297,7 +297,7 @@ public abstract partial class RenderPipeline
             return GetWritableTextureGpuState(writableTexture);
         }
 
-        if (texture is RenderTarget.RenderTexture renderTexture)
+        if (texture is RenderTexture renderTexture)
         {
             return GetRenderTargetTextureGpuState(renderTexture);
         }
@@ -312,7 +312,7 @@ public abstract partial class RenderPipeline
         return gpuState;
     }
 
-    internal TextureGpuState GetRenderTargetTextureGpuState(RenderTarget.RenderTexture texture)
+    internal TextureGpuState GetRenderTargetTextureGpuState(RenderTexture texture)
     {
         texture.CachedGpuState ??= new RenderTargetTextureGpuState(texture);
         return texture.CachedGpuState;
@@ -332,7 +332,7 @@ public abstract partial class RenderPipeline
 
     internal CubeTextureGpuState GetCubeTextureGpuState(CubeTexture texture)
     {
-        if (texture is CubeRenderTarget.RenderCubeTexture renderTexture)
+        if (texture is RenderCubeTexture renderTexture)
         {
             return GetRenderTargetCubeTextureGpuState(renderTexture);
         }
@@ -347,7 +347,7 @@ public abstract partial class RenderPipeline
         return gpuState;
     }
 
-    internal CubeTextureGpuState GetRenderTargetCubeTextureGpuState(CubeRenderTarget.RenderCubeTexture texture)
+    internal CubeTextureGpuState GetRenderTargetCubeTextureGpuState(RenderCubeTexture texture)
     {
         texture.CachedGpuState ??= new CubeRenderTargetTextureGpuState(texture);
         return texture.CachedGpuState;

@@ -116,10 +116,10 @@ public sealed class RenderTargetTextureHandle
 
     public string TextureName { get; }
 
-    internal RenderTarget.RenderTexture ResolveTexture(RenderPipeline renderPipeline, Camera camera)
+    internal RenderTexture ResolveTexture(RenderPipeline renderPipeline, Camera camera)
     {
         var renderTarget = RenderTarget.ResolveRenderTarget(renderPipeline, camera);
-        return renderTarget.GetTexture(TextureName);
+        return renderTarget.GetTexture(TextureName)!;
     }
 }
 

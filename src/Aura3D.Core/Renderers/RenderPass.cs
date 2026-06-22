@@ -143,7 +143,7 @@ public partial class RenderPass
     protected RenderTarget GetRenderTarget(RenderTargetHandle renderTargetHandle, Camera camera)
         => renderPipeline.GetRenderTarget(renderTargetHandle, new Size((int)camera.Width, (int)camera.Height));
 
-    protected RenderTarget.RenderTexture GetTexture(RenderTargetTextureHandle renderTargetTextureHandle, Camera camera)
+    protected RenderTexture GetTexture(RenderTargetTextureHandle renderTargetTextureHandle, Camera camera)
         => renderTargetTextureHandle.ResolveTexture(renderPipeline, camera);
 
     protected RenderTarget GetOutputRenderTargetOrThrow(Camera camera)

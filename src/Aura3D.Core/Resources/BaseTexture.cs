@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace Aura3D.Core.Resources;
 
 /// <summary>
@@ -11,6 +13,51 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     protected void MarkModified()
     {
         Version++;
+    }
+
+    /// <summary>
+    /// 纹理宽度
+    /// </summary>
+    private uint _width;
+    public uint Width
+    {
+        get => _width;
+        set
+        {
+            if (_width == value)
+                return;
+            _width = value;
+            MarkModified();
+        }
+    }
+
+    /// <summary>
+    /// 纹理高度
+    /// </summary>
+    private uint _height;
+    public uint Height
+    {
+        get => _height;
+        set
+        {
+            if (_height == value)
+                return;
+            _height = value;
+            MarkModified();
+        }
+    }
+
+    /// <summary>
+    /// 将 HDR 浮点数据转换为字节缓冲（按 IEEE 浮点字节序原样存储）。
+    /// </summary>
+    /// <param name="data">HDR 浮点数据。</param>
+    /// <returns>字节缓冲列表；空数据返回空列表。</returns>
+    protected static List<byte> ConvertHdrDataToBytes(ReadOnlySpan<float> data)
+    {
+        if (data.IsEmpty)
+            return [];
+
+        return new List<byte>(MemoryMarshal.AsBytes(data).ToArray());
     }
 
     /// <summary>

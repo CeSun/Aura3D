@@ -4,7 +4,7 @@ namespace Aura3D.Core.Renderers;
 
 internal sealed class RenderTargetTextureGpuState : TextureGpuState
 {
-    public RenderTargetTextureGpuState(RenderTarget.RenderTexture texture)
+    public RenderTargetTextureGpuState(RenderTexture texture)
         : base(texture)
     {
     }
@@ -15,7 +15,7 @@ internal sealed class RenderTargetTextureGpuState : TextureGpuState
         protected set => RenderTexture.TextureId = value;
     }
 
-    private RenderTarget.RenderTexture RenderTexture => (RenderTarget.RenderTexture)GetResource();
+    private RenderTexture RenderTexture => (RenderTexture)GetResource();
 
     public override void Destroy(GL gl)
     {

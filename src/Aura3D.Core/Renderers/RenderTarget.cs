@@ -6,11 +6,8 @@ namespace Aura3D.Core.Renderers;
 /// <summary>
 /// 渲染目标类，用于管理帧缓冲对象及其关联的颜色纹理和深度/模板纹理。
 /// </summary>
-public class RenderTarget : IRuntimeGpuState
+public class RenderTarget : RenderTargetBase<RenderTexture, RenderTarget>
 {
-    public ulong Version { get; private set; } = 1;
-    public ulong SyncedVersion { get; private set; }
-
     /// <summary>
     /// 初始化 <see cref="RenderTarget"/> 类的新实例。
     /// </summary>
@@ -19,95 +16,22 @@ public class RenderTarget : IRuntimeGpuState
         depthStencilTexture = new RenderTexture(this);
     }
 
-    /// <inheritedoc />
-    public int MipmapLevel { get; private set; } = 1;
-
     /// <summary>
-    /// 设置渲染目标的 Mipmap 级别。
+    /// 向渲染目标添加一个颜色纹理。
     /// </summary>
-    /// <param name="mipmapLevel">Mipmap 级别。</param>
+    /// <param name="name">纹理名称。</param>
+    /// <param name="internalFormat">纹理内部格式。</param>
     /// <returns>当前的 <see cref="RenderTarget"/> 实例。</returns>
-    public RenderTarget SetMipMapLevel(int mipmapLevel)
+    public override RenderTarget AddRenderTexture(string name, TextureFormat internalFormat)
     {
-        if (MipmapLevel == mipmapLevel)
-            return this;
-
-        MipmapLevel = mipmapLevel;
+        renderTextures.Add(new RenderTexture(this)
+        {
+            InternalFormat = internalFormat
+        });
+        renderTexturesMap.Add(name, renderTextures[^1]);
         Version++;
 
         return this;
-    }
-
-    protected List<RenderTexture> renderTextures = new List<RenderTexture>();
-
-    protected Dictionary<string, RenderTexture> renderTexturesMap = new Dictionary<string, RenderTexture>();
-
-    protected RenderTexture depthStencilTexture { get;  set; }
-
-    /// <inheritedoc />
-    public RenderTexture DepthStencilTexture => depthStencilTexture;
-
-    /// <summary>
-    /// 获取或设置帧缓冲对象的 ID。
-    /// </summary>
-    public uint FrameBufferId { get; set; }
-
-    /// <summary>
-    /// 获取或设置渲染目标的高度。
-    /// </summary>
-    public uint Height { get; set; }
-
-    /// <summary>
-    /// 获取或设置渲染目标的宽度。
-    /// </summary>
-    public uint Width { get; set; }
-
-    /// <inheritedoc />
-    public float Scale { get; set; } = 1.0f;
-
-    /// <summary>
-    /// 设置渲染目标的尺寸。
-    /// </summary>
-    /// <param name="width">宽度。</param>
-    /// <param name="height">高度。</param>
-    /// <returns>当前的 <see cref="RenderTarget"/> 实例。</returns>
-    public RenderTarget SetSize(uint width, uint height)
-    {
-        if (Width == width && Height == height)
-            return this;
-
-        Width = width;
-        Height = height;
-        SyncTextureSizes();
-        Version++;
-        return this;
-    }
-
-
-    /// <summary>
-    /// 销毁渲染目标及其关联的所有 GPU 资源。
-    /// </summary>
-    /// <param name="gl">OpenGL 上下文。</param>
-    public void Destroy(GL gl)
-    {
-        foreach (var texture in renderTextures)
-        {
-            if (texture.TextureId != 0)
-            {
-                gl.DeleteTexture(texture.TextureId);
-                texture.TextureId = 0;
-            }
-        }
-        if (DepthStencilTexture.TextureId != 0)
-            gl.DeleteTexture(DepthStencilTexture.TextureId);
-
-        if (FrameBufferId != 0)
-        {
-            gl.DeleteFramebuffer(FrameBufferId);
-        }
-
-        SyncedVersion = 0;
-
     }
 
     /// <summary>
@@ -115,7 +39,7 @@ public class RenderTarget : IRuntimeGpuState
     /// </summary>
     /// <param name="gl">OpenGL 上下文。</param>
     /// <exception cref="InvalidOperationException">当帧缓冲创建失败时抛出。</exception>
-    public unsafe void Upload(GL gl)
+    public override unsafe void Upload(GL gl)
     {
         FrameBufferId = gl.GenFramebuffer();
         gl.BindFramebuffer(GLEnum.Framebuffer, FrameBufferId);
@@ -138,8 +62,8 @@ public class RenderTarget : IRuntimeGpuState
 
             gl.TexImage2D(GLEnum.Texture2D, 0, (int)texture.InternalFormat.ToGlInternalFormat(), (uint)Width, (uint)Height, 0, (GLEnum)texture.InternalFormat.ToGlPixelFormat(), (GLEnum)texture.InternalFormat.ToGlPixelType(), null);
 
-            if (MipmapLevel > 1)
-                gl.GenerateMipmap(GLEnum.TextureCubeMap);
+            if (EnableMipMap)
+                gl.GenerateMipmap(GLEnum.Texture2D);
             gl.FramebufferTexture2D(GLEnum.Framebuffer, GLEnum.ColorAttachment0 + index, GLEnum.Texture2D, texture.TextureId, 0);
 
             ColorAttachmentSet[index] = GLEnum.ColorAttachment0 + index;
@@ -154,8 +78,6 @@ public class RenderTarget : IRuntimeGpuState
 
         gl.TexImage2D(GLEnum.Texture2D, 0, (int)depthStencilTexture.InternalFormat.ToGlInternalFormat(), (uint)Width, (uint)Height, 0, depthStencilTexture.InternalFormat.ToGlPixelFormat(), depthStencilTexture.InternalFormat.ToGlPixelType(), (void*)0);
 
-        if (MipmapLevel > 1)
-            gl.GenerateMipmap(GLEnum.TextureCubeMap);
         gl.FramebufferTexture2D(GLEnum.Framebuffer, depthStencilTexture.InternalFormat.ToGlAttachment(), GLEnum.Texture2D, DepthStencilTexture.TextureId, 0);
 
         gl.DrawBuffers(ColorAttachmentSet);
@@ -170,122 +92,39 @@ public class RenderTarget : IRuntimeGpuState
         SyncTextureSizes();
         SyncedVersion = Version;
     }
+}
+
+
+/// <summary>
+/// 渲染目标内部的 2D 纹理实现类。
+/// </summary>
+public sealed class RenderTexture : Aura3D.Core.Resources.Texture, IRenderTargetTexture
+{
 
     /// <summary>
-    /// 向渲染目标添加一个颜色纹理。
+    /// 初始化 <see cref="RenderTexture"/> 类的新实例。
     /// </summary>
-    /// <param name="name">纹理名称。</param>
-    /// <param name="internalFormat">纹理内部格式。</param>
-    /// <returns>当前的 <see cref="RenderTarget"/> 实例。</returns>
-    public RenderTarget AddRenderTexture(string name, TextureFormat internalFormat)
+    /// <param name="rt">所属的渲染目标。</param>
+    public RenderTexture(RenderTarget rt)
     {
-        renderTextures.Add(new RenderTexture(this)
-        {
-            InternalFormat = internalFormat
-        });
-        renderTexturesMap.Add(name, renderTextures.Last());
-        Version++;
-
-        return this;
+        RenderTarget = rt;
+        WrapS = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
+        WrapT = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
+        MinFilter = Aura3D.Core.Resources.TextureFilterMode.Linear;
+        MagFilter = Aura3D.Core.Resources.TextureFilterMode.Linear;
     }
 
+    RenderTarget RenderTarget { get; set; }
+
+    internal TextureGpuState? CachedGpuState { get; set; }
+
+    /// <inheritedoc />
+    public uint TextureId { get; set; }
 
     /// <summary>
-    /// 获取指定索引的颜色纹理。
+    /// 获取或设置纹理的内部格式。
     /// </summary>
-    /// <param name="index">纹理索引。</param>
-    /// <returns>纹理实例，如果索引无效则返回 null。</returns>
-    public RenderTexture? GetTexture(int index)
-    {
-        if (index < 0)
-            return null;
-        if (index >= renderTextures.Count)
-            return null;
-        return renderTextures[index];
-    }
-
-    /// <summary>
-    /// 获取指定名称的颜色纹理。
-    /// </summary>
-    /// <param name="name">纹理名称。</param>
-    /// <returns>纹理实例。</returns>
-    /// <exception cref="KeyNotFoundException">当纹理不存在时抛出。</exception>
-    public RenderTexture GetTexture(string name)
-    {
-        if (renderTexturesMap.TryGetValue(name, out var texture))
-        {
-            return texture;
-        }
-        throw new KeyNotFoundException($"RenderTarget texture '{name}' not found");
-    }
-
-    /// <summary>
-    /// 获取深度纹理的格式。
-    /// </summary>
-    public TextureFormat DepthTextureFormat { get; private set; }
-
-    /// <summary>
-    /// 设置深度纹理格式。
-    /// </summary>
-    /// <param name="textureFormat">深度纹理格式。</param>
-    /// <returns>当前的 <see cref="RenderTarget"/> 实例。</returns>
-    public RenderTarget SetDepthTexture(TextureFormat textureFormat)
-    {
-        if (DepthTextureFormat == textureFormat)
-            return this;
-
-        depthStencilTexture.InternalFormat = textureFormat;
-        DepthTextureFormat = textureFormat;
-        Version++;
-        return this;
-    }
-
-    private void SyncTextureSizes()
-    {
-        foreach (var texture in renderTextures)
-        {
-            texture.Width = Width;
-            texture.Height = Height;
-        }
-
-        depthStencilTexture.Width = Width;
-        depthStencilTexture.Height = Height;
-    }
-
-
-
-    /// <summary>
-    /// 渲染目标内部的纹理实现类。
-    /// </summary>
-    public sealed class RenderTexture : Aura3D.Core.Resources.Texture
-    {
-
-        /// <summary>
-        /// 初始化 <see cref="RenderTexture"/> 类的新实例。
-        /// </summary>
-        /// <param name="rt">所属的渲染目标。</param>
-        public RenderTexture(RenderTarget rt)
-        {
-            RenderTarget = rt;
-            WrapS = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
-            WrapT = Aura3D.Core.Resources.TextureWrapMode.ClampToEdge;
-            MinFilter = Aura3D.Core.Resources.TextureFilterMode.Linear;
-            MagFilter = Aura3D.Core.Resources.TextureFilterMode.Linear;
-        }
-
-        RenderTarget RenderTarget { get; set; }
-
-        internal TextureGpuState? CachedGpuState { get; set; }
-
-        /// <inheritedoc />
-        public uint TextureId { get; set; }
-
-        /// <summary>
-        /// 获取或设置纹理的内部格式。
-        /// </summary>
-        public TextureFormat InternalFormat { get; set; }
-    }
-
+    public TextureFormat InternalFormat { get; set; }
 }
 
 public enum TextureFormat
@@ -354,7 +193,7 @@ public static class TextureFormatExtensions
         TextureFormat.Rgb32f => PixelFormat.Rgb,
         TextureFormat.Rgba32f => PixelFormat.Rgba,
 
-        _ => throw new ArgumentOutOfRangeException(nameof(format), $"Texture format '{format}' is not supported.")
+        _ => throw new ArgumentOutOfRangeException(nameof(format), $"Texture format '{format}' is not supported."),
 
     };
 

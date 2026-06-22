@@ -304,7 +304,7 @@ public partial class RenderPass
     /// </summary>
     /// <param name="name">Uniform 变量名称。</param>
     /// <param name="texture">2D 纹理资源。</param>
-    public void UniformTexture(string name, Aura3D.Core.Resources.Texture texture)
+    public void UniformTexture(string name, Aura3D.Core.Resources.Texture? texture)
     {
         if (texture == null)
             return;
