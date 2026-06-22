@@ -269,10 +269,6 @@ public class InstanceAttribute
     /// </summary>
     public int Stride { get; init; }
     /// <summary>
-    /// GPU 缓冲区 ID。
-    /// </summary>
-    public uint Vbo { get; internal set; }
-    /// <summary>
     /// 是否启用上传。
     /// </summary>
     public bool Enabled { get; internal set; } = true;
