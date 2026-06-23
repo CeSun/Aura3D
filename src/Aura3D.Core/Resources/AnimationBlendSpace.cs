@@ -1,4 +1,4 @@
-using Aura3D.Core.Nodes;
+﻿using Aura3D.Core.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,56 +9,19 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 动画混合空间，用于在多个动画之间进行基于距离的插值混合。
 /// </summary>
-public class AnimationBlendSpace : IAnimationSampler
+public class AnimationBlendSpace : AnimationSamplerBase
 {
-    /// <summary>
-    /// 重置混合空间到初始状态。
-    /// </summary>
-    public void Reset()
-    {
-        _axisValue = new(0, 0);
-    }
-
     /// <summary>
     /// 初始化 <see cref="AnimationBlendSpace"/> 类的新实例。
     /// </summary>
     /// <param name="skeleton">骨骼数据。</param>
     public AnimationBlendSpace(Skeleton skeleton)
+        : base(skeleton)
     {
-        Skeleton = skeleton;
-
-        _bonesTransform = new Matrix4x4[skeleton.Bones.Count];
-        BoneMatrixBuffer = new BoneMatrixBuffer(Skeleton, this);
-
-        for (var i = 0; i < _bonesTransform.Length; i++)
-        {
-            _bonesTransform[i] = skeleton.Bones[i].WorldMatrix;
-        }
+        InitializePoseFromWorldMatrices();
     }
 
-    /// <summary>
-    /// 获取骨骼数据。
-    /// </summary>
-    public Skeleton Skeleton { get; }
-
-    /// <inheritdoc />
-    public BoneMatrixBuffer BoneMatrixBuffer { get; }
-
-    /// <summary>
-    /// 获取或设置是否由外部更新动画。
-    /// </summary>
-    public bool ExternalUpdate { get; set; } = false;
-
-    /// <inheritdoc />
-    public IReadOnlyList<Matrix4x4> BonesTransform => _bonesTransform;
-
-    /// <summary>
-    /// 骨骼变换矩阵数组。
-    /// </summary>
-    private readonly Matrix4x4[] _bonesTransform;
-
     private readonly List<(Vector2 Point, IAnimationSampler Sampler)> _animationSamplers = [];
-
     private readonly List<float> _weights = [];
 
     /// <summary>
@@ -77,8 +40,8 @@ public class AnimationBlendSpace : IAnimationSampler
 
         _animationSamplers.Add((point, animationSampler));
         _weights.Add(0);
-
     }
+
     private Vector2 _axisValue;
 
     /// <summary>
@@ -111,11 +74,8 @@ public class AnimationBlendSpace : IAnimationSampler
         computeBlend(0);
     }
 
-    /// <summary>
-    /// 更新混合空间，计算并应用骨骼变换。
-    /// </summary>
-    /// <param name="deltaTime">自上一帧以来的时间增量。</param>
-    public void Update(double deltaTime)
+    /// <inheritdoc />
+    public override void Update(double deltaTime)
     {
         computeBlend(deltaTime);
         BoneMatrixBuffer.MarkModified();
@@ -180,15 +140,16 @@ public class AnimationBlendSpace : IAnimationSampler
     /// <summary>
     /// 计算两点之间的欧几里得距离。
     /// </summary>
-    /// <param name="x1">第一点的 X 坐标。</param>
-    /// <param name="y1">第一点的 Y 坐标。</param>
-    /// <param name="x2">第二点的 X 坐标。</param>
-    /// <param name="y2">第二点的 Y 坐标。</param>
-    /// <returns>两点之间的距离。</returns>
     private float CalculateDistance(float x1, float y1, float x2, float y2)
     {
         float dx = x1 - x2;
         float dy = y1 - y2;
         return (float)MathF.Sqrt(dx * dx + dy * dy);
+    }
+
+    /// <inheritdoc />
+    public override void Reset()
+    {
+        _axisValue = new(0, 0);
     }
 }

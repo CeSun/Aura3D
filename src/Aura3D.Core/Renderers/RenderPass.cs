@@ -1,4 +1,4 @@
-using Aura3D.Core.Math;
+﻿using Aura3D.Core.Math;
 using Aura3D.Core.Nodes;
 using Aura3D.Core.Resources;
 using Aura3D.Core.Scenes;
@@ -33,7 +33,7 @@ public partial class RenderPass
 
     protected List<SpotLight> SpotLights => renderPipeline.SpotLights;
     
-    protected List<Mesh> VisibleMeshesInCamera => renderPipeline.VisibleMeshesInCamera;
+    protected IReadOnlyList<Mesh> VisibleMeshesInCamera => renderPipeline.VisibleMeshesInCamera;
 
     protected GL gl => renderPipeline.gl!;
 
@@ -296,7 +296,7 @@ public partial class RenderPass
     /// <param name="filter">网格筛选条件。</param>
     /// <param name="view">视图矩阵。</param>
     /// <param name="projection">投影矩阵。</param>
-    public void RenderMeshesFromList(List<Mesh> meshes, Func<Mesh, bool> filter, Matrix4x4 view, Matrix4x4 projection)
+    public void RenderMeshesFromList(IReadOnlyList<Mesh> meshes, Func<Mesh, bool> filter, Matrix4x4 view, Matrix4x4 projection)
     {
         foreach (var mesh in meshes)
         {
@@ -440,7 +440,7 @@ public partial class RenderPass
     /// </summary>
     /// <param name="Meshes">要排序的网格列表。</param>
     /// <param name="camera">用于计算距离的相机。</param>
-    public virtual void SortMeshes(List<Mesh> Meshes, Camera camera)
+    public virtual void SortMeshes(IReadOnlyList<Mesh> Meshes, Camera camera)
     {
         renderPipeline.SortMeshes(Meshes, camera);
     }    

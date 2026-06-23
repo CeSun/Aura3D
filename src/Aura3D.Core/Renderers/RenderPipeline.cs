@@ -1,4 +1,4 @@
-using Aura3D.Core.Math;
+﻿using Aura3D.Core.Math;
 using Aura3D.Core.Nodes;
 using Aura3D.Core.Resources;
 using Aura3D.Core.Scenes;
@@ -159,12 +159,14 @@ public abstract partial class RenderPipeline
     /// <summary>
     /// 获取或设置当前相机视锥体中可见的网格列表。
     /// </summary>
-    public List<Mesh> VisibleMeshesInCamera { get; } = [];
+    public IReadOnlyList<Mesh> VisibleMeshesInCamera => _visibleMeshesInCamera;
+    private readonly List<Mesh> _visibleMeshesInCamera = [];
 
     /// <summary>
     /// 获取当前相机视锥体中可见的实例化网格列表。
     /// </summary>
-    public List<InstancedMesh> VisibleInstancedMeshesInCamera { get; } = [];
+    public IReadOnlyList<InstancedMesh> VisibleInstancedMeshesInCamera => _visibleInstancedMeshesInCamera;
+    private readonly List<InstancedMesh> _visibleInstancedMeshesInCamera = [];
 
 
     protected void RegisterRenderPass(RenderPass renderPass, RenderPassGroup renderPassGroup)
@@ -522,17 +524,17 @@ public abstract partial class RenderPipeline
             if (camera.Enable == false)
                 continue;
 
-            VisibleMeshesInCamera.Clear();
-            VisibleInstancedMeshesInCamera.Clear();
+            _visibleMeshesInCamera.Clear();
+            _visibleInstancedMeshesInCamera.Clear();
             if (EnableFrustumCulling == true)
             {
-                UpdateVisibleMeshesInCamera(camera.View, camera.Projection, VisibleMeshesInCamera);
-                UpdateVisibleInstancedMeshesInCamera(camera.View, camera.Projection, VisibleInstancedMeshesInCamera);
+                UpdateVisibleMeshesInCamera(camera.View, camera.Projection, _visibleMeshesInCamera);
+                UpdateVisibleInstancedMeshesInCamera(camera.View, camera.Projection, _visibleInstancedMeshesInCamera);
             }
             else
             {
-                VisibleMeshesInCamera.AddRange(Meshes);
-                VisibleInstancedMeshesInCamera.AddRange(InstancedMeshes);
+                _visibleMeshesInCamera.AddRange(Meshes);
+                _visibleInstancedMeshesInCamera.AddRange(InstancedMeshes);
             }
 
             BeforeCameraRender(camera);
@@ -742,11 +744,13 @@ public abstract partial class RenderPipeline
     /// </summary>
     /// <param name="Meshes">要排序的网格列表。</param>
     /// <param name="camera">用于计算距离的相机。</param>
-    public virtual void SortMeshes(List<Mesh> Meshes, Camera camera)
+    public virtual void SortMeshes(IReadOnlyList<Mesh> Meshes, Camera camera)
     {
         var m = camera.View;
 
-        Meshes.Sort((mesh1, mesh2) =>
+        if (Meshes is not List<Mesh> list)
+            return;
+        list.Sort((mesh1, mesh2) =>
         {
             var location1 = Vector3.Transform(mesh1.Position, mesh1.WorldTransform * m);
 

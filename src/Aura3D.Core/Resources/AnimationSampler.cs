@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -10,53 +10,41 @@ namespace Aura3D.Core.Resources;
 /// <summary>
 /// 动画采样器，负责动画的播放和采样
 /// </summary>
-public class AnimationSampler : IAnimationSampler
+public class AnimationSampler : AnimationSamplerBase
 {
-    /// <summary>
-    /// 是否使用外部更新
-    /// </summary>
-    public bool ExternalUpdate { get; set; } = false;
     /// <summary>
     /// 初始化动画采样器
     /// </summary>
     /// <param name="animation">动画对象</param>
     public AnimationSampler(Animation animation)
+        : base(animation.Skeleton!)
     {
-        bonesTransform = new Matrix4x4[animation.Skeleton!.Bones.Count];
-
-        for (var i = 0; i < bonesTransform.Length; i++)
-        {
-            bonesTransform[i] = animation.Skeleton.Bones[i].WorldMatrix;
-        }
-
+        InitializePoseFromWorldMatrices();
         this.animation = animation;
-        Skeleton = animation.Skeleton!;
-
-        BoneMatrixBuffer = new BoneMatrixBuffer(Skeleton, this);
 
         // Compute the first frame immediately to avoid showing T-pose
         // before the first Update() call.
         processBoneTransform(Skeleton.Root, 0);
     }
 
-    public Skeleton Skeleton { get; }
+    /// <summary>
+    /// 获取或设置时间缩放因子。
+    /// </summary>
     public float TimeScale { get; set; } = 1.0f;
 
     protected Animation animation { get; set; }
 
-    public IReadOnlyList<Matrix4x4> BonesTransform => bonesTransform;
-
-    public BoneMatrixBuffer BoneMatrixBuffer { get; }
-
-    private Matrix4x4[] bonesTransform;
-
     private DateTime startTime { get; set; } = default;
 
+    /// <summary>
+    /// 获取或设置动画循环模式。
+    /// </summary>
     public LoopMode LoopMode { get; set; } = LoopMode.Loop;
 
     private bool pingPongForward { get; set; } = true;
 
-    public void Update(double deltaTime)
+    /// <inheritdoc />
+    public override void Update(double deltaTime)
     {
         if (startTime == default)
         {
@@ -107,11 +95,11 @@ public class AnimationSampler : IAnimationSampler
         var channelMatrix = animation.Sample(bone.Name, time);
         if (bone.Parent != null)
         {
-            bonesTransform[bone.Index] = channelMatrix * BonesTransform[bone.Parent.Index];
+            _bonesTransform[bone.Index] = channelMatrix * BonesTransform[bone.Parent.Index];
         }
         else
         {
-            bonesTransform[bone.Index] = channelMatrix;
+            _bonesTransform[bone.Index] = channelMatrix;
         }
         foreach (var child in bone.Children)
         {
@@ -119,7 +107,8 @@ public class AnimationSampler : IAnimationSampler
         }
     }
 
-    public void Reset()
+    /// <inheritdoc />
+    public override void Reset()
     {
         startTime = default;
     }

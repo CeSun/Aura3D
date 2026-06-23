@@ -1,11 +1,11 @@
-using System.Numerics;
+﻿using System.Numerics;
 
 namespace Aura3D.Core.Resources;
 
 /// <summary>
 /// 动画图，用于管理复杂的状态机动画过渡逻辑。
 /// </summary>
-public class AnimationGraph : IAnimationSampler
+public class AnimationGraph : AnimationSamplerBase
 {
     /// <summary>
     /// 初始化 <see cref="AnimationGraph"/> 类的新实例。
@@ -13,11 +13,8 @@ public class AnimationGraph : IAnimationSampler
     /// <param name="skeleton">骨骼数据。</param>
     /// <param name="root">动画图的根节点。</param>
     public AnimationGraph(Skeleton skeleton, AnimationGraphNode root)
+        : base(skeleton)
     {
-        Skeleton = skeleton;
-        _bonesTransform = new Matrix4x4[skeleton.Bones.Count];
-        BoneMatrixBuffer = new BoneMatrixBuffer(Skeleton, this);
-
         Root = root;
         currentNode = root;
         lastNode = currentNode;
@@ -25,21 +22,8 @@ public class AnimationGraph : IAnimationSampler
 
         // Copy the initial pose from the root node's sampler to avoid
         // showing T-pose before the first Update() call.
-        for (var i = 0; i < _bonesTransform.Length; i++)
-        {
-            _bonesTransform[i] = currentNode.Sampler.BonesTransform[i];
-        }
+        InitializePoseFrom(currentNode.Sampler.BonesTransform);
     }
-
-    /// <summary>
-    /// 获取骨骼数据。
-    /// </summary>
-    public Skeleton Skeleton { get; }
-
-    /// <summary>
-    /// 获取骨骼矩阵 UBO。
-    /// </summary>
-    public BoneMatrixBuffer BoneMatrixBuffer { get; }
 
     /// <summary>
     /// 获取或设置动画图的根节点。
@@ -54,23 +38,10 @@ public class AnimationGraph : IAnimationSampler
     /// </summary>
     public float CurrentWeight { get; private set; } = 1f;
 
-    /// <summary>
-    /// 获取或设置是否由外部更新动画。
-    /// </summary>
-    public bool ExternalUpdate { get; set; } = false;
-
     private DateTime startTime { get; set; } = default;
 
     /// <inheritdoc />
-    public IReadOnlyList<Matrix4x4> BonesTransform => _bonesTransform;
-
-    private readonly Matrix4x4[] _bonesTransform;
-
-    /// <summary>
-    /// 更新动画图状态。
-    /// </summary>
-    /// <param name="deltaTime">自上一帧以来的时间增量。</param>
-    public void Update(double deltaTime)
+    public override void Update(double deltaTime)
     {
         var timeSpan = DateTime.Now - startTime;
         double elapsedSeconds = timeSpan.TotalSeconds;
@@ -85,7 +56,6 @@ public class AnimationGraph : IAnimationSampler
         else
         {
             CurrentWeight = (float)(elapsedSeconds / currentNode.BlendTime);
-
         }
 
         if (CurrentWeight < 1)
@@ -126,10 +96,8 @@ public class AnimationGraph : IAnimationSampler
         BoneMatrixBuffer.MarkModified();
     }
 
-    /// <summary>
-    /// 重置动画图到初始状态。
-    /// </summary>
-    public void Reset()
+    /// <inheritdoc />
+    public override void Reset()
     {
         currentNode = Root;
         lastNode = currentNode;
@@ -178,5 +146,4 @@ public class AnimationGraphNode
     /// 获取下一个节点的列表。
     /// </summary>
     internal List<(Func<IAnimationSampler, double, bool>, AnimationGraphNode)> NextNodes { get; } = [];
-
 }
