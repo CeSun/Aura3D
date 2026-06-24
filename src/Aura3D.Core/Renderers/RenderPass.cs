@@ -182,8 +182,8 @@ public partial class RenderPass
 
     public unsafe virtual void RenderInstancedMesh(InstancedMesh instancedMesh, Matrix4x4 view, Matrix4x4 projection)
     {
-        renderPipeline.EnsureSynced(instancedMesh);
-        gl.BindVertexArray(instancedMesh.Vao);
+        var imGpuState = renderPipeline.EnsureSynced(instancedMesh);
+        gl.BindVertexArray(imGpuState.Vao);
         BindMaterialParameters(instancedMesh.Material);
 
         var primitive = GetGLPrimitiveType(instancedMesh.PrimitiveType);

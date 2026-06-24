@@ -1,7 +1,5 @@
 ﻿using Aura3D.Core.Math;
-using Aura3D.Core.Renderers;
 using Aura3D.Core.Resources;
-using Silk.NET.OpenGLES;
 using System.Numerics;
 
 namespace Aura3D.Core.Nodes;
@@ -9,11 +7,8 @@ namespace Aura3D.Core.Nodes;
 /// <summary>
 /// 表示一个可用于实例化渲染的网格节点。
 /// </summary>
-public class InstancedMesh : Node, IRuntimeGpuState
+public class InstancedMesh : Node
 {
-    public ulong Version => geometry.Version;
-    public ulong SyncedVersion { get; private set; }
-
     /// <summary>
     /// 添加一个新的实例。
     /// </summary>
@@ -63,10 +58,6 @@ public class InstancedMesh : Node, IRuntimeGpuState
     }
 
     private InstancedGeometry geometry { get; set; } = null!;
-
-    private InstancedGeometryGpuState? geometryGpuState;
-
-    public uint Vao => geometryGpuState?.Vao ?? 0;
 
     public int IndicesCount => geometry.IndicesCount;
 
@@ -319,29 +310,4 @@ public class InstancedMesh : Node, IRuntimeGpuState
         _worldBoundingBoxDirty = true;
     }
 
-    public void Destroy(GL gl)
-    {
-        geometryGpuState?.Destroy(gl);
-        geometryGpuState = null;
-        SyncedVersion = 0;
-    }
-
-
-    public unsafe void Upload(GL gl)
-    {
-        if (_instanceCount == 0)
-        {
-            SyncedVersion = Version;
-            return;
-        }
-
-        geometryGpuState ??= new InstancedGeometryGpuState(geometry);
-
-        if (geometryGpuState.Vao == 0 || geometryGpuState.SyncedVersion != geometry.Version)
-        {
-            geometryGpuState.Upload(gl);
-        }
-
-        SyncedVersion = Version;
-    }
 }

@@ -114,6 +114,7 @@ public abstract partial class RenderPipeline
     private ConditionalWeakTable<Material, MaterialGpuState> materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
     private ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState> boneMatrixBufferGpuStates = new ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState>();
     private ConditionalWeakTable<Geometry, GeometryGpuState> geometryGpuStates = new ConditionalWeakTable<Geometry, GeometryGpuState>();
+    private ConditionalWeakTable<InstancedGeometry, InstancedGeometryGpuState> instancedGeometryGpuStates = new ConditionalWeakTable<InstancedGeometry, InstancedGeometryGpuState>();
 
     private ConditionalWeakTable<Resources.Texture, TextureGpuState> textureGpuStates = new ConditionalWeakTable<Resources.Texture, TextureGpuState>();
     private ConditionalWeakTable<WritableTexture, WritableTextureGpuState> writableTextureGpuStates = new ConditionalWeakTable<WritableTexture, WritableTextureGpuState>();
@@ -291,6 +292,18 @@ public abstract partial class RenderPipeline
 
         return gpuState;
     }
+    internal InstancedGeometryGpuState GetInstancedGeometryGpuState(InstancedGeometry geometry)
+    {
+        if (instancedGeometryGpuStates.TryGetValue(geometry, out var gpuState) == false)
+        {
+            gpuState = new InstancedGeometryGpuState(geometry);
+            instancedGeometryGpuStates.Add(geometry, gpuState);
+            GpuStates.Add(gpuState);
+        }
+
+        return gpuState;
+    }
+
 
     internal TextureGpuState GetTextureGpuState(Resources.Texture texture)
     {
@@ -415,6 +428,25 @@ public abstract partial class RenderPipeline
 
         return gpuState;
     }
+    /// <summary>
+    /// 确保 InstancedMesh 的 InstancedGeometry 已同步到 GPU，返回 GPU 状态。
+    /// </summary>
+    internal InstancedGeometryGpuState EnsureSynced(InstancedMesh instancedMesh)
+    {
+        var geometry = instancedMesh.GetGeometry() as InstancedGeometry;
+        if (geometry == null)
+            throw new InvalidOperationException("InstancedMesh does not have InstancedGeometry.");
+
+        var gpuState = GetInstancedGeometryGpuState(geometry);
+
+        if (gpuState.Vao == 0 || gpuState.SyncedVersion != geometry.Version)
+        {
+            gpuState.Upload(gl!);
+        }
+
+        return gpuState;
+    }
+
 
     public void SyncAndBindBoneMatrixBuffer(BoneMatrixBuffer boneMatrixBuffer)
     {
