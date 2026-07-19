@@ -544,7 +544,9 @@ public static class AssimpLoader
             int[] len = new int[assimpMesh.VertexCount];
             foreach (var bone in assimpMesh.Bones)
             {
-                var id = skeleton.Bones.First(b => b.Name == bone.Name).Index;
+                var id = skeleton.GetBoneIndex(bone.Name);
+                if (id < 0)
+                    throw new InvalidOperationException($"Cannot find skeleton bone: {bone.Name}");
 
                 foreach (var vertexWeight in bone.VertexWeights)
                 {
