@@ -1,6 +1,7 @@
 using Aura3D.Core.Math;
 using Aura3D.Core.Resources;
 using Silk.NET.OpenGLES;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
 
@@ -66,7 +67,7 @@ public class Model : Node
     /// <returns>克隆后的模型。</returns>
     public virtual Model Clone(CopyType copyType = CopyType.SharedResource)
     {
-        var model = (Model)clone(this, null);
+        var model = (Model)clone(this, null, copyType);
 
         // 复制包围盒相关属性
         model.BoundingBoxPadding = BoundingBoxPadding;
@@ -91,15 +92,19 @@ public class Model : Node
         return model;
     }
 
-    protected Node clone(Node node, Node? parentNode)
+    protected Node clone(Node node, Node? parentNode, CopyType copyType)
     {
         Node? cloneNode = null;
 
         if (node is Model model)
         {
             cloneNode = new Model();
-            ((Model)cloneNode).Skeleton = model.Skeleton;
-            ((Model)cloneNode).AnimationSampler = model.AnimationSampler;
+            ((Model)cloneNode).Skeleton = copyType == CopyType.FullCopy
+                ? CloneSkeleton(model.Skeleton)
+                : model.Skeleton;
+            ((Model)cloneNode).AnimationSampler = copyType == CopyType.FullCopy
+                ? null
+                : model.AnimationSampler;
         }
         else if (node is Mesh mesh)
         {
@@ -125,10 +130,73 @@ public class Model : Node
 
         foreach (var child in node.Children)
         {
-            clone(child, cloneNode);
+            clone(child, cloneNode, copyType);
         }
         return cloneNode;
 
+    }
+
+    private static Skeleton? CloneSkeleton(Skeleton? skeleton)
+    {
+        if (skeleton is null)
+            return null;
+
+        var clone = new Skeleton();
+        var boneMap = new Dictionary<Bone, Bone>(ReferenceEqualityComparer.Instance);
+        var sourceBones = new List<Bone>();
+        var visited = new HashSet<Bone>(ReferenceEqualityComparer.Instance);
+
+        void AddBone(Bone? bone)
+        {
+            if (bone is null || !visited.Add(bone))
+                return;
+
+            sourceBones.Add(bone);
+            foreach (var child in bone.Children)
+                AddBone(child);
+        }
+
+        AddBone(skeleton.Root);
+        foreach (var bone in skeleton.Bones)
+            AddBone(bone);
+
+        foreach (var sourceBone in sourceBones)
+        {
+            boneMap[sourceBone] = new Bone
+            {
+                Name = sourceBone.Name,
+                Index = sourceBone.Index,
+                InverseWorldMatrix = sourceBone.InverseWorldMatrix,
+                LocalMatrix = sourceBone.LocalMatrix,
+                WorldMatrix = sourceBone.WorldMatrix
+            };
+        }
+
+        foreach (var sourceBone in sourceBones)
+        {
+            var clonedBone = boneMap[sourceBone];
+            clonedBone.Parent = sourceBone.Parent != null && boneMap.TryGetValue(sourceBone.Parent, out var parent)
+                ? parent
+                : null;
+
+            foreach (var child in sourceBone.Children)
+            {
+                if (boneMap.TryGetValue(child, out var clonedChild))
+                    clonedBone.Children.Add(clonedChild);
+            }
+        }
+
+        clone.Root = boneMap.TryGetValue(skeleton.Root, out var clonedRoot)
+            ? clonedRoot
+            : new Bone();
+
+        foreach (var sourceBone in skeleton.Bones)
+        {
+            if (boneMap.TryGetValue(sourceBone, out var clonedBone))
+                clone.Bones.Add(clonedBone);
+        }
+
+        return clone;
     }
 
     /// <summary>
