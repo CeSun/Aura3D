@@ -174,7 +174,10 @@ public static class AssimpLoader
                   | PostProcessSteps.GenerateNormals
                   | PostProcessSteps.OptimizeMeshes
                   | PostProcessSteps.CalculateTangentSpace
-                  | PostProcessSteps.GenerateUVCoords;
+                  | PostProcessSteps.GenerateUVCoords
+                  | PostProcessSteps.LimitBoneWeights
+                  | PostProcessSteps.JoinIdenticalVertices
+                  | PostProcessSteps.GlobalScale;
     private unsafe static List<Core.Resources.Animation> processAnimations(Scene scene)
     {
         List<Core.Resources.Animation> animations = [];
@@ -544,7 +547,9 @@ public static class AssimpLoader
             int[] len = new int[assimpMesh.VertexCount];
             foreach (var bone in assimpMesh.Bones)
             {
-                var id = skeleton.Bones.First(b => b.Name == bone.Name).Index;
+                var id = skeleton.GetBoneIndex(bone.Name);
+                if (id < 0)
+                    throw new InvalidOperationException($"Cannot find skeleton bone: {bone.Name}");
 
                 foreach (var vertexWeight in bone.VertexWeights)
                 {
@@ -586,24 +591,31 @@ public static class AssimpLoader
         }
     }
 
-    private static void processBoneNode2(Assimp.Node assimpNode, Dictionary<string, Core.Resources.Bone> boneMap)
+    private static void processBoneNode2(
+        Assimp.Node assimpNode,
+        Dictionary<string, Core.Resources.Bone> boneMap,
+        HashSet<Core.Resources.Bone> processedBones,
+        Core.Resources.Bone? nearestBoneAncestor = null)
     {
+        var nextBoneAncestor = nearestBoneAncestor;
+
         if (boneMap.TryGetValue(assimpNode.Name, out var bone))
         {
+            if (!processedBones.Add(bone))
+                return;
 
-            foreach (var child in assimpNode.Children)
+            if (nearestBoneAncestor != null && !ReferenceEquals(nearestBoneAncestor, bone))
             {
-                if (boneMap.TryGetValue(child.Name, out var childBone))
-                {
-                    bone.Children.Add(childBone);
-                    childBone.Parent = bone;
-                }
+                bone.Parent = nearestBoneAncestor;
+                nearestBoneAncestor.Children.Add(bone);
             }
+
+            nextBoneAncestor = bone;
         }
 
         foreach (var child in assimpNode.Children)
         {
-            processBoneNode2(child, boneMap);
+            processBoneNode2(child, boneMap, processedBones, nextBoneAncestor);
         }
 
     }
@@ -637,7 +649,8 @@ public static class AssimpLoader
         if (boneMap.Count == 0)
             return null;
 
-        processBoneNode2(scene.RootNode, boneMap);
+        var processedBones = new HashSet<Core.Resources.Bone>(ReferenceEqualityComparer.Instance);
+        processBoneNode2(scene.RootNode, boneMap, processedBones);
 
         var skeleton = new Skeleton();
 
