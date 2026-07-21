@@ -8,18 +8,24 @@ namespace Aura3D.Core.Resources;
 /// <typeparam name="T">纹理类型</typeparam>
 public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<T>
 {
-    public ulong Version { get; protected set; } = 1;
+    private ulong _localVersion = 1;
+
+    public virtual ulong Version
+    {
+        get => _localVersion;
+        protected set => _localVersion = value;
+    }
 
     protected void MarkModified()
     {
-        Version++;
+        _localVersion++;
     }
 
     /// <summary>
     /// 纹理宽度
     /// </summary>
     private uint _width;
-    public uint Width
+    public virtual uint Width
     {
         get => _width;
         set
@@ -35,7 +41,7 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     /// 纹理高度
     /// </summary>
     private uint _height;
-    public uint Height
+    public virtual uint Height
     {
         get => _height;
         set
@@ -64,7 +70,7 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     /// 是否为 HDR 纹理
     /// </summary>
     private bool _isHdr;
-    public bool IsHdr
+    public virtual bool IsHdr
     {
         get => _isHdr;
         set

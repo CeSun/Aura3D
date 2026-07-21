@@ -9,7 +9,31 @@ namespace Aura3D.Core.Resources;
 /// </summary>
 public class Texture : BaseTexture<Texture>, IClone<Texture>
 {
-    private List<byte> _data = [];
+    private PixelState _pixelState = new();
+
+    public override ulong Version
+    {
+        get => unchecked(base.Version + _pixelState.Version);
+        protected set => base.Version = unchecked(value - _pixelState.Version);
+    }
+
+    public override uint Width
+    {
+        get => _pixelState.Width;
+        set => UpdatePixelMetadata(value, _pixelState.Height, _pixelState.IsHdr);
+    }
+
+    public override uint Height
+    {
+        get => _pixelState.Height;
+        set => UpdatePixelMetadata(_pixelState.Width, value, _pixelState.IsHdr);
+    }
+
+    public override bool IsHdr
+    {
+        get => _pixelState.IsHdr;
+        set => UpdatePixelMetadata(_pixelState.Width, _pixelState.Height, value);
+    }
 
     /// <summary>
     /// 从颜色创建纯色纹理
@@ -38,27 +62,19 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
 
     }
 
-    public ReadOnlySpan<byte> AsLdrData() => IsHdr ? [] : CollectionsMarshal.AsSpan(_data);
+    public ReadOnlySpan<byte> AsLdrData() => IsHdr ? [] : CollectionsMarshal.AsSpan(_pixelState.Data);
 
-    public ReadOnlySpan<float> AsHdrData() => IsHdr ? MemoryMarshal.Cast<byte, float>(CollectionsMarshal.AsSpan(_data)) : [];
+    public ReadOnlySpan<float> AsHdrData() => IsHdr ? MemoryMarshal.Cast<byte, float>(CollectionsMarshal.AsSpan(_pixelState.Data)) : [];
 
     public Texture SetLdrData(ReadOnlySpan<byte> data, uint width, uint height)
     {
-        _data = new List<byte>(data.ToArray());
-        Width = width;
-        Height = height;
-        IsHdr = false;
-        MarkModified();
+        _pixelState.Replace(data, width, height, isHdr: false);
         return this;
     }
 
     public Texture SetHdrData(ReadOnlySpan<float> data, uint width, uint height)
     {
-        _data = ConvertHdrDataToBytes(data);
-        Width = width;
-        Height = height;
-        IsHdr = true;
-        MarkModified();
+        _pixelState.Replace(MemoryMarshal.AsBytes(data), width, height, isHdr: true);
         return this;
     }
 
@@ -77,25 +93,94 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
             IsGammaSpace = IsGammaSpace,
         };
 
-        texture.SetPixelBuffer(_data);
+        texture.SetPixelState(_pixelState);
         return texture;
     }
 
     public Texture DeepClone()
     {
         var texture = Clone();
-        texture.SetPixelBuffer(new List<byte>(_data));
+        texture.SetPixelState(new PixelState(_pixelState));
         return texture;
     }
 
     protected void SetPixelBuffer(List<byte> data)
     {
-        _data = data;
+        _pixelState = new PixelState(
+            data,
+            _pixelState.Width,
+            _pixelState.Height,
+            _pixelState.IsHdr,
+            unchecked(_pixelState.Version + 1));
+    }
+
+    private void SetPixelState(PixelState pixelState)
+    {
+        _pixelState = pixelState;
     }
 
     protected void ClearPixelData()
     {
-        _data = [];
+        _pixelState.Replace([], _pixelState.Width, _pixelState.Height, _pixelState.IsHdr);
+    }
+
+    private void UpdatePixelMetadata(uint width, uint height, bool isHdr)
+    {
+        if (_pixelState.Width == width && _pixelState.Height == height && _pixelState.IsHdr == isHdr)
+            return;
+
+        _pixelState.UpdateMetadata(width, height, isHdr);
+    }
+
+    private sealed class PixelState
+    {
+        public PixelState()
+        {
+        }
+
+        public PixelState(PixelState source)
+            : this(new List<byte>(source.Data), source.Width, source.Height, source.IsHdr, source.Version)
+        {
+        }
+
+        public PixelState(List<byte> data, uint width, uint height, bool isHdr, ulong version = 1)
+        {
+            Data = data;
+            Width = width;
+            Height = height;
+            IsHdr = isHdr;
+            Version = version;
+        }
+
+        public List<byte> Data { get; } = [];
+
+        public uint Width { get; private set; }
+
+        public uint Height { get; private set; }
+
+        public bool IsHdr { get; private set; }
+
+        public ulong Version { get; private set; } = 1;
+
+        public void Replace(ReadOnlySpan<byte> data, uint width, uint height, bool isHdr)
+        {
+            var snapshot = data.ToArray();
+            Data.EnsureCapacity(snapshot.Length);
+            Data.Clear();
+            Data.AddRange(snapshot);
+            Width = width;
+            Height = height;
+            IsHdr = isHdr;
+            Version++;
+        }
+
+        public void UpdateMetadata(uint width, uint height, bool isHdr)
+        {
+            Width = width;
+            Height = height;
+            IsHdr = isHdr;
+            Version++;
+        }
     }
 
 }
