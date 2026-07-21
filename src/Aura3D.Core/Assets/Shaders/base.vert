@@ -47,13 +47,6 @@ void main()
 {
 	vTexCoord = texCoord;
 
-    vec3 T = normalize(mat3(normalMatrix) * tangent);
-    vec3 B = normalize(mat3(normalMatrix) * bitangent);
-    vec3 N = normalize(mat3(normalMatrix) * normal);
-	mat3 TBN = mat3(T, B, N);
-	vTBN = TBN;
-
-
 #ifdef SKINNED_MESH
 
 		int idx0 = int(boneIndices.x);
@@ -70,10 +63,20 @@ void main()
 	    skinMatrix      += w.w * BoneMatrices[idx3];
 
 		vec4 worldPosition = modelMatrix * skinMatrix * vec4(position, 1.0);
+		mat3 skinNormalMatrix = mat3(normalMatrix) * mat3(skinMatrix);
+		vec3 T = normalize(skinNormalMatrix * tangent);
+		vec3 B = normalize(skinNormalMatrix * bitangent);
+		vec3 N = normalize(skinNormalMatrix * normal);
 
 #else
 		vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+		vec3 T = normalize(mat3(normalMatrix) * tangent);
+		vec3 B = normalize(mat3(normalMatrix) * bitangent);
+		vec3 N = normalize(mat3(normalMatrix) * normal);
 #endif
+
+		mat3 TBN = mat3(T, B, N);
+		vTBN = TBN;
 
 		vFragPosition = worldPosition.xyz;
 		gl_Position = projectionMatrix * viewMatrix * worldPosition;
