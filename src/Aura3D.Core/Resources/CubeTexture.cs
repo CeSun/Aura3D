@@ -193,11 +193,11 @@ public class HDRIToCubeTextureConverter
 
                         Vector4 rgba = SamplePanoramaTexture(texture, panoramaUV);
 
-                        ldrFaces[faceIndex].Add((byte)(rgba.X * 255));
-                        ldrFaces[faceIndex].Add((byte)(rgba.Y * 255));
-                        ldrFaces[faceIndex].Add((byte)(rgba.Z * 255));
+                        ldrFaces[faceIndex].Add(ToLdrByte(rgba.X));
+                        ldrFaces[faceIndex].Add(ToLdrByte(rgba.Y));
+                        ldrFaces[faceIndex].Add(ToLdrByte(rgba.Z));
                         if (channels == 4)
-                            ldrFaces[faceIndex].Add((byte)(rgba.W * 255));
+                            ldrFaces[faceIndex].Add(ToLdrByte(rgba.W));
                     }
                 }
             }
@@ -207,6 +207,11 @@ public class HDRIToCubeTextureConverter
         }
         return cubeTexture;
 
+    }
+
+    private static byte ToLdrByte(float value)
+    {
+        return (byte)global::System.Math.Clamp((int)MathF.Round(value * 255f), 0, 255);
     }
 
     private enum CubeFace
@@ -264,6 +269,7 @@ public class HDRIToCubeTextureConverter
 
         x = x % width;
         if (x < 0) x += width;
+        y = global::System.Math.Clamp(y, 0f, (float)height - 1f);
 
         int x0 = (int)MathF.Floor(x);
         int x1 = (x0 + 1) % (int)width;
