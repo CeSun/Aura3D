@@ -66,6 +66,8 @@ public class Model : Node
     /// <returns>克隆后的模型。</returns>
     public virtual Model Clone(CopyType copyType = CopyType.SharedResource)
     {
+        // TODO: FullCopy 目前仍共享 Skeleton 和 AnimationSampler；后续应成对深拷贝，
+        // 并确保克隆后的 AnimationSampler 绑定到克隆后的 Skeleton。
         var model = (Model)clone(this, null);
 
         // 复制包围盒相关属性
