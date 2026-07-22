@@ -1,17 +1,15 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 namespace Aura3D.Core.Resources;
 
 /// <summary>
-/// 动画图，用于管理复杂的状态机动画过渡逻辑。
+/// Represents the animation graph type.
 /// </summary>
 public class AnimationGraph : AnimationSamplerBase
 {
     /// <summary>
-    /// 初始化 <see cref="AnimationGraph"/> 类的新实例。
+    /// Initializes a new instance of the animation graph type.
     /// </summary>
-    /// <param name="skeleton">骨骼数据。</param>
-    /// <param name="root">动画图的根节点。</param>
     public AnimationGraph(Skeleton skeleton, AnimationGraphNode root)
         : base(skeleton)
     {
@@ -26,7 +24,7 @@ public class AnimationGraph : AnimationSamplerBase
     }
 
     /// <summary>
-    /// 获取或设置动画图的根节点。
+    /// Gets or sets the root.
     /// </summary>
     public AnimationGraphNode Root { get; set; }
 
@@ -34,7 +32,7 @@ public class AnimationGraph : AnimationSamplerBase
     private AnimationGraphNode currentNode;
 
     /// <summary>
-    /// 获取当前混合权重。
+    /// Gets or sets the current weight.
     /// </summary>
     public float CurrentWeight { get; private set; } = 1f;
 
@@ -106,35 +104,31 @@ public class AnimationGraph : AnimationSamplerBase
 }
 
 /// <summary>
-/// 动画图节点，表示状态机中的一个动画状态。
+/// Represents the animation graph node type.
 /// </summary>
 public class AnimationGraphNode
 {
     /// <summary>
-    /// 初始化 <see cref="AnimationGraphNode"/> 类的新实例。
+    /// Initializes a new instance of the animation graph node type.
     /// </summary>
-    /// <param name="sampler">节点的动画采样器。</param>
     public AnimationGraphNode(IAnimationSampler sampler)
     {
         Sampler = sampler;
     }
 
     /// <summary>
-    /// 获取或设置混合时间（秒）。
+    /// Gets or sets the blend time.
     /// </summary>
     public float BlendTime { get; set; }
 
     /// <summary>
-    /// 获取节点的动画采样器。
+    /// Gets the sampler.
     /// </summary>
     public IAnimationSampler Sampler { get; }
 
     /// <summary>
-    /// 添加下一个可能的节点。
+    /// Adds the next node.
     /// </summary>
-    /// <param name="func">判断是否应该切换到下一个节点的函数。</param>
-    /// <param name="node">下一个节点。</param>
-    /// <exception cref="Aura3D.Core.Exceptions.AnimationException">当尝试将节点自身添加为下一个节点时抛出。</exception>
     public void AddNextNode(Func<IAnimationSampler, double, bool> func, AnimationGraphNode node)
     {
         if (this == node)
@@ -143,7 +137,7 @@ public class AnimationGraphNode
     }
 
     /// <summary>
-    /// 获取下一个节点的列表。
+    /// Gets the next nodes.
     /// </summary>
     internal List<(Func<IAnimationSampler, double, bool>, AnimationGraphNode)> NextNodes { get; } = [];
 }

@@ -5,9 +5,7 @@ using System.Numerics;
 namespace Aura3D.Core.Renderers;
 
 /// <summary>
-/// RenderPass 的即时模式调试绘制 API，提供类似 glBegin/glEnd 的绘制方式。
-/// 调用 Begin 开始收集顶点，Vertex/Line 添加顶点，End 立即上传并绘制。
-/// 不创建任何持久化对象（如 DebugDrawData），不保存帧间状态。
+/// Represents the render pass type.
 /// </summary>
 public partial class RenderPass
 {
@@ -16,7 +14,7 @@ public partial class RenderPass
     private uint _immVbo;
 
     /// <summary>
-    /// 开始即时模式顶点收集，类似于 glBegin。
+    /// Performs the begin operation.
     /// </summary>
     protected void Begin()
     {
@@ -24,7 +22,7 @@ public partial class RenderPass
     }
 
     /// <summary>
-    /// 添加一个顶点，类似于 glVertex3f。
+    /// Performs the vertex operation.
     /// </summary>
     protected void Vertex(float x, float y, float z)
     {
@@ -34,7 +32,7 @@ public partial class RenderPass
     }
 
     /// <summary>
-    /// 添加一个顶点。
+    /// Performs the vertex operation.
     /// </summary>
     protected void Vertex(Vector3 v)
     {
@@ -44,7 +42,7 @@ public partial class RenderPass
     }
 
     /// <summary>
-    /// 添加一条线段（两个顶点）。
+    /// Performs the line operation.
     /// </summary>
     protected void Line(Vector3 from, Vector3 to)
     {
@@ -53,7 +51,7 @@ public partial class RenderPass
     }
 
     /// <summary>
-    /// 添加一条线段（两个顶点）。
+    /// Performs the line operation.
     /// </summary>
     protected void Line(float x1, float y1, float z1, float x2, float y2, float z2)
     {
@@ -62,7 +60,7 @@ public partial class RenderPass
     }
 
     /// <summary>
-    /// 添加一个线框盒子（12 条线段）。
+    /// Performs the wire box operation.
     /// </summary>
     protected void WireBox(Vector3 min, Vector3 max)
     {
@@ -86,7 +84,7 @@ public partial class RenderPass
     }
 
     /// <summary>
-    /// 添加一个线框矩形（4 条线段）。
+    /// Performs the wire rect operation.
     /// </summary>
     protected void WireRect(Vector3 center, Vector3 axis1, Vector3 axis2, float size1, float size2)
     {
@@ -105,7 +103,7 @@ public partial class RenderPass
     }
 
     /// <summary>
-    /// 添加一个线框圆。
+    /// Performs the circle operation.
     /// </summary>
     protected void Circle(Vector3 center, Vector3 normal, float radius, int segments = 32)
     {
@@ -124,10 +122,8 @@ public partial class RenderPass
     }
 
     /// <summary>
-    /// 结束即时模式并立即绘制，类似于 glEnd。
-    /// 调用前需确保已绑定着色器并设置好相关 uniform。
+    /// Performs the end operation.
     /// </summary>
-    /// <param name="primitiveType">图元类型，默认为 Lines。</param>
     protected unsafe void End(Resources.PrimitiveType primitiveType = Resources.PrimitiveType.Lines)
     {
         if (_immVerts.Count == 0)
@@ -162,7 +158,7 @@ public partial class RenderPass
     }
 
     /// <summary>
-    /// 添加一个线框球体（由三个正交的大圆组成）。
+    /// Performs the wire sphere operation.
     /// </summary>
     protected void WireSphere(Vector3 center, float radius, int segments = 24)
     {
@@ -172,13 +168,8 @@ public partial class RenderPass
     }
 
     /// <summary>
-    /// 添加一个线框圆锥体（底部圆 + 从顶点到底部圆的连线）。
+    /// Performs the wire cone operation.
     /// </summary>
-    /// <param name="origin">圆锥顶点（世界空间）。</param>
-    /// <param name="direction">圆锥开口方向（单位向量）。</param>
-    /// <param name="angleRadians">半角（弧度）。</param>
-    /// <param name="length">圆锥长度。</param>
-    /// <param name="segments">底部分段数。</param>
     protected void WireCone(Vector3 origin, Vector3 direction, float angleRadians, float length, int segments = 16)
     {
         var dir = Vector3.Normalize(direction);
@@ -209,11 +200,8 @@ public partial class RenderPass
     }
 
     /// <summary>
-    /// 添加一个带箭头的线段。箭头位于终点。
+    /// Performs the wire arrow operation.
     /// </summary>
-    /// <param name="from">起点。</param>
-    /// <param name="to">终点（箭头位置）。</param>
-    /// <param name="headSize">箭头大小。</param>
     protected void WireArrow(Vector3 from, Vector3 to, float headSize = 0.15f)
     {
         var dir = Vector3.Normalize(to - from);
@@ -231,6 +219,9 @@ public partial class RenderPass
         Line(to, basePt - perp2 * w);
     }
 
+    /// <summary>
+    /// Initializes a new instance of the static type.
+    /// </summary>
     protected static (Vector3 u, Vector3 v) GetPlaneBasis(Vector3 normal)
     {
         var n = Vector3.Normalize(normal);

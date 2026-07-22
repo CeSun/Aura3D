@@ -3,16 +3,18 @@ using Aura3D.Core.Renderers;
 namespace Aura3D.Core.Resources;
 
 /// <summary>
-/// 可作为渲染输出目标的单张 2D 纹理。
-/// CPU 侧资源与普通 <see cref="Texture"/> 一致，GPU 侧由 <see cref="Renderers.WritableTextureGpuState"/> 管理。
+/// Represents the writable texture type.
 /// </summary>
 public class WritableTexture : Texture
 {
     /// <summary>
-    /// 获取纹理内部格式。
+    /// Gets or sets the format.
     /// </summary>
     public TextureFormat Format { get; private set; } = TextureFormat.Rgba8;
 
+    /// <summary>
+    /// Initializes a new instance of the writable texture type.
+    /// </summary>
     public WritableTexture()
     {
         ApplyFormatSettings(Format);
@@ -23,7 +25,7 @@ public class WritableTexture : Texture
     }
 
     /// <summary>
-    /// 设置纹理尺寸。
+    /// Sets the size.
     /// </summary>
     public WritableTexture SetSize(uint width, uint height)
     {
@@ -37,7 +39,7 @@ public class WritableTexture : Texture
     }
 
     /// <summary>
-    /// 设置纹理格式。仅支持颜色格式。
+    /// Sets the format.
     /// </summary>
     public WritableTexture SetFormat(TextureFormat format)
     {
@@ -59,6 +61,9 @@ public class WritableTexture : Texture
         return this;
     }
 
+    /// <summary>
+    /// Clones the associated data.
+    /// </summary>
     public new WritableTexture Clone()
     {
         var clone = new WritableTexture()
@@ -71,6 +76,9 @@ public class WritableTexture : Texture
         return clone;
     }
 
+    /// <summary>
+    /// Deep-clones the associated data.
+    /// </summary>
     public new WritableTexture DeepClone() => Clone();
 
     private void ApplyFormatSettings(TextureFormat format)

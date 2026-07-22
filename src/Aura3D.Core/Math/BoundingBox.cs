@@ -6,22 +6,22 @@ using System.Collections;
 namespace Aura3D.Core.Math;
 
 /// <summary>
-/// 三维轴对齐包围盒（AABB），提供相交、包含、变换、合并等核心功能
+/// Represents the bounding box type.
 /// </summary>
 public class BoundingBox : IEquatable<BoundingBox>
 {
     /// <summary>
-    /// 浮点精度容差（可根据业务场景调整）
+    /// Defines the default epsilon value.
     /// </summary>
     public const float DefaultEpsilon = 1e-6f;
 
     /// <summary>
-    /// 包围盒最小值（左下后）
+    /// Gets the min.
     /// </summary>
     public Vector3 Min { get; }
 
     /// <summary>
-    /// 包围盒最大值（右上前）
+    /// Gets the max.
     /// </summary>
     public Vector3 Max { get; }
 
@@ -30,11 +30,8 @@ public class BoundingBox : IEquatable<BoundingBox>
     private readonly Lazy<Vector3> _lazyCenter;
 
     /// <summary>
-    /// 初始化包围盒（自动修正浮点精度误差）
+    /// Initializes a new instance of the bounding box type.
     /// </summary>
-    /// <param name="min">最小值</param>
-    /// <param name="max">最大值</param>
-    /// <exception cref="ArgumentException">当 Min 超出 Max 容差范围时抛出</exception>
     public BoundingBox(Vector3 min, Vector3 max)
     {
         // 校验无效浮点数
@@ -73,21 +70,18 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 包围盒尺寸（Max - Min）
+    /// Gets the size.
     /// </summary>
     public Vector3 Size => _lazySize.Value;
 
     /// <summary>
-    /// 包围盒中心点
+    /// Gets the center.
     /// </summary>
     public Vector3 Center => _lazyCenter.Value;
 
     /// <summary>
-    /// 判断是否与另一个包围盒相交（考虑浮点精度）
+    /// Performs the intersects operation.
     /// </summary>
-    /// <param name="other">另一个包围盒</param>
-    /// <returns>相交返回 true，否则 false</returns>
-    /// <exception cref="ArgumentNullException">other 为 null 时抛出</exception>
     public bool Intersects(BoundingBox other)
     {
         ArgumentNullException.ThrowIfNull(other);
@@ -102,10 +96,8 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 判断是否包含指定点（考虑浮点精度）
+    /// Performs the contains operation.
     /// </summary>
-    /// <param name="point">待判断的点</param>
-    /// <returns>包含返回 true，否则 false</returns>
     public bool Contains(Vector3 point)
     {
         if (IsInvalidVector(point))
@@ -118,11 +110,8 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 判断是否完全包含另一个包围盒（考虑浮点精度）
+    /// Performs the contains operation.
     /// </summary>
-    /// <param name="other">另一个包围盒</param>
-    /// <returns>完全包含返回 true，否则 false</returns>
-    /// <exception cref="ArgumentNullException">other 为 null 时抛出</exception>
     public bool Contains(BoundingBox other)
     {
         ArgumentNullException.ThrowIfNull(other);
@@ -131,11 +120,8 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 对包围盒执行矩阵变换（支持投影矩阵的齐次除法）
+    /// Transforms the associated data.
     /// </summary>
-    /// <param name="matrix">变换矩阵</param>
-    /// <returns>变换后的新包围盒</returns>
-    /// <exception cref="InvalidOperationException">变换结果无效时抛出</exception>
     public BoundingBox Transform(Matrix4x4 matrix)
     {
         // 生成包围盒的 8 个顶点
@@ -183,13 +169,8 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 从点集合创建包围盒
+    /// Creates the from points.
     /// </summary>
-    /// <param name="points">点集合</param>
-    /// <returns>包含所有点的最小包围盒</returns>
-    /// <exception cref="ArgumentNullException">points 为 null 时抛出</exception>
-    /// <exception cref="InvalidOperationException">points 为空集合时抛出</exception>
-    /// <exception cref="ArgumentException">points 包含无效点时抛出</exception>
     public static BoundingBox CreateFromPoints(IEnumerable<Vector3> points)
     {
         ArgumentNullException.ThrowIfNull(points);
@@ -220,13 +201,8 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 合并多个包围盒为一个新包围盒
+    /// Creates the merged.
     /// </summary>
-    /// <param name="boxes">包围盒集合</param>
-    /// <returns>包含所有输入包围盒的最小包围盒</returns>
-    /// <exception cref="ArgumentNullException">boxes 为 null 时抛出</exception>
-    /// <exception cref="InvalidOperationException">boxes 为空集合时抛出</exception>
-    /// <exception cref="ArgumentException">boxes 包含 null 元素时抛出</exception>
     public static BoundingBox CreateMerged(IEnumerable<BoundingBox> boxes)
     {
         ArgumentNullException.ThrowIfNull(boxes);
@@ -256,7 +232,7 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 检查向量是否包含 NaN 或 Infinity
+    /// Determines whether invalid vector.
     /// </summary>
     public static bool IsInvalidVector(Vector3 vec)
     {
@@ -265,7 +241,7 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 检查四维向量是否包含 NaN 或 Infinity
+    /// Determines whether invalid vector.
     /// </summary>
     public static bool IsInvalidVector(Vector4 vec)
     {
@@ -274,10 +250,8 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 将包围盒沿所有轴扩展指定量，返回新的包围盒。
+    /// Performs the expand operation.
     /// </summary>
-    /// <param name="amount">扩展量（正值扩大，负值收缩）。</param>
-    /// <returns>扩展后的新包围盒。</returns>
     public BoundingBox Expand(float amount)
     {
         var expand = new Vector3(amount);
@@ -285,10 +259,8 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 比较两个包围盒是否相等（考虑浮点精度）
+    /// Performs the equals operation.
     /// </summary>
-    /// <param name="other">另一个包围盒</param>
-    /// <returns>相等返回 true，否则 false</returns>
     public bool Equals(BoundingBox? other)
     {
         if (other is null)
@@ -307,6 +279,9 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
 
+    /// <summary>
+    /// Determines whether box inside frustum.
+    /// </summary>
     public bool IsBoxInsideFrustum(Span<Plane> planes)
     {
         // 生成 AABB 的 8 个顶点
@@ -350,19 +325,16 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 比较对象是否与当前包围盒相等
+    /// Performs the equals operation.
     /// </summary>
-    /// <param name="obj">待比较的对象</param>
-    /// <returns>相等返回 true，否则 false</returns>
     public override bool Equals(object? obj)
     {
         return Equals(obj as BoundingBox);
     }
 
     /// <summary>
-    /// 获取哈希码（适配浮点精度）
+    /// Gets the hash code.
     /// </summary>
-    /// <returns>哈希码</returns>
     public override int GetHashCode()
     {
         // 按容差取整后计算哈希，保证精度范围内的相等性
@@ -377,7 +349,7 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 相等运算符重载
+    /// Determines whether two values are equal.
     /// </summary>
     public static bool operator ==(BoundingBox? left, BoundingBox? right)
     {
@@ -386,7 +358,7 @@ public class BoundingBox : IEquatable<BoundingBox>
 
 
     /// <summary>
-    /// 不等运算符重载
+    /// Determines whether two values are not equal.
     /// </summary>
     public static bool operator !=(BoundingBox? left, BoundingBox? right)
     {
@@ -394,9 +366,8 @@ public class BoundingBox : IEquatable<BoundingBox>
     }
 
     /// <summary>
-    /// 格式化包围盒为字符串
+    /// Performs the to string operation.
     /// </summary>
-    /// <returns>可读的字符串表示</returns>
     public override string ToString()
     {
         return $"BoundingBox(Min=({Min.X:F6}, {Min.Y:F6}, {Min.Z:F6}), " +

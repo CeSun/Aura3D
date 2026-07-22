@@ -48,7 +48,7 @@ public enum SceneGraphError
 }
 
 /// <summary>
-/// Represents a scene-graph invariant violation.
+/// Represents the scene graph exception type.
 /// </summary>
 public sealed class SceneGraphException : InvalidOperationException
 {
@@ -65,17 +65,17 @@ public sealed class SceneGraphException : InvalidOperationException
     }
 
     /// <summary>
-    /// Gets the language-independent error code.
+    /// Gets the code.
     /// </summary>
     public SceneGraphError Code { get; }
 
     /// <summary>
-    /// Gets the primary node involved in the failed operation, when available.
+    /// Gets the node.
     /// </summary>
     public Node? Node { get; }
 
     /// <summary>
-    /// Gets the related parent or child node, when available.
+    /// Gets the related node.
     /// </summary>
     public Node? RelatedNode { get; }
 }

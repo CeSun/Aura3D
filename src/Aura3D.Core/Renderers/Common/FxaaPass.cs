@@ -6,15 +6,13 @@ using System.Numerics;
 namespace Aura3D.Core.Renderers;
 
 /// <summary>
-/// FXAA 抗锯齿渲染通道
+/// Represents the fxaa pass type.
 /// </summary>
 public class FxaaPass : RenderPass
 {
     /// <summary>
-    /// 初始化 FXAA 抗锯齿渲染通道
+    /// Initializes a new instance of the fxaa pass type.
     /// </summary>
-    /// <param name="renderPipeline">渲染管线</param>
-    /// <param name="inputTexture">输入渲染目标纹理引用</param>
     public FxaaPass(RenderPipeline renderPipeline, RenderTargetTextureHandle inputTexture) : base(renderPipeline)
     {
         this.inputTexture = inputTexture;
@@ -258,6 +256,9 @@ void main()
 }
 ";
 
+    /// <summary>
+    /// Renders the associated data.
+    /// </summary>
     public override void Render(Camera camera)
     {
         BindOutput(camera);
@@ -287,5 +288,8 @@ void main()
         RenderQuad();
     }
 
+    /// <summary>
+    /// Gets the input texture.
+    /// </summary>
     protected RenderTargetTextureHandle inputTexture;
 }

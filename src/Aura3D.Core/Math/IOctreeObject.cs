@@ -8,19 +8,22 @@ namespace Aura3D.Core.Math;
 
 
 /// <summary>
-/// 可加入八叉树的物体接口
+/// Defines the contract for octree object.
 /// </summary>
 public interface IOctreeObject
 {
     /// <summary>
-    /// 物体的包围盒（不能为空）
+    /// Gets the bounding box.
     /// </summary>
     BoundingBox? BoundingBox { get; }
 
     /// <summary>
-    /// 物体所属的八叉树节点（用于快速移除/更新）
+    /// Gets the belonging nodes.
     /// </summary>
     List<object> BelongingNodes { get; }
 
+    /// <summary>
+    /// Occurs when on bounding box changed is raised.
+    /// </summary>
     event Action<IOctreeObject>? OnBoundingBoxChanged;
 }

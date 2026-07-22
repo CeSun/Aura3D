@@ -3,8 +3,7 @@ using System.Numerics;
 namespace Aura3D.Core.Resources;
 
 /// <summary>
-/// 专用于 <see cref="Aura3D.Core.Nodes.InstancedMesh"/> 的几何资源。
-/// 它不作为可共享资源复用，实例属性数据与基础几何数据一起由该对象独占持有。
+/// Represents the instanced geometry type.
 /// </summary>
 public class InstancedGeometry : Geometry
 {
@@ -26,10 +25,19 @@ public class InstancedGeometry : Geometry
 
     private readonly Dictionary<string, InstanceAttribute> instanceAttributes = [];
 
+    /// <summary>
+    /// Gets the instance attributes.
+    /// </summary>
     public IReadOnlyDictionary<string, InstanceAttribute> InstanceAttributes => instanceAttributes;
 
+    /// <summary>
+    /// Gets or sets the instance count.
+    /// </summary>
     public int InstanceCount { get; private set; }
 
+    /// <summary>
+    /// Initializes a new instance of the instanced geometry type.
+    /// </summary>
     public InstancedGeometry(Geometry source)
     {
         PrimitiveType = source.PrimitiveType;
@@ -46,6 +54,9 @@ public class InstancedGeometry : Geometry
             });
     }
 
+    /// <summary>
+    /// Adds the instance.
+    /// </summary>
     public unsafe int AddInstance(Matrix4x4 transform)
     {
         EnsureDefaultAttributes();
@@ -68,6 +79,9 @@ public class InstancedGeometry : Geometry
         return InstanceCount - 1;
     }
 
+    /// <summary>
+    /// Removes the instance.
+    /// </summary>
     public void RemoveInstance(int index)
     {
         foreach (var attr in instanceAttributes.Values)
@@ -80,6 +94,9 @@ public class InstancedGeometry : Geometry
         MarkModified();
     }
 
+    /// <summary>
+    /// Updates the instance.
+    /// </summary>
     public unsafe void UpdateInstance(int index, Matrix4x4 transform)
     {
         EnsureDefaultAttributes();
@@ -102,6 +119,9 @@ public class InstancedGeometry : Geometry
         MarkModified();
     }
 
+    /// <summary>
+    /// Gets the instance transform.
+    /// </summary>
     public unsafe Matrix4x4? GetInstanceTransform(int index)
     {
         if (!instanceAttributes.TryGetValue("InstanceTransform", out var attr))
@@ -119,6 +139,9 @@ public class InstancedGeometry : Geometry
         return m;
     }
 
+    /// <summary>
+    /// Sets the attribute enabled.
+    /// </summary>
     public void SetAttributeEnabled(string name, bool enabled)
     {
         if (instanceAttributes.TryGetValue(name, out var attr))
@@ -128,6 +151,9 @@ public class InstancedGeometry : Geometry
         }
     }
 
+    /// <summary>
+    /// Sets the instance attribute.
+    /// </summary>
     public unsafe void SetInstanceAttribute<T>(BuildInVertexAttribute attribute, int componentCount, IReadOnlyList<T> data)
         where T : unmanaged
     {
@@ -162,6 +188,9 @@ public class InstancedGeometry : Geometry
         MarkModified();
     }
 
+    /// <summary>
+    /// Sets the instances.
+    /// </summary>
     public unsafe void SetInstances(IReadOnlyList<Matrix4x4> transforms)
     {
         EnsureDefaultAttributes();

@@ -51,7 +51,7 @@ public enum RendererError
 }
 
 /// <summary>
-/// Represents a renderer state or resource failure.
+/// Represents the renderer exception type.
 /// </summary>
 public sealed class RendererException : InvalidOperationException
 {

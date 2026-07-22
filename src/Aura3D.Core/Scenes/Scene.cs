@@ -10,12 +10,12 @@ using System.Numerics;
 namespace Aura3D.Core.Scenes;
 
 /// <summary>
-/// 场景类，负责管理场景中的所有节点、渲染管线、相机以及空间索引结构。
+/// Represents the scene type.
 /// </summary>
 public class Scene
 {
     /// <summary>
-    /// 获取场景中的所有节点集合。
+    /// Gets the nodes.
     /// </summary>
     public IReadOnlySet<Node> Nodes => _nodes;
 
@@ -24,35 +24,32 @@ public class Scene
     private readonly HashSet<Node> _dirtyNodes = [];
 
     /// <summary>
-    /// 复用快照列表，避免每帧分配。
+    /// Gets the nodes snapshot.
     /// </summary>
     private readonly List<Node> _nodesSnapshot = [];
 
     /// <summary>
-    /// 获取场景的主相机。
+    /// Gets or sets the main camera.
     /// </summary>
     public Camera MainCamera { get; private set; }
 
     /// <summary>
-    /// 获取或设置场景的主方向光源。
-    /// 主方向光会使用 CSM（级联阴影贴图），其余方向光使用普通单张阴影贴图。
-    /// 设置为 <c>null</c> 时禁用 CSM。
+    /// Gets or sets the main directional light.
     /// </summary>
     public DirectionalLight? MainDirectionalLight { get; set; }
 
     /// <summary>
-    /// 获取或设置场景的网格八叉树空间索引。
-    /// 包含所有网格（静态与骨骼），包围盒仅在 WorldTransform 变更时更新。
+    /// Gets or sets the mesh octree.
     /// </summary>
     public Octree<Mesh> MeshOctree { get; set; }
 
     /// <summary>
-    /// 获取或设置场景的渲染管线。
+    /// Gets or sets the render pipeline.
     /// </summary>
     public RenderPipeline RenderPipeline { get; set; }
 
     /// <summary>
-    /// 获取或设置场景的背景，可以是立方体贴图或普通纹理。
+    /// Gets the background.
     /// </summary>
     public OneOf<CubeTexture, Texture> Background
     {
@@ -66,22 +63,18 @@ public class Scene
     private OneOf<CubeTexture, Texture> _background;
 
     /// <summary>
-    /// 获取场景的渲染管线配置。
+    /// Gets the pipeline settings.
     /// </summary>
     public PipelineSettings PipelineSettings { get; }
 
     /// <summary>
-    /// 获取场景默认的输出面。
-    /// 当相机未指定 <see cref="Camera.OutputTexture"/> 时，会直接渲染到该输出面。
+    /// Gets the default output surface.
     /// </summary>
     public RenderSurface? DefaultOutputSurface { get; }
 
     /// <summary>
-    /// 初始化 <see cref="Scene"/> 类的新实例。
+    /// Initializes a new instance of the scene type.
     /// </summary>
-    /// <param name="createRenderPipeline">用于创建渲染管线的委托函数。</param>
-    /// <param name="pipelineSettings">渲染管线配置，为 <c>null</c> 时使用默认值。</param>
-    /// <param name="defaultOutputSurface">场景默认输出面，未指定输出纹理的相机会直接渲染到该输出面。</param>
     public Scene(Func<Scene, RenderPipeline> createRenderPipeline,
                 PipelineSettings? pipelineSettings = null,
                 RenderSurface? defaultOutputSurface = null)
@@ -104,17 +97,17 @@ public class Scene
     }
 
     /// <summary>
-    /// 获取场景中内置的方向轴可视化节点。
+    /// Gets or sets the axis gizmo.
     /// </summary>
     public AxisGizmo AxisGizmo { get; private set; }
 
     /// <summary>
-    /// 获取场景中内置的网格可视化节点。
+    /// Gets or sets the grid.
     /// </summary>
     public Grid Grid { get; private set; }
 
     /// <summary>
-    /// 获取或设置是否显示方向轴。
+    /// Gets the show axis gizmo.
     /// </summary>
     public bool ShowAxisGizmo
     {
@@ -123,7 +116,7 @@ public class Scene
     }
 
     /// <summary>
-    /// 获取或设置是否显示参考网格。
+    /// Gets the show grid.
     /// </summary>
     public bool ShowGrid
     {
@@ -132,10 +125,8 @@ public class Scene
     }
 
     /// <summary>
-    /// 将节点添加到场景中，并递归添加其所有子节点。
+    /// Adds the node.
     /// </summary>
-    /// <param name="node">要添加的节点。</param>
-    /// <exception cref="InvalidOperationException">当节点或其子树已属于场景，或其父节点属于其他场景时抛出。</exception>
     public void AddNode(Node node)
     {
         ArgumentNullException.ThrowIfNull(node);
@@ -211,10 +202,8 @@ public class Scene
     }
 
     /// <summary>
-    /// 从场景中移除节点，并递归移除其所有子节点。
+    /// Removes the node.
     /// </summary>
-    /// <param name="node">要移除的根节点；非根节点应通过其父节点的 RemoveChild 移除。</param>
-    /// <exception cref="InvalidOperationException">当节点不是根节点，或节点子树与当前场景注册状态不一致时抛出。</exception>
     public void RemoveNode(Node node)
     {
         ArgumentNullException.ThrowIfNull(node);
@@ -257,9 +246,8 @@ public class Scene
     }
 
     /// <summary>
-    /// 将变换发生变化的节点标记为脏节点，以便后续更新其空间索引。
+    /// Adds the node transform dirty.
     /// </summary>
-    /// <param name="node">变换发生变化的节点。</param>
     public void AddNodeTransformDirty(Node node)
     {
         if (_nodes.Contains(node) == false)
@@ -270,9 +258,8 @@ public class Scene
     }
 
     /// <summary>
-    /// 处理包围盒变化事件的回调方法。
+    /// Performs the on bounding box changed operation.
     /// </summary>
-    /// <param name="otreeObject">包围盒发生变化的八叉树对象。</param>
     private void OnBoundingBoxChanged(IOctreeObject otreeObject)
     {
         if (otreeObject is not Node node)
@@ -281,9 +268,8 @@ public class Scene
     }
 
     /// <summary>
-    /// 更新场景中的所有节点，并处理脏节点的空间索引更新。
+    /// Updates the associated data.
     /// </summary>
-    /// <param name="deltaTime">自上一帧以来的时间增量（秒）。</param>
     public void Update(double deltaTime)
     {
 
@@ -311,13 +297,8 @@ public class Scene
     }
 
     /// <summary>
-    /// 从屏幕坐标发射射线，拾取场景中的 Model、Mesh 和 InstancedMesh。
-    /// 返回所有命中结果，按距离由近到远排序。
+    /// Performs the pick operation.
     /// </summary>
-    /// <param name="screenX">屏幕 X 坐标（像素，左上角为原点）。</param>
-    /// <param name="screenY">屏幕 Y 坐标（像素，左上角为原点）。</param>
-    /// <param name="camera">用于射线计算的相机，默认使用主相机。</param>
-    /// <returns>按距离排序的命中结果列表。无命中时返回空列表。</returns>
     public List<PickResult> Pick(float screenX, float screenY, Camera? camera = null)
     {
         camera ??= MainCamera;
@@ -351,12 +332,8 @@ public class Scene
     }
 
     /// <summary>
-    /// 从屏幕坐标发射射线，返回最近的命中结果。
+    /// Performs the pick closest operation.
     /// </summary>
-    /// <param name="screenX">屏幕 X 坐标（像素）。</param>
-    /// <param name="screenY">屏幕 Y 坐标（像素）。</param>
-    /// <param name="camera">用于射线计算的相机，默认使用主相机。</param>
-    /// <returns>最近的命中结果，无命中时返回 null。</returns>
     public PickResult? PickClosest(float screenX, float screenY, Camera? camera = null)
     {
         var results = Pick(screenX, screenY, camera);
@@ -364,7 +341,7 @@ public class Scene
     }
 
     /// <summary>
-    /// 将屏幕像素坐标转换为世界空间射线。
+    /// Performs the screen to ray operation.
     /// </summary>
     private static Ray? ScreenToRay(float screenX, float screenY, Camera camera)
     {
@@ -403,8 +380,7 @@ public class Scene
     }
 
     /// <summary>
-    /// 判断网格是否可被拾取。
-    /// 排除无几何体或无包围盒的网格。
+    /// Determines whether pickable.
     /// </summary>
     private static bool IsPickable(Mesh mesh)
     {
@@ -417,9 +393,7 @@ public class Scene
     }
 
     /// <summary>
-    /// 对单个 Mesh 执行拾取检测。优先使用三角形级别精确检测，
-    /// 对于骨骼动画网格会先进行 CPU 蒙皮计算以反映动画后的顶点位置。
-    /// 非三角形几何体则回退到包围盒检测。
+    /// Performs the pick mesh operation.
     /// </summary>
     private static void PickMesh(Mesh mesh, Ray ray, List<PickResult> results)
     {
@@ -474,7 +448,7 @@ public class Scene
     }
 
     /// <summary>
-    /// 对 InstancedMesh 的每个实例执行拾取检测，支持三角形级别精确检测。
+    /// Performs the pick instanced mesh operation.
     /// </summary>
     private static void PickInstancedMesh(InstancedMesh instancedMesh, Ray ray, List<PickResult> results)
     {
@@ -535,7 +509,7 @@ public class Scene
     }
 
     /// <summary>
-    /// 用逆变换矩阵将世界空间射线变换到局部空间。
+    /// Transforms the ray.
     /// </summary>
     private static Ray TransformRay(Ray ray, Matrix4x4 inverseTransform)
     {
@@ -545,11 +519,8 @@ public class Scene
     }
 
     /// <summary>
-    /// 对几何体的所有三角形执行射线相交检测，返回最近的命中距离（局部空间）。
+    /// Performs the ray intersect triangles operation.
     /// </summary>
-    /// <param name="localRay">局部空间中的射线。</param>
-    /// <param name="geometry">要检测的几何体，提供索引和顶点数据。</param>
-    /// <param name="positions">顶点位置数据。为 null 时使用几何体自带的位置数据。</param>
     private static float? RayIntersectTriangles(Ray localRay, Resources.Geometry geometry, IReadOnlyList<float>? positions = null)
     {
         positions ??= geometry.GetAttributeData(BuildInVertexAttribute.Position);
@@ -607,13 +578,8 @@ public class Scene
     }
 
     /// <summary>
-    /// 对骨骼动画网格进行 CPU 蒙皮计算，返回动画后的顶点位置。
-    /// 骨骼矩阵计算与顶点着色器一致：
-    /// <c>BoneMatrix[i] = Bone.InverseWorldMatrix * BonesTransform[i]</c>
-    /// 仅用于拾取时的精确三角形检测。
+    /// Gets the skinned positions.
     /// </summary>
-    /// <param name="mesh">要进行蒙皮的骨骼网格。</param>
-    /// <returns>蒙皮后的顶点位置列表；如果网格不是骨骼网格或无有效骨骼数据则返回 null。</returns>
     private static List<float>? GetSkinnedPositions(Mesh mesh)
     {
         if (!mesh.IsSkinnedMesh)

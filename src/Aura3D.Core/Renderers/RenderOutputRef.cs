@@ -5,7 +5,7 @@ using System.Drawing;
 namespace Aura3D.Core.Renderers;
 
 /// <summary>
-/// 渲染输出引用，用于统一表示相机最终输出或已注册的渲染目标。
+/// Represents the render output ref type.
 /// </summary>
 public abstract class RenderOutputRef
 {
@@ -18,7 +18,7 @@ public abstract class RenderOutputRef
 }
 
 /// <summary>
-/// 相机最终输出引用，会根据相机配置自动输出到相机纹理或默认 surface。
+/// Represents the camera output ref type.
 /// </summary>
 public sealed class CameraOutputRef : RenderOutputRef
 {
@@ -38,7 +38,7 @@ public sealed class CameraOutputRef : RenderOutputRef
 }
 
 /// <summary>
-/// 已注册渲染目标的引用与配置对象。
+/// Represents the render target handle type.
 /// </summary>
 public sealed class RenderTargetHandle : RenderOutputRef
 {
@@ -52,12 +52,21 @@ public sealed class RenderTargetHandle : RenderOutputRef
 
     internal RenderPipeline OwnerPipeline { get; }
 
+    /// <summary>
+    /// Gets the name.
+    /// </summary>
     public string Name { get; }
 
     internal List<(string, TextureFormat)> Textures { get; } = [];
 
+    /// <summary>
+    /// Gets or sets the depth texture format.
+    /// </summary>
     public TextureFormat DepthTextureFormat { get; private set; }
 
+    /// <summary>
+    /// Adds the texture.
+    /// </summary>
     public RenderTargetHandle AddTexture(string name, TextureFormat internalFormat)
     {
         if (textureNames.Contains(name))
@@ -68,12 +77,18 @@ public sealed class RenderTargetHandle : RenderOutputRef
         return this;
     }
 
+    /// <summary>
+    /// Sets the depth texture.
+    /// </summary>
     public RenderTargetHandle SetDepthTexture(TextureFormat textureFormat)
     {
         DepthTextureFormat = textureFormat;
         return this;
     }
 
+    /// <summary>
+    /// Gets the texture.
+    /// </summary>
     public RenderTargetTextureHandle GetTexture(string name)
     {
         if (!textureNames.Contains(name))
@@ -102,7 +117,7 @@ public sealed class RenderTargetHandle : RenderOutputRef
 }
 
 /// <summary>
-/// 已注册渲染目标上的纹理附件引用。
+/// Represents the render target texture handle type.
 /// </summary>
 public sealed class RenderTargetTextureHandle
 {
@@ -112,8 +127,14 @@ public sealed class RenderTargetTextureHandle
         TextureName = textureName;
     }
 
+    /// <summary>
+    /// Gets the render target.
+    /// </summary>
     public RenderTargetHandle RenderTarget { get; }
 
+    /// <summary>
+    /// Gets the texture name.
+    /// </summary>
     public string TextureName { get; }
 
     internal RenderTexture ResolveTexture(RenderPipeline renderPipeline, Camera camera)

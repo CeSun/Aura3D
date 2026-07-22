@@ -4,12 +4,12 @@ using Aura3D.Core.Resources;
 namespace Aura3D.Core.Nodes;
 
 /// <summary>
-/// 方向光节点，模拟无限远处的平行光源，常用于模拟太阳光。
+/// Represents the directional light type.
 /// </summary>
 public class DirectionalLight : Light
 {
     /// <summary>
-    /// 初始化 <see cref="DirectionalLight"/> 类的新实例。
+    /// Initializes a new instance of the directional light type.
     /// </summary>
     public DirectionalLight()
     {
@@ -17,7 +17,7 @@ public class DirectionalLight : Light
     }
 
     /// <summary>
-    /// 阴影贴图配置。
+    /// Gets or sets the shadow config.
     /// </summary>
     public DirectionalLightShadowMapConfig ShadowConfig { get; set; } = new()
     {
@@ -28,38 +28,38 @@ public class DirectionalLight : Light
     };
 
     /// <summary>
-    /// 获取或设置辐照度（单位：勒克斯）。
+    /// Gets or sets the irradiance.
     /// </summary>
     public float Irradiance { get; set; } = 80000;
 
     /// <summary>
-    /// 获取光照强度。
+    /// Gets the intensity.
     /// </summary>
     public float Intensity => Irradiance * 0.00001f;
 }
 
 /// <summary>
-/// 方向光阴影贴图配置。
+/// Represents the directional light shadow map config type.
 /// </summary>
 public class DirectionalLightShadowMapConfig
 {
     /// <summary>
-    /// 获取或设置阴影贴图宽度。
+    /// Gets or sets the width.
     /// </summary>
     public int Width { get; set; }
 
     /// <summary>
-    /// 获取或设置阴影贴图高度。
+    /// Gets or sets the height.
     /// </summary>
     public int Height { get; set; }
 
     /// <summary>
-    /// 获取或设置近裁剪面。
+    /// Gets or sets the near plane.
     /// </summary>
     public float NearPlane { get; set; }
 
     /// <summary>
-    /// 获取或设置远裁剪面。
+    /// Gets or sets the far plane.
     /// </summary>
     public float FarPlane { get; set; }
 }

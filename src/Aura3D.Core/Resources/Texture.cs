@@ -5,30 +5,42 @@ using System.Runtime.InteropServices;
 namespace Aura3D.Core.Resources;
 
 /// <summary>
-/// 纹理类，支持2D纹理的加载、上传和渲染
+/// Represents the texture type.
 /// </summary>
 public class Texture : BaseTexture<Texture>, IClone<Texture>
 {
     private PixelState _pixelState = new();
 
+    /// <summary>
+    /// Gets the version.
+    /// </summary>
     public override ulong Version
     {
         get => unchecked(base.Version + _pixelState.Version);
         protected set => base.Version = unchecked(value - _pixelState.Version);
     }
 
+    /// <summary>
+    /// Gets the width.
+    /// </summary>
     public override uint Width
     {
         get => _pixelState.Width;
         set => UpdatePixelMetadata(value, _pixelState.Height, _pixelState.IsHdr);
     }
 
+    /// <summary>
+    /// Gets the height.
+    /// </summary>
     public override uint Height
     {
         get => _pixelState.Height;
         set => UpdatePixelMetadata(_pixelState.Width, value, _pixelState.IsHdr);
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the object is hdr.
+    /// </summary>
     public override bool IsHdr
     {
         get => _pixelState.IsHdr;
@@ -36,10 +48,8 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
     }
 
     /// <summary>
-    /// 从颜色创建纯色纹理
+    /// Creates the from color.
     /// </summary>
-    /// <param name="color">颜色</param>
-    /// <returns>纯色纹理</returns>
     public static Texture CreateFromColor(Color color)
     {
         var texture = new Resources.Texture();
@@ -62,22 +72,37 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
 
     }
 
+    /// <summary>
+    /// Performs the as ldr data operation.
+    /// </summary>
     public ReadOnlySpan<byte> AsLdrData() => IsHdr ? [] : CollectionsMarshal.AsSpan(_pixelState.Data);
 
+    /// <summary>
+    /// Performs the as hdr data operation.
+    /// </summary>
     public ReadOnlySpan<float> AsHdrData() => IsHdr ? MemoryMarshal.Cast<byte, float>(CollectionsMarshal.AsSpan(_pixelState.Data)) : [];
 
+    /// <summary>
+    /// Sets the ldr data.
+    /// </summary>
     public Texture SetLdrData(ReadOnlySpan<byte> data, uint width, uint height)
     {
         _pixelState.Replace(data, width, height, isHdr: false);
         return this;
     }
 
+    /// <summary>
+    /// Sets the hdr data.
+    /// </summary>
     public Texture SetHdrData(ReadOnlySpan<float> data, uint width, uint height)
     {
         _pixelState.Replace(MemoryMarshal.AsBytes(data), width, height, isHdr: true);
         return this;
     }
 
+    /// <summary>
+    /// Clones the associated data.
+    /// </summary>
     public Texture Clone()
     {
         var texture = new Texture
@@ -97,6 +122,9 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
         return texture;
     }
 
+    /// <summary>
+    /// Deep-clones the associated data.
+    /// </summary>
     public Texture DeepClone()
     {
         var texture = Clone();
@@ -104,6 +132,9 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
         return texture;
     }
 
+    /// <summary>
+    /// Sets the pixel buffer.
+    /// </summary>
     protected void SetPixelBuffer(List<byte> data)
     {
         _pixelState = new PixelState(
@@ -119,6 +150,9 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
         _pixelState = pixelState;
     }
 
+    /// <summary>
+    /// Clears the pixel data.
+    /// </summary>
     protected void ClearPixelData()
     {
         _pixelState.Replace([], _pixelState.Width, _pixelState.Height, _pixelState.IsHdr);
@@ -186,48 +220,54 @@ public class Texture : BaseTexture<Texture>, IClone<Texture>
 }
 
 /// <summary>
-/// 颜色格式枚举
+/// Specifies values for color format.
 /// </summary>
 public enum ColorFormat
 {
+    /// <summary>
+    /// Gets the rgb.
+    /// </summary>
     RGB = 0,
+    /// <summary>
+    /// Gets the rgba.
+    /// </summary>
     RGBA = 1,
 }
 
 /// <summary>
-/// 纹理环绕模式枚举
+/// Specifies values for texture wrap mode.
 /// </summary>
 public enum TextureWrapMode
 {
     /// <summary>
-    /// 重复
+    /// Gets the repeat.
     /// </summary>
     Repeat = 0,
     /// <summary>
-    /// 镜像重复
+    /// Gets the mirrored repeat.
     /// </summary>
     MirroredRepeat = 1,
     /// <summary>
-    /// 钳制到边缘
+    /// Gets the clamp to edge.
     /// </summary>
     ClampToEdge = 2,
     /// <summary>
-    /// 钳制到边界颜色
+    /// Gets the clamp to border.
     /// </summary>
     ClampToBorder = 3,
 }
 
 /// <summary>
-/// 纹理过滤模式枚举
+/// Specifies values for texture filter mode.
 /// </summary>
 public enum TextureFilterMode
 {
     /// <summary>
-    /// 最近邻过滤
+    /// Gets the nearest.
     /// </summary>
     Nearest = 0,
     /// <summary>
-    /// 线性过滤
+    /// Gets the linear.
     /// </summary>
     Linear = 1,
 }

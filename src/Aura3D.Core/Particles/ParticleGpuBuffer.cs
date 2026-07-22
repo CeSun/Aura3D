@@ -11,7 +11,13 @@ namespace Aura3D.Core.Particles;
 /// </summary>
 public unsafe class ParticleGpuBuffer : IRuntimeGpuState
 {
+    /// <summary>
+    /// Gets or sets the version.
+    /// </summary>
     public ulong Version { get; private set; } = 1;
+    /// <summary>
+    /// Gets or sets the synced version.
+    /// </summary>
     public ulong SyncedVersion { get; private set; }
 
     /// <summary>Floats per instance: posRot(4) + color(4) + sizeAge(2) = 10</summary>
@@ -79,6 +85,9 @@ public unsafe class ParticleGpuBuffer : IRuntimeGpuState
         gl.BindVertexArray(0);
     }
 
+    /// <summary>
+    /// Destroys the associated data.
+    /// </summary>
     public void Destroy(GL gl)
     {
         if (_vao != 0) { gl.DeleteVertexArray(_vao); _vao = 0; }

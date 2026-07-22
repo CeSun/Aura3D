@@ -6,10 +6,19 @@ using Aura3D.Core.Renderers;
 
 namespace Aura3D.Core;
 
+/// <summary>
+/// Represents the point cloud pass type.
+/// </summary>
 public class PointCloudPass : RenderPass
 {
+    /// <summary>
+    /// Gets or sets the default point size.
+    /// </summary>
     public float DefaultPointSize { get; set; } = 5.0f;
 
+    /// <summary>
+    /// Initializes a new instance of the point cloud pass type.
+    /// </summary>
     public PointCloudPass(RenderPipeline renderPipeline) : base(renderPipeline)
     {
         ShaderName = nameof(PointCloudPass);
@@ -65,6 +74,9 @@ public class PointCloudPass : RenderPass
             """;
     }
 
+    /// <summary>
+    /// Performs the before render operation.
+    /// </summary>
     public override void BeforeRender(Camera camera)
     {
         BindOutputRenderTarget(camera);
@@ -76,6 +88,9 @@ public class PointCloudPass : RenderPass
         gl.Disable(EnableCap.CullFace);
     }
 
+    /// <summary>
+    /// Renders the associated data.
+    /// </summary>
     public override void Render(Camera camera)
     {
         // Opaque point cloud meshes (regular)
@@ -105,10 +120,16 @@ public class PointCloudPass : RenderPass
         gl.Disable(EnableCap.Blend);
     }
 
+    /// <summary>
+    /// Performs the after render operation.
+    /// </summary>
     public override void AfterRender(Camera camera)
     {
     }
 
+    /// <summary>
+    /// Renders the mesh.
+    /// </summary>
     public override void RenderMesh(Mesh mesh, Matrix4x4 view, Matrix4x4 projection)
     {
         ClearTextureUnit();
@@ -127,6 +148,9 @@ public class PointCloudPass : RenderPass
         base.RenderMesh(mesh, view, projection);
     }
 
+    /// <summary>
+    /// Renders the instanced mesh.
+    /// </summary>
     public override void RenderInstancedMesh(InstancedMesh instancedMesh, Matrix4x4 view, Matrix4x4 projection)
     {
         ClearTextureUnit();

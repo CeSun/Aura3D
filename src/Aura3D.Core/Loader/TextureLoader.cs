@@ -3,8 +3,14 @@ using StbImageSharp;
 
 namespace Aura3D.Core;
 
+/// <summary>
+/// Represents the texture loader type.
+/// </summary>
 public static class TextureLoader
 {
+    /// <summary>
+    /// Loads the texture.
+    /// </summary>
     public static Texture LoadTexture(Stream stream)
     {
         var texture = new Texture();
@@ -40,6 +46,9 @@ public static class TextureLoader
     }
 
 
+    /// <summary>
+    /// Loads the texture.
+    /// </summary>
     public static Texture LoadTexture(byte[] bytes)
     { 
         using var stream = new MemoryStream(bytes);
@@ -47,6 +56,9 @@ public static class TextureLoader
     }
 
 
+    /// <summary>
+    /// Loads the cube texture.
+    /// </summary>
     public static CubeTexture LoadCubeTexture(List<string> fileNames)
     {
         if (fileNames.Count != 6)
@@ -72,6 +84,9 @@ public static class TextureLoader
         }
 
     }
+    /// <summary>
+    /// Loads the cube texture.
+    /// </summary>
     public static CubeTexture LoadCubeTexture(List<Stream> streams)
     {
         if (streams.Count != 6)
@@ -130,6 +145,9 @@ public static class TextureLoader
         return cubeTexture;
     }
 
+    /// <summary>
+    /// Loads the hdr texture.
+    /// </summary>
     public static Texture LoadHdrTexture(Stream stream)
     {
         var texture = new Texture();

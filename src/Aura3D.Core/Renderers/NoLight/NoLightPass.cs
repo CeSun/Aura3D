@@ -7,15 +7,14 @@ using System.Numerics;
 namespace Aura3D.Core.Renderers;
 
 /// <summary>
-/// 无光照渲染通道，仅显示基础纹理颜色
+/// Represents the no light pass type.
 /// </summary>
 public class NoLightPass : RenderPass
 {
     Resources.Texture defaultBaseColor;
     /// <summary>
-    /// 初始化无光照渲染通道
+    /// Initializes a new instance of the no light pass type.
     /// </summary>
-    /// <param name="renderPipeline">渲染管线</param>
     public NoLightPass(RenderPipeline renderPipeline) : base(renderPipeline)
     {
         this.FragmentShader = ShaderResource.NoLightFrag;
@@ -24,6 +23,9 @@ public class NoLightPass : RenderPass
         defaultBaseColor = Resources.Texture.CreateFromColor(Color.White);
     }
 
+    /// <summary>
+    /// Performs the before render operation.
+    /// </summary>
     public override void BeforeRender(Camera camera)
     {
         BindOutputRenderTarget(camera);
@@ -36,10 +38,16 @@ public class NoLightPass : RenderPass
 
     }
 
+    /// <summary>
+    /// Sets the up.
+    /// </summary>
     public override void Setup()
     {
         renderPipeline.EnsureSynced(defaultBaseColor);
     }
+    /// <summary>
+    /// Renders the associated data.
+    /// </summary>
     public override void Render(Camera camera)
     {
         UseShader();
@@ -80,6 +88,9 @@ public class NoLightPass : RenderPass
 
     }
 
+    /// <summary>
+    /// Performs the after render operation.
+    /// </summary>
     public override void AfterRender(Camera camera)
     {
         
@@ -114,6 +125,9 @@ public class NoLightPass : RenderPass
         }
     }
 
+    /// <summary>
+    /// Renders the instanced mesh.
+    /// </summary>
     public override void RenderInstancedMesh(InstancedMesh instancedMesh, Matrix4x4 view, Matrix4x4 projection)
     {
         ClearTextureUnit();
@@ -123,6 +137,9 @@ public class NoLightPass : RenderPass
         base.RenderInstancedMesh(instancedMesh, view, projection);
     }
 
+    /// <summary>
+    /// Renders the mesh.
+    /// </summary>
     public override void RenderMesh(Mesh mesh, Matrix4x4 view, Matrix4x4 projection)
     {
         ClearTextureUnit();

@@ -28,8 +28,17 @@ public class ParticleSystem : Node
         }
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the object is playing.
+    /// </summary>
     public bool IsPlaying => _isPlaying;
+    /// <summary>
+    /// Gets the active count.
+    /// </summary>
     public int ActiveCount => Emitters.Sum(e => e.ActiveCount);
+    /// <summary>
+    /// Gets the emitters.
+    /// </summary>
     public List<ParticleEmitter> Emitters { get; } = new();
 
     // ---- Visibility culling ----
@@ -71,6 +80,9 @@ public class ParticleSystem : Node
 
     // ---- Lifecycle ----
 
+    /// <summary>
+    /// Starts the associated data.
+    /// </summary>
     public void Play()
     {
         if (_isPlaying) return;
@@ -107,6 +119,9 @@ public class ParticleSystem : Node
         }
     }
 
+    /// <summary>
+    /// Stops the associated data.
+    /// </summary>
     public void Stop()
     {
         _isPlaying = false;
@@ -129,12 +144,21 @@ public class ParticleSystem : Node
         }
     }
 
+    /// <summary>
+    /// Pauses the associated data.
+    /// </summary>
     public void Pause() => _isPaused = !_isPaused;
 
+    /// <summary>
+    /// Notifies the gpu resources changed.
+    /// </summary>
     public void NotifyGpuResourcesChanged() { }
 
     // ---- Update ----
 
+    /// <summary>
+    /// Updates the associated data.
+    /// </summary>
     public override void Update(double delta)
     {
         base.Update(delta);

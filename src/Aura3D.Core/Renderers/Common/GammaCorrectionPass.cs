@@ -5,17 +5,18 @@ using System.Numerics;
 namespace Aura3D.Core.Renderers;
 
 /// <summary>
-/// 伽马校正渲染通道
+/// Represents the gamma correction pass type.
 /// </summary>
 public class GammaCorrectionPass : RenderPass
 {
+    /// <summary>
+    /// Gets the input texture.
+    /// </summary>
     protected RenderTargetTextureHandle inputTexture;
 
     /// <summary>
-    /// 初始化伽马校正渲染通道
+    /// Initializes a new instance of the gamma correction pass type.
     /// </summary>
-    /// <param name="renderPipeline">渲染管线</param>
-    /// <param name="inputTexture">输入渲染目标纹理引用</param>
     public GammaCorrectionPass(RenderPipeline renderPipeline, RenderTargetTextureHandle inputTexture) : base(renderPipeline)
     {
         this.inputTexture = inputTexture;
@@ -63,6 +64,9 @@ void main()
     }
 
 
+    /// <summary>
+    /// Renders the associated data.
+    /// </summary>
     public override void Render(Camera camera)
     {
         BindOutputRenderTarget(camera);

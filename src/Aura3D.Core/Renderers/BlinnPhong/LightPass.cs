@@ -7,6 +7,9 @@ using System.Numerics;
 
 namespace Aura3D.Core.Renderers;
 
+/// <summary>
+/// Represents the light pass type.
+/// </summary>
 public class LightPass : RenderPass
 {
     Resources.Texture defaultBaseColor;
@@ -53,6 +56,9 @@ public class LightPass : RenderPass
     private readonly string[] _mainLightCSMMatricesUniforms;
     private readonly string[] _mainLightCSMSplitDepthsUniforms;
 
+    /// <summary>
+    /// Updates the light num limit.
+    /// </summary>
     public void UpdateLightNumLimit(int directionalLightLimit, int pointLightLimit, int spotLightLimit)
     {
         FragmentShader = ShaderResource.MeshFrag
@@ -74,6 +80,9 @@ public class LightPass : RenderPass
     }
     
 
+    /// <summary>
+    /// Initializes a new instance of the light pass type.
+    /// </summary>
     public LightPass(RenderPipeline renderPipeline) : base(renderPipeline)
     {
         VertexShader = ShaderResource.MeshVert;
@@ -158,16 +167,25 @@ public class LightPass : RenderPass
             _mainLightCSMSplitDepthsUniforms[i] = $"MainLightCSMSplitDepths[{i}]";
         }
     }
+    /// <summary>
+    /// Sets the up.
+    /// </summary>
     public override void Setup()
     {
         renderPipeline.EnsureSynced(defaultBaseColor);
         renderPipeline.EnsureSynced(defaultNormal);
     }
 
+    /// <summary>
+    /// Destroys the associated data.
+    /// </summary>
     public override void Destroy()
     {
     }
 
+    /// <summary>
+    /// Performs the before render operation.
+    /// </summary>
     public override void BeforeRender(Camera camera)
     {
         gl.Disable(EnableCap.Blend);
@@ -177,6 +195,9 @@ public class LightPass : RenderPass
         gl.CullFace(TriangleFace.Back);
     }
 
+    /// <summary>
+    /// Renders the associated data.
+    /// </summary>
     public override void Render(Camera camera)
     {
         BindOutputRenderTarget(camera);
@@ -205,6 +226,9 @@ public class LightPass : RenderPass
         RenderVisibleInstancedMeshesInCamera(instancedMesh => IsMaterialBlendMode(instancedMesh.Material, BlendMode.Masked), camera.View, camera.Projection);
     }
 
+    /// <summary>
+    /// Sets the up uniform.
+    /// </summary>
     protected void SetupUniform(Material? material, Matrix4x4 view, Matrix4x4 projection)
     {
         SetupCameraUniforms(view, projection);
@@ -262,8 +286,7 @@ public class LightPass : RenderPass
     }
 
     /// <summary>
-    /// 检查当前帧是否有方向光启用了 CSM（级联阴影贴图）。
-    /// 用于决定是否在着色器编译时启用 ENABLE_CSM 宏。
+    /// Performs the check csm enabled operation.
     /// </summary>
     private bool CheckCsmEnabled()
     {
@@ -465,10 +488,16 @@ public class LightPass : RenderPass
         }
     }
 
+    /// <summary>
+    /// Performs the after render operation.
+    /// </summary>
     public override void AfterRender(Camera camera)
     {
     }
 
+    /// <summary>
+    /// Renders the instanced mesh.
+    /// </summary>
     public override void RenderInstancedMesh(InstancedMesh instancedMesh, Matrix4x4 view, Matrix4x4 projection)
     {
         ClearTextureUnit();
@@ -477,6 +506,9 @@ public class LightPass : RenderPass
         base.RenderInstancedMesh(instancedMesh, view, projection);
     }
 
+    /// <summary>
+    /// Renders the mesh.
+    /// </summary>
     public override void RenderMesh(Mesh mesh, Matrix4x4 view, Matrix4x4 projection)
     {
         ClearTextureUnit();

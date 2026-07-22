@@ -7,32 +7,32 @@ using Aura3D.Core.Resources;
 namespace Aura3D.Core.Nodes;
 
 /// <summary>
-/// 相机节点，负责场景的拍摄与渲染，支持透视与正交两种投影模式。
+/// Represents the camera type.
 /// </summary>
 public class Camera : Node
 {
     /// <summary>
-    /// 获取或设置近裁剪面距离。
+    /// Gets or sets the near plane.
     /// </summary>
     public float NearPlane { get; set; } = 1f; // 近裁剪面
 
     /// <summary>
-    /// 获取或设置远裁剪面距离。
+    /// Gets or sets the far plane.
     /// </summary>
     public float FarPlane { get; set; } = 100f; // 远裁剪面
 
     /// <summary>
-    /// 获取或设置视野角度（度数）。
+    /// Gets or sets the field of view.
     /// </summary>
     public float FieldOfView { get; set; } = 75f; // 视野角度（度数）
 
     /// <summary>
-    /// 获取或设置正交投影时的大小。
+    /// Gets or sets the orthographic size.
     /// </summary>
     public float OrthographicSize { get; set; } = 5f; // 正交投影时的大小
 
     /// <summary>
-    /// 获取观察矩阵。
+    /// Gets the view.
     /// </summary>
     public Matrix4x4 View
     {
@@ -46,7 +46,7 @@ public class Camera : Node
     }
 
     /// <summary>
-    /// 获取投影矩阵。
+    /// Gets the projection.
     /// </summary>
     public Matrix4x4 Projection
     {
@@ -75,15 +75,13 @@ public class Camera : Node
     }
 
     /// <summary>
-    /// 获取视图投影矩阵（View * Projection）。
+    /// Gets the view projection.
     /// </summary>
     public Matrix4x4 ViewProjection => View * Projection;
 
     /// <summary>
-    /// 将世界空间坐标映射到屏幕控件坐标。返回 null 表示目标在相机后方。
+    /// Performs the world to screen operation.
     /// </summary>
-    /// <param name="worldPos">世界空间位置。</param>
-    /// <returns>控件像素坐标，原点在控件左上角；如果目标在相机后方则返回 null。</returns>
     public Vector2? WorldToScreen(Vector3 worldPos)
     {
         var clip = Vector4.Transform(new Vector4(worldPos, 1), ViewProjection);
@@ -99,32 +97,31 @@ public class Camera : Node
     }
 
     /// <summary>
-    /// 获取或设置投影类型。
+    /// Gets or sets the projection type.
     /// </summary>
     public ProjectionType ProjectionType { get; set; } = ProjectionType.Perspective; // 投影类型
 
     /// <summary>
-    /// 获取当前相机输出纹理的宽度。
+    /// Gets the width.
     /// </summary>
     public uint Width => OutputTexture != null
         ? OutputTexture.Width
         : GetDefaultOutputSurfaceOrThrow().Width;
 
     /// <summary>
-    /// 获取当前相机输出纹理的高度。
+    /// Gets the height.
     /// </summary>
     public uint Height => OutputTexture != null
         ? OutputTexture.Height
         : GetDefaultOutputSurfaceOrThrow().Height;
 
     /// <summary>
-    /// 获取屏幕空间与像素空间的缩放比。
+    /// Gets the screen scale.
     /// </summary>
     public float ScreenScale => OutputTexture != null ? 1f : GetDefaultOutputSurfaceOrThrow().Scale;
 
     /// <summary>
-    /// 获取或设置相机最终颜色输出对应的可写纹理。
-    /// 该纹理是相机默认渲染路径的唯一颜色输出。
+    /// Gets the output texture.
     /// </summary>
     public WritableTexture? OutputTexture
     {
@@ -148,14 +145,13 @@ public class Camera : Node
     }
 
     /// <summary>
-    /// 获取或设置是否渲染背景。
+    /// Gets a value indicating whether the object is render background.
     /// </summary>
     public bool IsRenderBackground { get; set; } = true;
 
     /// <summary>
-    /// 使相机朝向指定目标点。
+    /// Performs the look at operation.
     /// </summary>
-    /// <param name="target">目标位置。</param>
     public void LookAt(Vector3 target)
     {
         var camera = this;
@@ -197,10 +193,8 @@ public class Camera : Node
     }
 
     /// <summary>
-    /// 调整相机位置与裁剪面，使其完整包围指定的轴对齐包围盒。
+    /// Performs the fit to bounding box operation.
     /// </summary>
-    /// <param name="aabb">包围盒。</param>
-    /// <param name="padding">边距比例，范围为 0 到 1。</param>
     public void FitToBoundingBox(BoundingBox aabb, float padding = 0.1f)
     {
         var camera = this;
@@ -239,21 +233,39 @@ public class Camera : Node
 }
 
 /// <summary>
-/// 投影类型。
+/// Specifies values for projection type.
 /// </summary>
 public enum ProjectionType
 {
+    /// <summary>
+    /// Specifies perspective.
+    /// </summary>
     Perspective, // 透视投影
+    /// <summary>
+    /// Specifies orthographic.
+    /// </summary>
     Orthographic // 正交投影
 }
 
 /// <summary>
-/// 清除缓冲区类型。
+/// Specifies values for clear type.
 /// </summary>
 public enum ClearType
 {
+    /// <summary>
+    /// Specifies only depth.
+    /// </summary>
     OnlyDepth, // 仅清除颜色缓冲区
+    /// <summary>
+    /// Specifies color.
+    /// </summary>
     Color,
+    /// <summary>
+    /// Specifies skybox.
+    /// </summary>
     Skybox,
+    /// <summary>
+    /// Specifies texture.
+    /// </summary>
     Texture
 }

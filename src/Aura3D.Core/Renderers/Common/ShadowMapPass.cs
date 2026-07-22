@@ -7,8 +7,14 @@ using System.Numerics;
 
 namespace Aura3D.Core.Renderers;
 
+/// <summary>
+/// Represents the shadow map pass type.
+/// </summary>
 public class ShadowMapPass : RenderPass
 {
+    /// <summary>
+    /// Initializes a new instance of the shadow map pass type.
+    /// </summary>
     public ShadowMapPass(RenderPipeline renderPipeline) : base(renderPipeline)
     {
         VertexShader = ShaderResource.ShadowMapVert;
@@ -16,12 +22,18 @@ public class ShadowMapPass : RenderPass
         ShaderName = nameof(ShadowMapPass);
     }
 
+    /// <summary>
+    /// Sets the up.
+    /// </summary>
     public override void Setup()
     {
         // Setup logic for the shadow map pass
         // This can include setting up shaders, buffers, etc.
     }
 
+    /// <summary>
+    /// Performs the before render operation.
+    /// </summary>
     public override void BeforeRender()
     {
         gl.Disable(EnableCap.Blend);
@@ -30,12 +42,18 @@ public class ShadowMapPass : RenderPass
         gl.DepthFunc(DepthFunction.Less);
         gl.CullFace(TriangleFace.Front);
     }
+    /// <summary>
+    /// Performs the after render operation.
+    /// </summary>
     public override void AfterRender()
     {
         gl.CullFace(TriangleFace.Back);
     }
 
 
+    /// <summary>
+    /// Renders the associated data.
+    /// </summary>
     public override void Render()
     {
         Span<Matrix4x4> views = stackalloc Matrix4x4[6];
@@ -281,6 +299,9 @@ public class ShadowMapPass : RenderPass
     }
 
     List<Mesh> meshes = new List<Mesh>();
+    /// <summary>
+    /// Renders the mesh.
+    /// </summary>
     public void RenderMesh(Matrix4x4 view, Matrix4x4 projection)
     {
         meshes.Clear();
@@ -336,6 +357,9 @@ public class ShadowMapPass : RenderPass
         }
     }
 
+    /// <summary>
+    /// Renders the instanced mesh.
+    /// </summary>
     public override void RenderInstancedMesh(InstancedMesh instancedMesh, Matrix4x4 view, Matrix4x4 projection)
     {
         ClearTextureUnit();
@@ -344,6 +368,9 @@ public class ShadowMapPass : RenderPass
 
         base.RenderInstancedMesh(instancedMesh, view, projection);
     }
+    /// <summary>
+    /// Renders the mesh.
+    /// </summary>
     public override void RenderMesh(Mesh mesh, Matrix4x4 view, Matrix4x4 projection)
     {
         ClearTextureUnit();
@@ -358,7 +385,7 @@ public class ShadowMapPass : RenderPass
     }
 
     /// <summary>
-    /// 计算 PSSM 级联分割深度。
+    /// Calculates the cascade splits.
     /// </summary>
     private static void CalculateCascadeSplits(float near, float far, int count, float lambda, Span<float> splits)
     {
@@ -374,7 +401,7 @@ public class ShadowMapPass : RenderPass
     }
 
     /// <summary>
-    /// 获取相机视锥体在指定深度范围内的 8 个角点（世界空间）。
+    /// Gets the frustum slice corners.
     /// </summary>
     private static void GetFrustumSliceCorners(Camera camera, float near, float far, Span<Vector3> corners)
     {

@@ -1,12 +1,15 @@
 namespace Aura3D.Core.Resources;
 
 /// <summary>
-/// 材质类，定义物体的表面属性和渲染行为
+/// Represents the material type.
 /// </summary>
 public class Material : IClone<Material>, IVersionedResource
 {
     private readonly List<Channel> _channels = [];
 
+    /// <summary>
+    /// Gets or sets the version.
+    /// </summary>
     public ulong Version { get; protected set; } = 1;
 
     private void MarkModified()
@@ -15,21 +18,24 @@ public class Material : IClone<Material>, IVersionedResource
     }
 
     /// <summary>
-    /// 材质通道列表
+    /// Gets the channels.
     /// </summary>
     public IReadOnlyList<Channel> Channels => _channels.AsReadOnly();
 
     private Dictionary<string, object> parameters { get; set; } = new();
 
     /// <summary>
-    /// 参数字典（只读）
+    /// Gets the parameters.
     /// </summary>
     public IReadOnlyDictionary<string, object> Parameters => parameters;
 
     /// <summary>
-    /// 混合模式
+    /// Gets the blend mode.
     /// </summary>
     private BlendMode _blendMode = BlendMode.Opaque;
+    /// <summary>
+    /// Gets the blend mode.
+    /// </summary>
     public BlendMode BlendMode
     {
         get => _blendMode;
@@ -43,9 +49,12 @@ public class Material : IClone<Material>, IVersionedResource
     }
 
     /// <summary>
-    /// 是否双面渲染
+    /// Gets the double sided.
     /// </summary>
     private bool _doubleSided;
+    /// <summary>
+    /// Gets the double sided.
+    /// </summary>
     public bool DoubleSided
     {
         get => _doubleSided;
@@ -59,9 +68,12 @@ public class Material : IClone<Material>, IVersionedResource
     }
 
     /// <summary>
-    /// 透明度阈值
+    /// Gets the alpha cutoff.
     /// </summary>
     private float _alphaCutoff = 0.5f;
+    /// <summary>
+    /// Gets the alpha cutoff.
+    /// </summary>
     public float AlphaCutoff
     {
         get => _alphaCutoff;
@@ -75,12 +87,12 @@ public class Material : IClone<Material>, IVersionedResource
     }
 
     /// <summary>
-    /// 是否有自定义着色器
+    /// Gets a value indicating whether the object has shader.
     /// </summary>
     public bool HasShader => _vertexShaders.Count > 0 || _fragmentShaders.Count > 0;
 
     /// <summary>
-    /// 顶点着色器字典（只读）
+    /// Gets the vertex shaders.
     /// </summary>
     public IReadOnlyDictionary<string, string> VertexShaders => _vertexShaders;
 
@@ -89,19 +101,12 @@ public class Material : IClone<Material>, IVersionedResource
     private Dictionary<string, string> _fragmentShaders = new();
 
     /// <summary>
-    /// 片段着色器字典（只读）
+    /// Gets the fragment shaders.
     /// </summary>
     public IReadOnlyDictionary<string, string> FragmentShaders => _fragmentShaders;
 
     /// <summary>
-    /// 尝试获取参数值
-    /// </summary>
-    /// <typeparam name="T">参数类型</typeparam>
-    /// <param name="key">参数键名</param>
-    /// <param name="value">参数值</param>
-    /// <returns>是否成功获取</returns>
-    /// <summary>
-    /// 遍历所有参数键值对
+    /// Performs the enumerate parameters operation.
     /// </summary>
     public IEnumerable<KeyValuePair<string, object>> EnumerateParameters()
     {
@@ -109,6 +114,9 @@ public class Material : IClone<Material>, IVersionedResource
             yield return kv;
     }
 
+    /// <summary>
+    /// Attempts to get the parameter value.
+    /// </summary>
     public bool TryGetParameterValue<T>(string key, out T value)
     {
         if (parameters.TryGetValue(key, out var obj) && obj is T t)
@@ -122,11 +130,8 @@ public class Material : IClone<Material>, IVersionedResource
     }
 
     /// <summary>
-    /// 设置参数值
+    /// Sets the parameter value.
     /// </summary>
-    /// <typeparam name="T">参数类型</typeparam>
-    /// <param name="key">参数键名</param>
-    /// <param name="value">参数值</param>
     public void SetParameterValue<T>(string key, T value)
     {
         if (value != null)
@@ -137,15 +142,17 @@ public class Material : IClone<Material>, IVersionedResource
     }
 
     /// <summary>
-    /// 删除参数值
+    /// Removes the parameter value.
     /// </summary>
-    /// <param name="key">参数键名</param>
     public void RemoveParameterValue(string key)
     {
         if (parameters.Remove(key))
             MarkModified();
     }
 
+    /// <summary>
+    /// Clones the associated data.
+    /// </summary>
     public Material Clone()
     {
         var m = new Material
@@ -176,8 +183,14 @@ public class Material : IClone<Material>, IVersionedResource
         return m;
     }
 
+    /// <summary>
+    /// Deep-clones the associated data.
+    /// </summary>
     public Material DeepClone() => DeepClone(deepCopyTextures: false);
 
+    /// <summary>
+    /// Deep-clones the associated data.
+    /// </summary>
     public Material DeepClone(bool deepCopyTextures)
     {
         var material = new Material
@@ -205,6 +218,9 @@ public class Material : IClone<Material>, IVersionedResource
         return material;
     }
 
+    /// <summary>
+    /// Sets the channels.
+    /// </summary>
     public void SetChannels(IEnumerable<Channel> channels)
     {
         _channels.Clear();
@@ -216,6 +232,9 @@ public class Material : IClone<Material>, IVersionedResource
         MarkModified();
     }
 
+    /// <summary>
+    /// Sets the channel.
+    /// </summary>
     public void SetChannel(Channel channel)
     {
         ArgumentNullException.ThrowIfNull(channel);
@@ -236,6 +255,9 @@ public class Material : IClone<Material>, IVersionedResource
         MarkModified();
     }
 
+    /// <summary>
+    /// Sets the shader source.
+    /// </summary>
     public void SetShaderSource(string key, ShaderType shaderType, string shader)
     {
         if (shaderType == ShaderType.Fragment)
@@ -249,6 +271,9 @@ public class Material : IClone<Material>, IVersionedResource
         MarkModified();
     }
 
+    /// <summary>
+    /// Gets the shader source.
+    /// </summary>
     public (string? vertexShader, string? fragmentShader) GetShaderSource(string key)
     {
         _vertexShaders.TryGetValue(key, out var vertexShader);
@@ -257,6 +282,9 @@ public class Material : IClone<Material>, IVersionedResource
         return (vertexShader, fragmentShader);
     }
 
+    /// <summary>
+    /// Removes the shader.
+    /// </summary>
     public void RemoveShader(string key, ShaderType shaderType)
     {
         if (shaderType == ShaderType.Fragment)
@@ -271,11 +299,17 @@ public class Material : IClone<Material>, IVersionedResource
         }
     }
 
+    /// <summary>
+    /// Sets the texture.
+    /// </summary>
     public void SetTexture(string name, Texture? texture)
     {
         SetChannel(new Channel { Name = name, Texture = texture });
     }
 
+    /// <summary>
+    /// Gets the texture.
+    /// </summary>
     public Texture? GetTexture(string name)
     {
         var channel = Channels.FirstOrDefault(c => c.Name == name);
@@ -289,28 +323,55 @@ public class Material : IClone<Material>, IVersionedResource
 }
 
 /// <summary>
-/// 材质通道类，包含纹理通道
+/// Represents the channel type.
 /// </summary>
 
 /// <summary>
-/// 通道名称
+/// Represents the channel type.
 /// </summary>
 public class Channel
 {
+    /// <summary>
+    /// Gets or sets the name.
+    /// </summary>
     public string Name { get; init; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the texture.
+    /// </summary>
     public Texture? Texture { get; init; }
 }
 
+/// <summary>
+/// Specifies values for blend mode.
+/// </summary>
 public enum BlendMode
 {
+    /// <summary>
+    /// Specifies opaque.
+    /// </summary>
     Opaque,
+    /// <summary>
+    /// Specifies masked.
+    /// </summary>
     Masked,
+    /// <summary>
+    /// Specifies translucent.
+    /// </summary>
     Translucent,
 }
 
+/// <summary>
+/// Specifies values for shader type.
+/// </summary>
 public enum ShaderType
 {
+    /// <summary>
+    /// Specifies vertex.
+    /// </summary>
     Vertex,
+    /// <summary>
+    /// Specifies fragment.
+    /// </summary>
     Fragment,
 }

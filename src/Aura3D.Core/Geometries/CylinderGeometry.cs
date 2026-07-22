@@ -7,56 +7,46 @@ using System.Numerics;
 namespace Aura3D.Core.Geometries;
 
 /// <summary>
-/// 圆柱体几何体，用于创建圆柱体形状的网格数据。
+/// Represents the cylinder geometry type.
 /// </summary>
 public class CylinderGeometry : Geometry
 {
     /// <summary>
-    /// 获取或设置圆柱体顶部的半径。
+    /// Gets the radius top.
     /// </summary>
     public float RadiusTop { get; }
     /// <summary>
-    /// 获取或设置圆柱体底部的半径。
+    /// Gets the radius bottom.
     /// </summary>
     public float RadiusBottom { get; }
     /// <summary>
-    /// 获取或设置圆柱体的高度。
+    /// Gets the height.
     /// </summary>
     public float Height { get; }
     /// <summary>
-    /// 获取或设置圆柱体的径向分段数（圆周方向的分段数）。
+    /// Gets the radial segments.
     /// </summary>
     public int RadialSegments { get; }
     /// <summary>
-    /// 获取或设置圆柱体的高度分段数。
+    /// Gets the height segments.
     /// </summary>
     public int HeightSegments { get; }
     /// <summary>
-    /// 获取或设置一个值，指示圆柱体是否开放（无顶面和底面）。
+    /// Gets the open ended.
     /// </summary>
     public bool OpenEnded { get; }
     /// <summary>
-    /// 获取或设置圆柱体圆周方向的起始角度。
+    /// Gets the theta start.
     /// </summary>
     public float ThetaStart { get; }
     /// <summary>
-    /// 获取或设置圆柱体圆周方向的总角度长度。
+    /// Gets the theta length.
     /// </summary>
     public float ThetaLength { get; }
 
     /// <summary>
-    /// 初始化 <see cref="CylinderGeometry"/> 类的新实例。
+    /// Initializes a new instance of the cylinder geometry type.
     /// </summary>
-    /// <param name="radiusTop">圆柱体顶部的半径。</param>
-    /// <param name="radiusBottom">圆柱体底部的半径。</param>
-    /// <param name="height">圆柱体的高度。</param>
-    /// <param name="radialSegments">径向分段数，必须大于等于3。</param>
-    /// <param name="heightSegments">高度分段数，必须大于等于1。</param>
-    /// <param name="openEnded">是否开放（无顶面和底面）。</param>
-    /// <param name="thetaStart">圆周方向的起始角度（弧度）。</param>
-    /// <param name="thetaLength">圆周方向的总角度长度（弧度）。</param>
-    /// <exception cref="ArgumentOutOfRangeException">当 radialSegments 小于 3 时抛出。</exception>
-    /// <exception cref="ArgumentOutOfRangeException">当 heightSegments 小于 1 时抛出。</exception>
     public CylinderGeometry(
         float radiusTop = 1f,
         float radiusBottom = 1f,

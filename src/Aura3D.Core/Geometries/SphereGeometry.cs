@@ -7,51 +7,42 @@ using System.Numerics;
 namespace Aura3D.Core.Geometries;
 
 /// <summary>
-/// 球体几何体，用于创建球体形状的网格数据。
+/// Represents the sphere geometry type.
 /// </summary>
 public class SphereGeometry : Geometry
 {
     /// <summary>
-    /// 获取或设置球体的半径。
+    /// Gets the radius.
     /// </summary>
     public float Radius { get; }
     /// <summary>
-    /// 获取或设置球体宽度方向的分段数。
+    /// Gets the width segments.
     /// </summary>
     public int WidthSegments { get; }
     /// <summary>
-    /// 获取或设置球体高度方向的分段数。
+    /// Gets the height segments.
     /// </summary>
     public int HeightSegments { get; }
     /// <summary>
-    /// 获取或设置球体纬度方向的起始角度（弧度）。
+    /// Gets the phi start.
     /// </summary>
     public float PhiStart { get; }
     /// <summary>
-    /// 获取或设置球体纬度方向的总角度长度（弧度）。
+    /// Gets the phi length.
     /// </summary>
     public float PhiLength { get; }
     /// <summary>
-    /// 获取或设置球体经度方向的起始角度（弧度）。
+    /// Gets the theta start.
     /// </summary>
     public float ThetaStart { get; }
     /// <summary>
-    /// 获取或设置球体经度方向的总角度长度（弧度）。
+    /// Gets the theta length.
     /// </summary>
     public float ThetaLength { get; }
 
     /// <summary>
-    /// 初始化 <see cref="SphereGeometry"/> 类的新实例。
+    /// Initializes a new instance of the sphere geometry type.
     /// </summary>
-    /// <param name="radius">球体的半径。</param>
-    /// <param name="widthSegments">宽度方向的分段数，必须大于等于3。</param>
-    /// <param name="heightSegments">高度方向的分段数，必须大于等于2。</param>
-    /// <param name="phiStart">纬度方向的起始角度（弧度）。</param>
-    /// <param name="phiLength">纬度方向的总角度长度（弧度）。</param>
-    /// <param name="thetaStart">经度方向的起始角度（弧度）。</param>
-    /// <param name="thetaLength">经度方向的总角度长度（弧度）。</param>
-    /// <exception cref="ArgumentOutOfRangeException">当 widthSegments 小于 3 时抛出。</exception>
-    /// <exception cref="ArgumentOutOfRangeException">当 heightSegments 小于 2 时抛出。</exception>
     public SphereGeometry(
         float radius = 1f,
         int widthSegments = 32,

@@ -8,14 +8,13 @@ using System.Numerics;
 namespace Aura3D.Core.Renderers;
 
 /// <summary>
-/// 背景渲染通道，支持天空盒和背景纹理
+/// Represents the background pass type.
 /// </summary>
 public class BackgroundPass: RenderPass
 {
     /// <summary>
-    /// 初始化背景渲染通道
+    /// Initializes a new instance of the background pass type.
     /// </summary>
-    /// <param name="renderPipeline">渲染管线</param>
     public BackgroundPass(RenderPipeline renderPipeline) : base(renderPipeline)
     {
         VertexShader = ShaderResource.BackgroundVert;
@@ -24,6 +23,9 @@ public class BackgroundPass: RenderPass
     }
 
 
+    /// <summary>
+    /// Performs the before render operation.
+    /// </summary>
     public override void BeforeRender(Camera camera)
     {
 
@@ -40,6 +42,9 @@ public class BackgroundPass: RenderPass
         gl.Disable(EnableCap.CullFace);
 
     }
+    /// <summary>
+    /// Renders the associated data.
+    /// </summary>
     public override void Render(Camera camera)
     {
         if (camera.IsRenderBackground == false)
@@ -88,6 +93,9 @@ public class BackgroundPass: RenderPass
         }
     }
 
+    /// <summary>
+    /// Performs the after render operation.
+    /// </summary>
     public override void AfterRender(Camera camera)
     {
         gl.DepthMask(true);

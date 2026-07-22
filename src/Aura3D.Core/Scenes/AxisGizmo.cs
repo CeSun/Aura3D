@@ -3,22 +3,22 @@ using System.Drawing;
 namespace Aura3D.Core.Scenes;
 
 /// <summary>
-/// 方向轴可视化配置，由 DebugDrawPass 使用即时模式绘制。
+/// Represents the axis gizmo type.
 /// </summary>
 public class AxisGizmo
 {
     /// <summary>
-    /// 是否显示方向轴。
+    /// Gets or sets the enable.
     /// </summary>
     public bool Enable { get; set; }
 
     /// <summary>
-    /// 轴线的总长度。
+    /// Gets or sets the axis length.
     /// </summary>
     public float AxisLength { get; set; } = 1.0f;
 
     /// <summary>
-    /// 箭头尖端的大小。
+    /// Gets or sets the arrowhead size.
     /// </summary>
     public float ArrowheadSize { get; set; } = 0.15f;
 }

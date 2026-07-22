@@ -3,28 +3,36 @@ using System.Runtime.InteropServices;
 namespace Aura3D.Core.Resources;
 
 /// <summary>
-/// 纹理基类，提供纹理的通用属性和方法
+/// Represents the base texture type.
 /// </summary>
-/// <typeparam name="T">纹理类型</typeparam>
 public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<T>
 {
     private ulong _localVersion = 1;
 
+    /// <summary>
+    /// Gets the version.
+    /// </summary>
     public virtual ulong Version
     {
         get => _localVersion;
         protected set => _localVersion = value;
     }
 
+    /// <summary>
+    /// Marks the modified.
+    /// </summary>
     protected void MarkModified()
     {
         _localVersion++;
     }
 
     /// <summary>
-    /// 纹理宽度
+    /// Gets the width.
     /// </summary>
     private uint _width;
+    /// <summary>
+    /// Gets the width.
+    /// </summary>
     public virtual uint Width
     {
         get => _width;
@@ -38,9 +46,12 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     }
 
     /// <summary>
-    /// 纹理高度
+    /// Gets the height.
     /// </summary>
     private uint _height;
+    /// <summary>
+    /// Gets the height.
+    /// </summary>
     public virtual uint Height
     {
         get => _height;
@@ -54,10 +65,8 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     }
 
     /// <summary>
-    /// 将 HDR 浮点数据转换为字节缓冲（按 IEEE 浮点字节序原样存储）。
+    /// Performs the convert hdr data to bytes operation.
     /// </summary>
-    /// <param name="data">HDR 浮点数据。</param>
-    /// <returns>字节缓冲列表；空数据返回空列表。</returns>
     protected static List<byte> ConvertHdrDataToBytes(ReadOnlySpan<float> data)
     {
         if (data.IsEmpty)
@@ -67,9 +76,12 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     }
 
     /// <summary>
-    /// 是否为 HDR 纹理
+    /// Gets the is hdr.
     /// </summary>
     private bool _isHdr;
+    /// <summary>
+    /// Gets a value indicating whether the object is hdr.
+    /// </summary>
     public virtual bool IsHdr
     {
         get => _isHdr;
@@ -82,9 +94,12 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
         }
     }
     /// <summary>
-    /// S 方向环绕模式
+    /// Gets the wrap s.
     /// </summary>
     private TextureWrapMode _wrapS = TextureWrapMode.ClampToEdge;
+    /// <summary>
+    /// Gets the wrap s.
+    /// </summary>
     public TextureWrapMode WrapS
     {
         get => _wrapS;
@@ -98,9 +113,12 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     }
 
     /// <summary>
-    /// T 方向环绕模式
+    /// Gets the wrap t.
     /// </summary>
     private TextureWrapMode _wrapT = TextureWrapMode.ClampToEdge;
+    /// <summary>
+    /// Gets the wrap t.
+    /// </summary>
     public TextureWrapMode WrapT
     {
         get => _wrapT;
@@ -114,9 +132,12 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     }
 
     /// <summary>
-    /// 缩小过滤模式
+    /// Gets the min filter.
     /// </summary>
     private TextureFilterMode _minFilter = TextureFilterMode.Linear;
+    /// <summary>
+    /// Gets the min filter.
+    /// </summary>
     public TextureFilterMode MinFilter
     {
         get => _minFilter;
@@ -130,9 +151,12 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     }
 
     /// <summary>
-    /// 放大过滤模式
+    /// Gets the mag filter.
     /// </summary>
     private TextureFilterMode _magFilter = TextureFilterMode.Linear;
+    /// <summary>
+    /// Gets the mag filter.
+    /// </summary>
     public TextureFilterMode MagFilter
     {
         get => _magFilter;
@@ -145,9 +169,12 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
         }
     }
     /// <summary>
-    /// 颜色格式
+    /// Gets the color format.
     /// </summary>
     private ColorFormat _colorFormat;
+    /// <summary>
+    /// Gets the color format.
+    /// </summary>
     public ColorFormat ColorFormat
     {
         get => _colorFormat;
@@ -161,9 +188,12 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     }
 
     /// <summary>
-    /// 是否在伽马空间
+    /// Gets the is gamma space.
     /// </summary>
     private bool _isGammaSpace;
+    /// <summary>
+    /// Gets a value indicating whether the object is gamma space.
+    /// </summary>
     public bool IsGammaSpace
     {
         get => _isGammaSpace;
@@ -178,10 +208,8 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
 
 
     /// <summary>
-    /// 设置 S 方向环绕模式
+    /// Sets the wrap s.
     /// </summary>
-    /// <param name="mode">环绕模式</param>
-    /// <returns>当前纹理对象</returns>
     public T SetWrapS(TextureWrapMode mode)
     {
         WrapS = mode;
@@ -189,10 +217,8 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     }
 
     /// <summary>
-    /// 设置 T 方向环绕模式
+    /// Sets the wrap t.
     /// </summary>
-    /// <param name="mode">环绕模式</param>
-    /// <returns>当前纹理对象</returns>
     public T SetWrapT(TextureWrapMode mode)
     {
         WrapT = mode;
@@ -200,10 +226,8 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     }
 
     /// <summary>
-    /// 设置缩小过滤模式
+    /// Sets the min filter.
     /// </summary>
-    /// <param name="mode">过滤模式</param>
-    /// <returns>当前纹理对象</returns>
     public T SetMinFilter(TextureFilterMode mode)
     {
         MinFilter = mode;
@@ -211,10 +235,8 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     }
 
     /// <summary>
-    /// 设置放大过滤模式
+    /// Sets the mag filter.
     /// </summary>
-    /// <param name="mode">过滤模式</param>
-    /// <returns>当前纹理对象</returns>
     public T SetMagFilter(TextureFilterMode mode)
     {
         MagFilter = mode;
@@ -222,10 +244,8 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
     }
 
     /// <summary>
-    /// 设置颜色格式
+    /// Sets the color format.
     /// </summary>
-    /// <param name="format">颜色格式</param>
-    /// <returns>当前纹理对象</returns>
     public T SetColorFormat(ColorFormat format)
     {
         ColorFormat = format;
@@ -234,10 +254,8 @@ public abstract class BaseTexture<T> : IVersionedResource where T : BaseTexture<
 
 
     /// <summary>
-    /// 设置是否在伽马空间
+    /// Sets the is gamma space.
     /// </summary>
-    /// <param name="isGamma">是否在伽马空间</param>
-    /// <returns>当前纹理对象</returns>
     public T SetIsGammaSpace(bool isGamma)
     {
         IsGammaSpace = isGamma;

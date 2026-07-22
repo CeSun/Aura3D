@@ -1,4 +1,4 @@
-﻿using Aura3D.Core.Math;
+using Aura3D.Core.Math;
 using Aura3D.Core.Nodes;
 using Aura3D.Core.Resources;
 using Aura3D.Core.Scenes;
@@ -9,27 +9,24 @@ using System.Runtime.CompilerServices;
 namespace Aura3D.Core.Renderers;
 
 /// <summary>
-/// 渲染管线创建实例的接口，用于通过场景创建对应的渲染管线实例。
+/// Defines the contract for render pipeline create instance.
 /// </summary>
 public interface IRenderPipelineCreateInstance
 {
     /// <summary>
-    /// 使用指定的场景创建渲染管线实例。
+    /// Creates the instance.
     /// </summary>
-    /// <param name="scene">要渲染的场景。</param>
-    /// <returns>新创建的渲染管线实例。</returns>
     public abstract static RenderPipeline CreateInstance(Scene scene);
 }
 
 /// <summary>
-/// 渲染管线的抽象基类，负责管理场景中的网格、相机、光源、GPU 资源以及组织渲染流程。
+/// Represents the render pipeline type.
 /// </summary>
 public abstract partial class RenderPipeline
 {
     /// <summary>
-    /// 初始化 <see cref="RenderPipeline"/> 类的新实例。
+    /// Initializes a new instance of the render pipeline type.
     /// </summary>
-    /// <param name="scene">要关联的场景。</param>
     public RenderPipeline(Scene scene)
     {
         this.Scene = scene;
@@ -37,20 +34,17 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 获取渲染管线的用户可配置设置。
+    /// Gets the settings.
     /// </summary>
     public PipelineSettings Settings { get; }
 
     /// <summary>
-    /// 获取当前渲染管线是否支持 CSM（级联阴影贴图）。
-    /// 默认返回 <c>false</c>；支持多级联阴影采样的管线应重写此属性返回 <c>true</c>。
-    /// <see cref="ShadowMapPass"/> 在渲染时会检查此属性，
-    /// 不支持 CSM 的管线即使 <see cref="PipelineSettings.CsmCascadeCount"/> 大于 1 也会退化为普通单张阴影贴图。
+    /// Gets the supports csm.
     /// </summary>
     public virtual bool SupportsCSM => false;
 
     /// <summary>
-    /// 获取或设置是否启用视锥体剔除。
+    /// Gets the enable frustum culling.
     /// </summary>
     public bool EnableFrustumCulling
     {
@@ -59,53 +53,59 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 获取当前渲染管线关联的场景。
+    /// Gets or sets the scene.
     /// </summary>
     public Scene Scene { get; private set; }
 
     /// <summary>
-    /// 获取场景中的所有网格节点列表。
+    /// Gets the meshes.
     /// </summary>
     public List<Mesh> Meshes { get; } = new List<Mesh>();
 
 
+    /// <summary>
+    /// Gets the instanced meshes.
+    /// </summary>
     public List<InstancedMesh> InstancedMeshes { get; } = new List<InstancedMesh>();
 
+    /// <summary>
+    /// Gets the particle systems.
+    /// </summary>
     public List<ParticleSystem> ParticleSystems { get; } = new List<ParticleSystem>();
 
     /// <summary>
-    /// 获取场景中的所有相机节点列表。
+    /// Gets the cameras.
     /// </summary>
     public List<Camera> Cameras { get; } = new List<Camera>();
 
     /// <summary>
-    /// 获取场景中的所有点光源列表。
+    /// Gets the point lights.
     /// </summary>
     public List<PointLight> PointLights { get; } = new List<PointLight>();
 
     /// <summary>
-    /// 获取场景中的所有聚光灯列表。
+    /// Gets the spot lights.
     /// </summary>
     public List<SpotLight> SpotLights { get; } = new List<SpotLight>();
 
     /// <summary>
-    /// 获取场景中的所有方向光源列表。
+    /// Gets the directional lights.
     /// </summary>
     public List<DirectionalLight> DirectionalLights { get; } = new List<DirectionalLight>();
 
     /// <summary>
-    /// 获取或设置 OpenGL ES 上下文对象。
+    /// Gets or sets the gl.
     /// </summary>
     public GL? gl { get; protected set; }
 
 
     /// <summary>
-    /// 获取每个相机渲染时都需要执行的渲染通道列表。
+    /// Gets the every camera render passes.
     /// </summary>
     public List<RenderPass> EveryCameraRenderPasses { get; } = new List<RenderPass>();
 
     /// <summary>
-    /// 获取每帧仅执行一次的渲染通道列表。
+    /// Gets the once render passes.
     /// </summary>
     public List<RenderPass> OnceRenderPasses { get; } = new List<RenderPass>();
 
@@ -123,7 +123,7 @@ public abstract partial class RenderPipeline
     private RenderTargetHandle? debugOutputHandle;
 
     /// <summary>
-    /// 获取或设置方向光源的最大数量限制。
+    /// Gets the directional light limit.
     /// </summary>
     public int DirectionalLightLimit
     {
@@ -132,7 +132,7 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 获取或设置点光源的最大数量限制。
+    /// Gets the point light limit.
     /// </summary>
     public int PointLightLimit
     {
@@ -141,7 +141,7 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 获取或设置聚光灯的最大数量限制。
+    /// Gets the spot light limit.
     /// </summary>
     public int SpotLightLimit
     {
@@ -155,21 +155,27 @@ public abstract partial class RenderPipeline
 
     private int lastSpotLightLimit;
 
+    /// <summary>
+    /// Occurs when light limit changed event is raised.
+    /// </summary>
     protected event Action<int, int, int>? LightLimitChangedEvent;
 
     /// <summary>
-    /// 获取或设置当前相机视锥体中可见的网格列表。
+    /// Gets the visible meshes in camera.
     /// </summary>
     public IReadOnlyList<Mesh> VisibleMeshesInCamera => _visibleMeshesInCamera;
     private readonly List<Mesh> _visibleMeshesInCamera = [];
 
     /// <summary>
-    /// 获取当前相机视锥体中可见的实例化网格列表。
+    /// Gets the visible instanced meshes in camera.
     /// </summary>
     public IReadOnlyList<InstancedMesh> VisibleInstancedMeshesInCamera => _visibleInstancedMeshesInCamera;
     private readonly List<InstancedMesh> _visibleInstancedMeshesInCamera = [];
 
 
+    /// <summary>
+    /// Performs the register render pass operation.
+    /// </summary>
     protected void RegisterRenderPass(RenderPass renderPass, RenderPassGroup renderPassGroup)
     {
         if (renderPassGroup == RenderPassGroup.EveryCamera)
@@ -179,12 +185,8 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 注册调试绘制通道。调试通道会在每个相机渲染的最后执行，并默认输出到相机最终输出。
+    /// Performs the register debug pass operation.
     /// </summary>
-    /// <param name="depthRenderTarget">
-    /// 需要拷贝深度的渲染目标。
-    /// 传入后，调试元素会与该渲染目标中的场景深度正确混合；传入 <c>null</c> 则仅清空调试深度。
-    /// </param>
     protected void RegisterDebugPass(RenderTargetHandle? depthRenderTarget = null)
     {
         debugOutputHandle ??= RegisterRenderTarget("DebugOutput")
@@ -197,18 +199,23 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 渲染通道分组枚举，用于标识渲染通道的执行频率。
+    /// Specifies values for render pass group.
     /// </summary>
     public enum RenderPassGroup
     {
+        /// <summary>
+        /// Specifies once.
+        /// </summary>
         Once,
+        /// <summary>
+        /// Specifies every camera.
+        /// </summary>
         EveryCamera,
     }
 
     /// <summary>
-    /// 使用指定的获取函数指针委托初始化渲染管线，包括 OpenGL 上下文获取与渲染通道设置。
+    /// Initializes the associated data.
     /// </summary>
-    /// <param name="getProcAddressFunctionPtr">用于获取 OpenGL 函数指针的委托。</param>
     public void Initialize(Func<string, nint> getProcAddressFunctionPtr)
     {
         gl = GL.GetApi(getProcAddressFunctionPtr);
@@ -226,7 +233,7 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 在初始化时执行管线的自定义设置逻辑，子类可重写以添加特定资源初始化。
+    /// Sets the up.
     /// </summary>
     public virtual void Setup()
     {
@@ -234,7 +241,7 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 确保指定 GPU 状态已与当前版本同步。
+    /// Ensures the synced.
     /// </summary>
     public void EnsureSynced(IGpuState resource)
     {
@@ -251,6 +258,9 @@ public abstract partial class RenderPipeline
         GpuStates.Remove(gpuState);
     }
 
+    /// <summary>
+    /// Gets the material gpu state.
+    /// </summary>
     public MaterialGpuState GetMaterialGpuState(Material material)
     {
         if (materialGpuStates.TryGetValue(material, out var gpuState) == false)
@@ -368,6 +378,9 @@ public abstract partial class RenderPipeline
         return texture.CachedGpuState;
     }
 
+    /// <summary>
+    /// Performs the collect unused gpu states operation.
+    /// </summary>
     public void CollectUnusedGpuStates()
     {
         if (gl == null)
@@ -393,6 +406,9 @@ public abstract partial class RenderPipeline
         }
     }
 
+    /// <summary>
+    /// Ensures the synced.
+    /// </summary>
     public TextureGpuState EnsureSynced(Resources.Texture texture)
     {
         var gpuState = GetTextureGpuState(texture);
@@ -405,6 +421,9 @@ public abstract partial class RenderPipeline
         return gpuState;
     }
 
+    /// <summary>
+    /// Ensures the synced.
+    /// </summary>
     public CubeTextureGpuState EnsureSynced(CubeTexture texture)
     {
         var gpuState = GetCubeTextureGpuState(texture);
@@ -429,7 +448,7 @@ public abstract partial class RenderPipeline
         return gpuState;
     }
     /// <summary>
-    /// 确保 InstancedMesh 的 InstancedGeometry 已同步到 GPU，返回 GPU 状态。
+    /// Ensures the synced.
     /// </summary>
     internal InstancedGeometryGpuState EnsureSynced(InstancedMesh instancedMesh)
     {
@@ -448,6 +467,9 @@ public abstract partial class RenderPipeline
     }
 
 
+    /// <summary>
+    /// Performs the sync and bind bone matrix buffer operation.
+    /// </summary>
     public void SyncAndBindBoneMatrixBuffer(BoneMatrixBuffer boneMatrixBuffer)
     {
         var gpuState = GetBoneMatrixBufferGpuState(boneMatrixBuffer);
@@ -461,9 +483,8 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 将节点添加到当前渲染管线，并根据节点类型分类管理。
+    /// Adds the node.
     /// </summary>
-    /// <param name="node">要添加的场景节点。</param>
     public void AddNode(Node node)
     {
         switch (node)
@@ -493,9 +514,8 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 从当前渲染管线中移除指定节点，并清理其关联的 GPU 资源。
+    /// Removes the node.
     /// </summary>
-    /// <param name="node">要移除的场景节点。</param>
     public void RemoveNode(Node node)
     {
         switch (node)
@@ -536,7 +556,7 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 执行一帧的完整渲染流程，包括更新渲染目标、光源限制、GPU 资源，以及执行所有渲染通道。
+    /// Renders the associated data.
     /// </summary>
     public virtual void Render()
     {
@@ -585,11 +605,8 @@ public abstract partial class RenderPipeline
     private Plane[] planes = new Plane[6];
 
     /// <summary>
-    /// 根据相机的视图和投影矩阵更新当前视锥体中可见的网格列表。
+    /// Updates the visible meshes in camera.
     /// </summary>
-    /// <param name="view">视图矩阵。</param>
-    /// <param name="projection">投影矩阵。</param>
-    /// <param name="meshes">用于输出可见网格的列表。</param>
     public void UpdateVisibleMeshesInCamera(Matrix4x4 view, Matrix4x4 projection, List<Mesh> meshes)
     {
         var viewProjection = view * projection;
@@ -638,13 +655,8 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 根据相机的视图和投影矩阵更新当前视锥体中可见的实例化网格列表。
-    /// 对每个 InstancedMesh 的合并世界包围盒进行视锥体测试，
-    /// 同时尊重每个 InstancedMesh 自身的 <see cref="InstancedMesh.EnableFrustumCulling"/> 设置。
+    /// Updates the visible instanced meshes in camera.
     /// </summary>
-    /// <param name="view">视图矩阵。</param>
-    /// <param name="projection">投影矩阵。</param>
-    /// <param name="instancedMeshes">用于输出可见实例化网格的列表。</param>
     public void UpdateVisibleInstancedMeshesInCamera(Matrix4x4 view, Matrix4x4 projection, List<InstancedMesh> instancedMeshes)
     {
         var viewProjection = view * projection;
@@ -669,7 +681,7 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 在所有相机渲染之前执行的逻辑，子类可重写。
+    /// Performs the before render operation.
     /// </summary>
     public virtual void BeforeRender()
     {
@@ -677,7 +689,7 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 在所有相机渲染之后执行的逻辑，子类可重写。
+    /// Performs the after render operation.
     /// </summary>
     public virtual void AfterRender()
     {
@@ -685,22 +697,23 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 在单个相机渲染之前执行的逻辑，子类可重写。
+    /// Performs the before camera render operation.
     /// </summary>
-    /// <param name="camera">当前要渲染的相机。</param>
     public virtual void BeforeCameraRender(Camera camera)
     {
 
     }
 
     /// <summary>
-    /// 在单个相机渲染之后执行的逻辑，子类可重写。
+    /// Performs the after camera render operation.
     /// </summary>
-    /// <param name="camera">当前已渲染完成的相机。</param>
     public virtual void AfterCameraRender(Camera camera)
     {
     }
 
+    /// <summary>
+    /// Gets the camera framebuffer id.
+    /// </summary>
     public unsafe uint GetCameraFramebufferId(Camera camera)
     {
         if (gl == null)
@@ -772,10 +785,8 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 根据网格与相机的距离对网格列表进行排序，用于透明物体的正确渲染。
+    /// Performs the sort meshes operation.
     /// </summary>
-    /// <param name="Meshes">要排序的网格列表。</param>
-    /// <param name="camera">用于计算距离的相机。</param>
     public virtual void SortMeshes(IReadOnlyList<Mesh> Meshes, Camera camera)
     {
         var m = camera.View;
@@ -802,7 +813,7 @@ public abstract partial class RenderPipeline
     private InternalQuad? _internalQuad;
 
     /// <summary>
-    /// 渲染一个全屏单位立方体，常用于天空盒或环境贴图渲染。
+    /// Renders the cube.
     /// </summary>
     public void RenderCube()
     {
@@ -822,7 +833,7 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 渲染一个全屏四边形，常用于后处理全屏效果的绘制。
+    /// Renders the quad.
     /// </summary>
     public unsafe void RenderQuad()
     {
@@ -842,7 +853,7 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
-    /// 销毁当前渲染管线及其管理的所有 GPU 资源和渲染通道。
+    /// Destroys the associated data.
     /// </summary>
     public virtual void Destroy()
     {

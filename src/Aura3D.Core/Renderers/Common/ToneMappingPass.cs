@@ -1,4 +1,4 @@
-﻿using Aura3D.Core.Nodes;
+using Aura3D.Core.Nodes;
 using Silk.NET.OpenGLES;
 using System;
 using System.Collections.Generic;
@@ -9,16 +9,14 @@ using System.Threading.Tasks;
 namespace Aura3D.Core.Renderers.Common;
 
 /// <summary>
-/// 色调映射渲染通道，将 HDR 颜色映射到 LDR 范围
+/// Represents the tone mapping pass type.
 /// </summary>
 public class ToneMappingPass : RenderPass
 {
     RenderTargetTextureHandle _inputTexture;
     /// <summary>
-    /// 初始化色调映射渲染通道
+    /// Initializes a new instance of the tone mapping pass type.
     /// </summary>
-    /// <param name="renderPipeline">渲染管线</param>
-    /// <param name="inputTexture">输入渲染目标纹理引用</param>
     public ToneMappingPass(RenderPipeline renderPipeline, RenderTargetTextureHandle inputTexture) : base(renderPipeline)
     {
         _inputTexture = inputTexture;
@@ -75,12 +73,18 @@ void main()
 ";
     }
 
+    /// <summary>
+    /// Performs the before render operation.
+    /// </summary>
     public override void BeforeRender(Camera camera)
     {
         gl.Disable(EnableCap.DepthTest);
         gl.Disable(EnableCap.Blend);
 
     }
+    /// <summary>
+    /// Renders the associated data.
+    /// </summary>
     public override void Render(Camera camera)
     {
         var source = GetTexture(_inputTexture, camera);

@@ -13,7 +13,7 @@ public enum AnimationError
 }
 
 /// <summary>
-/// Represents an animation invariant violation.
+/// Represents the animation exception type.
 /// </summary>
 public sealed class AnimationException : InvalidOperationException
 {

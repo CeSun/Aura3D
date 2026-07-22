@@ -1,10 +1,12 @@
 namespace Aura3D.Core.Resources;
 
 /// <summary>
-/// 表示带有版本号的 CPU 资源。
-/// 版本号用于后续 GPU 同步判断，本次改造仅先建立统一骨架。
+/// Defines the contract for versioned resource.
 /// </summary>
 public interface IVersionedResource
 {
+    /// <summary>
+    /// Gets the version.
+    /// </summary>
     ulong Version { get; }
 }

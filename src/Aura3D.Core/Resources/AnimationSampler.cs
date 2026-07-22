@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -8,14 +8,13 @@ using System.Threading.Tasks;
 namespace Aura3D.Core.Resources;
 
 /// <summary>
-/// 动画采样器，负责动画的播放和采样
+/// Represents the animation sampler type.
 /// </summary>
 public class AnimationSampler : AnimationSamplerBase
 {
     /// <summary>
-    /// 初始化动画采样器
+    /// Initializes a new instance of the animation sampler type.
     /// </summary>
-    /// <param name="animation">动画对象</param>
     public AnimationSampler(Animation animation)
         : base(animation.Skeleton!)
     {
@@ -28,16 +27,19 @@ public class AnimationSampler : AnimationSamplerBase
     }
 
     /// <summary>
-    /// 获取或设置时间缩放因子。
+    /// Gets or sets the time scale.
     /// </summary>
     public float TimeScale { get; set; } = 1.0f;
 
+    /// <summary>
+    /// Gets or sets the animation.
+    /// </summary>
     protected Animation animation { get; set; }
 
     private DateTime startTime { get; set; } = default;
 
     /// <summary>
-    /// 获取或设置动画循环模式。
+    /// Gets or sets the loop mode.
     /// </summary>
     public LoopMode LoopMode { get; set; } = LoopMode.Loop;
 
@@ -116,39 +118,39 @@ public class AnimationSampler : AnimationSamplerBase
 }
 
 /// <summary>
-/// 动画循环模式
+/// Specifies values for loop mode.
 /// </summary>
 public enum LoopMode
 {
     /// <summary>
-    /// 播放一次
+    /// Specifies once.
     /// </summary>
     Once,
     /// <summary>
-    /// 循环播放
+    /// Specifies loop.
     /// </summary>
     Loop,
     /// <summary>
-    /// 往复播放
+    /// Specifies ping pong.
     /// </summary>
     PingPong
 }
 
 /// <summary>
-/// 复制类型
+/// Specifies values for copy type.
 /// </summary>
 public enum CopyType
 {
     /// <summary>
-    /// 共享资源
+    /// Specifies shared resource.
     /// </summary>
     SharedResource,
     /// <summary>
-    /// 共享资源数据
+    /// Specifies shared resource data.
     /// </summary>
     SharedResourceData,
     /// <summary>
-    /// 完全复制
+    /// Specifies full copy.
     /// </summary>
     FullCopy
 }

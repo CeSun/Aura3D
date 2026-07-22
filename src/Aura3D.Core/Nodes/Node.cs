@@ -8,30 +8,29 @@ using Aura3D.Core.Exceptions;
 namespace Aura3D.Core.Nodes;
 
 /// <summary>
-/// 表示场景中的节点对象，支持变换（位置、旋转、缩放）及层级关系管理。
+/// Represents the node type.
 /// </summary>
 public partial class Node
 {
     /// <summary>
-    /// 获取或设置节点名称。
+    /// Gets or sets the name.
     /// </summary>
     public string Name { get; set; } = "Node";
 
     /// <summary>
-    /// 获取节点的标签集合。
+    /// Gets the tags.
     /// </summary>
     public HashSet<string> Tags { get; } = new HashSet<string>();
 
     #region Transform
 
     /// <summary>
-    /// 节点的位置。
+    /// Gets the position.
     /// </summary>
     private Vector3 _position;
 
     /// <summary>
-    /// 获取或设置节点的位置。设置相同值时不触发变换更新。
-    /// 连续修改多个属性时建议使用 <see cref="BeginTransformUpdate"/> 包裹。
+    /// Gets the position.
     /// </summary>
     public Vector3 Position
     {
@@ -54,12 +53,12 @@ public partial class Node
 
 
     /// <summary>
-    /// 节点的欧拉角（弧度）表示。
+    /// Gets the rotation.
     /// </summary>
     private Vector3 _rotation;
 
     /// <summary>
-    /// 获取或设置节点的旋转（弧度）。设置相同值时不触发变换更新。
+    /// Gets the rotation.
     /// </summary>
     public Vector3 Rotation
     {
@@ -86,12 +85,12 @@ public partial class Node
 
 
     /// <summary>
-    /// 节点的欧拉角（度数）表示。
+    /// Gets the rotation degrees.
     /// </summary>
     private Vector3 _rotationDegrees;
 
     /// <summary>
-    /// 获取或设置节点的旋转（度数）。
+    /// Gets the rotation degrees.
     /// </summary>
     public Vector3 RotationDegrees
     {
@@ -117,12 +116,12 @@ public partial class Node
     }
 
     /// <summary>
-    /// 节点的旋转四元数表示。
+    /// Gets the rotation quaternion.
     /// </summary>
     private Quaternion _rotationQuaternion;
 
     /// <summary>
-    /// 获取或设置节点的旋转（四元数）。
+    /// Gets the rotation quaternion.
     /// </summary>
     public Quaternion RotationQuaternion
     {
@@ -151,10 +150,7 @@ public partial class Node
     private Vector3 _scale;
 
     /// <summary>
-    /// 获取或设置节点的缩放。缩放值必须为正数。
-    /// </summary>
-    /// <summary>
-    /// 获取或设置节点的缩放。设置相同值时不触发变换更新。
+    /// Gets the scale.
     /// </summary>
     public Vector3 Scale
     {
@@ -179,7 +175,7 @@ public partial class Node
 
     private Matrix4x4 _localTransform;
     /// <summary>
-    /// 获取节点的本地变换矩阵。
+    /// Gets the local transform.
     /// </summary>
     public Matrix4x4 LocalTransform 
     { 
@@ -201,7 +197,7 @@ public partial class Node
 
     private Matrix4x4 _worldTransform;
     /// <summary>
-    /// 获取节点的世界变换矩阵（包含父节点变换）。
+    /// Gets the world transform.
     /// </summary>
     public Matrix4x4 WorldTransform
     {
@@ -251,10 +247,8 @@ public partial class Node
     }
 
     /// <summary>
-    /// 开始变换更新作用域，在此期间禁用自动变换更新。
+    /// Performs the begin transform update operation.
     /// </summary>
-    /// <param name="updateTransformMode">需要更新的变换模式。</param>
-    /// <returns>变换更新作用域。</returns>
     public IDisposable BeginTransformUpdate(UpdateTransformMode updateTransformMode = UpdateTransformMode.All)
     {
         _autoUpdateTransform = false;
@@ -262,6 +256,9 @@ public partial class Node
         return new TransformUpdateScope(this, updateTransformMode);
     }
 
+    /// <summary>
+    /// Performs the end transform update operation.
+    /// </summary>
     protected void EndTransformUpdate(UpdateTransformMode updateTransformMode)
     {
         _autoUpdateTransform = true;
@@ -288,6 +285,9 @@ public partial class Node
         OnWorldTransformChanged();
     }
 
+    /// <summary>
+    /// Performs the on world transform changed operation.
+    /// </summary>
     protected virtual void OnWorldTransformChanged()
     {
 
@@ -308,37 +308,37 @@ public partial class Node
     }
 
     /// <summary>
-    /// 获取节点的前方方向向量。
+    /// Gets the forward.
     /// </summary>
     public Vector3 Forward => WorldTransform.ForwardVector();
 
     /// <summary>
-    /// 获取节点的后方方向向量。
+    /// Gets the backward.
     /// </summary>
     public Vector3 Backward => -1 * Forward;
 
     /// <summary>
-    /// 获取节点的上方方向向量。
+    /// Gets the up.
     /// </summary>
     public Vector3 Up => WorldTransform.UpVector();
 
     /// <summary>
-    /// 获取节点的下方方向向量。
+    /// Gets the down.
     /// </summary>
     public Vector3 Down => -1 * Up;
 
     /// <summary>
-    /// 获取节点的右方方向向量。
+    /// Gets the right.
     /// </summary>
     public Vector3 Right => WorldTransform.RightVector();
 
     /// <summary>
-    /// 获取节点的左方方向向量。
+    /// Gets the left.
     /// </summary>
     public Vector3 Left => -1 * Right;
 
     /// <summary>
-    /// 初始化 <see cref="Node"/> 类的新实例。
+    /// Initializes a new instance of the node type.
     /// </summary>
     public Node()
     {
@@ -361,27 +361,29 @@ public partial class Node
     #region Hierarchy
 
     /// <summary>
-    /// 获取或设置当前节点所在的场景。
+    /// Gets or sets the current scene.
     /// </summary>
     public Scene? CurrentScene { get; internal set; }
 
     /// <summary>
-    /// 获取节点的父节点。
+    /// Gets or sets the parent.
     /// </summary>
     public Node? Parent { get; private set; }
 
 
+    /// <summary>
+    /// Determines whether h set.
+    /// </summary>
     protected HashSet<Node> _children = new HashSet<Node>();
 
     /// <summary>
-    /// 获取节点的所有子节点（只读）。
+    /// Gets the children.
     /// </summary>
     public IReadOnlySet<Node> Children => _children;
 
     /// <summary>
-    /// 将指定子节点添加到当前节点，并更新其变换，使其在世界空间中的位置保持不变。
+    /// Adds the child.
     /// </summary>
-    /// <param name="child">要添加的子节点。</param>
     public void AddChild(Node child, AttachToParentRule attachToParentRule)
     {
         // 检查子节点是否已存在，若存在则不重复添加
@@ -465,9 +467,8 @@ public partial class Node
     }
 
     /// <summary>
-    /// 从当前节点移除指定子节点，并将其变换恢复为世界空间变换，保持其在场景中的位置不变。
+    /// Removes the child.
     /// </summary>
-    /// <param name="child">要移除的子节点。</param>
     public void RemoveChild(Node child, AttachToParentRule attachToParentRule)
     {
         // 检查子节点是否存在，若不存在则不处理
@@ -511,7 +512,7 @@ public partial class Node
     }
 
     /// <summary>
-    /// 获取或设置节点是否启用，同时会级联影响所有子节点。
+    /// Gets the enable.
     /// </summary>
     public bool Enable 
     {
@@ -529,10 +530,8 @@ public partial class Node
     private bool _enable = true;
 
     /// <summary>
-    /// 递归获取当前节点及其子节点中指定类型的节点列表。
+    /// Performs the list operation.
     /// </summary>
-    /// <typeparam name="T">节点类型。</typeparam>
-    /// <returns>匹配的节点列表。</returns>
     public List<T> GetNodesInChildren<T>() where T : Node
     {
         var list = new List<T>();
@@ -552,11 +551,8 @@ public partial class Node
     private readonly Dictionary<string, IRuntimeGpuState> _pipelineGpuStates = new Dictionary<string, IRuntimeGpuState>();
 
     /// <summary>
-    /// 按名称获取渲染管线中的运行时 GPU 状态。
+    /// Represents the get pipeline gpu state type.
     /// </summary>
-    /// <typeparam name="T">GPU 状态类型。</typeparam>
-    /// <param name="name">状态名称。</param>
-    /// <returns>匹配类型的 GPU 状态，若不存在则返回默认值。</returns>
     public T? GetPipelineGpuState<T>(string name) where T : class, IRuntimeGpuState
     {
         if (_pipelineGpuStates.TryGetValue(name, out var resource))
@@ -577,25 +573,23 @@ public partial class Node
     }
 
     /// <summary>
-    /// 移除渲染管线中指定名称的运行时 GPU 状态。
+    /// Removes the pipeline gpu state.
     /// </summary>
-    /// <param name="name">状态名称。</param>
     public void RemovePipelineGpuState(string name)
     {
         _pipelineGpuStates.Remove(name);
     }
 
     /// <summary>
-    /// 查询渲染管线中的所有运行时 GPU 状态。
+    /// Performs the query pipeline gpu states operation.
     /// </summary>
-    /// <returns>GPU 状态的可查询集合。</returns>
     public IQueryable<IRuntimeGpuState> QueryPipelineGpuStates()
     {
         return _pipelineGpuStates.Values.AsQueryable();
     }
 
     /// <summary>
-    /// 清空渲染管线中的所有运行时 GPU 状态。
+    /// Clears the pipeline gpu states.
     /// </summary>
     public void ClearPipelineGpuStates()
     {
@@ -604,19 +598,16 @@ public partial class Node
 
 
     /// <summary>
-    /// 设置渲染管线中的运行时 GPU 状态。
+    /// Sets the pipeline gpu state.
     /// </summary>
-    /// <param name="name">状态名称。</param>
-    /// <param name="resource">GPU 状态。</param>
     public void SetPipelineGpuState(string name, IRuntimeGpuState resource)
     {
         _pipelineGpuStates[name] = resource;
     }
 
     /// <summary>
-    /// 更新节点状态。
+    /// Updates the associated data.
     /// </summary>
-    /// <param name="delta">时间增量（秒）。</param>
     public virtual void Update(double delta)
     {
 
@@ -624,21 +615,39 @@ public partial class Node
 }
 
 /// <summary>
-/// 定义子节点附加到父节点时的变换规则。
+/// Specifies values for attach to parent rule.
 /// </summary>
 public enum AttachToParentRule
 {
+    /// <summary>
+    /// Specifies keep world.
+    /// </summary>
     KeepWorld,
+    /// <summary>
+    /// Specifies keep local.
+    /// </summary>
     KeepLocal
 }
 
 /// <summary>
-/// 变换更新模式。
+/// Specifies values for update transform mode.
 /// </summary>
 public enum UpdateTransformMode
 {
+    /// <summary>
+    /// Gets the local.
+    /// </summary>
     Local = 1 << 0,
+    /// <summary>
+    /// Gets the world.
+    /// </summary>
     World = 1 << 1,
+    /// <summary>
+    /// Gets the children world.
+    /// </summary>
     ChildrenWorld = 1 << 2,
+    /// <summary>
+    /// Gets the all.
+    /// </summary>
     All = Local | World | ChildrenWorld
 }

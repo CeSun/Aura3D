@@ -4,29 +4,34 @@ using Silk.NET.OpenGLES;
 namespace Aura3D.Core.Renderers;
 
 /// <summary>
-/// 渲染目标内部纹理附件的统一契约，供 <see cref="RenderTargetBase{TTexture, TSelf}"/> 在 2D / Cube 两种实现间共享存储与生命周期管理。
+/// Defines the contract for render target texture.
 /// </summary>
 public interface IRenderTargetTexture
 {
-    /// <summary>OpenGL 纹理对象 ID。</summary>
+    /// <summary>
+    /// Gets or sets the texture id.
+    /// </summary>
     uint TextureId { get; set; }
 
-    /// <summary>纹理内部格式。</summary>
+    /// <summary>
+    /// Gets or sets the internal format.
+    /// </summary>
     TextureFormat InternalFormat { get; set; }
 
-    /// <summary>纹理宽度。</summary>
+    /// <summary>
+    /// Gets or sets the width.
+    /// </summary>
     uint Width { get; set; }
 
-    /// <summary>纹理高度。</summary>
+    /// <summary>
+    /// Gets or sets the height.
+    /// </summary>
     uint Height { get; set; }
 }
 
 /// <summary>
-/// 渲染目标基类，承载 2D / Cube 渲染目标共享的字段、集合与生命周期管理。
-/// 派生类通过 CRTP 指定具体纹理类型与自身类型，以保持 fluent API 的具体类型返回。
+/// Represents the render target base type.
 /// </summary>
-/// <typeparam name="TTexture">渲染目标内部纹理附件类型，必须实现 <see cref="IRenderTargetTexture"/>。</typeparam>
-/// <typeparam name="TSelf">派生类自身类型，用于 fluent API 返回具体类型。</typeparam>
 public abstract class RenderTargetBase<TTexture, TSelf> : IRuntimeGpuState
     where TTexture : class, IRenderTargetTexture
     where TSelf : RenderTargetBase<TTexture, TSelf>
@@ -37,41 +42,57 @@ public abstract class RenderTargetBase<TTexture, TSelf> : IRuntimeGpuState
     /// <inheritdoc />
     public ulong SyncedVersion { get; protected set; }
 
-    /// <summary>颜色附件列表，按 <see cref="AddRenderTexture"/> 添加顺序排列。</summary>
+    /// <summary>
+    /// Performs the new operation.
+    /// </summary>
     protected List<TTexture> renderTextures = new();
 
-    /// <summary>颜色附件名称到纹理的映射，供 <see cref="GetTexture(string)"/> 查询。</summary>
+    /// <summary>
+    /// Performs the new operation.
+    /// </summary>
     protected Dictionary<string, TTexture> renderTexturesMap = new();
 
-    /// <summary>深度/模板附件纹理，由派生类构造函数初始化。</summary>
+    /// <summary>
+    /// Gets the depth stencil texture.
+    /// </summary>
     protected TTexture depthStencilTexture = default!;
 
-    /// <summary>获取深度/模板附件纹理。</summary>
+    /// <summary>
+    /// Gets the depth stencil texture.
+    /// </summary>
     public TTexture DepthStencilTexture => depthStencilTexture;
 
-    /// <summary>获取或设置帧缓冲对象的 ID。</summary>
+    /// <summary>
+    /// Gets or sets the frame buffer id.
+    /// </summary>
     public uint FrameBufferId { get; set; }
 
-    /// <summary>获取或设置渲染目标的高度。</summary>
+    /// <summary>
+    /// Gets or sets the height.
+    /// </summary>
     public uint Height { get; set; }
 
-    /// <summary>获取或设置渲染目标的宽度。</summary>
+    /// <summary>
+    /// Gets or sets the width.
+    /// </summary>
     public uint Width { get; set; }
 
     /// <inheritdoc />
     public float Scale { get; set; } = 1.0f;
 
-    /// <summary>是否启用 mipmap 生成。</summary>
+    /// <summary>
+    /// Gets or sets the enable mip map.
+    /// </summary>
     public bool EnableMipMap { get; set; }
 
-    /// <summary>获取深度/模板附件的纹理格式。</summary>
+    /// <summary>
+    /// Gets or sets the depth texture format.
+    /// </summary>
     public TextureFormat DepthTextureFormat { get; protected set; }
 
     /// <summary>
-    /// 启用或禁用 mipmap 生成。
+    /// Sets the enable mip map level.
     /// </summary>
-    /// <param name="enableMipMap">是否启用 mipmap。</param>
-    /// <returns>当前的渲染目标实例。</returns>
     public TSelf SetEnableMipMapLevel(bool enableMipMap)
     {
         if (EnableMipMap == enableMipMap)
@@ -82,11 +103,8 @@ public abstract class RenderTargetBase<TTexture, TSelf> : IRuntimeGpuState
     }
 
     /// <summary>
-    /// 设置渲染目标的尺寸。
+    /// Sets the size.
     /// </summary>
-    /// <param name="width">宽度。</param>
-    /// <param name="height">高度。</param>
-    /// <returns>当前的渲染目标实例。</returns>
     public TSelf SetSize(uint width, uint height)
     {
         if (Width == width && Height == height)
@@ -100,10 +118,8 @@ public abstract class RenderTargetBase<TTexture, TSelf> : IRuntimeGpuState
     }
 
     /// <summary>
-    /// 获取指定索引的颜色纹理。
+    /// Gets the texture.
     /// </summary>
-    /// <param name="index">纹理索引。</param>
-    /// <returns>纹理实例；索引无效时返回 <c>null</c>。</returns>
     public TTexture? GetTexture(int index)
     {
         if (index < 0)
@@ -114,10 +130,8 @@ public abstract class RenderTargetBase<TTexture, TSelf> : IRuntimeGpuState
     }
 
     /// <summary>
-    /// 获取指定名称的颜色纹理。
+    /// Gets the texture.
     /// </summary>
-    /// <param name="name">纹理名称。</param>
-    /// <returns>纹理实例；不存在时返回 <c>null</c>。</returns>
     public TTexture? GetTexture(string name)
     {
         if (renderTexturesMap.TryGetValue(name, out var texture))
@@ -126,10 +140,8 @@ public abstract class RenderTargetBase<TTexture, TSelf> : IRuntimeGpuState
     }
 
     /// <summary>
-    /// 设置深度/模板纹理格式。
+    /// Sets the depth texture.
     /// </summary>
-    /// <param name="textureFormat">深度纹理格式。</param>
-    /// <returns>当前的渲染目标实例。</returns>
     public TSelf SetDepthTexture(TextureFormat textureFormat)
     {
         if (DepthTextureFormat == textureFormat)
@@ -142,15 +154,12 @@ public abstract class RenderTargetBase<TTexture, TSelf> : IRuntimeGpuState
     }
 
     /// <summary>
-    /// 向渲染目标添加一个颜色纹理。
+    /// Adds the render texture.
     /// </summary>
-    /// <param name="name">纹理名称。</param>
-    /// <param name="internalFormat">纹理内部格式。</param>
-    /// <returns>当前的渲染目标实例。</returns>
     public abstract TSelf AddRenderTexture(string name, TextureFormat internalFormat);
 
     /// <summary>
-    /// 同步所有附件纹理的尺寸到当前 <see cref="Width"/> / <see cref="Height"/>。
+    /// Performs the sync texture sizes operation.
     /// </summary>
     protected void SyncTextureSizes()
     {
@@ -165,9 +174,8 @@ public abstract class RenderTargetBase<TTexture, TSelf> : IRuntimeGpuState
     }
 
     /// <summary>
-    /// 销毁渲染目标及其关联的所有 GPU 资源。
+    /// Destroys the associated data.
     /// </summary>
-    /// <param name="gl">OpenGL 上下文。</param>
     public void Destroy(GL gl)
     {
         foreach (var texture in renderTextures)
@@ -190,8 +198,7 @@ public abstract class RenderTargetBase<TTexture, TSelf> : IRuntimeGpuState
     }
 
     /// <summary>
-    /// 上传渲染目标数据到 GPU。
+    /// Uploads the associated data.
     /// </summary>
-    /// <param name="gl">OpenGL 上下文。</param>
     public abstract void Upload(GL gl);
 }

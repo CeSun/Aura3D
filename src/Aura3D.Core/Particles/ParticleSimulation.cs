@@ -2,6 +2,9 @@ using System.Numerics;
 
 namespace Aura3D.Core.Particles;
 
+/// <summary>
+/// Represents the particle simulation type.
+/// </summary>
 public static class ParticleSimulation
 {
     /// <summary>
@@ -88,6 +91,9 @@ public static class ParticleSimulation
 
     // ===== Shape sampling =====
 
+    /// <summary>
+    /// Samples the position.
+    /// </summary>
     public static Vector3 SamplePosition(ParticleEmitter em, Random rng) => em.Shape switch
     {
         EmissionShape.Point => Vector3.Zero,

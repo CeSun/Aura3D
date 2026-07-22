@@ -4,35 +4,13 @@ using System.Numerics;
 namespace Aura3D.Core.Nodes;
 
 /// <summary>
-/// 类似 UE Hierarchical Instanced Static Mesh (HISM) 的层次化实例网格组。
-/// 将大量实例按空间位置通过八叉树分组，每组生成一个 <see cref="InstancedMesh"/>，
-/// 借助 <see cref="InstancedMesh"/> 自带的视锥体剔除实现高效的按组裁剪。
-///
-/// <para>异步重建：<see cref="Build"/> 将八叉树构建、实例数据填充等 CPU 重活
-/// 放到后台线程执行，主线程仅在 <see cref="BuildIfNeeded"/> 中完成场景图操作
-/// （旧分组移除、新分组挂载），GPU 上传由 RenderPipeline 自动处理。</para>
-///
-/// <para>增量更新：当 <see cref="UpdateInstance"/> 发现实例仍在原空间分组内时，
-/// 原地修改 InstancedMesh 的实例数据并递增资源版本，不触发重建；
-/// 仅在实例跨分组移动、增删实例时才回退到全量重建。</para>
-///
-/// 使用方式：
-/// <code>
-/// var group = new InstancedMeshGroup(sourceMesh);
-/// group.SetInstances(transforms);
-/// group.Build();  // 立即返回，后台线程执行
-/// scene.AddNode(group);
-///
-/// // 每帧 Update 自动调用 BuildIfNeeded() 完成主线程收尾
-/// </code>
+/// Represents the instanced mesh group type.
 /// </summary>
 public class InstancedMeshGroup : Node
 {
     /// <summary>
-    /// 初始化实例网格组。
+    /// Initializes a new instance of the instanced mesh group type.
     /// </summary>
-    /// <param name="sourceMesh">源网格，所有实例将共享此网格的几何体与材质。</param>
-    /// <exception cref="ArgumentNullException">sourceMesh 为 null 时抛出。</exception>
     public InstancedMeshGroup(Mesh sourceMesh)
     {
         SourceMesh = sourceMesh ?? throw new ArgumentNullException(nameof(sourceMesh));
@@ -40,49 +18,47 @@ public class InstancedMeshGroup : Node
     }
 
     /// <summary>
-    /// 获取源网格。
+    /// Gets the source mesh.
     /// </summary>
     public Mesh SourceMesh { get; }
 
     /// <summary>
-    /// 每个 InstancedMesh 分组最多容纳的实例数。默认 1024。
-    /// 数值越小分组越细，剔除精度越高但 DrawCall 也越多。
+    /// Gets or sets the max instances per group.
     /// </summary>
     public int MaxInstancesPerGroup { get; set; } = 1024;
 
     /// <summary>
-    /// 八叉树最大深度。默认 6。
-    /// 防止实例过于密集时无限递归。
+    /// Gets or sets the max depth.
     /// </summary>
     public int MaxDepth { get; set; } = 6;
 
     /// <summary>
-    /// 获取当前已创建的分组列表（调用 <see cref="Build"/> 后可用）。
+    /// Gets the groups.
     /// </summary>
     public IReadOnlyList<InstancedMesh> Groups => _groups;
 
     /// <summary>
-    /// 获取实例总数。
+    /// Gets the instance count.
     /// </summary>
     public int InstanceCount => _transforms.Count;
 
     /// <summary>
-    /// 获取分组数量。
+    /// Gets the group count.
     /// </summary>
     public int GroupCount => _groups.Count;
 
     /// <summary>
-    /// 获取自上次重建以来执行过的原地更新次数。
+    /// Gets or sets the in place update count.
     /// </summary>
     public int InPlaceUpdateCount { get; private set; }
 
     /// <summary>
-    /// 获取自上次重建以来触发过的全量重建次数。
+    /// Gets or sets the rebuild count.
     /// </summary>
     public int RebuildCount { get; private set; }
 
     /// <summary>
-    /// 获取是否有重建任务正在后台执行。
+    /// Gets a value indicating whether the object is building.
     /// </summary>
     public bool IsBuilding => _buildTask != null && !_buildTask.IsCompleted;
 
@@ -100,7 +76,7 @@ public class InstancedMeshGroup : Node
     private CancellationTokenSource? _buildCts;
 
     /// <summary>
-    /// 后台构建的结果，由工作线程产出、主线程消费。
+    /// Represents the build result type.
     /// </summary>
     private sealed class BuildResult
     {
@@ -115,9 +91,8 @@ public class InstancedMeshGroup : Node
     // ========================================================================
 
     /// <summary>
-    /// 一次性设置所有实例变换，取消当前后台构建并标记需要重建。
+    /// Sets the instances.
     /// </summary>
-    /// <param name="transforms">实例的世界变换矩阵列表。</param>
     public void SetInstances(IReadOnlyList<Matrix4x4> transforms)
     {
         CancelBuild();
@@ -127,10 +102,8 @@ public class InstancedMeshGroup : Node
     }
 
     /// <summary>
-    /// 追加一个实例并标记需要重建。
+    /// Adds the instance.
     /// </summary>
-    /// <param name="transform">实例的世界变换矩阵。</param>
-    /// <returns>新实例的索引。</returns>
     public int AddInstance(Matrix4x4 transform)
     {
         _transforms.Add(transform);
@@ -139,9 +112,8 @@ public class InstancedMeshGroup : Node
     }
 
     /// <summary>
-    /// 批量追加实例并标记需要重建。
+    /// Adds the instances.
     /// </summary>
-    /// <param name="transforms">要追加的变换矩阵集合。</param>
     public void AddInstances(IEnumerable<Matrix4x4> transforms)
     {
         _transforms.AddRange(transforms);
@@ -149,8 +121,7 @@ public class InstancedMeshGroup : Node
     }
 
     /// <summary>
-    /// 更新指定索引的实例变换。
-    /// 同区域内 → O(1) 原地更新；跨区域 → 标记重建。
+    /// Updates the instance.
     /// </summary>
     public void UpdateInstance(int index, Matrix4x4 transform)
     {
@@ -166,7 +137,7 @@ public class InstancedMeshGroup : Node
     }
 
     /// <summary>
-    /// 移除指定索引的实例并标记需要重建。
+    /// Removes the instance.
     /// </summary>
     public void RemoveInstance(int index)
     {
@@ -178,7 +149,7 @@ public class InstancedMeshGroup : Node
     }
 
     /// <summary>
-    /// 清空所有实例。
+    /// Clears the instances.
     /// </summary>
     public void ClearInstances()
     {
@@ -188,9 +159,7 @@ public class InstancedMeshGroup : Node
     }
 
     /// <summary>
-    /// 启动后台重建（立即返回）。
-    /// 八叉树构建、实例分组的 CPU 重活在后台线程执行，
-    /// 主线程在 <see cref="BuildIfNeeded"/> 中完成场景图挂载。
+    /// Builds the associated data.
     /// </summary>
     public void Build()
     {
@@ -274,8 +243,7 @@ public class InstancedMeshGroup : Node
     }
 
     /// <summary>
-    /// 如果后台构建完成则在主线程完成场景图挂载，然后 GPU 上传由 RenderPipeline 处理。
-    /// 通常由 <see cref="Update"/> 每帧自动调用。
+    /// Builds the if needed.
     /// </summary>
     public void BuildIfNeeded()
     {
@@ -297,7 +265,7 @@ public class InstancedMeshGroup : Node
     }
 
     /// <summary>
-    /// 每帧更新：自动调用 <see cref="BuildIfNeeded"/>。
+    /// Updates the associated data.
     /// </summary>
     public override void Update(double delta)
     {
@@ -319,7 +287,7 @@ public class InstancedMeshGroup : Node
     }
 
     /// <summary>
-    /// 在主线程完成构建结果的场景图挂载。
+    /// Performs the finalize build operation.
     /// </summary>
     private void FinalizeBuild(BuildResult result)
     {
@@ -346,7 +314,7 @@ public class InstancedMeshGroup : Node
     }
 
     /// <summary>
-    /// 空实例时的收尾（直接在主线程完成）。
+    /// Performs the finalize empty operation.
     /// </summary>
     private void FinalizeEmpty()
     {
@@ -444,8 +412,7 @@ public class InstancedMeshGroup : Node
 }
 
 /// <summary>
-/// 内部八叉树节点，用于按空间位置对实例进行分组。
-/// Build 后保留树结构供增量更新时按位置查找所属分组。
+/// Represents the instance octree node type.
 /// </summary>
 internal class InstanceOctreeNode
 {

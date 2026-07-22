@@ -4,24 +4,33 @@ using System.Runtime.InteropServices;
 namespace Aura3D.Core.Resources;
 
 /// <summary>
-/// 立方体纹理类，用于天空盒等需要6面纹理的场景
+/// Represents the cube texture type.
 /// </summary>
 public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
 {
     private List<byte>[] _data = [[], [], [], [], [], []];
 
+    /// <summary>
+    /// Performs the as ldr data operation.
+    /// </summary>
     public ReadOnlySpan<byte> AsLdrData(int faceIndex)
     {
         ValidateFaceIndex(faceIndex);
         return IsHdr ? [] : CollectionsMarshal.AsSpan(_data[faceIndex]);
     }
 
+    /// <summary>
+    /// Performs the as hdr data operation.
+    /// </summary>
     public ReadOnlySpan<float> AsHdrData(int faceIndex)
     {
         ValidateFaceIndex(faceIndex);
         return IsHdr ? MemoryMarshal.Cast<byte, float>(CollectionsMarshal.AsSpan(_data[faceIndex])) : [];
     }
 
+    /// <summary>
+    /// Sets the ldr face data.
+    /// </summary>
     public CubeTexture SetLdrFaceData(int faceIndex, ReadOnlySpan<byte> data)
     {
         ValidateFaceIndex(faceIndex);
@@ -31,6 +40,9 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
         return this;
     }
 
+    /// <summary>
+    /// Sets the hdr face data.
+    /// </summary>
     public CubeTexture SetHdrFaceData(int faceIndex, ReadOnlySpan<float> data)
     {
         ValidateFaceIndex(faceIndex);
@@ -40,6 +52,9 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
         return this;
     }
 
+    /// <summary>
+    /// Clones the associated data.
+    /// </summary>
     public CubeTexture Clone()
     {
         var texture = new CubeTexture
@@ -59,6 +74,9 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
         return texture;
     }
 
+    /// <summary>
+    /// Deep-clones the associated data.
+    /// </summary>
     public CubeTexture DeepClone()
     {
         var texture = Clone();
@@ -72,6 +90,9 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
     }
 
     private TextureWrapMode _wrapR = TextureWrapMode.ClampToEdge;
+    /// <summary>
+    /// Gets the wrap r.
+    /// </summary>
     public TextureWrapMode WrapR
     {
         get => _wrapR;
@@ -102,17 +123,14 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
 
 
 /// <summary>
-/// HDRI 到立方体纹理转换器
+/// Represents the hdri to cube texture converter type.
 /// </summary>
 public class HDRIToCubeTextureConverter
 {
 
     /// <summary>
-    /// 从全景纹理转换为立方体纹理
+    /// Performs the convert from texture operation.
     /// </summary>
-    /// <param name="texture">全景纹理</param>
-    /// <param name="cubeFaceSize">立方体每个面的大小</param>
-    /// <returns>立方体纹理</returns>
     public static CubeTexture ConvertFromTexture(Texture texture, uint cubeFaceSize)
     {
         var cubeTexture = new CubeTexture();

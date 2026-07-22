@@ -8,17 +8,24 @@ using System.Numerics;
 namespace Aura3D.Core;
 
 /// <summary>
-/// Particle render pass using billboard quads + GPU instancing.
-/// Renders directly from ParticleSystem nodes, bypassing the InstancedMesh pipeline.
-/// GPU buffer upload is managed by the render pipeline on first use.
+/// Represents the particle pass type.
 /// </summary>
 public class ParticlePass : RenderPass
 {
+    /// <summary>
+    /// Gets or sets the default particle size.
+    /// </summary>
     public float DefaultParticleSize { get; set; } = 1.0f;
+    /// <summary>
+    /// Gets or sets the global alpha.
+    /// </summary>
     public float GlobalAlpha { get; set; } = 1.0f;
 
     private readonly ParticleQuadGeometry _quadGeometry = new();
 
+    /// <summary>
+    /// Initializes a new instance of the particle pass type.
+    /// </summary>
     public ParticlePass(RenderPipeline renderPipeline) : base(renderPipeline)
     {
         ShaderName = nameof(ParticlePass);
@@ -111,6 +118,9 @@ public class ParticlePass : RenderPass
             """;
     }
 
+    /// <summary>
+    /// Performs the before render operation.
+    /// </summary>
     public override void BeforeRender(Camera camera)
     {
         BindOutputRenderTarget(camera);
@@ -121,6 +131,9 @@ public class ParticlePass : RenderPass
         gl.DepthMask(true);
     }
 
+    /// <summary>
+    /// Renders the associated data.
+    /// </summary>
     public override void Render(Camera camera)
     {
         Matrix4x4.Invert(camera.View, out var invView);
@@ -149,6 +162,9 @@ public class ParticlePass : RenderPass
         gl.Disable(EnableCap.Blend);
     }
 
+    /// <summary>
+    /// Performs the after render operation.
+    /// </summary>
     public override void AfterRender(Camera camera) { }
 
     private void RenderParticleSystems(

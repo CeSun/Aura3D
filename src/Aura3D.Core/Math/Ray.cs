@@ -3,25 +3,23 @@ using System.Numerics;
 namespace Aura3D.Core.Math;
 
 /// <summary>
-/// 表示 3D 空间中的一条射线，由原点和单位方向向量定义。
+/// Represents the ray type.
 /// </summary>
 public struct Ray
 {
     /// <summary>
-    /// 射线的起点。
+    /// Gets the origin.
     /// </summary>
     public Vector3 Origin;
 
     /// <summary>
-    /// 射线的单位方向向量。
+    /// Gets the direction.
     /// </summary>
     public Vector3 Direction;
 
     /// <summary>
-    /// 初始化 <see cref="Ray"/> 结构的新实例，自动归一化方向向量。
+    /// Initializes a new instance of the ray type.
     /// </summary>
-    /// <param name="origin">射线起点。</param>
-    /// <param name="direction">射线方向（会被归一化）。</param>
     public Ray(Vector3 origin, Vector3 direction)
     {
         Origin = origin;
@@ -29,21 +27,16 @@ public struct Ray
     }
 
     /// <summary>
-    /// 获取射线上沿方向距离为 t 的点。
+    /// Gets the point.
     /// </summary>
-    /// <param name="t">沿射线方向的距离。</param>
-    /// <returns>世界空间中的点。</returns>
     public Vector3 GetPoint(float t)
     {
         return Origin + Direction * t;
     }
 
     /// <summary>
-    /// 检测射线与 <see cref="BoundingBox"/> 的相交，返回射线原点到交点的参数 t。
-    /// 使用平板法（slab method）进行高效的 AABB 相交检测。
+    /// Performs the intersects operation.
     /// </summary>
-    /// <param name="box">要检测的轴对齐包围盒。</param>
-    /// <returns>入口点的 t 值（沿射线方向的距离），不相交则返回 null。</returns>
     public float? Intersects(BoundingBox box)
     {
         // 计算每个轴分量的逆方向，用于平板相交测试
@@ -109,12 +102,8 @@ public struct Ray
     }
 
     /// <summary>
-    /// 使用 Möller–Trumbore 算法检测射线与三角形的相交。
+    /// Performs the intersects triangle operation.
     /// </summary>
-    /// <param name="v0">三角形顶点 0。</param>
-    /// <param name="v1">三角形顶点 1。</param>
-    /// <param name="v2">三角形顶点 2。</param>
-    /// <returns>命中点的 t 值（沿射线方向的距离），不相交则返回 null。</returns>
     public float? IntersectsTriangle(Vector3 v0, Vector3 v1, Vector3 v2)
     {
         const float epsilon = 1e-6f;

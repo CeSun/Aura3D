@@ -5,31 +5,82 @@ using System.Numerics;
 
 namespace Aura3D.Core.Particles;
 
+/// <summary>
+/// Represents the particle emitter type.
+/// </summary>
 public class ParticleEmitter
 {
     // ---- Emission ----
 
+    /// <summary>
+    /// Gets or sets the emission rate.
+    /// </summary>
     public float EmissionRate { get; set; } = 100f;
+    /// <summary>
+    /// Gets or sets the shape.
+    /// </summary>
     public EmissionShape Shape { get; set; } = EmissionShape.Point;
+    /// <summary>
+    /// Gets or sets the shape size.
+    /// </summary>
     public Vector3 ShapeSize { get; set; } = Vector3.One;
+    /// <summary>
+    /// Gets or sets the cone angle.
+    /// </summary>
     public float ConeAngle { get; set; } = 30f;
+    /// <summary>
+    /// Gets or sets the looping.
+    /// </summary>
     public bool Looping { get; set; } = true;
+    /// <summary>
+    /// Gets or sets the duration.
+    /// </summary>
     public float Duration { get; set; } = 0f;
 
     // ---- Particle properties ----
 
+    /// <summary>
+    /// Gets or sets the lifetime.
+    /// </summary>
     public RangeFloat Lifetime { get; set; } = new(1f, 3f);
+    /// <summary>
+    /// Gets or sets the velocity.
+    /// </summary>
     public RangeVector3 Velocity { get; set; } = new(new(0, 5, 0), new(0, 10, 0));
+    /// <summary>
+    /// Gets or sets the start size.
+    /// </summary>
     public RangeFloat StartSize { get; set; } = new(0.1f, 0.3f);
+    /// <summary>
+    /// Gets or sets the end size.
+    /// </summary>
     public RangeFloat EndSize { get; set; } = new(0.01f, 0.05f);
+    /// <summary>
+    /// Gets or sets the start color.
+    /// </summary>
     public Color StartColor { get; set; } = Color.White;
+    /// <summary>
+    /// Gets or sets the end color.
+    /// </summary>
     public Color EndColor { get; set; } = Color.Transparent;
+    /// <summary>
+    /// Gets or sets the rotation.
+    /// </summary>
     public RangeFloat Rotation { get; set; } = new(0f, MathF.PI * 2);
+    /// <summary>
+    /// Gets or sets the angular velocity.
+    /// </summary>
     public RangeFloat AngularVelocity { get; set; } = new(-1f, 1f);
 
     // ---- Physics ----
 
+    /// <summary>
+    /// Gets or sets the gravity.
+    /// </summary>
     public Vector3 Gravity { get; set; } = new(0f, -9.8f, 0f);
+    /// <summary>
+    /// Gets or sets the damping.
+    /// </summary>
     public float Damping { get; set; } = 0f;
 
     // ---- Billboard rendering (per-emitter) ----
@@ -79,8 +130,17 @@ public class ParticleEmitter
 
     // ---- Runtime state (managed by ParticleSystem) ----
 
+    /// <summary>
+    /// Gets or sets the elapsed time.
+    /// </summary>
     public float ElapsedTime { get; internal set; }
+    /// <summary>
+    /// Gets or sets the emission accumulator.
+    /// </summary>
     public float EmissionAccumulator { get; internal set; }
+    /// <summary>
+    /// Gets a value indicating whether the object is finished.
+    /// </summary>
     public bool IsFinished => !Looping && Duration > 0 && ElapsedTime >= Duration;
 
     /// <summary>Whether this emitter renders through the mesh pipeline (true) or billboard pipeline (false).</summary>
@@ -95,9 +155,15 @@ public class ParticleEmitter
 
     // ---- Color helpers ----
 
+    /// <summary>
+    /// Gets the start color vector.
+    /// </summary>
     public Vector4 GetStartColorVector() =>
         new(StartColor.R / 255f, StartColor.G / 255f, StartColor.B / 255f, StartColor.A / 255f);
 
+    /// <summary>
+    /// Gets the end color vector.
+    /// </summary>
     public Vector4 GetEndColorVector() =>
         new(EndColor.R / 255f, EndColor.G / 255f, EndColor.B / 255f, EndColor.A / 255f);
 

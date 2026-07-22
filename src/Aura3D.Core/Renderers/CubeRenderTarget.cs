@@ -3,13 +3,22 @@ using Silk.NET.OpenGLES;
 
 namespace Aura3D.Core.Renderers;
 
+/// <summary>
+/// Represents the cube render target type.
+/// </summary>
 public class CubeRenderTarget : RenderTargetBase<RenderCubeTexture, CubeRenderTarget>
 {
+    /// <summary>
+    /// Initializes a new instance of the cube render target type.
+    /// </summary>
     public CubeRenderTarget()
     {
         depthStencilTexture = new RenderCubeTexture(this);
     }
 
+    /// <summary>
+    /// Adds the render texture.
+    /// </summary>
     public override CubeRenderTarget AddRenderTexture(string name, TextureFormat internalFormat)
     {
         renderTextures.Add(new RenderCubeTexture(this)
@@ -23,6 +32,9 @@ public class CubeRenderTarget : RenderTargetBase<RenderCubeTexture, CubeRenderTa
     }
 
 
+    /// <summary>
+    /// Uploads the associated data.
+    /// </summary>
     public override unsafe void Upload(GL gl)
     {
 
@@ -97,11 +109,14 @@ public class CubeRenderTarget : RenderTargetBase<RenderCubeTexture, CubeRenderTa
 
 
 /// <summary>
-/// 渲染目标内部的 Cube 纹理实现类。
+/// Represents the render cube texture type.
 /// </summary>
 public sealed class RenderCubeTexture : CubeTexture, IRenderTargetTexture
 {
 
+    /// <summary>
+    /// Initializes a new instance of the render cube texture type.
+    /// </summary>
     public RenderCubeTexture(CubeRenderTarget rt)
     {
         RenderTarget = rt;
@@ -116,7 +131,13 @@ public sealed class RenderCubeTexture : CubeTexture, IRenderTargetTexture
 
     internal CubeTextureGpuState? CachedGpuState { get; set; }
 
+    /// <summary>
+    /// Gets or sets the texture id.
+    /// </summary>
     public uint TextureId { get; set; }
 
+    /// <summary>
+    /// Gets or sets the internal format.
+    /// </summary>
     public TextureFormat InternalFormat { get; set; }
 }

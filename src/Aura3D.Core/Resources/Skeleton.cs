@@ -8,30 +8,32 @@ using System.Threading.Tasks;
 namespace Aura3D.Core.Resources;
 
 /// <summary>
-/// 骨骼系统，包含所有骨骼的层级结构
+/// Represents the skeleton type.
 /// </summary>
 public class Skeleton
 {
     /// <summary>
-    /// 所有骨骼的列表
+    /// Gets the bones.
     /// </summary>
     public List<Bone> Bones { get; } = new();
 
     /// <summary>
-    /// 根骨骼
+    /// Gets or sets the root.
     /// </summary>
     public Bone Root { get; set; } = new();
 
     /// <summary>
-    /// 骨骼名称到索引的映射缓存，用于快速查找
+    /// Gets the bone index cache.
     /// </summary>
     private Dictionary<string, int>? _boneIndexCache;
 
     /// <summary>
-    /// 静态绑定位姿的骨骼矩阵 UBO（懒创建）。
-    /// 当网格有 <see cref="IAnimationSampler"/> 时优先使用采样器的缓冲区。
+    /// Gets the bone matrix buffer.
     /// </summary>
     private BoneMatrixBuffer? _boneMatrixBuffer;
+    /// <summary>
+    /// Gets the bone matrix buffer.
+    /// </summary>
     public BoneMatrixBuffer BoneMatrixBuffer
     {
         get
@@ -42,9 +44,8 @@ public class Skeleton
     }
 
     /// <summary>
-    /// 获取骨骼名称到索引的映射。首次访问时构建缓存。
+    /// Gets the bone index map.
     /// </summary>
-    /// <returns>骨骼名称到索引的字典</returns>
     public Dictionary<string, int> GetBoneIndexMap()
     {
         if (_boneIndexCache == null)
@@ -59,10 +60,8 @@ public class Skeleton
     }
 
     /// <summary>
-    /// 根据骨骼名称获取索引
+    /// Gets the bone index.
     /// </summary>
-    /// <param name="boneName">骨骼名称</param>
-    /// <returns>骨骼索引，如果未找到则返回 -1</returns>
     public int GetBoneIndex(string boneName)
     {
         if (GetBoneIndexMap().TryGetValue(boneName, out var index))
@@ -74,42 +73,42 @@ public class Skeleton
 }
 
 /// <summary>
-/// 骨骼类，表示骨骼层级中的一个节点
+/// Represents the bone type.
 /// </summary>
 public class Bone
 {
     /// <summary>
-    /// 骨骼名称
+    /// Gets or sets the name.
     /// </summary>
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// 骨骼索引
+    /// Gets or sets the index.
     /// </summary>
     public int Index { get; set; } = -1;
 
     /// <summary>
-    /// 逆世界矩阵，用于蒙皮
+    /// Gets or sets the inverse world matrix.
     /// </summary>
     public Matrix4x4 InverseWorldMatrix { get; set; } = Matrix4x4.Identity;
 
     /// <summary>
-    /// 局部矩阵
+    /// Gets or sets the local matrix.
     /// </summary>
     public Matrix4x4 LocalMatrix { get; set; } = Matrix4x4.Identity;
 
     /// <summary>
-    /// 世界矩阵
+    /// Gets or sets the world matrix.
     /// </summary>
     public Matrix4x4 WorldMatrix { get; set; } = Matrix4x4.Identity;
 
     /// <summary>
-    /// 父骨骼
+    /// Gets or sets the parent.
     /// </summary>
     public Bone? Parent { get; set; }
 
     /// <summary>
-    /// 子骨骼列表
+    /// Gets the children.
     /// </summary>
     public List<Bone> Children { get; } = new();
 }

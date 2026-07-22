@@ -1,19 +1,17 @@
-﻿using Aura3D.Core.Math;
+using Aura3D.Core.Math;
 using Aura3D.Core.Resources;
 using System.Numerics;
 
 namespace Aura3D.Core.Nodes;
 
 /// <summary>
-/// 表示一个可用于实例化渲染的网格节点。
+/// Represents the instanced mesh type.
 /// </summary>
 public class InstancedMesh : Node
 {
     /// <summary>
-    /// 添加一个新的实例。
+    /// Adds the instance.
     /// </summary>
-    /// <param name="transform">实例的模型变换矩阵。</param>
-    /// <returns>新实例的索引。</returns>
     public unsafe int AddInstance(Matrix4x4 transform)
     {
         _instanceCount = geometry.AddInstance(transform) + 1;
@@ -24,6 +22,9 @@ public class InstancedMesh : Node
     }
 
 
+    /// <summary>
+    /// Removes the instance.
+    /// </summary>
     public void RemoveInstance(int index)
     {
         geometry.RemoveInstance(index);
@@ -36,6 +37,9 @@ public class InstancedMesh : Node
         }
     }
 
+    /// <summary>
+    /// Updates the instance.
+    /// </summary>
     public unsafe void UpdateInstance(int index, Matrix4x4 transform)
     {
         geometry.UpdateInstance(index, transform);
@@ -47,6 +51,9 @@ public class InstancedMesh : Node
 
     private Material? _material;
 
+    /// <summary>
+    /// Gets the material.
+    /// </summary>
     public Material? Material
     {
         get => _material;
@@ -59,28 +66,33 @@ public class InstancedMesh : Node
 
     private InstancedGeometry geometry { get; set; } = null!;
 
+    /// <summary>
+    /// Gets the indices count.
+    /// </summary>
     public int IndicesCount => geometry.IndicesCount;
 
+    /// <summary>
+    /// Gets the instance count.
+    /// </summary>
     public int InstanceCount => _instanceCount;
 
     /// <summary>
-    /// 图元类型，委托给内部 Geometry。
+    /// Gets the primitive type.
     /// </summary>
     public Aura3D.Core.Resources.PrimitiveType PrimitiveType => geometry.PrimitiveType;
 
     /// <summary>
-    /// 顶点数量，委托给内部 Geometry。
+    /// Gets the vertex count.
     /// </summary>
     public int VertexCount => geometry.VertexCount;
 
     /// <summary>
-    /// 获取或设置是否对此 InstancedMesh 启用视锥体剔除。
+    /// Gets or sets the enable frustum culling.
     /// </summary>
     public bool EnableFrustumCulling { get; set; } = true;
 
     /// <summary>
-    /// 获取局部空间中的包围盒（从源几何体计算，不考虑实例变换）。
-    /// 如果几何体没有位置数据，则为 <c>null</c>。
+    /// Gets the local bounding box.
     /// </summary>
     public BoundingBox? LocalBoundingBox
     {
@@ -99,23 +111,22 @@ public class InstancedMesh : Node
     private bool _localBoundingBoxComputed;
 
     /// <summary>
-    /// 每个实例的世界空间包围盒缓存。
+    /// Performs the new operation.
     /// </summary>
     private readonly List<BoundingBox?> _instanceWorldBoundingBoxes = new();
 
     /// <summary>
-    /// 世界包围盒脏标记，当实例发生增删改时设为 true。
+    /// Gets the world bounding box dirty.
     /// </summary>
     private bool _worldBoundingBoxDirty = true;
 
     /// <summary>
-    /// 合并后的世界空间包围盒缓存。
+    /// Gets the cached world bounding box.
     /// </summary>
     private BoundingBox? _cachedWorldBoundingBox;
 
     /// <summary>
-    /// 获取合并后的世界空间包围盒（所有实例包围盒的并集）。
-    /// 如果没有实例或没有局部包围盒，则为 <c>null</c>。
+    /// Gets the world bounding box.
     /// </summary>
     public BoundingBox? WorldBoundingBox
     {
@@ -131,10 +142,8 @@ public class InstancedMesh : Node
     }
 
     /// <summary>
-    /// 获取指定索引实例的世界空间包围盒。
+    /// Gets the instance world bounding box.
     /// </summary>
-    /// <param name="index">实例索引。</param>
-    /// <returns>该实例的世界包围盒；如果索引无效或没有局部包围盒则为 <c>null</c>。</returns>
     public BoundingBox? GetInstanceWorldBoundingBox(int index)
     {
         if (index < 0 || index >= _instanceWorldBoundingBoxes.Count)
@@ -143,29 +152,24 @@ public class InstancedMesh : Node
     }
 
     /// <summary>
-    /// 获取指定索引实例的世界变换矩阵。
+    /// Gets the instance transform.
     /// </summary>
-    /// <param name="index">实例索引。</param>
-    /// <returns>世界变换矩阵；如果索引无效则返回 null。</returns>
     public unsafe Matrix4x4? GetInstanceTransform(int index)
     {
         return geometry.GetInstanceTransform(index);
     }
 
     /// <summary>
-    /// 获取底层几何体数据，用于射线三角形相交检测等。
+    /// Gets the geometry.
     /// </summary>
-    /// <returns>底层 <see cref="Geometry"/> 实例。</returns>
     public Geometry? GetGeometry()
     {
         return geometry;
     }
 
     /// <summary>
-    /// 测试此 InstancedMesh 的合并世界包围盒是否在给定视锥体内。
+    /// Determines whether inside frustum.
     /// </summary>
-    /// <param name="planes">视锥体的 6 个裁剪平面。</param>
-    /// <returns>如果在视锥体内或相交则为 <c>true</c>，完全在外则为 <c>false</c>。</returns>
     public bool IsInsideFrustum(Span<Plane> planes)
     {
         var wbb = WorldBoundingBox;
@@ -175,7 +179,7 @@ public class InstancedMesh : Node
     }
 
     /// <summary>
-    /// 从源几何体的 Position 属性计算局部包围盒。
+    /// Computes the local bounding box.
     /// </summary>
     private BoundingBox? ComputeLocalBoundingBox()
     {
@@ -196,7 +200,7 @@ public class InstancedMesh : Node
     }
 
     /// <summary>
-    /// 更新指定实例的世界包围盒。
+    /// Updates the instance world bounding box.
     /// </summary>
     private void UpdateInstanceWorldBoundingBox(int index, Matrix4x4 transform)
     {
@@ -220,7 +224,7 @@ public class InstancedMesh : Node
     }
 
     /// <summary>
-    /// 计算合并后的世界空间包围盒（所有实例包围盒的并集）。
+    /// Computes the world bounding box.
     /// </summary>
     private BoundingBox? ComputeWorldBoundingBox()
     {
@@ -238,10 +242,8 @@ public class InstancedMesh : Node
     }
 
     /// <summary>
-    /// 从给定的网格创建一个实例化网格节点。
+    /// Performs the from mesh operation.
     /// </summary>
-    /// <param name="mesh">要实例化的网格。</param>
-    /// <returns>创建的实例化网格节点。</returns>
     public static InstancedMesh FromMesh(Mesh mesh)
     {
         if (mesh.Geometry == null)
@@ -263,22 +265,16 @@ public class InstancedMesh : Node
     }
 
     /// <summary>
-    /// 开启或关闭指定逐实例属性的上传。
+    /// Sets the attribute enabled.
     /// </summary>
-    /// <param name="name">属性名称。</param>
-    /// <param name="enabled">是否启用上传。</param>
     public void SetAttributeEnabled(string name, bool enabled)
     {
         geometry.SetAttributeEnabled(name, enabled);
     }
 
     /// <summary>
-    /// 设置通用的逐实例自定义属性。
+    /// Sets the instance attribute.
     /// </summary>
-    /// <typeparam name="T">非托管值类型，每个实例的数据元素。</typeparam>
-    /// <param name="attribute">内置顶点属性枚举，同时作为名称和 location。</param>
-    /// <param name="componentCount">分量数：1=float, 2=vec2, 3=vec3, 4=vec4。</param>
-    /// <param name="data">逐实例数据列表，数量必须与 <see cref="InstanceCount"/> 一致。</param>
     public unsafe void SetInstanceAttribute<T>(BuildInVertexAttribute attribute, int componentCount, IReadOnlyList<T> data)
         where T : unmanaged
     {

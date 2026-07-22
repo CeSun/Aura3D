@@ -8,11 +8,7 @@ using System.Numerics;
 namespace Aura3D.Core.Renderers;
 
 /// <summary>
-/// 调试绘制渲染通道，使用即时模式（Begin/Vertex/End）直接渲染
-/// 坐标轴、网格等引擎内置调试可视化元素。
-/// 渲染到自有 RenderTarget（带颜色+深度附件），支持从场景渲染目标拷贝深度缓冲以实现正确的遮挡关系，
-/// 最后将结果写回相机 FBO。
-/// 该通道在每帧最后执行。
+/// Represents the debug draw pass type.
 /// </summary>
 public class DebugDrawPass : RenderPass
 {
@@ -20,16 +16,8 @@ public class DebugDrawPass : RenderPass
     private readonly RenderTargetHandle? _depthRenderTarget;
 
     /// <summary>
-    /// 初始化 <see cref="DebugDrawPass"/> 类的新实例。
+    /// Initializes a new instance of the debug draw pass type.
     /// </summary>
-    /// <param name="renderPipeline">所属的渲染管线。</param>
-    /// <param name="debugOutput">调试绘制使用的中间渲染目标。</param>
-    /// <param name="depthRenderTarget">
-    /// 深度缓冲源渲染目标引用（如 BaseRenderTarget）。
-    /// 传入非 null 值时，会将场景深度缓冲拷贝到调试 RenderTarget，
-    /// 使网格等调试元素能被场景几何体正确遮挡。
-    /// 传入 null 时仅清除深度缓冲。
-    /// </param>
     public DebugDrawPass(RenderPipeline renderPipeline, RenderTargetHandle debugOutput, RenderTargetHandle? depthRenderTarget = null)
         : base(renderPipeline)
     {
@@ -83,7 +71,7 @@ public class DebugDrawPass : RenderPass
     }
 
     /// <summary>
-    /// 执行指定相机的调试绘制渲染。
+    /// Renders the associated data.
     /// </summary>
     public override void Render(Camera camera)
     {

@@ -8,45 +8,43 @@ using System.Reflection.Metadata.Ecma335;
 namespace Aura3D.Core.Nodes;
 
 /// <summary>
-/// 模型节点，用于组织和管理包含多个 <see cref="Mesh"/> 的层级结构，支持骨骼动画。
+/// Represents the model type.
 /// </summary>
 public class Model : Node
 {
     /// <summary>
-    /// 获取或设置模型的骨骼数据。
+    /// Gets or sets the skeleton.
     /// </summary>
     public Skeleton? Skeleton { get; set; }
 
     /// <summary>
-    /// 获取或设置模型的动画采样器。
+    /// Gets or sets the animation sampler.
     /// </summary>
     public IAnimationSampler? AnimationSampler { get; set; }
 
     /// <summary>
-    /// 获取模型及其子节点中的所有网格。
+    /// Gets the meshes.
     /// </summary>
     public IReadOnlyList<Mesh> Meshes => GetNodesInChildren<Mesh>();
 
     /// <summary>
-    /// 获取一个值，指示该模型是否为骨骼模型。
+    /// Gets a value indicating whether the object is skinned model.
     /// </summary>
     public bool IsSkinnedModel => Skeleton != null;
 
     /// <summary>
-    /// 获取或设置包围盒的扩展量（模型局部空间），用于补偿动画导致的肢体超出。
+    /// Gets or sets the bounding box padding.
     /// </summary>
     public float BoundingBoxPadding { get; set; }
 
     /// <summary>
-    /// 获取或设置开发者手动指定的模型局部空间包围盒。
-    /// 非 null 时将覆盖所有自动计算的包围盒。
+    /// Gets or sets the custom bounding box.
     /// </summary>
     public BoundingBox? CustomBoundingBox { get; set; }
 
     /// <summary>
-    /// 更新模型状态，驱动骨骼动画。包围盒不再随动画更新，仅在 WorldTransform 变更时刷新。
+    /// Updates the associated data.
     /// </summary>
-    /// <param name="delta">时间增量（秒）。</param>
     public override void Update(double delta)
     {
         if (IsSkinnedModel == false)
@@ -61,10 +59,8 @@ public class Model : Node
     }
 
     /// <summary>
-    /// 克隆当前模型及其子节点。
+    /// Clones the associated data.
     /// </summary>
-    /// <param name="copyType">克隆类型，决定资源是共享还是深拷贝。</param>
-    /// <returns>克隆后的模型。</returns>
     public virtual Model Clone(CopyType copyType = CopyType.SharedResource)
     {
         var model = (Model)clone(this, null, copyType);
@@ -92,6 +88,9 @@ public class Model : Node
         return model;
     }
 
+    /// <summary>
+    /// Performs the clone operation.
+    /// </summary>
     protected Node clone(Node node, Node? parentNode, CopyType copyType)
     {
         Node? cloneNode = null;
@@ -200,7 +199,7 @@ public class Model : Node
     }
 
     /// <summary>
-    /// 获取模型所有网格合并后的边界框。
+    /// Gets the bounding box.
     /// </summary>
     public BoundingBox BoundingBox
     {
@@ -225,19 +224,14 @@ public class Model : Node
 
 
 /// <summary>
-/// 提供模型相关的辅助方法。
+/// Represents the model helper type.
 /// </summary>
 public static class ModelHelper
 {
 
     /// <summary>
-    /// 计算顶点的切线与副切线（TBN）。
+    /// Performs the calc vertics tbn operation.
     /// </summary>
-    /// <param name="indices">索引列表。</param>
-    /// <param name="vertexNormals">顶点法线列表。</param>
-    /// <param name="uvs">纹理坐标列表。</param>
-    /// <param name="tangents">输出的切线列表。</param>
-    /// <param name="bitangents">输出的副切线列表。</param>
     public static void CalcVerticsTbn(IReadOnlyList<uint> indices, IReadOnlyList<float> vertexNormals, IReadOnlyList<float> uvs, out List<float> tangents, out List<float> bitangents)
     {
         tangents = new List<float>();

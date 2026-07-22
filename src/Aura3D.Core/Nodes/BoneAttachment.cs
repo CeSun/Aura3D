@@ -3,30 +3,31 @@ using System.Numerics;
 namespace Aura3D.Core.Nodes;
 
 /// <summary>
-/// 骨骼附着节点，将其自身变换绑定到指定骨骼的世界矩阵上，
-/// 使子节点能够跟随骨骼动画运动。
-/// 使用 Mesh 的世界矩阵进行计算，正确处理 Model 与 Mesh 之间的中间节点变换。
+/// Represents the bone attachment type.
 /// </summary>
 public class BoneAttachment : Node
 {
     /// <summary>
-    /// 目标骨骼网格，提供骨骼数据、动画采样器和世界变换
+    /// Gets or sets the mesh.
     /// </summary>
     public Mesh? Mesh { get; set; }
 
     /// <summary>
-    /// 目标骨骼名称
+    /// Gets or sets the bone name.
     /// </summary>
     public string BoneName { get; set; } = string.Empty;
 
     /// <summary>
-    /// 相对于骨骼空间的局部偏移矩阵
+    /// Gets or sets the local offset.
     /// </summary>
     public Matrix4x4 LocalOffset { get; set; } = Matrix4x4.Identity;
 
     private int _cachedBoneIndex = -1;
     private Mesh? _cachedMesh;
 
+    /// <summary>
+    /// Updates the associated data.
+    /// </summary>
     public override void Update(double delta)
     {
         if (Mesh == null) 

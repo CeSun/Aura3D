@@ -4,12 +4,12 @@ using Silk.NET.OpenGLES;
 namespace Aura3D.Core.Renderers;
 
 /// <summary>
-/// 渲染目标类，用于管理帧缓冲对象及其关联的颜色纹理和深度/模板纹理。
+/// Represents the render target type.
 /// </summary>
 public class RenderTarget : RenderTargetBase<RenderTexture, RenderTarget>
 {
     /// <summary>
-    /// 初始化 <see cref="RenderTarget"/> 类的新实例。
+    /// Initializes a new instance of the render target type.
     /// </summary>
     public RenderTarget()
     {
@@ -17,11 +17,8 @@ public class RenderTarget : RenderTargetBase<RenderTexture, RenderTarget>
     }
 
     /// <summary>
-    /// 向渲染目标添加一个颜色纹理。
+    /// Adds the render texture.
     /// </summary>
-    /// <param name="name">纹理名称。</param>
-    /// <param name="internalFormat">纹理内部格式。</param>
-    /// <returns>当前的 <see cref="RenderTarget"/> 实例。</returns>
     public override RenderTarget AddRenderTexture(string name, TextureFormat internalFormat)
     {
         renderTextures.Add(new RenderTexture(this)
@@ -35,10 +32,8 @@ public class RenderTarget : RenderTargetBase<RenderTexture, RenderTarget>
     }
 
     /// <summary>
-    /// 上传渲染目标数据到 GPU。
+    /// Uploads the associated data.
     /// </summary>
-    /// <param name="gl">OpenGL 上下文。</param>
-    /// <exception cref="InvalidOperationException">当帧缓冲创建失败时抛出。</exception>
     public override unsafe void Upload(GL gl)
     {
         FrameBufferId = gl.GenFramebuffer();
@@ -96,15 +91,14 @@ public class RenderTarget : RenderTargetBase<RenderTexture, RenderTarget>
 
 
 /// <summary>
-/// 渲染目标内部的 2D 纹理实现类。
+/// Represents the render texture type.
 /// </summary>
 public sealed class RenderTexture : Aura3D.Core.Resources.Texture, IRenderTargetTexture
 {
 
     /// <summary>
-    /// 初始化 <see cref="RenderTexture"/> 类的新实例。
+    /// Initializes a new instance of the render texture type.
     /// </summary>
-    /// <param name="rt">所属的渲染目标。</param>
     public RenderTexture(RenderTarget rt)
     {
         RenderTarget = rt;
@@ -122,35 +116,83 @@ public sealed class RenderTexture : Aura3D.Core.Resources.Texture, IRenderTarget
     public uint TextureId { get; set; }
 
     /// <summary>
-    /// 获取或设置纹理的内部格式。
+    /// Gets or sets the internal format.
     /// </summary>
     public TextureFormat InternalFormat { get; set; }
 }
 
+/// <summary>
+/// Specifies values for texture format.
+/// </summary>
 public enum TextureFormat
 {
 
+    /// <summary>
+    /// Specifies depth component16.
+    /// </summary>
     DepthComponent16,
+    /// <summary>
+    /// Specifies depth component24.
+    /// </summary>
     DepthComponent24,
+    /// <summary>
+    /// Specifies depth component32f.
+    /// </summary>
     DepthComponent32f,
+    /// <summary>
+    /// Specifies depth24 stencil8.
+    /// </summary>
     Depth24Stencil8,
+    /// <summary>
+    /// Specifies depth32f stencil8.
+    /// </summary>
     Depth32fStencil8,
 
+    /// <summary>
+    /// Specifies rgb8.
+    /// </summary>
     Rgb8 ,
+    /// <summary>
+    /// Specifies srgb8.
+    /// </summary>
     Srgb8,
+    /// <summary>
+    /// Specifies rgba8.
+    /// </summary>
     Rgba8,
+    /// <summary>
+    /// Specifies srgb8 alpha8.
+    /// </summary>
     Srgb8Alpha8,
 
+    /// <summary>
+    /// Specifies rgb16f.
+    /// </summary>
     Rgb16f,
+    /// <summary>
+    /// Specifies rgba16f.
+    /// </summary>
     Rgba16f,
 
+    /// <summary>
+    /// Specifies rgb32f.
+    /// </summary>
     Rgb32f,
+    /// <summary>
+    /// Specifies rgba32f.
+    /// </summary>
     Rgba32f,
 }
 
 
+/// <summary>
+/// Represents the texture format extensions type.
+/// </summary>
 public static class TextureFormatExtensions
 {
+    /// <summary>
+    /// Performs the to gl pixel type operation.
+    /// </summary>
     public static PixelType ToGlPixelType(this TextureFormat format) => format switch
     {
         TextureFormat.DepthComponent16 => PixelType.UnsignedShort,
@@ -174,6 +216,9 @@ public static class TextureFormatExtensions
     };
 
 
+    /// <summary>
+    /// Performs the to gl pixel format operation.
+    /// </summary>
     public static PixelFormat ToGlPixelFormat(this TextureFormat format) => format switch
     {
         TextureFormat.DepthComponent16 => PixelFormat.DepthComponent,
@@ -198,6 +243,9 @@ public static class TextureFormatExtensions
     };
 
 
+    /// <summary>
+    /// Performs the to gl internal format operation.
+    /// </summary>
     public static InternalFormat ToGlInternalFormat(this TextureFormat format) => format switch
     {
         TextureFormat.DepthComponent16 => InternalFormat.DepthComponent16,
@@ -217,6 +265,9 @@ public static class TextureFormatExtensions
     };
 
 
+    /// <summary>
+    /// Performs the to gl attachment operation.
+    /// </summary>
     public static GLEnum ToGlAttachment(this TextureFormat format) => format switch
     {
         TextureFormat.DepthComponent16 => GLEnum.DepthAttachment,

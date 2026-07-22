@@ -4,37 +4,37 @@ using System.Numerics;
 namespace Aura3D.Core.Math;
 
 /// <summary>
-/// 数学辅助类，提供常用的数学转换和计算方法
+/// Represents the math helper type.
 /// </summary>
 public static class MathHelper
 {
+    /// <summary>
+    /// Defines the degree to rad value.
+    /// </summary>
     public const float DegreeToRad = MathF.PI / 180;
+    /// <summary>
+    /// Defines the rad to degree value.
+    /// </summary>
     public const float RadToDegree = 180 / MathF.PI;
 
     /// <summary>
-    /// 将角度转换为弧度
+    /// Performs the degree to radians operation.
     /// </summary>
-    /// <param name="degree">角度值</param>
-    /// <returns>对应的弧度值</returns>
     public static float DegreeToRadians(this float degree)
     {
         return degree * DegreeToRad;
     }
     /// <summary>
-    /// 将弧度转换为角度
+    /// Performs the radians to degree operation.
     /// </summary>
-    /// <param name="radians">弧度值</param>
-    /// <returns>对应的角度值</returns>
     public static float RadiansToDegree(this float radians)
     {
         return radians * RadToDegree;
     }
 
     /// <summary>
-    /// 将四元数转换为欧拉角
+    /// Performs the to euler angles operation.
     /// </summary>
-    /// <param name="q">四元数</param>
-    /// <returns>包含俯仰角(pitch)、偏航角(yaw)和翻滚角(roll)的向量</returns>
     public static Vector3 ToEulerAngles(this Quaternion q)
     {
         float pitch = MathF.Asin(2 * (q.W * q.X - q.Y * q.Z));
@@ -46,10 +46,8 @@ public static class MathHelper
 
 
     /// <summary>
-    /// 从矩阵中提取缩放分量
+    /// Performs the scale operation.
     /// </summary>
-    /// <param name="matrix">变换矩阵</param>
-    /// <returns>包含X、Y、Z三个轴缩放值的向量</returns>
     public static Vector3 Scale(this Matrix4x4 matrix)
     {
         var Vector1 = new Vector3()
@@ -78,17 +76,13 @@ public static class MathHelper
         };
     }
     /// <summary>
-    /// 从矩阵中提取旋转分量
+    /// Performs the rotation operation.
     /// </summary>
-    /// <param name="matrix">变换矩阵</param>
-    /// <returns>表示旋转的四元数</returns>
     public static Quaternion Rotation(this Matrix4x4 matrix) => Quaternion.CreateFromRotationMatrix(matrix.RotationMatrix4x4());
 
     /// <summary>
-    /// 从矩阵中提取旋转矩阵部分（去除位移和缩放）
+    /// Performs the rotation matrix4x4 operation.
     /// </summary>
-    /// <param name="matrix">变换矩阵</param>
-    /// <returns>仅包含旋转信息的4x4矩阵</returns>
     public static Matrix4x4 RotationMatrix4x4(this Matrix4x4 matrix)
     {
         var vector1 = new Vector3()
@@ -129,30 +123,24 @@ public static class MathHelper
     }
 
     /// <summary>
-    /// 从四维向量中提取XYZ分量
+    /// Performs the xyz operation.
     /// </summary>
-    /// <param name="vector4">四维向量</param>
-    /// <returns>三维向量</returns>
     public static Vector3 XYZ(this Vector4 vector4)
     {
         return new Vector3(vector4.X, vector4.Y, vector4.Z);
     }
 
     /// <summary>
-    /// 从四维向量中提取XY分量
+    /// Performs the xy operation.
     /// </summary>
-    /// <param name="vector4">四维向量</param>
-    /// <returns>二维向量</returns>
     public static Vector2 XY(this Vector4 vector4)
     {
         return new Vector2(vector4.X, vector4.Y);
     }
 
     /// <summary>
-    /// 计算矩阵的逆矩阵
+    /// Performs the inverse operation.
     /// </summary>
-    /// <param name="m">要反转的矩阵</param>
-    /// <returns>逆矩阵</returns>
     public static Matrix4x4 Inverse(this Matrix4x4 m)
     {
         Matrix4x4.Invert(m, out var r);
@@ -160,10 +148,8 @@ public static class MathHelper
     }
 
     /// <summary>
-    /// 获取矩阵的前方向向量
+    /// Performs the forward vector operation.
     /// </summary>
-    /// <param name="m">变换矩阵</param>
-    /// <returns>前方向向量</returns>
     public static Vector3 ForwardVector(this Matrix4x4 m)
     {
         var vector = new Vector3(0, 0, -1);
@@ -172,10 +158,8 @@ public static class MathHelper
     }
 
     /// <summary>
-    /// 获取矩阵的右方向向量
+    /// Performs the right vector operation.
     /// </summary>
-    /// <param name="m">变换矩阵</param>
-    /// <returns>右方向向量</returns>
     public static Vector3 RightVector(this Matrix4x4 m)
     {
         var vector = new Vector3(1, 0, 0);
@@ -183,10 +167,8 @@ public static class MathHelper
     }
 
     /// <summary>
-    /// 获取矩阵的上方向向量
+    /// Performs the up vector operation.
     /// </summary>
-    /// <param name="m">变换矩阵</param>
-    /// <returns>上方向向量</returns>
     public static Vector3 UpVector(this Matrix4x4 m)
     {
         var vector = new Vector3(0, 1, 0);
@@ -194,20 +176,16 @@ public static class MathHelper
     }
 
     /// <summary>
-    /// 将四维向量转换为颜色
+    /// Performs the to color operation.
     /// </summary>
-    /// <param name="vector4">四维向量，分量为RGBA</param>
-    /// <returns>颜色对象</returns>
     public static Color ToColor(this Vector4 vector4)
     {
         return Color.FromArgb((int)(vector4.W * 255), (int)(vector4.X * 255), (int)(vector4.Y * 255), (int)(vector4.Z * 255));
     }
 
     /// <summary>
-    /// 将颜色转换为四维向量
+    /// Performs the to vector4 operation.
     /// </summary>
-    /// <param name="color">颜色对象</param>
-    /// <returns>四维向量，分量为RGBA</returns>
     public static Vector4 ToVector4(this Color color)
     {
         return new Vector4(color.R / 255f, color.G / 255f, color.B / 255f, color.A / 255f);
@@ -215,17 +193,13 @@ public static class MathHelper
 }
 
 /// <summary>
-/// 矩阵辅助类，提供矩阵相关的操作方法
+/// Represents the matrix helper type.
 /// </summary>
 public static class MatrixHelper
 {
     /// <summary>
-    /// 创建变换矩阵
+    /// Creates the transform.
     /// </summary>
-    /// <param name="position">位置</param>
-    /// <param name="rotation">旋转四元数</param>
-    /// <param name="scale">缩放</param>
-    /// <returns>组合变换矩阵</returns>
     public static Matrix4x4 CreateTransform(Vector3 position, Quaternion rotation, Vector3 scale)
     {
 
@@ -268,10 +242,8 @@ public static class MatrixHelper
 
 
     /// <summary>
-    /// 从视图投影矩阵中提取6个裁剪平面
+    /// Performs the extract planes operation.
     /// </summary>
-    /// <param name="viewProj">视图投影矩阵</param>
-    /// <param name="planes">用于存储6个裁剪平面的数组（左、右、下、上、近、远）</param>
     public static void ExtractPlanes(Matrix4x4 viewProj, Span<Plane> planes)
     {
         // 从视图投影矩阵中提取裁剪平面
@@ -291,10 +263,8 @@ public static class MatrixHelper
     }
 
     /// <summary>
-    /// 归一化平面
+    /// Performs the normalize plane operation.
     /// </summary>
-    /// <param name="p">要归一化的平面</param>
-    /// <returns>归一化后的平面</returns>
     private static Plane NormalizePlane(Plane p)
     {
         float length = p.Normal.Length();

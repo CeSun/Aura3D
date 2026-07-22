@@ -9,14 +9,13 @@ using System.Threading.Tasks;
 namespace Aura3D.Core.Renderers;
 
 /// <summary>
-/// 无光照渲染管线，仅渲染基础纹理颜色，不进行光照计算
+/// Represents the no light pipeline type.
 /// </summary>
 public class NoLightPipeline : RenderPipeline, IRenderPipelineCreateInstance
 {
     /// <summary>
-    /// 初始化无光照渲染管线
+    /// Initializes a new instance of the no light pipeline type.
     /// </summary>
-    /// <param name="scene">场景对象</param>
     public NoLightPipeline(Scene scene) : base(scene)
     {
         var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
@@ -42,12 +41,13 @@ public class NoLightPipeline : RenderPipeline, IRenderPipelineCreateInstance
     }
 
     /// <summary>
-    /// 创建渲染管线实例的工厂方法
+    /// Creates the instance.
     /// </summary>
-    /// <param name="scene">场景对象</param>
-    /// <returns>新的 NoLightPipeline 实例</returns>
     public static RenderPipeline CreateInstance(Scene scene) => new NoLightPipeline(scene);
 
+    /// <summary>
+    /// Performs the before camera render operation.
+    /// </summary>
     public override void BeforeCameraRender(Camera camera)
     {
         base.BeforeCameraRender(camera);

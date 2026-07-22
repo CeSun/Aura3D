@@ -4,8 +4,14 @@ using Aura3D.Core.Renderers;
 
 namespace Aura3D.Core;
 
+/// <summary>
+/// Represents the point cloud pipeline type.
+/// </summary>
 public class PointCloudPipeline : RenderPipeline, IRenderPipelineCreateInstance
 {
+    /// <summary>
+    /// Initializes a new instance of the point cloud pipeline type.
+    /// </summary>
     public PointCloudPipeline(Scene scene) : base(scene)
     {
         var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
@@ -36,6 +42,9 @@ public class PointCloudPipeline : RenderPipeline, IRenderPipelineCreateInstance
         RegisterDebugPass(baseRenderTarget);
     }
 
+    /// <summary>
+    /// Performs the before camera render operation.
+    /// </summary>
     public override void BeforeCameraRender(Camera camera)
     {
         if (gl == null)
@@ -44,6 +53,9 @@ public class PointCloudPipeline : RenderPipeline, IRenderPipelineCreateInstance
         gl.Viewport(0, 0, camera.Width, camera.Height);
     }
 
+    /// <summary>
+    /// Creates the instance.
+    /// </summary>
     public static RenderPipeline CreateInstance(Scene scene)
         => new PointCloudPipeline(scene);
 }

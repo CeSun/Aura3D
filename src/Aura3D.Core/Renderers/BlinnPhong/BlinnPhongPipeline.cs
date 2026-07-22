@@ -4,19 +4,18 @@ using Silk.NET.OpenGLES;
 
 namespace Aura3D.Core.Renderers;
 /// <summary>
-/// Blinn-Phong 渲染管线，支持阴影、光照、透明度和后处理效果
+/// Represents the blinn phong pipeline type.
 /// </summary>
 public class BlinnPhongPipeline : RenderPipeline, IRenderPipelineCreateInstance
 {
     /// <summary>
-    /// Blinn-Phong 管线支持 CSM（级联阴影贴图），为主方向光生成多级联阴影。
+    /// Gets the supports csm.
     /// </summary>
     public override bool SupportsCSM => true;
 
     /// <summary>
-    /// 初始化 Blinn-Phong 渲染管线
+    /// Initializes a new instance of the blinn phong pipeline type.
     /// </summary>
-    /// <param name="scene">场景对象</param>
     public BlinnPhongPipeline(Scene scene) : base(scene)
     {
         var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
@@ -51,6 +50,9 @@ public class BlinnPhongPipeline : RenderPipeline, IRenderPipelineCreateInstance
         RegisterDebugPass(baseRenderTarget);
     }
 
+    /// <summary>
+    /// Performs the before camera render operation.
+    /// </summary>
     public override void BeforeCameraRender(Camera camera)
     {
         if (gl == null)
@@ -61,27 +63,34 @@ public class BlinnPhongPipeline : RenderPipeline, IRenderPipelineCreateInstance
     }
 
 
+    /// <summary>
+    /// Performs the after camera render operation.
+    /// </summary>
     public override void AfterCameraRender(Camera camera)
     {
 
 
     }
 
+    /// <summary>
+    /// Performs the after render operation.
+    /// </summary>
     public override void AfterRender()
     {
         
     }
 
 
+    /// <summary>
+    /// Performs the before render operation.
+    /// </summary>
     public override void BeforeRender()
     {
 
     }
 
     /// <summary>
-    /// 创建渲染管线实例的工厂方法
+    /// Creates the instance.
     /// </summary>
-    /// <param name="scene">场景对象</param>
-    /// <returns>新的 BlinnPhongPipeline 实例</returns>
     public static RenderPipeline CreateInstance(Scene scene) => new BlinnPhongPipeline(scene);
 }

@@ -1,4 +1,4 @@
-﻿using Aura3D.Core.Nodes;
+using Aura3D.Core.Nodes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,14 +7,13 @@ using System.Numerics;
 namespace Aura3D.Core.Resources;
 
 /// <summary>
-/// 动画混合空间，用于在多个动画之间进行基于距离的插值混合。
+/// Represents the animation blend space type.
 /// </summary>
 public class AnimationBlendSpace : AnimationSamplerBase
 {
     /// <summary>
-    /// 初始化 <see cref="AnimationBlendSpace"/> 类的新实例。
+    /// Initializes a new instance of the animation blend space type.
     /// </summary>
-    /// <param name="skeleton">骨骼数据。</param>
     public AnimationBlendSpace(Skeleton skeleton)
         : base(skeleton)
     {
@@ -25,11 +24,8 @@ public class AnimationBlendSpace : AnimationSamplerBase
     private readonly List<float> _weights = [];
 
     /// <summary>
-    /// 添加动画采样器到混合空间。
+    /// Adds the animation sampler.
     /// </summary>
-    /// <param name="point">采样器在混合空间中的位置，X 和 Y 必须在 [-1, 1] 范围内。</param>
-    /// <param name="animationSampler">动画采样器。</param>
-    /// <exception cref="ArgumentOutOfRangeException">当点的坐标超出范围时抛出。</exception>
     public void AddAnimationSampler(Vector2 point, IAnimationSampler animationSampler)
     {
         if (point.X > 1 || point.X < -1)
@@ -45,11 +41,8 @@ public class AnimationBlendSpace : AnimationSamplerBase
     private Vector2 _axisValue;
 
     /// <summary>
-    /// 设置混合空间的轴值。
+    /// Sets the axis.
     /// </summary>
-    /// <param name="x">X 轴值，必须在 [-1, 1] 范围内。</param>
-    /// <param name="y">Y 轴值，必须在 [-1, 1] 范围内。</param>
-    /// <exception cref="ArgumentOutOfRangeException">当轴值超出范围时抛出。</exception>
     public void SetAxis(float x, float y)
     {
         if (x < -1 || y < -1 || x > 1 || y > 1)
@@ -59,13 +52,12 @@ public class AnimationBlendSpace : AnimationSamplerBase
     }
 
     /// <summary>
-    /// 获取或设置反距离加权（IDW）的幂次。默认值为 2。
+    /// Gets or sets the idw power.
     /// </summary>
     public float IdwPower { get; set; } = 2f;
 
     /// <summary>
-    /// 初始化混合姿态。在所有动画采样器添加完成后调用，
-    /// 避免首帧显示绑定姿态（T-Pose）。
+    /// Initializes the pose.
     /// </summary>
     public void InitializePose()
     {
@@ -138,7 +130,7 @@ public class AnimationBlendSpace : AnimationSamplerBase
     }
 
     /// <summary>
-    /// 计算两点之间的欧几里得距离。
+    /// Calculates the distance.
     /// </summary>
     private float CalculateDistance(float x1, float y1, float x2, float y2)
     {
