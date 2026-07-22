@@ -26,24 +26,23 @@ public class AnimationTests
     public void Sample_ShouldInterpolateTransformFromKeyframes()
     {
         var animation = new Animation();
-        animation.Channels["Arm"] = new AnimationChannel
-        {
-            PositionKeyframes =
-            [
-                new Keyframe<Vector3> { Time = 0f, Value = Vector3.Zero },
-                new Keyframe<Vector3> { Time = 2f, Value = new Vector3(10f, 0f, 0f) }
-            ],
-            RotationKeyframes =
-            [
-                new Keyframe<Quaternion> { Time = 0f, Value = Quaternion.Identity },
-                new Keyframe<Quaternion> { Time = 2f, Value = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathF.PI) }
-            ],
-            ScaleKeyframes =
-            [
-                new Keyframe<Vector3> { Time = 0f, Value = Vector3.One },
-                new Keyframe<Vector3> { Time = 2f, Value = new Vector3(3f, 3f, 3f) }
-            ]
-        };
+        var channel = new AnimationChannel();
+        channel.PositionKeyframes.AddRange(
+        [
+            new Keyframe<Vector3> { Time = 0f, Value = Vector3.Zero },
+            new Keyframe<Vector3> { Time = 2f, Value = new Vector3(10f, 0f, 0f) }
+        ]);
+        channel.RotationKeyframes.AddRange(
+        [
+            new Keyframe<Quaternion> { Time = 0f, Value = Quaternion.Identity },
+            new Keyframe<Quaternion> { Time = 2f, Value = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathF.PI) }
+        ]);
+        channel.ScaleKeyframes.AddRange(
+        [
+            new Keyframe<Vector3> { Time = 0f, Value = Vector3.One },
+            new Keyframe<Vector3> { Time = 2f, Value = new Vector3(3f, 3f, 3f) }
+        ]);
+        animation.Channels["Arm"] = channel;
 
         var sample = animation.Sample("Arm", 1f);
 
@@ -61,20 +60,13 @@ public class AnimationTests
     public void Sample_ShouldFallbackToSkeletonBone_WhenChannelDoesNotExist()
     {
         var expected = Matrix4x4.CreateTranslation(1f, 2f, 3f);
-        var animation = new Animation
+        var skeleton = new Skeleton();
+        skeleton.Bones.Add(new Bone
         {
-            Skeleton = new Skeleton
-            {
-                Bones =
-                [
-                    new Bone
-                    {
-                        Name = "Hip",
-                        LocalMatrix = expected
-                    }
-                ]
-            }
-        };
+            Name = "Hip",
+            LocalMatrix = expected
+        });
+        var animation = new Animation { Skeleton = skeleton };
 
         var sample = animation.Sample("Hip", 0.5f);
 

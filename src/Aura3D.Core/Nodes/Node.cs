@@ -396,6 +396,23 @@ public partial class Node
         if (child.Parent != null)
             throw new InvalidOperationException("子节点已有父节点");
 
+        if (CurrentScene == null)
+        {
+            EnsureSubtreeDetached(child);
+        }
+        else if (child.CurrentScene == null)
+        {
+            CurrentScene.ValidateSubtreeCanBeAdded(child);
+        }
+        else if (!ReferenceEquals(CurrentScene, child.CurrentScene))
+        {
+            throw new InvalidOperationException("父子节点属于不同场景");
+        }
+        else
+        {
+            CurrentScene.ValidateSubtreeBelongsToScene(child);
+        }
+
         var childWorldTransform = child.WorldTransform;
         // 将子节点加入集合
         _children.Add(child);
@@ -420,9 +437,20 @@ public partial class Node
         else 
             child.Enable = true;
 
-        if (CurrentScene != null)
+        if (CurrentScene != null && child.CurrentScene == null)
         {
             CurrentScene.AddNode(child);
+        }
+    }
+
+    private static void EnsureSubtreeDetached(Node node)
+    {
+        if (node.CurrentScene != null)
+            throw new InvalidOperationException("不能将场景中的节点挂到未加入场景的父节点");
+
+        foreach (var child in node.Children)
+        {
+            EnsureSubtreeDetached(child);
         }
     }
 
@@ -445,6 +473,15 @@ public partial class Node
         if (_children.Contains(child) == false)
         {
             throw new InvalidOperationException("子节点不存在");
+        }
+
+        if (CurrentScene != null)
+        {
+            CurrentScene.ValidateSubtreeBelongsToScene(child);
+        }
+        else if (child.CurrentScene != null)
+        {
+            throw new InvalidOperationException("父子节点的场景归属不一致");
         }
 
         // 从集合中移除子节点

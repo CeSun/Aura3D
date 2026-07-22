@@ -134,14 +134,58 @@ public class Scene
     /// 将节点添加到场景中，并递归添加其所有子节点。
     /// </summary>
     /// <param name="node">要添加的节点。</param>
-    /// <exception cref="InvalidOperationException">当节点已添加到场景或已存在时抛出。</exception>
+    /// <exception cref="InvalidOperationException">当节点或其子树已属于场景，或其父节点属于其他场景时抛出。</exception>
     public void AddNode(Node node)
     {
-        if (node.CurrentScene != null)
-            throw new InvalidOperationException("Node already add to scene");
+        ArgumentNullException.ThrowIfNull(node);
 
-        if (Nodes.Contains(node))
-            throw new InvalidOperationException("Node already exits");
+        if (node.Parent != null && !ReferenceEquals(node.Parent.CurrentScene, this))
+            throw new InvalidOperationException("节点的父节点不属于当前场景");
+
+        ValidateSubtreeCanBeAdded(node);
+        AddNodeCore(node);
+    }
+
+    internal void ValidateSubtreeCanBeAdded(Node node)
+    {
+        ValidateSubtreeCanBeAdded(node, []);
+    }
+
+    private void ValidateSubtreeCanBeAdded(Node node, HashSet<Node> visited)
+    {
+        if (!visited.Add(node))
+            throw new InvalidOperationException("节点子树包含循环或重复引用");
+
+        if (node.CurrentScene != null || _nodes.Contains(node))
+            throw new InvalidOperationException("节点已属于场景");
+
+        foreach (var child in node.Children)
+        {
+            ValidateSubtreeCanBeAdded(child, visited);
+        }
+    }
+
+    internal void ValidateSubtreeBelongsToScene(Node node)
+    {
+        ValidateSubtreeBelongsToScene(node, []);
+    }
+
+    private void ValidateSubtreeBelongsToScene(Node node, HashSet<Node> visited)
+    {
+        if (!visited.Add(node))
+            throw new InvalidOperationException("节点子树包含循环或重复引用");
+
+        if (!ReferenceEquals(node.CurrentScene, this) || !_nodes.Contains(node))
+            throw new InvalidOperationException("节点子树与场景注册状态不一致");
+
+        foreach (var child in node.Children)
+        {
+            ValidateSubtreeBelongsToScene(child, visited);
+        }
+    }
+
+    private void AddNodeCore(Node node)
+    {
 
         _nodes.Add(node);
 
@@ -161,22 +205,28 @@ public class Scene
 
         foreach (var child in node.Children)
         {
-            AddNode(child);
+            AddNodeCore(child);
         }
     }
 
     /// <summary>
     /// 从场景中移除节点，并递归移除其所有子节点。
     /// </summary>
-    /// <param name="node">要移除的节点。</param>
-    /// <exception cref="InvalidOperationException">当节点未附加到场景或不存在于当前场景时抛出。</exception>
+    /// <param name="node">要移除的根节点；非根节点应通过其父节点的 RemoveChild 移除。</param>
+    /// <exception cref="InvalidOperationException">当节点不是根节点，或节点子树与当前场景注册状态不一致时抛出。</exception>
     public void RemoveNode(Node node)
     {
-        if (node.CurrentScene == null)
-            throw new InvalidOperationException("Node is not attached to any scene.");
+        ArgumentNullException.ThrowIfNull(node);
 
-        if (Nodes.Contains(node) == false)
-            throw new InvalidOperationException("Node does not exist in this scene.");
+        if (node.Parent != null)
+            throw new InvalidOperationException("非根节点必须通过父节点的 RemoveChild 移除");
+
+        ValidateSubtreeBelongsToScene(node);
+        RemoveNodeCore(node);
+    }
+
+    private void RemoveNodeCore(Node node)
+    {
 
         _nodes.Remove(node);
 
@@ -200,7 +250,7 @@ public class Scene
 
         foreach (var child in node.Children)
         {
-            RemoveNode(child);
+            RemoveNodeCore(child);
         }
         node.ClearPipelineGpuStates();
     }
