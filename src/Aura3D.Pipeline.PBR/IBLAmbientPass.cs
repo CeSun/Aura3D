@@ -4,7 +4,6 @@ using Silk.NET.OpenGLES;
 using System.Drawing;
 using System.Numerics;
 using Aura3D.Core.Renderers;
-using Aura3D.Core;
 
 namespace Aura3D.Pipeline.PBR;
 
@@ -28,7 +27,7 @@ void main() {
     v_clipPos = gl_Position;
 }";
 
-        FragmentShader = ShaderResource.pbr_ibl_ambient_frag;
+        FragmentShader = PbrResources.IblAmbientFragmentShader;
         this.gbufferRenderTarget = gbufferRenderTarget;
     }
 

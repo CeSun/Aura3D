@@ -8,4 +8,14 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Aura3D.Core\Aura3D.Core.csproj" />
 	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="Assets\Shaders\mesh.vert" LogicalName="Aura3D.Pipeline.PBR.Resources.MeshVertexShader" />
+		<EmbeddedResource Include="Assets\Shaders\deferredbase.frag" LogicalName="Aura3D.Pipeline.PBR.Resources.DeferredMeshFragmentShader" />
+		<EmbeddedResource Include="Assets\Shaders\pbr_directionallight_lighting_pass.vert" LogicalName="Aura3D.Pipeline.PBR.Resources.LightingVertexShader" />
+		<EmbeddedResource Include="Assets\Shaders\pbr_directionallight_lighting_pass.frag" LogicalName="Aura3D.Pipeline.PBR.Resources.LightingFragmentShader" />
+		<EmbeddedResource Include="Assets\Shaders\pbr_constant_ambient.frag" LogicalName="Aura3D.Pipeline.PBR.Resources.ConstantAmbientFragmentShader" />
+		<EmbeddedResource Include="Assets\Shaders\pbr_ibl_ambient.frag" LogicalName="Aura3D.Pipeline.PBR.Resources.IblAmbientFragmentShader" />
+		<EmbeddedResource Include="Assets\Textures\lut.hdr" LogicalName="Aura3D.Pipeline.PBR.Resources.LutData" />
+	</ItemGroup>
 </Project>

@@ -78,44 +78,6 @@ namespace Aura3D.Core {
         }
         
         /// <summary>
-        /// Gets the cel frag.
-        /// </summary>
-        public static string CelFrag {
-            get {
-                return ResourceManager.GetString("CelFrag", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        /// Gets the cel ramp.
-        /// </summary>
-        public static byte[] CelRamp {
-            get {
-                object obj = ResourceManager.GetObject("CelRamp", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        /// Gets the cel ramp2.
-        /// </summary>
-        public static byte[] CelRamp2 {
-            get {
-                object obj = ResourceManager.GetObject("CelRamp2", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        /// Gets the deferred mesh frag.
-        /// </summary>
-        public static string DeferredMeshFrag {
-            get {
-                return ResourceManager.GetString("DeferredMeshFrag", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         /// Gets the debug frag.
         /// </summary>
         public static string DebugFrag {
@@ -133,16 +95,6 @@ namespace Aura3D.Core {
             }
         }
 
-        /// <summary>
-        /// Gets the lut.
-        /// </summary>
-        public static byte[] lut {
-            get {
-                object obj = ResourceManager.GetObject("lut", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
         /// <summary>
         /// Gets the mesh frag.
         /// </summary>
@@ -176,60 +128,6 @@ namespace Aura3D.Core {
         public static string NoLightVert {
             get {
                 return ResourceManager.GetString("NoLightVert", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        /// Gets the outline frag.
-        /// </summary>
-        public static string OutlineFrag {
-            get {
-                return ResourceManager.GetString("OutlineFrag", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        /// Gets the outline vert.
-        /// </summary>
-        public static string OutlineVert {
-            get {
-                return ResourceManager.GetString("OutlineVert", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        /// Gets the pbr constant ambient frag.
-        /// </summary>
-        public static string pbr_constant_ambient_frag {
-            get {
-                return ResourceManager.GetString("pbr_constant_ambient_frag", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        /// Gets the pbr directionallight lighting pass frag.
-        /// </summary>
-        public static string pbr_directionallight_lighting_pass_frag {
-            get {
-                return ResourceManager.GetString("pbr_directionallight_lighting_pass_frag", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        /// Gets the pbr directionallight lighting pass vert.
-        /// </summary>
-        public static string pbr_directionallight_lighting_pass_vert {
-            get {
-                return ResourceManager.GetString("pbr_directionallight_lighting_pass_vert", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        /// Gets the pbr ibl ambient frag.
-        /// </summary>
-        public static string pbr_ibl_ambient_frag {
-            get {
-                return ResourceManager.GetString("pbr_ibl_ambient_frag", resourceCulture);
             }
         }
         

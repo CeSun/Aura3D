@@ -10,7 +10,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Camera = Aura3D.Core.Nodes.Camera;
 using Aura3D.Core.Renderers;
-using Aura3D.Core;
 
 namespace Aura3D.Pipeline.PBR;
 
@@ -32,9 +31,9 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRDeferredPipeline>
     {
         gbufferRenderTarget = gbufferRendertarget;
 
-        VertexShader = ShaderResource.MeshVert;
+        VertexShader = PbrResources.MeshVertexShader;
 
-        FragmentShader = ShaderResource.pbr_ibl_ambient_frag;
+        FragmentShader = PbrResources.IblAmbientFragmentShader;
     }
 
     public override void BeforeRender(Camera camera)

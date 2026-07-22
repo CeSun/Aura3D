@@ -3,7 +3,6 @@ using Silk.NET.OpenGLES;
 using System.Numerics;
 using Aura3D.Core.Resources;
 using Aura3D.Core.Math;
-using Aura3D.Core;
 using Aura3D.Core.Renderers;
 
 namespace Aura3D.Pipeline.CelShading;
@@ -18,8 +17,8 @@ public class OutlinePass : RenderPass
 
     public OutlinePass(RenderPipeline renderPipeline) : base(renderPipeline)
     {
-        VertexShader = ShaderResource.OutlineVert;
-        FragmentShader = ShaderResource.OutlineFrag;
+        VertexShader = CelShadingResources.OutlineVertexShader;
+        FragmentShader = CelShadingResources.OutlineFragmentShader;
     }
     public override void Setup()
     {

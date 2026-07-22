@@ -49,7 +49,7 @@ public class PBRDeferredPipeline : RenderPipeline, IRenderPipelineCreateInstance
 
     public PBRDeferredPipeline(Scene scene) : base(scene)
     {
-        using (var ms = new MemoryStream(ShaderResource.lut))
+        using (var ms = new MemoryStream(PbrResources.LutData))
         {
             BrdfLutTexture = Core.TextureLoader.LoadHdrTexture(ms);
         }

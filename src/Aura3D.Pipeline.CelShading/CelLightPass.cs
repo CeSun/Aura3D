@@ -30,7 +30,7 @@ public class CelLightPass : RenderPass
     private Texture rampTexture;
     public void UpdateLightNumLimit(int directionalLightLimit, int pointLightLimit, int spotLightLimit)
     {
-        FragmentShader = ShaderResource.CelFrag
+        FragmentShader = CelShadingResources.CelFragmentShader
             .Replace("#define MAX_DIRECTIONAL_LIGHTS 4", "#define MAX_DIRECTIONAL_LIGHTS " + directionalLightLimit)
             .Replace("#define MAX_POINT_LIGHTS 4", "#define MAX_POINT_LIGHTS " + pointLightLimit)
             .Replace("#define MAX_SPOT_LIGHTS 4", "#define MAX_SPOT_LIGHTS " + spotLightLimit)
@@ -49,9 +49,9 @@ public class CelLightPass : RenderPass
 
     public CelLightPass(RenderPipeline renderPipeline) : base(renderPipeline)
     {
-        VertexShader = ShaderResource.MeshVert;
-        FragmentShader = ShaderResource.CelFrag;
-        rampTexture = TextureLoader.LoadTexture(ShaderResource.CelRamp2);
+        VertexShader = CelShadingResources.MeshVertexShader;
+        FragmentShader = CelShadingResources.CelFragmentShader;
+        rampTexture = TextureLoader.LoadTexture(CelShadingResources.CelRamp2Data);
     }
 
     public override void BeforeRender(Camera camera)

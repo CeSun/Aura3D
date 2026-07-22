@@ -9,4 +9,13 @@
 		<ProjectReference Include="..\Aura3D.Core\Aura3D.Core.csproj" />
 		<ProjectReference Include="..\Aura3D.Model.GltfLoader\Aura3D.Model.GltfLoader.csproj" />
 	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="Assets\Shaders\mesh.vert" LogicalName="Aura3D.Pipeline.CelShading.Resources.MeshVertexShader" />
+		<EmbeddedResource Include="Assets\Shaders\base_cel.frag" LogicalName="Aura3D.Pipeline.CelShading.Resources.CelFragmentShader" />
+		<EmbeddedResource Include="Assets\Shaders\outline.vert" LogicalName="Aura3D.Pipeline.CelShading.Resources.OutlineVertexShader" />
+		<EmbeddedResource Include="Assets\Shaders\outline.frag" LogicalName="Aura3D.Pipeline.CelShading.Resources.OutlineFragmentShader" />
+		<EmbeddedResource Include="Assets\Textures\CelRamp.png" LogicalName="Aura3D.Pipeline.CelShading.Resources.CelRampData" />
+		<EmbeddedResource Include="Assets\Textures\CelRamp2.png" LogicalName="Aura3D.Pipeline.CelShading.Resources.CelRamp2Data" />
+	</ItemGroup>
 </Project>

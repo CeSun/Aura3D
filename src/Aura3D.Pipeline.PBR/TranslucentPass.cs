@@ -5,7 +5,6 @@ using Silk.NET.OpenGLES;
 using System.Drawing;
 using System.Numerics;
 using Aura3D.Core.Renderers;
-using Aura3D.Core;
 
 namespace Aura3D.Pipeline.PBR;
 
@@ -25,9 +24,9 @@ internal class TranslucentPass : RenderPass<PBRDeferredPipeline>
     {
         gbufferRenderTarget = gbufferRendertarget;
 
-        VertexShader = ShaderResource.MeshVert;
+        VertexShader = PbrResources.MeshVertexShader;
 
-        FragmentShader = ShaderResource.pbr_directionallight_lighting_pass_frag;
+        FragmentShader = PbrResources.LightingFragmentShader;
 
         ShaderName = nameof(TranslucentPass);
     }

@@ -3,7 +3,6 @@ using Aura3D.Core.Nodes;
 using Silk.NET.OpenGLES;
 using System.Numerics;
 using Aura3D.Core.Renderers;
-using Aura3D.Core;
 
 namespace Aura3D.Pipeline.PBR;
 
@@ -14,9 +13,9 @@ internal class DirectionalLightingPass : RenderPass
     {
         this.gbufferRenderTarget = gbufferRenderTarget;
 
-        this.VertexShader = ShaderResource.pbr_directionallight_lighting_pass_vert;
+        this.VertexShader = PbrResources.LightingVertexShader;
 
-        this.FragmentShader = ShaderResource.pbr_directionallight_lighting_pass_frag;
+        this.FragmentShader = PbrResources.LightingFragmentShader;
 
         ShaderName = nameof(DirectionalLightingPass);
     }

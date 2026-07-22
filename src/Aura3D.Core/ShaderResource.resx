@@ -127,17 +127,8 @@
   <data name="MeshFrag" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Assets\Shaders\base.frag;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
-  <data name="CelFrag" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Assets\Shaders\base_cel.frag;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
   <data name="MeshVert" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Assets\Shaders\base.vert;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
-  <data name="OutlineVert" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Assets\Shaders\outline.vert;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
-  <data name="OutlineFrag" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Assets\Shaders\outline.frag;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
   <data name="NoLightFrag" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Assets\Shaders\nolight.frag;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
@@ -151,34 +142,10 @@
   <data name="ShadowMapVert" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Assets\Shaders\shadowmap.vert;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
-  <data name="CelRamp" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Assets\Textures\CelRamp.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="CelRamp2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Assets\Textures\CelRamp2.png;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="DeferredMeshFrag" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Assets\Shaders\deferredbase.frag;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
-  <data name="pbr_directionallight_lighting_pass_vert" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Assets\Shaders\pbr_directionallight_lighting_pass.vert;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
-  <data name="pbr_directionallight_lighting_pass_frag" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Assets\Shaders\pbr_directionallight_lighting_pass.frag;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
-  <data name="pbr_constant_ambient_frag" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Assets\Shaders\pbr_constant_ambient.frag;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
-  <data name="pbr_ibl_ambient_frag" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Assets\Shaders\pbr_ibl_ambient.frag;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
   <data name="DebugVert" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Assets\Shaders\debug.vert;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
   <data name="DebugFrag" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Assets\Shaders\debug.frag;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
-  <data name="lut" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Assets\Textures\lut.hdr;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

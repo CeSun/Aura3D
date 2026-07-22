@@ -5,7 +5,6 @@ using Silk.NET.OpenGLES;
 using System.Drawing;
 using System.Numerics;
 using Aura3D.Core.Renderers;
-using Aura3D.Core;
 
 namespace Aura3D.Pipeline.PBR;
 
@@ -20,9 +19,9 @@ internal class TranslucentConstantAmbientPass : RenderPass<PBRDeferredPipeline>
     {
         gbufferRenderTarget = gbufferRendertarget;
 
-        VertexShader = ShaderResource.MeshVert;
+        VertexShader = PbrResources.MeshVertexShader;
 
-        FragmentShader = ShaderResource.pbr_constant_ambient_frag;
+        FragmentShader = PbrResources.ConstantAmbientFragmentShader;
     }
 
     public override void BeforeRender(Camera camera)

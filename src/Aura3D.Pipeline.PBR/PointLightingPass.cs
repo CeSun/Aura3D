@@ -7,7 +7,6 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Aura3D.Core.Renderers;
-using Aura3D.Core;
 
 namespace Aura3D.Pipeline.PBR;
 
@@ -18,9 +17,9 @@ public class PointLightingPass : RenderPass
     {
         gbufferRenderTarget = gbufferRendertarget;
 
-        this.VertexShader = ShaderResource.pbr_directionallight_lighting_pass_vert;
+        this.VertexShader = PbrResources.LightingVertexShader;
 
-        this.FragmentShader = ShaderResource.pbr_directionallight_lighting_pass_frag;
+        this.FragmentShader = PbrResources.LightingFragmentShader;
 
         ShaderName = nameof(PointLightingPass);
     }

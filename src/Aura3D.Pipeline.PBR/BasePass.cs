@@ -4,7 +4,6 @@ using Aura3D.Core.Resources;
 using Silk.NET.OpenGLES;
 using System.Numerics;
 using Aura3D.Core.Renderers;
-using Aura3D.Core;
 
 namespace Aura3D.Pipeline.PBR;
 
@@ -23,9 +22,9 @@ internal class BasePass : RenderPass <PBRDeferredPipeline>
 
     public BasePass(RenderPipeline renderPipeline) : base(renderPipeline)
     {
-        VertexShader = ShaderResource.MeshVert;
+        VertexShader = PbrResources.MeshVertexShader;
 
-        FragmentShader = ShaderResource.DeferredMeshFrag;
+        FragmentShader = PbrResources.DeferredMeshFragmentShader;
 
         ShaderName = nameof(BasePass);
 

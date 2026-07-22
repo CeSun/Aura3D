@@ -3,7 +3,6 @@ using Aura3D.Core.Nodes;
 using Silk.NET.OpenGLES;
 using System.Drawing;
 using Aura3D.Core.Renderers;
-using Aura3D.Core;
 
 namespace Aura3D.Pipeline.PBR;
 
@@ -14,9 +13,9 @@ internal class ConstantAmbientPass : RenderPass
     {
         gbufferRenderTarget = gbufferRendertarget;
 
-        this.VertexShader = ShaderResource.pbr_directionallight_lighting_pass_vert;
+        this.VertexShader = PbrResources.LightingVertexShader;
 
-        FragmentShader = ShaderResource.pbr_constant_ambient_frag;
+        FragmentShader = PbrResources.ConstantAmbientFragmentShader;
     }
 
     public override void BeforeRender(Camera camera)
