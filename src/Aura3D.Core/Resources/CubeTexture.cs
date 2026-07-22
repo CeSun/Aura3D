@@ -87,7 +87,7 @@ public class CubeTexture : BaseTexture<CubeTexture>, IClone<CubeTexture>
     internal void SetFaceBuffers(List<byte>[] data)
     {
         if (data.Length != 6)
-            throw new ArgumentException("Cube texture must contain exactly 6 faces.");
+            throw Aura3D.Core.Exceptions.ResourceErrors.CubeTextureFaceCount();
 
         _data = data;
     }

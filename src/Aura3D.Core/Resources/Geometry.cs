@@ -77,7 +77,7 @@ public class Geometry : IClone<Geometry>, IVersionedResource
     public void SetVertexAttribute(string name, uint location, int size, List<float> data)
     {
         if (data.Count % size != 0)
-            throw new ArgumentException($"The length of vertex attribute data must be a multiple of its size. Data length: {data.Count}, Size: {size}");
+            throw Aura3D.Core.Exceptions.ResourceErrors.VertexAttributeLengthMismatch(data.Count, size);
 
         if (VertexAttributes.TryGetValue(name, out var vertexAttribute))
         {

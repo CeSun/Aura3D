@@ -61,8 +61,8 @@ public class SphereGeometry : Geometry
         float thetaStart = 0f,
         float thetaLength = MathF.PI)
     {
-        if (widthSegments < 3) throw new ArgumentOutOfRangeException(nameof(widthSegments), "widthSegments must be >= 3");
-        if (heightSegments < 2) throw new ArgumentOutOfRangeException(nameof(heightSegments), "heightSegments must be >= 2");
+        if (widthSegments < 3) throw Aura3D.Core.Exceptions.GeometryErrors.MinimumSegmentCount(nameof(widthSegments), 3, widthSegments);
+        if (heightSegments < 2) throw Aura3D.Core.Exceptions.GeometryErrors.MinimumSegmentCount(nameof(heightSegments), 2, heightSegments);
 
         Radius = radius;
         WidthSegments = widthSegments;

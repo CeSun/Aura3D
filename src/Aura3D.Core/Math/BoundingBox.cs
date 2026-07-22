@@ -40,7 +40,7 @@ public class BoundingBox : IEquatable<BoundingBox>
         // 校验无效浮点数
         if (IsInvalidVector(min) || IsInvalidVector(max))
         {
-            throw new ArgumentException("Min/Max 不能包含 NaN 或 Infinity",
+            throw Aura3D.Core.Exceptions.SpatialErrors.BoundingBoxVectorInvalid(
                 IsInvalidVector(min) ? nameof(min) : nameof(max));
         }
 
@@ -51,9 +51,8 @@ public class BoundingBox : IEquatable<BoundingBox>
 
         if (xInvalid || yInvalid || zInvalid)
         {
-            throw new ArgumentException(
-                $"Min 必须小于等于 Max（容差：{DefaultEpsilon}）。无效轴：" +
-                $"{(xInvalid ? "X " : "")}{(yInvalid ? "Y " : "")}{(zInvalid ? "Z " : "")}");
+            var invalidAxes = $"{(xInvalid ? "X " : "")}{(yInvalid ? "Y " : "")}{(zInvalid ? "Z " : "")}".Trim();
+            throw Aura3D.Core.Exceptions.SpatialErrors.BoundingBoxOrderInvalid(DefaultEpsilon, invalidAxes);
         }
 
         // 主动修正微小精度误差，保证 Min <= Max
@@ -164,8 +163,7 @@ public class BoundingBox : IEquatable<BoundingBox>
             // 校验变换结果有效性
             if (IsInvalidVector(transformed))
             {
-                throw new InvalidOperationException(
-                    $"矩阵变换产生无效值（NaN/Infinity），矩阵：{matrix}");
+                throw Aura3D.Core.Exceptions.SpatialErrors.BoundingBoxTransformInvalid(matrix);
             }
 
             // 齐次除法（处理投影矩阵）
@@ -205,8 +203,7 @@ public class BoundingBox : IEquatable<BoundingBox>
             // 校验点有效性
             if (IsInvalidVector(p))
             {
-                throw new ArgumentException(
-                    "点集合包含无效值（NaN/Infinity）", nameof(points));
+                throw Aura3D.Core.Exceptions.SpatialErrors.PointCollectionInvalid(nameof(points));
             }
 
             hasPoint = true;
@@ -216,7 +213,7 @@ public class BoundingBox : IEquatable<BoundingBox>
 
         if (!hasPoint)
         {
-            throw new InvalidOperationException("点集合不能为空");
+            throw Aura3D.Core.Exceptions.SpatialErrors.PointCollectionEmpty();
         }
 
         return new BoundingBox(min, max);
@@ -242,8 +239,7 @@ public class BoundingBox : IEquatable<BoundingBox>
         {
             if (box is null)
             {
-                throw new ArgumentException(
-                    "包围盒集合不能包含 null 元素", nameof(boxes));
+                throw Aura3D.Core.Exceptions.SpatialErrors.BoundingBoxCollectionContainsNull(nameof(boxes));
             }
 
             hasBox = true;
@@ -253,7 +249,7 @@ public class BoundingBox : IEquatable<BoundingBox>
 
         if (!hasBox)
         {
-            throw new InvalidOperationException("包围盒集合不能为空");
+            throw Aura3D.Core.Exceptions.SpatialErrors.BoundingBoxCollectionEmpty();
         }
 
         return new BoundingBox(min, max);

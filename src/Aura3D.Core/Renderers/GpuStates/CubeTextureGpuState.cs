@@ -44,7 +44,7 @@ public class CubeTextureGpuState : IResourceGpuState
         if (texture.TryGetTarget(out var value))
             return value;
 
-        throw new InvalidOperationException("The CPU resource has already been collected.");
+        throw Aura3D.Core.Exceptions.RendererErrors.CpuResourceCollected(nameof(CubeTexture));
     }
 
     protected void DestroyTexture(GL gl)

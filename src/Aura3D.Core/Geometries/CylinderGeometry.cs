@@ -67,8 +67,8 @@ public class CylinderGeometry : Geometry
         float thetaStart = 0f,
         float thetaLength = MathF.PI * 2f)
     {
-        if (radialSegments < 3) throw new ArgumentOutOfRangeException(nameof(radialSegments), "radialSegments must be >= 3");
-        if (heightSegments < 1) throw new ArgumentOutOfRangeException(nameof(heightSegments), "heightSegments must be >= 1");
+        if (radialSegments < 3) throw Aura3D.Core.Exceptions.GeometryErrors.MinimumSegmentCount(nameof(radialSegments), 3, radialSegments);
+        if (heightSegments < 1) throw Aura3D.Core.Exceptions.GeometryErrors.MinimumSegmentCount(nameof(heightSegments), 1, heightSegments);
 
         RadiusTop = radiusTop;
         RadiusBottom = radiusBottom;

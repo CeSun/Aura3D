@@ -246,7 +246,7 @@ public class InstancedMesh : Node
     {
         if (mesh.Geometry == null)
         {
-            throw new ArgumentException("The provided mesh does not contain geometry.");
+            throw Aura3D.Core.Exceptions.NodeErrors.InstancedMeshRequiresGeometry(nameof(mesh));
         }
 
         var geometry = new InstancedGeometry(mesh.Geometry);

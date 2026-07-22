@@ -1,3 +1,4 @@
+using Aura3D.Core.Exceptions;
 using Aura3D.Core.Resources;
 using System.Numerics;
 using Xunit;
@@ -6,6 +7,18 @@ namespace Aura3D.Tests.Resources;
 
 public class AnimationTests
 {
+    [Fact]
+    public void GetValueByTime_ShouldExposeStableErrorCode_WhenKeyframeListIsEmpty()
+    {
+        IReadOnlyList<Keyframe<float>> keyframes = [];
+
+        var exception = Assert.Throws<AnimationException>(
+            () => keyframes.GetValueByTime(0f, SamplerHelper.Lerp));
+
+        Assert.Equal(AnimationError.EmptyKeyframeList, exception.Code);
+        Assert.Equal("The keyframe list is empty.", exception.Message);
+    }
+
     [Fact]
     public void GetValueByTime_ShouldClampOutsideKeyframeRange()
     {
@@ -71,5 +84,35 @@ public class AnimationTests
         var sample = animation.Sample("Hip", 0.5f);
 
         Assert.Equal(expected, sample);
+    }
+
+    [Fact]
+    public void AddNextNode_ShouldExposeStableErrorCode_WhenNodeReferencesItself()
+    {
+        var node = new AnimationGraphNode(new TestAnimationSampler());
+
+        var exception = Assert.Throws<AnimationException>(
+            () => node.AddNextNode((_, _) => true, node));
+
+        Assert.Equal(AnimationError.GraphSelfReference, exception.Code);
+    }
+
+    private sealed class TestAnimationSampler : IAnimationSampler
+    {
+        public bool ExternalUpdate { get; set; }
+
+        public Skeleton Skeleton { get; } = new();
+
+        public IReadOnlyList<Matrix4x4> BonesTransform { get; } = [];
+
+        public BoneMatrixBuffer BoneMatrixBuffer => Skeleton.BoneMatrixBuffer;
+
+        public void Update(double deltaTime)
+        {
+        }
+
+        public void Reset()
+        {
+        }
     }
 }

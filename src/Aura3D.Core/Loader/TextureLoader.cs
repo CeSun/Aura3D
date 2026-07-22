@@ -30,7 +30,7 @@ public static class TextureLoader
             {
                 ColorComponents.RedGreenBlue => ColorFormat.RGB,
                 ColorComponents.RedGreenBlueAlpha => ColorFormat.RGBA,
-                _ => throw new NotSupportedException("Unsupported color format")
+                _ => throw Aura3D.Core.Exceptions.TextureLoaderErrors.UnsupportedColorFormat()
             })
             .SetMinFilter(TextureFilterMode.Linear)
             .SetMagFilter(TextureFilterMode.Linear);
@@ -50,7 +50,7 @@ public static class TextureLoader
     public static CubeTexture LoadCubeTexture(List<string> fileNames)
     {
         if (fileNames.Count != 6)
-            throw new ArgumentException("Cube texture requires 6 images.");
+            throw Aura3D.Core.Exceptions.TextureLoaderErrors.CubeTextureImageCount();
 
         var streams = new List<Stream>();
 
@@ -75,7 +75,7 @@ public static class TextureLoader
     public static CubeTexture LoadCubeTexture(List<Stream> streams)
     {
         if (streams.Count != 6)
-            throw new ArgumentException("Cube texture requires 6 images.");
+            throw Aura3D.Core.Exceptions.TextureLoaderErrors.CubeTextureImageCount();
 
         var cubeTexture = new CubeTexture();
 
@@ -108,21 +108,21 @@ public static class TextureLoader
                 {
                     ColorComponents.RedGreenBlue => ColorFormat.RGB,
                     ColorComponents.RedGreenBlueAlpha => ColorFormat.RGBA,
-                    _ => throw new NotSupportedException("Unsupported color format")
+                    _ => throw Aura3D.Core.Exceptions.TextureLoaderErrors.UnsupportedColorFormat()
                 };
             }
             else
             {
                 if (cubeTexture.Width != imageResult.Width || cubeTexture.Height != imageResult.Height)
-                    throw new ArgumentException("All images in a cube texture must have the same dimensions.");
+                    throw Aura3D.Core.Exceptions.TextureLoaderErrors.CubeTextureDimensionMismatch();
                 var colorFormat = imageResult.Comp switch
                 {
                     ColorComponents.RedGreenBlue => ColorFormat.RGB,
                     ColorComponents.RedGreenBlueAlpha => ColorFormat.RGBA,
-                    _ => throw new NotSupportedException("Unsupported color format")
+                    _ => throw Aura3D.Core.Exceptions.TextureLoaderErrors.UnsupportedColorFormat()
                 };
                 if (cubeTexture.ColorFormat != colorFormat)
-                    throw new ArgumentException("All images in a cube texture must have the same color format.");
+                    throw Aura3D.Core.Exceptions.TextureLoaderErrors.CubeTextureColorFormatMismatch();
             }
 
         }
@@ -155,7 +155,7 @@ public static class TextureLoader
             {
                 ColorComponents.RedGreenBlue => ColorFormat.RGB,
                 ColorComponents.RedGreenBlueAlpha => ColorFormat.RGBA,
-                _ => throw new NotSupportedException("Unsupported color format")
+                _ => throw Aura3D.Core.Exceptions.TextureLoaderErrors.UnsupportedColorFormat()
             })
             .SetMinFilter(TextureFilterMode.Linear)
             .SetMagFilter(TextureFilterMode.Linear);

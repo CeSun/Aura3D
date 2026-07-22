@@ -140,11 +140,11 @@ public class Camera : Node
     {
         if (CurrentScene == null)
         {
-            throw new InvalidOperationException("Camera must be added to a scene before querying Width or Height when OutputTexture is not set.");
+            throw Aura3D.Core.Exceptions.NodeErrors.CameraMustBelongToScene();
         }
 
         return CurrentScene.DefaultOutputSurface
-               ?? throw new InvalidOperationException("Scene default output surface is not set.");
+               ?? throw Aura3D.Core.Exceptions.RendererErrors.DefaultOutputSurfaceNotSet();
     }
 
     /// <summary>
@@ -204,8 +204,7 @@ public class Camera : Node
     public void FitToBoundingBox(BoundingBox aabb, float padding = 0.1f)
     {
         var camera = this;
-        if (camera == null) throw new ArgumentNullException(nameof(camera));
-        if (aabb == null) throw new ArgumentNullException(nameof(aabb));
+        ArgumentNullException.ThrowIfNull(aabb);
         if (padding < 0 || padding > 1) throw new ArgumentOutOfRangeException(nameof(padding));
 
         Vector3 boxCenter = aabb.Center;

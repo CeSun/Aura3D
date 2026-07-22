@@ -86,7 +86,7 @@ public class RenderTarget : RenderTargetBase<RenderTexture, RenderTarget>
 
         if (state != GLEnum.FramebufferComplete)
         {
-            throw new InvalidOperationException($"Framebuffer creation failed with status: {state}");
+            throw Aura3D.Core.Exceptions.RendererErrors.FramebufferCreationFailed(state, nameof(RenderTarget));
         }
 
         SyncTextureSizes();
@@ -170,7 +170,7 @@ public static class TextureFormatExtensions
         TextureFormat.Rgb32f => PixelType.Float,
         TextureFormat.Rgba32f => PixelType.Float,
 
-        _ => throw new ArgumentOutOfRangeException(nameof(format), $"Texture format '{format}' is not supported.")
+        _ => throw Aura3D.Core.Exceptions.RendererErrors.UnsupportedTextureFormat(nameof(format), format)
     };
 
 
@@ -193,7 +193,7 @@ public static class TextureFormatExtensions
         TextureFormat.Rgb32f => PixelFormat.Rgb,
         TextureFormat.Rgba32f => PixelFormat.Rgba,
 
-        _ => throw new ArgumentOutOfRangeException(nameof(format), $"Texture format '{format}' is not supported."),
+        _ => throw Aura3D.Core.Exceptions.RendererErrors.UnsupportedTextureFormat(nameof(format), format),
 
     };
 
@@ -213,7 +213,7 @@ public static class TextureFormatExtensions
         TextureFormat.Rgba16f => InternalFormat.Rgba16f,
         TextureFormat.Rgb32f => InternalFormat.Rgb32f,
         TextureFormat.Rgba32f => InternalFormat.Rgba32f,
-        _ => throw new ArgumentOutOfRangeException(nameof(format), $"Texture format '{format}' is not supported.")
+        _ => throw Aura3D.Core.Exceptions.RendererErrors.UnsupportedTextureFormat(nameof(format), format)
     };
 
 
@@ -224,6 +224,6 @@ public static class TextureFormatExtensions
         TextureFormat.DepthComponent32f => GLEnum.DepthAttachment,
         TextureFormat.Depth24Stencil8 => GLEnum.DepthStencilAttachment,
         TextureFormat.Depth32fStencil8 => GLEnum.DepthStencilAttachment,
-        _ => throw new ArgumentOutOfRangeException(nameof(format), $"Texture format '{format}' is not supported.")
+        _ => throw Aura3D.Core.Exceptions.RendererErrors.UnsupportedTextureFormat(nameof(format), format)
     };
 }

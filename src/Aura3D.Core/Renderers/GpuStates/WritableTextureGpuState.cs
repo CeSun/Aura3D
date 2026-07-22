@@ -67,7 +67,7 @@ internal sealed class WritableTextureGpuState : TextureGpuState
         var status = gl.CheckFramebufferStatus(GLEnum.Framebuffer);
         if (status != GLEnum.FramebufferComplete)
         {
-            throw new InvalidOperationException($"WritableTexture framebuffer creation failed with status: {status}");
+            throw Aura3D.Core.Exceptions.RendererErrors.FramebufferCreationFailed(status, nameof(WritableTexture));
         }
 
         gl.BindTexture(GLEnum.Texture2D, 0);

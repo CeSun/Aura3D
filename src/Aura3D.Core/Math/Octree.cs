@@ -59,10 +59,10 @@ public class Octree<T> where T : IOctreeObject
     public Octree(Vector3 size, int maxDepth)
     {
         if (maxDepth < 0)
-            throw new ArgumentOutOfRangeException(nameof(maxDepth), "最大深度不能为负数");
+            throw Aura3D.Core.Exceptions.SpatialErrors.OctreeMaxDepth(nameof(maxDepth));
 
         if (BoundingBox.IsInvalidVector(size) || size.X <= 0 || size.Y <= 0 || size.Z <= 0)
-            throw new ArgumentException("尺寸必须为正数且非 NaN/Infinity", nameof(size));
+            throw Aura3D.Core.Exceptions.SpatialErrors.OctreeSize(nameof(size));
 
         _size = size;
         _initialSize = size;
@@ -139,11 +139,11 @@ public class Octree<T> where T : IOctreeObject
 
         var bb = obj.BoundingBox;
         if (bb == null)
-            throw new ArgumentException("物体的包围盒不能为 null", nameof(obj));
+            throw Aura3D.Core.Exceptions.SpatialErrors.ObjectBoundingBoxNull(nameof(obj));
 
         if (BoundingBox.IsInvalidVector(bb.Min) ||
             BoundingBox.IsInvalidVector(bb.Max))
-            throw new ArgumentException("物体的包围盒包含无效值", nameof(obj));
+            throw Aura3D.Core.Exceptions.SpatialErrors.ObjectBoundingBoxInvalid(nameof(obj));
 
         if (_allObjects.Contains(obj))
             return false;
@@ -197,11 +197,11 @@ public class Octree<T> where T : IOctreeObject
         ArgumentNullException.ThrowIfNull(obj);
 
         if (!_allObjects.Contains(obj))
-            throw new KeyNotFoundException("物体未加入八叉树，无法更新");
+            throw Aura3D.Core.Exceptions.SpatialErrors.ObjectNotInOctree();
 
         var bb = obj.BoundingBox;
         if (bb == null)
-            throw new InvalidOperationException("物体的包围盒在更新时为 null");
+            throw Aura3D.Core.Exceptions.SpatialErrors.ObjectBoundingBoxNullDuringUpdate();
 
         // 快速路径：如果仍在所有所属节点内，无需重插
         if (StillContainedInCurrentNodes(obj, bb))

@@ -104,7 +104,7 @@ public static class SamplerHelper
     public static T GetValueByTime<T>(this IReadOnlyList<Keyframe<T>> list, float time, Func<Keyframe<T>, Keyframe<T>, float, T> lerpFunc) where T : struct
     {
         if (list.Count == 0)
-            throw new Exception("The keyframe list is empty.");
+            throw Aura3D.Core.Exceptions.AnimationErrors.EmptyKeyframeList();
 
         if (list.Count == 1)
             return list[0].Value;

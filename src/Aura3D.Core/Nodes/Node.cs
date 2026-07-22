@@ -3,6 +3,7 @@ using Aura3D.Core.Resources;
 using System.Numerics;
 using Aura3D.Core.Math;
 using Aura3D.Core.Renderers;
+using Aura3D.Core.Exceptions;
 
 namespace Aura3D.Core.Nodes;
 
@@ -385,16 +386,16 @@ public partial class Node
     {
         // 检查子节点是否已存在，若存在则不重复添加
         if (_children.Contains(child))
-            throw new InvalidOperationException("子节点已存在");
+            throw SceneGraphErrors.ChildAlreadyExists(this, child);
 
         if (child == this) 
-            throw new InvalidOperationException("不能将自身作为子节点");
+            throw SceneGraphErrors.CannotAddNodeAsOwnChild(this);
 
         if (checkCircle(child) == true)
-            throw new InvalidOperationException("不能将父节点添加为子节点，形成循环引用");
+            throw SceneGraphErrors.CircularHierarchy(this, child);
         
         if (child.Parent != null)
-            throw new InvalidOperationException("子节点已有父节点");
+            throw SceneGraphErrors.ChildAlreadyHasParent(this, child);
 
         if (CurrentScene == null)
         {
@@ -406,7 +407,7 @@ public partial class Node
         }
         else if (!ReferenceEquals(CurrentScene, child.CurrentScene))
         {
-            throw new InvalidOperationException("父子节点属于不同场景");
+            throw SceneGraphErrors.ParentAndChildBelongToDifferentScenes(this, child);
         }
         else
         {
@@ -443,10 +444,10 @@ public partial class Node
         }
     }
 
-    private static void EnsureSubtreeDetached(Node node)
+    private void EnsureSubtreeDetached(Node node)
     {
         if (node.CurrentScene != null)
-            throw new InvalidOperationException("不能将场景中的节点挂到未加入场景的父节点");
+            throw SceneGraphErrors.CannotAttachSceneNodeToDetachedParent(this, node);
 
         foreach (var child in node.Children)
         {
@@ -472,7 +473,7 @@ public partial class Node
         // 检查子节点是否存在，若不存在则不处理
         if (_children.Contains(child) == false)
         {
-            throw new InvalidOperationException("子节点不存在");
+            throw SceneGraphErrors.ChildNotFound(this, child);
         }
 
         if (CurrentScene != null)
@@ -481,7 +482,7 @@ public partial class Node
         }
         else if (child.CurrentScene != null)
         {
-            throw new InvalidOperationException("父子节点的场景归属不一致");
+            throw SceneGraphErrors.SceneOwnershipMismatch(this, child);
         }
 
         // 从集合中移除子节点
@@ -566,7 +567,7 @@ public partial class Node
             }
             else
             {
-                throw new InvalidCastException($"GPU 状态 '{name}' 的类型不匹配，无法转换为 {typeof(T).Name}");
+                throw RendererErrors.GpuStateTypeMismatch(name, typeof(T));
             }
         }
         else

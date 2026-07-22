@@ -47,7 +47,7 @@ public class WritableTexture : Texture
             or TextureFormat.Depth24Stencil8
             or TextureFormat.Depth32fStencil8)
         {
-            throw new ArgumentOutOfRangeException(nameof(format), "WritableTexture only supports color formats.");
+            throw Aura3D.Core.Exceptions.ResourceErrors.WritableTextureColorFormatOnly(nameof(format));
         }
 
         if (Format == format)

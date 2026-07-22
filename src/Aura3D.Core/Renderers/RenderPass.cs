@@ -149,7 +149,7 @@ public partial class RenderPass
     protected RenderTarget GetOutputRenderTargetOrThrow(Camera camera)
     {
         if (outputRenderTarget == null)
-            throw new InvalidOperationException("Output render target is not set.");
+            throw Aura3D.Core.Exceptions.RendererErrors.RenderPassOutputNotSet();
 
         return outputRenderTarget.ResolveRenderTarget(renderPipeline, camera);
     }

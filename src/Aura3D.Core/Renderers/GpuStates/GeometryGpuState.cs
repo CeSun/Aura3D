@@ -21,7 +21,7 @@ internal class GeometryGpuState : IResourceGpuState<Geometry>
             if (geometry.TryGetTarget(out var value))
                 return value;
 
-            throw new InvalidOperationException("The CPU resource has already been collected.");
+            throw Aura3D.Core.Exceptions.RendererErrors.CpuResourceCollected(nameof(Geometry));
         }
     }
 

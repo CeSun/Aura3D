@@ -132,7 +132,7 @@ public class InstancedGeometry : Geometry
         where T : unmanaged
     {
         if (data.Count != InstanceCount)
-            throw new ArgumentException($"数据数量 ({data.Count}) 与实例数量 ({InstanceCount}) 不一致。");
+            throw Aura3D.Core.Exceptions.ResourceErrors.InstanceAttributeCountMismatch(data.Count, InstanceCount);
 
         var name = attribute.ToString();
         int elementSize = sizeof(T) / sizeof(float);

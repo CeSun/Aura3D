@@ -33,10 +33,10 @@ public class AnimationBlendSpace : AnimationSamplerBase
     public void AddAnimationSampler(Vector2 point, IAnimationSampler animationSampler)
     {
         if (point.X > 1 || point.X < -1)
-            throw new ArgumentOutOfRangeException(nameof(point), "Animation sampler point X must be in range [-1, 1].");
+            throw Aura3D.Core.Exceptions.AnimationErrors.BlendPointXOutOfRange(nameof(point));
 
         if (point.Y > 1 || point.Y < -1)
-            throw new ArgumentOutOfRangeException(nameof(point), "Animation sampler point Y must be in range [-1, 1].");
+            throw Aura3D.Core.Exceptions.AnimationErrors.BlendPointYOutOfRange(nameof(point));
 
         _animationSamplers.Add((point, animationSampler));
         _weights.Add(0);
@@ -53,7 +53,7 @@ public class AnimationBlendSpace : AnimationSamplerBase
     public void SetAxis(float x, float y)
     {
         if (x < -1 || y < -1 || x > 1 || y > 1)
-            throw new ArgumentOutOfRangeException(nameof(x), "Axis values must be in range [-1, 1].");
+            throw Aura3D.Core.Exceptions.AnimationErrors.BlendAxisOutOfRange(nameof(x));
         _axisValue.X = x;
         _axisValue.Y = y;
     }

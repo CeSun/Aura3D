@@ -2,6 +2,7 @@ using Aura3D.Core.Math;
 using Aura3D.Core.Nodes;
 using Aura3D.Core.Renderers;
 using Aura3D.Core.Resources;
+using Aura3D.Core.Exceptions;
 using OneOf;
 using System.Drawing;
 using System.Numerics;
@@ -140,7 +141,7 @@ public class Scene
         ArgumentNullException.ThrowIfNull(node);
 
         if (node.Parent != null && !ReferenceEquals(node.Parent.CurrentScene, this))
-            throw new InvalidOperationException("节点的父节点不属于当前场景");
+            throw SceneGraphErrors.ParentDoesNotBelongToScene(node);
 
         ValidateSubtreeCanBeAdded(node);
         AddNodeCore(node);
@@ -154,10 +155,10 @@ public class Scene
     private void ValidateSubtreeCanBeAdded(Node node, HashSet<Node> visited)
     {
         if (!visited.Add(node))
-            throw new InvalidOperationException("节点子树包含循环或重复引用");
+            throw SceneGraphErrors.SubtreeContainsCycleOrDuplicate(node);
 
         if (node.CurrentScene != null || _nodes.Contains(node))
-            throw new InvalidOperationException("节点已属于场景");
+            throw SceneGraphErrors.NodeAlreadyBelongsToScene(node);
 
         foreach (var child in node.Children)
         {
@@ -173,10 +174,10 @@ public class Scene
     private void ValidateSubtreeBelongsToScene(Node node, HashSet<Node> visited)
     {
         if (!visited.Add(node))
-            throw new InvalidOperationException("节点子树包含循环或重复引用");
+            throw SceneGraphErrors.SubtreeContainsCycleOrDuplicate(node);
 
         if (!ReferenceEquals(node.CurrentScene, this) || !_nodes.Contains(node))
-            throw new InvalidOperationException("节点子树与场景注册状态不一致");
+            throw SceneGraphErrors.SubtreeSceneRegistrationMismatch(node);
 
         foreach (var child in node.Children)
         {
@@ -219,7 +220,7 @@ public class Scene
         ArgumentNullException.ThrowIfNull(node);
 
         if (node.Parent != null)
-            throw new InvalidOperationException("非根节点必须通过父节点的 RemoveChild 移除");
+            throw SceneGraphErrors.NonRootNodeRemoval(node);
 
         ValidateSubtreeBelongsToScene(node);
         RemoveNodeCore(node);

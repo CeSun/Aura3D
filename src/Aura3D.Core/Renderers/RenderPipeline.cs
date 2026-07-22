@@ -435,7 +435,7 @@ public abstract partial class RenderPipeline
     {
         var geometry = instancedMesh.GetGeometry() as InstancedGeometry;
         if (geometry == null)
-            throw new InvalidOperationException("InstancedMesh does not have InstancedGeometry.");
+            throw Aura3D.Core.Exceptions.RendererErrors.MissingInstancedGeometry();
 
         var gpuState = GetInstancedGeometryGpuState(geometry);
 
@@ -719,7 +719,7 @@ public abstract partial class RenderPipeline
         }
         if (gpuState.FramebufferId == 0)
         {
-            throw new InvalidOperationException("WritableTexture framebuffer was not created.");
+            throw Aura3D.Core.Exceptions.RendererErrors.FramebufferNotCreated(nameof(WritableTexture));
         }
 
         return gpuState.FramebufferId;
@@ -729,13 +729,13 @@ public abstract partial class RenderPipeline
     {
         if (camera.OutputTexture == null)
         {
-            throw new InvalidOperationException("Camera output texture is not set.");
+            throw Aura3D.Core.Exceptions.RendererErrors.CameraOutputTextureNotSet();
         }
 
         if (camera.OutputTexture.Width == 0 || camera.OutputTexture.Height == 0)
         {
             var outputSurface = Scene.DefaultOutputSurface
-                ?? throw new InvalidOperationException("Scene default output surface is not set.");
+                ?? throw Aura3D.Core.Exceptions.RendererErrors.DefaultOutputSurfaceNotSet();
 
             camera.OutputTexture.SetSize(outputSurface.Width, outputSurface.Height);
         }

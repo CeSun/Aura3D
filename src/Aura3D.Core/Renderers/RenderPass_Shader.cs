@@ -139,7 +139,7 @@ public partial class RenderPass
         {
             var info = gl.GetShaderInfoLog(vertex);
             Console.WriteLine(vs);
-            throw new InvalidOperationException($"Vertex shader compilation failed: {info}");
+            throw Aura3D.Core.Exceptions.RendererErrors.ShaderCompilationFailed(true, info);
         }
 
         var fragment = gl.CreateShader(ShaderType.FragmentShader);
@@ -153,7 +153,7 @@ public partial class RenderPass
         {
             var info = gl.GetShaderInfoLog(fragment);
             Console.WriteLine(fs);
-            throw new InvalidOperationException($"Fragment shader compilation failed: {info}");
+            throw Aura3D.Core.Exceptions.RendererErrors.ShaderCompilationFailed(false, info);
         }
 
         var programId = gl.CreateProgram();
@@ -166,7 +166,7 @@ public partial class RenderPass
         if (linkStatus == 0)
         {
             var info = gl.GetProgramInfoLog(programId);
-            throw new InvalidOperationException($"Shader program link failed: {info}");
+            throw Aura3D.Core.Exceptions.RendererErrors.ShaderProgramLinkFailed(info);
         }
 
         // GLES 3.0 不支持 shader 内 layout(binding=N)，link 后枚举所有

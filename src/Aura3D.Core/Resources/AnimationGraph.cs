@@ -134,11 +134,11 @@ public class AnimationGraphNode
     /// </summary>
     /// <param name="func">判断是否应该切换到下一个节点的函数。</param>
     /// <param name="node">下一个节点。</param>
-    /// <exception cref="InvalidOperationException">当尝试将节点自身添加为下一个节点时抛出。</exception>
+    /// <exception cref="Aura3D.Core.Exceptions.AnimationException">当尝试将节点自身添加为下一个节点时抛出。</exception>
     public void AddNextNode(Func<IAnimationSampler, double, bool> func, AnimationGraphNode node)
     {
         if (this == node)
-            throw new InvalidOperationException("An animation graph node cannot reference itself as a next node.");
+            throw Aura3D.Core.Exceptions.AnimationErrors.GraphSelfReference();
         NextNodes.Add((func, node));
     }
 

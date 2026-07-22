@@ -244,28 +244,13 @@ public static class ModelHelper
         bitangents = new List<float>();
 
         // 参数合法性校验
-        if (indices == null || vertexNormals == null || uvs == null)
-            throw new ArgumentException("输入列表不能为null");
+        ArgumentNullException.ThrowIfNull(indices);
+        ArgumentNullException.ThrowIfNull(vertexNormals);
+        ArgumentNullException.ThrowIfNull(uvs);
 
         if (indices.Count % 3 != 0)
-            throw new ArgumentException("索引列表长度必须是3的倍数（每个三角形3个索引）");
+            throw Aura3D.Core.Exceptions.GeometryErrors.TriangleIndexCount(nameof(indices));
 
-        // 计算顶点数量（假设索引是连续的，取最大索引+1）
-        /*
-        uint maxIndex = 0;
-        foreach (uint idx in indices)
-        {
-            if (idx > maxIndex) maxIndex = idx;
-        }
-        int vertexCount = (int)maxIndex + 1;
-        
-        // 验证法线和UV数据长度是否匹配顶点数量
-        // if (vertexNormals.Count != vertexCount * 3)
-        //    throw new ArgumentException($"法线列表长度应为{vertexCount * 3}（每个顶点3个分量），实际为{vertexNormals.Count}");
-
-        if (uvs.Count != vertexCount * 2)
-            throw new ArgumentException($"UV列表长度应为{vertexCount * 2}（每个顶点2个分量），实际为{uvs.Count}");
-        */
         // 初始化切线和副切线数组（初始值为0）
         float[] tan = new float[vertexNormals.Count];
         float[] bitan = new float[vertexNormals.Count];

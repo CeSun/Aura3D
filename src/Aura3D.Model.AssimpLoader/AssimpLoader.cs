@@ -410,7 +410,7 @@ public static class AssimpLoader
             }
             else
             {
-                throw new InvalidDataException("Embedded texture has neither compressed nor non-compressed data.");
+                throw Aura3D.Model.Exceptions.ModelImportErrors.InvalidEmbeddedTexture();
             }
         }
         else
@@ -549,7 +549,7 @@ public static class AssimpLoader
             {
                 var id = skeleton.GetBoneIndex(bone.Name);
                 if (id < 0)
-                    throw new InvalidOperationException($"Cannot find skeleton bone: {bone.Name}");
+                    throw Aura3D.Model.Exceptions.ModelImportErrors.SkeletonBoneNotFound(bone.Name);
 
                 foreach (var vertexWeight in bone.VertexWeights)
                 {

@@ -87,7 +87,7 @@ public class CubeRenderTarget : RenderTargetBase<RenderCubeTexture, CubeRenderTa
 
         if (state != GLEnum.FramebufferComplete)
         {
-            throw new Exception("create framebuffer error: " + state);
+            throw Aura3D.Core.Exceptions.RendererErrors.FramebufferCreationFailed(state, nameof(CubeRenderTarget));
         }
 
         SyncTextureSizes();

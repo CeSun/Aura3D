@@ -74,7 +74,7 @@ public abstract partial class RenderPipeline
     {
         if (!ReferenceEquals(renderTargetHandle.OwnerPipeline, this))
         {
-            throw new InvalidOperationException("Render target handle does not belong to the current render pipeline.");
+            throw Aura3D.Core.Exceptions.RendererErrors.RenderTargetOwnershipMismatch();
         }
 
         if (renderTargetHandles.TryGetValue(renderTargetHandle.Name, out var rtConf))
@@ -106,6 +106,6 @@ public abstract partial class RenderPipeline
             return rt.Item1;
         }
 
-        throw new KeyNotFoundException($"RenderTarget '{renderTargetHandle.Name}' not found. Ensure the render target is registered before use.");
+        throw Aura3D.Core.Exceptions.RendererErrors.RenderTargetNotFound(renderTargetHandle.Name);
     }
 }

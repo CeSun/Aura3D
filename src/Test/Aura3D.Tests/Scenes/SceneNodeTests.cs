@@ -1,3 +1,4 @@
+using Aura3D.Core.Exceptions;
 using Aura3D.Core.Nodes;
 using Aura3D.Core.Renderers;
 using Aura3D.Core.Scenes;
@@ -52,9 +53,12 @@ public class SceneNodeTests
         parentScene.AddNode(parent);
         childScene.AddNode(child);
 
-        Assert.Throws<InvalidOperationException>(
+        var exception = Assert.Throws<SceneGraphException>(
             () => parent.AddChild(child, AttachToParentRule.KeepLocal));
 
+        Assert.Equal(SceneGraphError.ParentAndChildBelongToDifferentScenes, exception.Code);
+        Assert.Same(parent, exception.Node);
+        Assert.Same(child, exception.RelatedNode);
         Assert.Null(child.Parent);
         Assert.DoesNotContain(child, parent.Children);
         Assert.Same(childScene, child.CurrentScene);
@@ -70,8 +74,11 @@ public class SceneNodeTests
         parent.AddChild(child, AttachToParentRule.KeepLocal);
         scene.AddNode(parent);
 
-        Assert.Throws<InvalidOperationException>(() => scene.RemoveNode(child));
+        var exception = Assert.Throws<SceneGraphException>(() => scene.RemoveNode(child));
 
+        Assert.Equal(SceneGraphError.NonRootNodeRemoval, exception.Code);
+        Assert.Same(child, exception.Node);
+        Assert.Same(parent, exception.RelatedNode);
         Assert.Same(parent, child.Parent);
         Assert.Contains(child, parent.Children);
         Assert.Same(scene, child.CurrentScene);

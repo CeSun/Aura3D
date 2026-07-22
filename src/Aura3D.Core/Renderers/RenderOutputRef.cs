@@ -13,7 +13,7 @@ public abstract class RenderOutputRef
 
     internal virtual RenderTarget ResolveRenderTarget(RenderPipeline renderPipeline, Camera camera)
     {
-        throw new InvalidOperationException("Current render output is not a registered render target.");
+        throw Aura3D.Core.Exceptions.RendererErrors.InvalidRenderOutput();
     }
 }
 
@@ -61,7 +61,7 @@ public sealed class RenderTargetHandle : RenderOutputRef
     public RenderTargetHandle AddTexture(string name, TextureFormat internalFormat)
     {
         if (textureNames.Contains(name))
-            throw new ArgumentException($"Texture '{name}' already exists in render target configuration.", nameof(name));
+            throw Aura3D.Core.Exceptions.RendererErrors.TextureAlreadyRegistered(name, nameof(name));
 
         Textures.Add((name, internalFormat));
         textureNames.Add(name);
@@ -78,7 +78,7 @@ public sealed class RenderTargetHandle : RenderOutputRef
     {
         if (!textureNames.Contains(name))
         {
-            throw new KeyNotFoundException($"Texture '{name}' is not registered in render target '{Name}'.");
+            throw Aura3D.Core.Exceptions.RendererErrors.TextureNotRegistered(name, Name);
         }
 
         return new RenderTargetTextureHandle(this, name);
@@ -94,7 +94,7 @@ public sealed class RenderTargetHandle : RenderOutputRef
     {
         if (!ReferenceEquals(OwnerPipeline, renderPipeline))
         {
-            throw new InvalidOperationException("Render target handle does not belong to the current render pipeline.");
+            throw Aura3D.Core.Exceptions.RendererErrors.RenderTargetOwnershipMismatch();
         }
 
         return renderPipeline.GetRenderTarget(this, new Size((int)camera.Width, (int)camera.Height));
