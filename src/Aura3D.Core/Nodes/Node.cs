@@ -392,24 +392,25 @@ public partial class Node
 
         if (checkCircle(child) == true)
             throw new InvalidOperationException("不能将父节点添加为子节点，形成循环引用");
+        
+        if (child.Parent != null)
+            throw new InvalidOperationException("子节点已有父节点");
 
+        var childWorldTransform = child.WorldTransform;
         // 将子节点加入集合
         _children.Add(child);
 
+        // 设置子节点的父节点为当前节点
+        child.Parent = this;
+
         if (attachToParentRule == AttachToParentRule.KeepWorld)
         {
-            var tempWorldTransform = child.WorldTransform;
-
-            // 设置子节点的父节点为当前节点
-            child.Parent = this;
-
             // 更新子节点的本地变换，使其世界空间位置保持不变
-            child.WorldTransform = tempWorldTransform;
+            child.WorldTransform = childWorldTransform;
         }
         else
         {
-            child.Parent = this;
-
+            // 更新子节点的世界变换，使其相对于父节点的位置保持不变
             child.updateWorldTransform();
         }
        
