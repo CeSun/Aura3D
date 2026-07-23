@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Aura3D.Core.Renderers;
 
+using Aura3D.Pipeline.PBR.Common;
+
 namespace Aura3D.Pipeline.PBR;
 
 public class PointLightingPass : RenderPass

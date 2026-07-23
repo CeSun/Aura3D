@@ -1,4 +1,4 @@
-﻿using Aura3D.Core.Math;
+using Aura3D.Core.Math;
 using Aura3D.Core.Nodes;
 using Aura3D.Core.Resources;
 using Silk.NET.OpenGLES;
@@ -8,7 +8,7 @@ using Aura3D.Core.Renderers;
 
 using Aura3D.Pipeline.PBR.Common;
 
-namespace Aura3D.Pipeline.PBR;
+namespace Aura3D.Pipeline.PBRForward;
 
 internal class TranslucentPass : RenderPass<PBRPipelineBase>
 {
@@ -21,14 +21,14 @@ internal class TranslucentPass : RenderPass<PBRPipelineBase>
     Core.Resources.Texture defaultEmissive => RenderPipeline.DefaultEmissive;
 
     Core.Resources.Texture defaultOcclusion => RenderPipeline.DefaultOcclusion;
-    readonly RenderTargetHandle gbufferRenderTarget;
-    public TranslucentPass(RenderPipeline renderPipeline, RenderTargetHandle gbufferRendertarget) : base(renderPipeline)
+    readonly RenderTargetHandle depthRenderTarget;
+    public TranslucentPass(RenderPipeline renderPipeline, RenderTargetHandle depthRenderTarget) : base(renderPipeline)
     {
-        gbufferRenderTarget = gbufferRendertarget;
+        this.depthRenderTarget = depthRenderTarget;
 
-        VertexShader = PbrResources.MeshVertexShader;
+        VertexShader = PbrForwardResources.MeshVertexShader;
 
-        FragmentShader = PbrResources.TranslucentLightingFragmentShader;
+        FragmentShader = PbrForwardResources.LightingFragmentShader;
 
         ShaderName = nameof(TranslucentPass);
     }
@@ -37,7 +37,7 @@ internal class TranslucentPass : RenderPass<PBRPipelineBase>
     {
         BindOutput(camera);
 
-        var gbuffer = GetRenderTarget(gbufferRenderTarget, camera);
+        var gbuffer = GetRenderTarget(depthRenderTarget, camera);
 
         gl.FramebufferTexture2D(GLEnum.Framebuffer, gbuffer.DepthTextureFormat.ToGlAttachment(), GLEnum.Texture2D, gbuffer.DepthStencilTexture.TextureId, 0);
 

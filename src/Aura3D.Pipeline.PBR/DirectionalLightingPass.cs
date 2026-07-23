@@ -4,6 +4,8 @@ using Silk.NET.OpenGLES;
 using System.Numerics;
 using Aura3D.Core.Renderers;
 
+using Aura3D.Pipeline.PBR.Common;
+
 namespace Aura3D.Pipeline.PBR;
 
 internal class DirectionalLightingPass : RenderPass

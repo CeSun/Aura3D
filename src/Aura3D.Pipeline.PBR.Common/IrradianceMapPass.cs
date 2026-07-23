@@ -1,12 +1,12 @@
-﻿using Aura3D.Core.Nodes;
+using Aura3D.Core.Nodes;
 using Aura3D.Core.Resources;
 using Silk.NET.OpenGLES;
 using System.Numerics;
 using Aura3D.Core.Renderers;
 
-namespace Aura3D.Pipeline.PBR;
+namespace Aura3D.Pipeline.PBR.Common;
 
-internal class IrradianceMapPass : RenderPass<PBRDeferredPipeline>
+public class IrradianceMapPass : RenderPass<PBRPipelineBase>
 {
     const uint _irradianceMapSize = 64;
 

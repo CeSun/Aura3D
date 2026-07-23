@@ -1,59 +1,20 @@
-﻿using Aura3D.Core.Nodes;
-using Aura3D.Core.Renderers.Common;
-using Aura3D.Core.Resources;
-using Aura3D.Core.Scenes;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Aura3D.Core;
+using Aura3D.Core.Nodes;
 using Aura3D.Core.Renderers;
-using Aura3D.Core;
+using Aura3D.Core.Renderers.Common;
+using Aura3D.Core.Scenes;
+
+using Aura3D.Pipeline.PBR.Common;
 
 namespace Aura3D.Pipeline.PBR;
 
-public class PBRDeferredPipeline : RenderPipeline, IRenderPipelineCreateInstance
+public class PBRDeferredPipeline : PBRPipelineBase, IRenderPipelineCreateInstance
 {
     /// <inheritdoc />
     public override bool SupportsCSM => true;
 
-    public Texture DefaultBaseColor { get; private set; }
-
-    public Texture DefaultNormal { get; private set; }
-
-    public Texture DefaultMetallicRoughness { get; private set; }
-
-    public Texture DefaultEmissive { get; private set; }
-
-    public Texture DefaultOcclusion { get; private set; }
-
-    public CubeTexture DefaultIblAmbientCubeTexture
-    {
-        get
-        {
-            if (_defaultIblAmbientCubeTexture == null)
-            {
-                var texture = Texture.CreateFromColor(Color.White);
-                var cube = HDRIToCubeTextureConverter.ConvertFromTexture(texture, 16);
-                _defaultIblAmbientCubeTexture = cube;
-                EnsureSynced(cube);
-            }
-            return _defaultIblAmbientCubeTexture;
-        }
-    }
-
-    private CubeTexture? _defaultIblAmbientCubeTexture = null;
-
-    public Texture BrdfLutTexture;
-
     public PBRDeferredPipeline(Scene scene) : base(scene)
     {
-        using (var ms = new MemoryStream(PbrResources.LutData))
-        {
-            BrdfLutTexture = Core.TextureLoader.LoadHdrTexture(ms);
-        }
-
         var gBuffer = RegisterRenderTarget("GBuffer")
             .AddTexture("BaseColor", TextureFormat.Rgba8)
             .AddTexture("NormalRoughness", TextureFormat.Rgba8)
@@ -107,20 +68,6 @@ public class PBRDeferredPipeline : RenderPipeline, IRenderPipelineCreateInstance
         RegisterRenderPass(new FxaaPass(this, backgroundRenderTarget.GetTexture("Color")).SetOutput(CameraOutput), RenderPassGroup.EveryCamera);
 
         RegisterDebugPass(backgroundRenderTarget);
-
-        DefaultBaseColor = Texture.CreateFromColor(Color.White);
-
-
-        DefaultNormal = Texture.CreateFromColor(Color.FromArgb(128, 128, 255));
-
-
-        DefaultMetallicRoughness = Texture.CreateFromColor(Color.FromArgb(0, 127, 0));
-
-
-        DefaultEmissive = Texture.CreateFromColor(Color.Black);
-
-        DefaultOcclusion = Texture.CreateFromColor(Color.White);
-
     }
 
     public static RenderPipeline CreateInstance(Scene scene) => new PBRDeferredPipeline(scene);
@@ -130,24 +77,8 @@ public class PBRDeferredPipeline : RenderPipeline, IRenderPipelineCreateInstance
         base.BeforeCameraRender(camera);
         if (gl == null)
             return;
+
         SortMeshes(VisibleMeshesInCamera, camera);
         gl.Viewport(0, 0, camera.Width, camera.Height);
-    }
-
-    public override void Setup()
-    {
-        if (gl == null)
-            return;
-        EnsureSynced(DefaultBaseColor);
-        EnsureSynced(DefaultNormal);
-        EnsureSynced(DefaultMetallicRoughness);
-        EnsureSynced(DefaultEmissive);
-        EnsureSynced(DefaultOcclusion);
-        EnsureSynced(BrdfLutTexture);
-    }
-
-    public override void Destroy()
-    {
-        base.Destroy();
     }
 }

@@ -49,6 +49,11 @@ public class PipelineSettings
     public float AmbientIntensity { get; set; } = 0.1f;
 
     /// <summary>
+    /// Gets or sets the PBR IBL ambient intensity.
+    /// </summary>
+    public float IblAmbientIntensity { get; set; } = 1.0f;
+
+    /// <summary>
     /// Gets or sets the enable fxaa.
     /// </summary>
     public bool EnableFxaa { get; set; } = true;
