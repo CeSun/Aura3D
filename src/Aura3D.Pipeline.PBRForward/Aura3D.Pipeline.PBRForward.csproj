@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Package.props" />
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aura3D.Core\Aura3D.Core.csproj" />
+    <ProjectReference Include="..\Aura3D.Pipeline.PBR.Common\Aura3D.Pipeline.PBR.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Shaders\mesh.vert" LogicalName="Aura3D.Pipeline.PBRForward.Resources.MeshVertexShader" />
+    <EmbeddedResource Include="Assets\Shaders\pbr_directionallight_lighting_pass.frag" LogicalName="Aura3D.Pipeline.PBRForward.Resources.LightingFragmentShader" />
+    <EmbeddedResource Include="Assets\Shaders\pbr_ibl_ambient.frag" LogicalName="Aura3D.Pipeline.PBRForward.Resources.IblAmbientFragmentShader" />
+  </ItemGroup>
+</Project>

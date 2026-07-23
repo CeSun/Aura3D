@@ -1,4 +1,4 @@
-﻿using Aura3D.Core.Nodes;
+using Aura3D.Core.Nodes;
 using Aura3D.Core.Resources;
 using Silk.NET.OpenGLES;
 using System;
@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 using Aura3D.Core.Renderers;
 using Aura3D.Core;
 
-namespace Aura3D.Pipeline.PBR;
+namespace Aura3D.Pipeline.PBR.Common;
 
-internal class PrefilteredEnvironmentMapPass : RenderPass<PBRDeferredPipeline>
+public class PrefilteredEnvironmentMapPass : RenderPass<PBRPipelineBase>
 {
     const int PREFILTER_WIDTH = 256;
 

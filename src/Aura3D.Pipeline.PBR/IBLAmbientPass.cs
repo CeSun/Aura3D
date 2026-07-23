@@ -5,6 +5,8 @@ using System.Drawing;
 using System.Numerics;
 using Aura3D.Core.Renderers;
 
+using Aura3D.Pipeline.PBR.Common;
+
 namespace Aura3D.Pipeline.PBR;
 
 internal class IBLAmbientPass : RenderPass<PBRDeferredPipeline>
@@ -83,6 +85,7 @@ void main() {
         UniformMatrix4(nameof(u_projMatrix), u_projMatrix);
         UniformMatrix4(nameof(u_invViewProjMatrix), u_invViewProjMatrix);
         UniformVector3("u_cameraPos", camera.WorldTransform.Translation);
+        UniformFloat("iblAmbientIntensity", renderPipeline.Settings.IblAmbientIntensity);
 
         int nearestPowerOfTwo = (int)MathF.Pow(2, MathF.Floor(MathF.Log2(u_prefilterMap.Width)));
         var mipmap =  BitOperations.TrailingZeroCount((uint)nearestPowerOfTwo) + 1;

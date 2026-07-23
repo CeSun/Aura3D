@@ -6,9 +6,11 @@ using System.Drawing;
 using System.Numerics;
 using Aura3D.Core.Renderers;
 
+using Aura3D.Pipeline.PBR.Common;
+
 namespace Aura3D.Pipeline.PBR;
 
-internal class TranslucentConstantAmbientPass : RenderPass<PBRDeferredPipeline>
+internal class TranslucentConstantAmbientPass : RenderPass<PBRPipelineBase>
 {
     Core.Resources.Texture defaultBaseColor => RenderPipeline.DefaultBaseColor;
 

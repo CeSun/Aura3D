@@ -6,7 +6,9 @@
   </PropertyGroup>
 
 	<ItemGroup>
+
 		<ProjectReference Include="..\Aura3D.Core\Aura3D.Core.csproj" />
+		<ProjectReference Include="..\Aura3D.Pipeline.PBR.Common\Aura3D.Pipeline.PBR.Common.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -16,6 +18,7 @@
 		<EmbeddedResource Include="Assets\Shaders\pbr_directionallight_lighting_pass.frag" LogicalName="Aura3D.Pipeline.PBR.Resources.LightingFragmentShader" />
 		<EmbeddedResource Include="Assets\Shaders\pbr_constant_ambient.frag" LogicalName="Aura3D.Pipeline.PBR.Resources.ConstantAmbientFragmentShader" />
 		<EmbeddedResource Include="Assets\Shaders\pbr_ibl_ambient.frag" LogicalName="Aura3D.Pipeline.PBR.Resources.IblAmbientFragmentShader" />
-		<EmbeddedResource Include="Assets\Textures\lut.hdr" LogicalName="Aura3D.Pipeline.PBR.Resources.LutData" />
+		<EmbeddedResource Include="Assets\Shaders\pbr_translucent_lighting.frag" LogicalName="Aura3D.Pipeline.PBR.Resources.TranslucentLightingFragmentShader" />
+		<EmbeddedResource Include="Assets\Shaders\pbr_translucent_ibl_ambient.frag" LogicalName="Aura3D.Pipeline.PBR.Resources.TranslucentIblAmbientFragmentShader" />
 	</ItemGroup>
 </Project>

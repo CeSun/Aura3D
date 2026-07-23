@@ -1,4 +1,4 @@
-﻿using Aura3D.Core.Math;
+using Aura3D.Core.Math;
 using Aura3D.Core.Nodes;
 using Aura3D.Core.Resources;
 using Silk.NET.OpenGLES;
@@ -13,7 +13,7 @@ using Aura3D.Core.Renderers;
 
 using Aura3D.Pipeline.PBR.Common;
 
-namespace Aura3D.Pipeline.PBR;
+namespace Aura3D.Pipeline.PBRForward;
 
 internal class TranslucentIBLAmbientPass : RenderPass<PBRPipelineBase>
 {
@@ -27,15 +27,15 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRPipelineBase>
 
     Core.Resources.Texture defaultOcclusion => RenderPipeline.DefaultOcclusion;
 
-    readonly RenderTargetHandle gbufferRenderTarget;
+    readonly RenderTargetHandle depthRenderTarget;
 
-    public TranslucentIBLAmbientPass(RenderPipeline renderPipeline, RenderTargetHandle gbufferRendertarget) : base(renderPipeline)
+    public TranslucentIBLAmbientPass(RenderPipeline renderPipeline, RenderTargetHandle depthRenderTarget) : base(renderPipeline)
     {
-        gbufferRenderTarget = gbufferRendertarget;
+        this.depthRenderTarget = depthRenderTarget;
 
-        VertexShader = PbrResources.MeshVertexShader;
+        VertexShader = PbrForwardResources.MeshVertexShader;
 
-        FragmentShader = PbrResources.TranslucentIblAmbientFragmentShader;
+        FragmentShader = PbrForwardResources.IblAmbientFragmentShader;
     }
 
     public override void BeforeRender(Camera camera)
@@ -43,7 +43,7 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRPipelineBase>
         this.camera = camera;
         BindOutput(camera);
 
-        var gbuffer = GetRenderTarget(gbufferRenderTarget, camera);
+        var gbuffer = GetRenderTarget(depthRenderTarget, camera);
 
         gl.FramebufferTexture2D(GLEnum.Framebuffer, gbuffer.DepthTextureFormat.ToGlAttachment(), GLEnum.Texture2D, gbuffer.DepthStencilTexture.TextureId, 0);
 
@@ -78,8 +78,8 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRPipelineBase>
     {
 
 
-        var perfilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap");
-        var u_prefilterMap = perfilteredEnvMap.GetTexture(0);
+        var perfilteredEnvMap = camera!.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap")!;
+        var u_prefilterMap = perfilteredEnvMap.GetTexture(0)!;
 
         int nearestPowerOfTwo = (int)MathF.Pow(2, MathF.Floor(MathF.Log2(u_prefilterMap.Width)));
         mipmap = BitOperations.TrailingZeroCount((uint)nearestPowerOfTwo) + 1;
@@ -108,7 +108,7 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRPipelineBase>
         }
     }
 
-    Camera camera;
+    Camera? camera;
     int mipmap;
     public void RenderTranslucentMesh(Mesh mesh, Matrix4x4 view, Matrix4x4 projection)
     {
@@ -129,11 +129,11 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRPipelineBase>
         var u_brdfLUT = RenderPipeline.BrdfLutTexture;
 
 
-        var irradianceMap = camera.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap");
-        var u_irradianceMap = irradianceMap.GetTexture(0);
+        var irradianceMap = camera!.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap")!;
+        var u_irradianceMap = irradianceMap.GetTexture(0)!;
 
-        var perfilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap");
-        var u_prefilterMap = perfilteredEnvMap.GetTexture(0);
+        var perfilteredEnvMap = camera!.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap")!;
+        var u_prefilterMap = perfilteredEnvMap.GetTexture(0)!;
 
 
         UniformMatrix4("viewMatrix", view);
@@ -143,7 +143,7 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRPipelineBase>
         normalMatrix = Matrix4x4.Transpose(normalMatrix);
         UniformMatrix4("normalMatrix", normalMatrix);
 
-        UniformVector3("u_cameraPos", camera.WorldTransform.Translation);
+        UniformVector3("u_cameraPos", camera!.WorldTransform.Translation);
 
         ClearTextureUnit();
         {
@@ -187,16 +187,16 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRPipelineBase>
     {
         var u_brdfLUT = RenderPipeline.BrdfLutTexture;
 
-        var irradianceMap = camera.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap");
-        var u_irradianceMap = irradianceMap.GetTexture(0);
+        var irradianceMap = camera!.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap")!;
+        var u_irradianceMap = irradianceMap.GetTexture(0)!;
 
-        var perfilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap");
-        var u_prefilterMap = perfilteredEnvMap.GetTexture(0);
+        var perfilteredEnvMap = camera!.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap")!;
+        var u_prefilterMap = perfilteredEnvMap.GetTexture(0)!;
 
         UniformMatrix4("viewMatrix", view);
         UniformMatrix4("projectionMatrix", projection);
 
-        UniformVector3("u_cameraPos", camera.WorldTransform.Translation);
+        UniformVector3("u_cameraPos", camera!.WorldTransform.Translation);
 
         ClearTextureUnit();
         {

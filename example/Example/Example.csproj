@@ -28,6 +28,7 @@
     <ProjectReference Include="..\..\src\Aura3D.Model.GltfLoader\Aura3D.Model.GltfLoader.csproj" />
     <ProjectReference Include="..\..\src\Aura3D.Pipeline.CelShading\Aura3D.Pipeline.CelShading.csproj" />
     <ProjectReference Include="..\..\src\Aura3D.Pipeline.PBR\Aura3D.Pipeline.PBR.csproj" />
+    <ProjectReference Include="..\..\src\Aura3D.Pipeline.PBRForward\Aura3D.Pipeline.PBRForward.csproj" />
   </ItemGroup>
 
   <ItemGroup>

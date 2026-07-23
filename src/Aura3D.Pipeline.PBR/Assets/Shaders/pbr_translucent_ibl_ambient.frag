@@ -7,18 +7,6 @@ precision highp samplerCube;
 
 layout(location = 0) out vec4 o_iblColor;
 
-#ifdef ENBALE_DEFERRED_SHADING
-
-in vec2 v_texCoord;
-in vec4 v_clipPos;
-
-uniform sampler2D gBufferBaseColor;
-uniform sampler2D gBufferNormalRoughness;
-uniform sampler2D gBufferMetallicEmissive;
-uniform sampler2D depthTexture;
-
-
-#else 
 
 in vec2 vTexCoord;
 in vec3 vFragPosition;
@@ -28,8 +16,8 @@ uniform sampler2D Texture_Normal;
 uniform sampler2D Texture_MetallicRoughness;
 uniform sampler2D Texture_Emissive;
 uniform sampler2D Texture_Occlusion;
+uniform float alphaCutoff;
 
-#endif
 
 uniform samplerCube u_irradianceMap;
 uniform samplerCube u_prefilterMap;
@@ -59,25 +47,6 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
 
 void main() {
 
-#ifdef ENBALE_DEFERRED_SHADING
-    // Sample base color (albedo)
-    vec4 basecolor = texture(gBufferBaseColor, v_texCoord);
-    vec3 albedo = basecolor.rgb;
-    float alpha = basecolor.a;
-    // Sample normal and roughness
-    vec3 normal = normalize(texture(gBufferNormalRoughness, v_texCoord).rgb);
-	normal = normalize(normal * 2.0 - 1.0);
-    float roughness = texture(gBufferNormalRoughness, v_texCoord).a;
-
-    // Sample metallic and emissive
-    float metallic = texture(gBufferMetallicEmissive, v_texCoord).r;
-    vec3 emissive = texture(gBufferMetallicEmissive, v_texCoord).gba;
-
-    // Reconstruct world position from depth
-    float depth = texture(depthTexture, v_texCoord).r;
-    vec3 worldPos = reconstructWorldPosition(v_texCoord, depth);
-
-#else
 
     vec4 baseColor = texture(Texture_BaseColor, vTexCoord);
     vec3 normal = texture(Texture_Normal, vTexCoord).xyz;
@@ -94,10 +63,14 @@ void main() {
 		normal = -normal;
 	}
 
-    float roughness = metalness_roughness.b;
-    float metallic = metalness_roughness.g;
+    float roughness = metalness_roughness.g;
+    float metallic = metalness_roughness.b;
     vec3 worldPos = vFragPosition;
-#endif
+    #ifdef BLENDMODE_MASKED
+    if (alpha < alphaCutoff)
+        discard;
+    #endif
+
     // Clamp parameters to valid range
     roughness = clamp(roughness, 0.01, 1.0);
     metallic = clamp(metallic, 0.0, 1.0);
