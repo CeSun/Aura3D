@@ -24,10 +24,6 @@ public static class AssimpLoader
 
         var model = processScene(scene, directory, loadTextureFunc);
 
-        var skeleton = processSkeleton(scene);
-
-        model.Skeleton = skeleton;
-
         foreach (var mesh in model.Meshes)
         {
             mesh.Model = model;
@@ -91,10 +87,6 @@ public static class AssimpLoader
 
         var model = processScene(scene, null, loadTextureFunc);
 
-        var skeleton = processSkeleton(scene);
-
-        model.Skeleton = skeleton;
-
         foreach (var mesh in model.Meshes)
         {
             mesh.Model = model;
@@ -115,23 +107,19 @@ public static class AssimpLoader
 
         var model = processScene(scene, directory, loadTextureFunc);
 
-        var skeleton = processSkeleton(scene);
-
-        model.Skeleton = skeleton;
-
         foreach (var mesh in model.Meshes)
         {
             mesh.Model = model;
         }
         List<Core.Resources.Animation> animations = [];
 
-        if (skeleton != null)
+        if (model.Skeleton != null)
         {
             animations = processAnimations(scene);
 
             foreach (var animation in animations)
             {
-                animation.Skeleton = skeleton;
+                animation.Skeleton = model.Skeleton;
             }
 
         }
@@ -146,10 +134,6 @@ public static class AssimpLoader
 
         var model = processScene(scene, null, loadTextureFunc);
 
-        var skeleton = processSkeleton(scene);
-
-        model.Skeleton = skeleton;
-
         foreach (var mesh in model.Meshes)
         {
             mesh.Model = model;
@@ -157,13 +141,13 @@ public static class AssimpLoader
 
         List<Core.Resources.Animation> animations = [];
 
-        if (skeleton != null)
+        if (model.Skeleton != null)
         {
             animations = processAnimations(scene);
 
             foreach (var animation in animations)
             {
-                animation.Skeleton = skeleton;
+                animation.Skeleton = model.Skeleton;
             }
         }
 
@@ -245,6 +229,7 @@ public static class AssimpLoader
         processMaterial(scene, materialsMap, directory, loadTextureFunc);
 
         var skeleton = processSkeleton(scene);
+        model.Skeleton = skeleton;
 
         List<Core.Nodes.Mesh> meshes = [];
 
