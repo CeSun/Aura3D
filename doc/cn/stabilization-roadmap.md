@@ -11,7 +11,7 @@
 - [x] 材质扩展注册表改为并发安全实现。
 - [x] 粒子停止或离开 Scene 时主动释放 GPU Buffer。
 - [x] RenderTarget 销毁改为幂等，并补齐 Pipeline 缓存与集合清理。
-- [x] 发布流程补齐 PBR.Common 和 PBRForward，同时在 PR、main 推送时执行测试和打包验证。
+- [x] 发布流程补齐 PBR.Common 和 PBRForward，并通过手动工作流统一执行测试、打包与 NuGet 发布。
 
 验收标准：核心测试全部通过；所有可发布库在 net8.0 和 net10.0 下构建成功；PBR 包的同版本依赖都存在于发布产物中。
 
