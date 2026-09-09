@@ -187,11 +187,15 @@ public abstract class RenderTargetBase<TTexture, TSelf> : IRuntimeGpuState
             }
         }
         if (depthStencilTexture.TextureId != 0)
+        {
             gl.DeleteTexture(depthStencilTexture.TextureId);
+            depthStencilTexture.TextureId = 0;
+        }
 
         if (FrameBufferId != 0)
         {
             gl.DeleteFramebuffer(FrameBufferId);
+            FrameBufferId = 0;
         }
 
         SyncedVersion = 0;

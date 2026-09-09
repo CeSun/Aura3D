@@ -1,7 +1,13 @@
 name: Build Nuget Packages
 
 on:
+  push:
+    branches: [ main ]
+  pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -15,8 +21,13 @@ jobs:
     - name: Install .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
-      
+        dotnet-version: |
+          8.0.x
+          10.0.x
+
+    - name: Test
+      run: dotnet test src/Test/Aura3D.Tests/Aura3D.Tests.csproj -c Release
+
     - name: Pack Aura3D.Core
       run: dotnet pack src/Aura3D.Core -o packages -c Release
         
@@ -28,6 +39,12 @@ jobs:
 
     - name: Pack Aura3D.Pipeline.PBR
       run: dotnet pack src/Aura3D.Pipeline.PBR -o packages -c Release
+
+    - name: Pack Aura3D.Pipeline.PBR.Common
+      run: dotnet pack src/Aura3D.Pipeline.PBR.Common -o packages -c Release
+
+    - name: Pack Aura3D.Pipeline.PBRForward
+      run: dotnet pack src/Aura3D.Pipeline.PBRForward -o packages -c Release
     
     - name: Pack Aura3D.Model.AssimpLoader
       run: dotnet pack src/Aura3D.Model.AssimpLoader -o packages -c Release
@@ -42,6 +59,7 @@ jobs:
         path: packages
 
   publish-to-nuget:
+    if: github.event_name == 'workflow_dispatch'
     needs: build
     runs-on: ubuntu-latest
     steps:

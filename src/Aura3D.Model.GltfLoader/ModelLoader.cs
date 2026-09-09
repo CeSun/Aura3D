@@ -4,6 +4,7 @@ using Aura3D.Core.Resources;
 using SharpGLTF.IO;
 using SharpGLTF.Schema2;
 using System;
+using System.Collections.Concurrent;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Material = Aura3D.Core.Resources.Material;
@@ -18,11 +19,13 @@ namespace Aura3D.Model;
 public static class ModelLoader
 {
 
-    static Dictionary<Type, Func<MaterialExtensionLoaderBase>> _materialExtensionFactories = new();
+    private static readonly ConcurrentDictionary<Type, Func<MaterialExtensionLoaderBase>>
+        MaterialExtensionFactories = new();
 
     public static void RegisterMaterialExtension<T1>(Func<MaterialExtensionLoaderBase> factory) where T1: JsonSerializable
     {
-        _materialExtensionFactories[typeof(T1)] = factory;
+        ArgumentNullException.ThrowIfNull(factory);
+        MaterialExtensionFactories[typeof(T1)] = factory;
     }
 
     public static (Core.Nodes.Model, List<Core.Resources.Animation>) LoadGlbModelAndAnimations(Stream stream)
@@ -120,7 +123,7 @@ public static class ModelLoader
     {
         using (var stream = File.OpenRead(filePath))
         {
-            return LoadGlbAnimations(stream);
+            return LoadGlbAnimations(stream, skeleton);
         }
     }
     public static List<Core.Resources.Animation> LoadGlbAnimations(Stream stream, Skeleton? skeleton = null)
@@ -312,7 +315,7 @@ public static class ModelLoader
     {
         foreach (var ext in material.Extensions)
         {
-            _materialExtensionFactories.TryGetValue(ext.GetType(), out var factory);
+            MaterialExtensionFactories.TryGetValue(ext.GetType(), out var factory);
             if (factory == null)
                 continue;
 

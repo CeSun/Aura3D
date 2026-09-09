@@ -151,36 +151,36 @@ RenderPipeline
 ```csharp
 public class NoLightPipeline : RenderPipeline
 {
-    public NoLightPipeline(Scene scene)
+    public NoLightPipeline(Scene scene) : base(scene)
     {
+        var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
+            .AddTexture("Color", TextureFormat.Rgba16f)
+            .SetDepthTexture(Settings.DepthFormat);
+
+        var gammaOutput = RegisterRenderTarget("GammaOutput")
+            .AddTexture("Color", TextureFormat.Rgba8)
+            .SetDepthTexture(Settings.DepthFormat);
+
         var noLightPass = new NoLightPass(this);
 
         // 注册 RenderPass（按顺序执行）
         RegisterRenderPass(
-            new BackgroundPass(this).SetOutPutRenderTarget("BaseRenderTarget"),
+            new BackgroundPass(this).SetOutput(baseRenderTarget),
             RenderPassGroup.EveryCamera);
 
         RegisterRenderPass(
-            noLightPass.SetOutPutRenderTarget("BaseRenderTarget"),
+            noLightPass.SetOutput(baseRenderTarget),
             RenderPassGroup.EveryCamera);
 
         RegisterRenderPass(
-            new GammaCorrectionPass(this, "BaseRenderTarget", "Color")
-                .SetOutPutRenderTarget("GammaOutput"),
+            new GammaCorrectionPass(this, baseRenderTarget.GetTexture("Color"))
+                .SetOutput(gammaOutput),
             RenderPassGroup.EveryCamera);
 
         RegisterRenderPass(
-            new FxaaPass(this, "GammaOutput", "Color"),
+            new FxaaPass(this, gammaOutput.GetTexture("Color"))
+                .SetOutput(CameraOutput),
             RenderPassGroup.EveryCamera);
-
-        // 注册 RenderTarget（帧缓冲）
-        RegisterRenderTarget("BaseRenderTarget")
-            .AddTexture("Color", TextureFormat.Rgba16f)
-            .SetDepthTexture(TextureFormat.DepthComponent16);
-
-        RegisterRenderTarget("GammaOutput")
-            .AddTexture("Color", TextureFormat.Rgba8)
-            .SetDepthTexture(TextureFormat.DepthComponent16);
     }
 }
 ```
@@ -383,10 +383,8 @@ RenderQuad()          → 绘制全屏四边形
 ```csharp
 public override void Render(Camera camera)
 {
-    BindOutPutRenderTarget(camera);
-
-    var rt = GetRenderTarget(inputRenderTargetName,
-        new Size((int)camera.RenderTarget.Width, (int)camera.RenderTarget.Height));
+    BindOutputRenderTarget(camera);
+    var source = GetTexture(inputTexture, camera);
 
     gl.Disable(EnableCap.DepthTest);
     gl.Disable(EnableCap.Blend);
@@ -394,7 +392,7 @@ public override void Render(Camera camera)
     UseShader();               // 无宏变体，可省略
     ClearTextureUnit();         // 清空纹理单元计数器
     UseShader_Internal();       // ← 手动激活！当前无 Material 上下文，传入 null
-    UniformTexture("colorTexture", rt.GetTexture(inputTextureName));
+    UniformTexture("colorTexture", source);
     RenderQuad();               // 绘制全屏四边形，采样 inputTexture 做伽马校正
 }
 ```
@@ -817,11 +815,11 @@ foreach (var res in resources)
 ### RenderPass 中的上下文方法
 
 ```csharp
-// 获取指定名称的 RenderTarget
-var rt = GetRenderTarget("BaseRenderTarget", new Size(1920, 1080));
+// 通过构造 RenderPass 时保存的 handle 获取当前相机尺寸的 RenderTarget
+var rt = GetRenderTarget(baseRenderTarget, camera);
 
-// 绑定输出 RenderTarget（由 SetOutPutRenderTarget 自动处理，一般不需手动调用）
-BindOutPutRenderTarget(camera);
+// 绑定 SetOutput 指定的输出（未指定时默认使用 CameraOutput）
+BindOutput(camera);
 
 // 渲染全屏四边形（后处理常用）
 RenderQuad();

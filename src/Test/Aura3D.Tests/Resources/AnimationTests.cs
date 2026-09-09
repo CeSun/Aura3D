@@ -97,6 +97,84 @@ public class AnimationTests
         Assert.Equal(AnimationError.GraphSelfReference, exception.Code);
     }
 
+    [Fact]
+    public void AnimationSampler_ShouldAdvanceOnlyByDeltaTime()
+    {
+        var sampler = CreateTranslationSampler();
+
+        sampler.Update(0.25);
+        Assert.Equal(2.5f, sampler.BonesTransform[0].M41, 5);
+
+        sampler.Update(0.25);
+        Assert.Equal(5f, sampler.BonesTransform[0].M41, 5);
+    }
+
+    [Fact]
+    public void AnimationSampler_Once_ShouldKeepFinalPose()
+    {
+        var sampler = CreateTranslationSampler();
+        sampler.LoopMode = LoopMode.Once;
+
+        sampler.Update(2);
+        Assert.Equal(10f, sampler.BonesTransform[0].M41, 5);
+
+        sampler.Update(1);
+        Assert.Equal(10f, sampler.BonesTransform[0].M41, 5);
+    }
+
+    [Fact]
+    public void AnimationSampler_ShouldRejectInvalidTimeScale()
+    {
+        var sampler = CreateTranslationSampler();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => sampler.TimeScale = -1);
+        Assert.Throws<ArgumentOutOfRangeException>(() => sampler.TimeScale = float.NaN);
+    }
+
+    [Fact]
+    public void AnimationBlendSpace_ShouldPreserveRigidRotationScale()
+    {
+        var root = new Bone { Name = "Root", Index = 0 };
+        var skeleton = new Skeleton { Root = root };
+        skeleton.Bones.Add(root);
+        var blendSpace = new AnimationBlendSpace(skeleton);
+        blendSpace.AddAnimationSampler(
+            new Vector2(-1, 0),
+            new StaticAnimationSampler(skeleton, Matrix4x4.Identity));
+        blendSpace.AddAnimationSampler(
+            new Vector2(1, 0),
+            new StaticAnimationSampler(skeleton, Matrix4x4.CreateRotationY(MathF.PI)));
+
+        blendSpace.SetAxis(0, 0);
+        blendSpace.InitializePose();
+
+        Assert.True(Matrix4x4.Decompose(
+            blendSpace.BonesTransform[0], out var scale, out _, out _));
+        Assert.Equal(1f, scale.X, 5);
+        Assert.Equal(1f, scale.Y, 5);
+        Assert.Equal(1f, scale.Z, 5);
+    }
+
+    private static AnimationSampler CreateTranslationSampler()
+    {
+        var root = new Bone { Name = "Root", Index = 0 };
+        var skeleton = new Skeleton { Root = root };
+        skeleton.Bones.Add(root);
+
+        var animation = new Animation { Duration = 1, Skeleton = skeleton };
+        var channel = new AnimationChannel();
+        channel.PositionKeyframes.AddRange(
+        [
+            new Keyframe<Vector3> { Time = 0, Value = Vector3.Zero },
+            new Keyframe<Vector3> { Time = 1, Value = new Vector3(10, 0, 0) }
+        ]);
+        channel.RotationKeyframes.Add(new Keyframe<Quaternion> { Time = 0, Value = Quaternion.Identity });
+        channel.ScaleKeyframes.Add(new Keyframe<Vector3> { Time = 0, Value = Vector3.One });
+        animation.Channels[root.Name] = channel;
+
+        return new AnimationSampler(animation);
+    }
+
     private sealed class TestAnimationSampler : IAnimationSampler
     {
         public bool ExternalUpdate { get; set; }
@@ -114,5 +192,21 @@ public class AnimationTests
         public void Reset()
         {
         }
+    }
+
+    private sealed class StaticAnimationSampler : IAnimationSampler
+    {
+        public StaticAnimationSampler(Skeleton skeleton, Matrix4x4 transform)
+        {
+            Skeleton = skeleton;
+            BonesTransform = [transform];
+        }
+
+        public bool ExternalUpdate { get; set; }
+        public Skeleton Skeleton { get; }
+        public IReadOnlyList<Matrix4x4> BonesTransform { get; }
+        public BoneMatrixBuffer BoneMatrixBuffer => Skeleton.BoneMatrixBuffer;
+        public void Update(double deltaTime) { }
+        public void Reset() { }
     }
 }

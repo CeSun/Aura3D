@@ -115,6 +115,8 @@ public void OnSceneInitialized(object sender, InitializedRoutedEventArgs args)
 | [Aura3D.Model.GltfLoader](https://www.nuget.org/packages/Aura3D.Model.GltfLoader) | glTF/GLB 模型加载器 |
 | [Aura3D.Model.AssimpLoader](https://www.nuget.org/packages/Aura3D.Model.AssimpLoader) | Assimp 模型加载器（支持 50+ 格式） |
 | [Aura3D.Pipeline.PBR](https://www.nuget.org/packages/Aura3D.Pipeline.PBR) | PBR 延迟渲染管线 |
+| Aura3D.Pipeline.PBR.Common | PBR 渲染管线共享资源 |
+| Aura3D.Pipeline.PBRForward | PBR 前向渲染管线 |
 | [Aura3D.Pipeline.CelShading](https://www.nuget.org/packages/Aura3D.Pipeline.CelShading) | 卡通渲染管线 |
 
 ## 许可证

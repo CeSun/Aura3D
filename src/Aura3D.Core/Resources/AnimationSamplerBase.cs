@@ -64,6 +64,33 @@ public abstract class AnimationSamplerBase : IAnimationSampler
         }
     }
 
+    /// <summary>
+    /// Validates and returns a frame delta used by animation samplers.
+    /// </summary>
+    protected static double ValidateDeltaTime(double deltaTime)
+    {
+        if (!double.IsFinite(deltaTime) || deltaTime < 0)
+            throw new ArgumentOutOfRangeException(nameof(deltaTime), "Delta time must be finite and non-negative.");
+        return deltaTime;
+    }
+
+    /// <summary>
+    /// Blends two transforms through their translation, rotation, and scale components.
+    /// </summary>
+    protected static Matrix4x4 BlendTransforms(Matrix4x4 from, Matrix4x4 to, float amount)
+    {
+        amount = System.Math.Clamp(amount, 0f, 1f);
+        if (!Matrix4x4.Decompose(from, out var fromScale, out var fromRotation, out var fromTranslation) ||
+            !Matrix4x4.Decompose(to, out var toScale, out var toRotation, out var toTranslation))
+        {
+            return Matrix4x4.Lerp(from, to, amount);
+        }
+
+        return Matrix4x4.CreateScale(Vector3.Lerp(fromScale, toScale, amount))
+            * Matrix4x4.CreateFromQuaternion(Quaternion.Slerp(fromRotation, toRotation, amount))
+            * Matrix4x4.CreateTranslation(Vector3.Lerp(fromTranslation, toTranslation, amount));
+    }
+
     /// <inheritdoc />
     public abstract void Update(double deltaTime);
 

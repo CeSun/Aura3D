@@ -54,7 +54,18 @@ public class AnimationBlendSpace : AnimationSamplerBase
     /// <summary>
     /// Gets or sets the idw power.
     /// </summary>
-    public float IdwPower { get; set; } = 2f;
+    public float IdwPower
+    {
+        get => _idwPower;
+        set
+        {
+            if (!float.IsFinite(value) || value <= 0)
+                throw new ArgumentOutOfRangeException(nameof(IdwPower), "IDW power must be finite and greater than zero.");
+            _idwPower = value;
+        }
+    }
+
+    private float _idwPower = 2f;
 
     /// <summary>
     /// Initializes the pose.
@@ -75,6 +86,10 @@ public class AnimationBlendSpace : AnimationSamplerBase
 
     private void computeBlend(double deltaTime)
     {
+        deltaTime = ValidateDeltaTime(deltaTime);
+        if (_animationSamplers.Count == 0)
+            return;
+
         float totalRawWeight = 0f;
 
         int index = 0;
@@ -98,7 +113,7 @@ public class AnimationBlendSpace : AnimationSamplerBase
             index++;
         }
 
-        index = 0;
+        var normalizedWeight = 0f;
         for (int i = 0; i < _weights.Count; i++)
         {
             float weight = _weights[i] / totalRawWeight;
@@ -107,25 +122,48 @@ public class AnimationBlendSpace : AnimationSamplerBase
             if (weight > 0.9999)
                 weight = 1;
             _weights[i] = weight;
+            normalizedWeight += weight;
         }
 
-        index = 0;
-        bool firstContributor = true;
-        foreach (var weight in _weights)
+        if (normalizedWeight <= 0)
+            return;
+
+        for (int i = 0; i < _weights.Count; i++)
+            _weights[i] /= normalizedWeight;
+
+        for (int i = 0; i < _weights.Count; i++)
         {
-            if (weight > 0)
+            if (_weights[i] > 0)
+                _animationSamplers[i].Sampler.Update(deltaTime);
+        }
+
+        for (int boneIndex = 0; boneIndex < BonesTransform.Count; boneIndex++)
+        {
+            var blended = default(Matrix4x4);
+            var firstContributor = true;
+            var accumulatedWeight = 0f;
+
+            for (int i = 0; i < _weights.Count; i++)
             {
-                _animationSamplers[index].Sampler.Update(deltaTime);
-                for (int j = 0; j < BonesTransform.Count; j++)
+                var weight = _weights[i];
+                if (weight <= 0)
+                    continue;
+
+                var transform = _animationSamplers[i].Sampler.BonesTransform[boneIndex];
+                if (firstContributor)
                 {
-                    if (firstContributor)
-                        _bonesTransform[j] = _animationSamplers[index].Sampler.BonesTransform[j] * weight;
-                    else
-                        _bonesTransform[j] += _animationSamplers[index].Sampler.BonesTransform[j] * weight;
+                    blended = transform;
+                    accumulatedWeight = weight;
+                    firstContributor = false;
+                    continue;
                 }
-                firstContributor = false;
+
+                accumulatedWeight += weight;
+                blended = BlendTransforms(blended, transform, weight / accumulatedWeight);
             }
-            index++;
+
+            if (!firstContributor)
+                _bonesTransform[boneIndex] = blended;
         }
     }
 

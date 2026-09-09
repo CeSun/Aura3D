@@ -99,7 +99,7 @@ public class ParticleSystem : Node
             em.Particles = new ParticleData[em.MaxParticles];
             em.ActiveCount = 0;
             em.Rng = new Random();
-            em.GpuBuffer = new ParticleGpuBuffer();
+            em.GpuBuffer = em.UseMeshRenderer ? null : new ParticleGpuBuffer();
             em.InstanceTransforms = null;
 
             // Mesh mode: create InstancedMesh per emitter
@@ -131,7 +131,6 @@ public class ParticleSystem : Node
         {
             em.Particles = Array.Empty<ParticleData>();
             em.ActiveCount = 0;
-            em.GpuBuffer = null;
             em.Rng = null;
             em.InstanceTransforms = null;
 
@@ -142,6 +141,39 @@ public class ParticleSystem : Node
                 em.InstancedMesh = null;
             }
         }
+
+        if (CurrentScene?.RenderPipeline is { } pipeline)
+            ReleaseGpuResources(pipeline);
+        else
+            ClearGpuBufferReferences();
+    }
+
+    internal void EnsureGpuResources()
+    {
+        if (!_isPlaying)
+            return;
+
+        foreach (var em in Emitters)
+        {
+            if (!em.UseMeshRenderer)
+                em.GpuBuffer ??= new ParticleGpuBuffer();
+        }
+    }
+
+    internal void ReleaseGpuResources(Aura3D.Core.Renderers.RenderPipeline pipeline)
+    {
+        foreach (var em in Emitters)
+        {
+            if (em.GpuBuffer != null)
+                pipeline.ReleaseGpuState(em.GpuBuffer);
+        }
+        ClearGpuBufferReferences();
+    }
+
+    private void ClearGpuBufferReferences()
+    {
+        foreach (var em in Emitters)
+            em.GpuBuffer = null;
     }
 
     /// <summary>
@@ -202,10 +234,6 @@ public class ParticleSystem : Node
             if (em.UseMeshRenderer)
             {
                 em.UpdateMeshInstances(worldRot);
-            }
-            else
-            {
-                em.GpuBuffer?.SetParticleData(em.Particles, em.ActiveCount);
             }
         }
     }

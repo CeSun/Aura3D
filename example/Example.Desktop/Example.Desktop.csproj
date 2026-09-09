@@ -6,7 +6,6 @@
 	  <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-	  <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <PropertyGroup>

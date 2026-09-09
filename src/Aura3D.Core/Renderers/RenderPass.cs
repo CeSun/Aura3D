@@ -35,17 +35,17 @@ public partial class RenderPass
     /// <summary>
     /// Gets the meshes.
     /// </summary>
-    protected List<Mesh> Meshes => renderPipeline.Meshes;
+    protected IReadOnlyList<Mesh> Meshes => renderPipeline.Meshes;
 
     /// <summary>
     /// Gets the point lights.
     /// </summary>
-    protected List<PointLight> PointLights => renderPipeline.PointLights;
+    protected IReadOnlyList<PointLight> PointLights => renderPipeline.PointLights;
 
     /// <summary>
     /// Gets the spot lights.
     /// </summary>
-    protected List<SpotLight> SpotLights => renderPipeline.SpotLights;
+    protected IReadOnlyList<SpotLight> SpotLights => renderPipeline.SpotLights;
     
     /// <summary>
     /// Gets the visible meshes in camera.

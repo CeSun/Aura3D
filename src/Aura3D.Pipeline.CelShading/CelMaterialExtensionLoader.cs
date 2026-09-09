@@ -29,7 +29,7 @@ public class CelMaterialExtensionLoader : MaterialExtensionLoaderBase
 
     private static Core.Resources.Texture? GetTextureAtIndex(ModelRoot modelRoot, int index)
     {
-        if (index < 0 || index > modelRoot.LogicalTextures.Count)
+        if (index < 0 || index >= modelRoot.LogicalTextures.Count)
             return null;
         SharpGLTF.Schema2.Texture glTexture = modelRoot.LogicalTextures[index];
 
@@ -169,7 +169,7 @@ public class Aura3DCelExtraProperties : ExtraProperties
 
     private static Core.Resources.Texture? GetTextureAtIndex(ModelRoot modelRoot, int index)
     {
-        if (index < 0 || index > modelRoot.LogicalTextures.Count)
+        if (index < 0 || index >= modelRoot.LogicalTextures.Count)
             return null;
         SharpGLTF.Schema2.Texture glTexture = modelRoot.LogicalTextures[index];
 

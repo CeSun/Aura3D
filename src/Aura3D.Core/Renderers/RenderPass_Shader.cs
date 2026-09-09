@@ -135,69 +135,65 @@ public partial class RenderPass
 
         var fs = fragmentShader.Replace("//{{defines}}", definesText);
 
-        var vertex = gl.CreateShader(ShaderType.VertexShader);
-
-        if (System.OperatingSystem.IsMacOS())
+        uint vertex = 0;
+        uint fragment = 0;
+        uint programId = 0;
+        var succeeded = false;
+        try
         {
-            vs = vs.Replace("#version 300 es", "#version 330 core");
-            fs = fs.Replace("#version 300 es", "#version 330 core");
+            vertex = gl.CreateShader(ShaderType.VertexShader);
+
+            if (System.OperatingSystem.IsMacOS())
+            {
+                vs = vs.Replace("#version 300 es", "#version 330 core");
+                fs = fs.Replace("#version 300 es", "#version 330 core");
+            }
+
+            gl.ShaderSource(vertex, vs);
+            gl.CompileShader(vertex);
+            gl.GetShader(vertex, GLEnum.CompileStatus, out int code);
+            if (code == 0)
+                throw Aura3D.Core.Exceptions.RendererErrors.ShaderCompilationFailed(
+                    true, gl.GetShaderInfoLog(vertex));
+
+            fragment = gl.CreateShader(ShaderType.FragmentShader);
+            gl.ShaderSource(fragment, fs);
+            gl.CompileShader(fragment);
+            gl.GetShader(fragment, GLEnum.CompileStatus, out code);
+            if (code == 0)
+                throw Aura3D.Core.Exceptions.RendererErrors.ShaderCompilationFailed(
+                    false, gl.GetShaderInfoLog(fragment));
+
+            programId = gl.CreateProgram();
+            gl.AttachShader(programId, vertex);
+            gl.AttachShader(programId, fragment);
+            gl.LinkProgram(programId);
+
+            gl.GetProgram(programId, GLEnum.LinkStatus, out int linkStatus);
+            if (linkStatus == 0)
+                throw Aura3D.Core.Exceptions.RendererErrors.ShaderProgramLinkFailed(
+                    gl.GetProgramInfoLog(programId));
+
+            // GLES 3.0 不支持 shader 内 layout(binding=N)，link 后枚举所有
+            // uniform block 并按索引自动绑定（block 0→binding 0, block 1→binding 1...）
+            gl.GetProgram(programId, GLEnum.ActiveUniformBlocks, out int blockCount);
+            for (uint i = 0; i < blockCount; i++)
+                gl.UniformBlockBinding(programId, i, i);
+
+            shader.ProgramId = programId;
+            GetAllUniformLocations(gl, shader);
+            succeeded = true;
+            return shader;
         }
-
-        gl.ShaderSource(vertex, vs);
-        gl.CompileShader(vertex);
-
-        gl.GetShader(vertex, GLEnum.CompileStatus, out int code);
-
-        if (code == 0)
+        finally
         {
-            var info = gl.GetShaderInfoLog(vertex);
-            Console.WriteLine(vs);
-            throw Aura3D.Core.Exceptions.RendererErrors.ShaderCompilationFailed(true, info);
+            if (vertex != 0)
+                gl.DeleteShader(vertex);
+            if (fragment != 0)
+                gl.DeleteShader(fragment);
+            if (!succeeded && programId != 0)
+                gl.DeleteProgram(programId);
         }
-
-        var fragment = gl.CreateShader(ShaderType.FragmentShader);
-
-        gl.ShaderSource(fragment, fs);
-        gl.CompileShader(fragment);
-
-        gl.GetShader(fragment, GLEnum.CompileStatus, out code);
-
-        if (code == 0)
-        {
-            var info = gl.GetShaderInfoLog(fragment);
-            Console.WriteLine(fs);
-            throw Aura3D.Core.Exceptions.RendererErrors.ShaderCompilationFailed(false, info);
-        }
-
-        var programId = gl.CreateProgram();
-
-        gl.AttachShader(programId, vertex);
-        gl.AttachShader(programId, fragment);
-        gl.LinkProgram(programId);
-
-        gl.GetProgram(programId, GLEnum.LinkStatus, out int linkStatus);
-        if (linkStatus == 0)
-        {
-            var info = gl.GetProgramInfoLog(programId);
-            throw Aura3D.Core.Exceptions.RendererErrors.ShaderProgramLinkFailed(info);
-        }
-
-        // GLES 3.0 不支持 shader 内 layout(binding=N)，link 后枚举所有
-        // uniform block 并按索引自动绑定（block 0→binding 0, block 1→binding 1...）
-        gl.GetProgram(programId, GLEnum.ActiveUniformBlocks, out int blockCount);
-        for (uint i = 0; i < blockCount; i++)
-        {
-            gl.UniformBlockBinding(programId, i, i);
-        }
-
-        gl.DeleteShader(vertex);
-        gl.DeleteShader(fragment);
-
-        shader.ProgramId = programId;
-
-        GetAllUniformLocations(gl, shader);
-
-        return shader;
     }
 
     private unsafe void GetAllUniformLocations(GL gl, Shader shader)

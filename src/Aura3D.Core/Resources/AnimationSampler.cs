@@ -29,65 +29,57 @@ public class AnimationSampler : AnimationSamplerBase
     /// <summary>
     /// Gets or sets the time scale.
     /// </summary>
-    public float TimeScale { get; set; } = 1.0f;
+    public float TimeScale
+    {
+        get => _timeScale;
+        set
+        {
+            if (!float.IsFinite(value) || value < 0)
+                throw new ArgumentOutOfRangeException(nameof(TimeScale), "Time scale must be finite and non-negative.");
+            _timeScale = value;
+        }
+    }
+
+    private float _timeScale = 1.0f;
 
     /// <summary>
     /// Gets or sets the animation.
     /// </summary>
     protected Animation animation { get; set; }
 
-    private DateTime startTime { get; set; } = default;
+    private double _elapsedSeconds;
 
     /// <summary>
     /// Gets or sets the loop mode.
     /// </summary>
     public LoopMode LoopMode { get; set; } = LoopMode.Loop;
 
-    private bool pingPongForward { get; set; } = true;
-
     /// <inheritdoc />
     public override void Update(double deltaTime)
     {
-        if (startTime == default)
+        _elapsedSeconds += ValidateDeltaTime(deltaTime) * TimeScale;
+
+        var duration = System.Math.Max(0d, animation.Duration);
+        double time;
+        if (duration <= 0)
         {
-            startTime = DateTime.Now;
+            time = 0;
+        }
+        else if (LoopMode == LoopMode.Once)
+        {
+            time = System.Math.Min(_elapsedSeconds, duration);
+        }
+        else if (LoopMode == LoopMode.PingPong)
+        {
+            var phase = _elapsedSeconds % (duration * 2);
+            time = phase <= duration ? phase : duration * 2 - phase;
+        }
+        else
+        {
+            time = _elapsedSeconds % duration;
         }
 
-        var now = DateTime.Now;
-        var elapsed = now - startTime;
-        var duration = TimeSpan.FromSeconds(animation.Duration / TimeScale);
-
-        while (elapsed > duration && duration > TimeSpan.Zero)
-        {
-            if (LoopMode == LoopMode.Loop)
-            {
-                startTime += duration;
-                elapsed = now - startTime;
-            }
-            else if (LoopMode == LoopMode.PingPong)
-            {
-                startTime += duration;
-                pingPongForward = !pingPongForward;
-                elapsed = now - startTime;
-            }
-            else if (LoopMode == LoopMode.Once)
-            {
-                return;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        var time = (float)elapsed.TotalSeconds * TimeScale;
-
-        if (pingPongForward == false)
-        {
-            time = animation.Duration - time;
-        }
-
-        processBoneTransform(Skeleton.Root, time);
+        processBoneTransform(Skeleton.Root, (float)time);
 
         BoneMatrixBuffer.MarkModified();
     }
@@ -112,7 +104,7 @@ public class AnimationSampler : AnimationSamplerBase
     /// <inheritdoc />
     public override void Reset()
     {
-        startTime = default;
+        _elapsedSeconds = 0;
     }
 
 }

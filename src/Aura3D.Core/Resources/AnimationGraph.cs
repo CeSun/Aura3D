@@ -16,7 +16,6 @@ public class AnimationGraph : AnimationSamplerBase
         Root = root;
         currentNode = root;
         lastNode = currentNode;
-        startTime = DateTime.Now;
 
         // Copy the initial pose from the root node's sampler to avoid
         // showing T-pose before the first Update() call.
@@ -36,24 +35,18 @@ public class AnimationGraph : AnimationSamplerBase
     /// </summary>
     public float CurrentWeight { get; private set; } = 1f;
 
-    private DateTime startTime { get; set; } = default;
+    private double _blendElapsedSeconds;
 
     /// <inheritdoc />
     public override void Update(double deltaTime)
     {
-        var timeSpan = DateTime.Now - startTime;
-        double elapsedSeconds = timeSpan.TotalSeconds;
-
-        if (elapsedSeconds < 0)
-            elapsedSeconds = 0;
-
-        if (timeSpan.TotalSeconds > currentNode.BlendTime)
+        deltaTime = ValidateDeltaTime(deltaTime);
+        if (CurrentWeight < 1)
         {
-            CurrentWeight = 1;
-        }
-        else
-        {
-            CurrentWeight = (float)(elapsedSeconds / currentNode.BlendTime);
+            _blendElapsedSeconds += deltaTime;
+            CurrentWeight = currentNode.BlendTime <= 0
+                ? 1f
+                : System.Math.Clamp((float)(_blendElapsedSeconds / currentNode.BlendTime), 0f, 1f);
         }
 
         if (CurrentWeight < 1)
@@ -62,7 +55,10 @@ public class AnimationGraph : AnimationSamplerBase
             currentNode.Sampler.Update(deltaTime);
             for (int i = 0; i < _bonesTransform.Length; i++)
             {
-                _bonesTransform[i] = Matrix4x4.Lerp(lastNode.Sampler.BonesTransform[i], currentNode.Sampler.BonesTransform[i], CurrentWeight);
+                _bonesTransform[i] = BlendTransforms(
+                    lastNode.Sampler.BonesTransform[i],
+                    currentNode.Sampler.BonesTransform[i],
+                    CurrentWeight);
             }
         }
         else
@@ -84,7 +80,7 @@ public class AnimationGraph : AnimationSamplerBase
                     lastNode = currentNode;
                     currentNode = nextNode;
                     currentNode.Sampler.Reset();
-                    startTime = DateTime.Now;
+                    _blendElapsedSeconds = 0;
                     CurrentWeight = 0;
                     break;
                 }
@@ -99,7 +95,9 @@ public class AnimationGraph : AnimationSamplerBase
     {
         currentNode = Root;
         lastNode = currentNode;
-        startTime = DateTime.Now;
+        currentNode.Sampler.Reset();
+        _blendElapsedSeconds = 0;
+        CurrentWeight = 1;
     }
 }
 

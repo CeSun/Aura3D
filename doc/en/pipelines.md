@@ -151,36 +151,36 @@ RenderPipeline
 ```csharp
 public class NoLightPipeline : RenderPipeline
 {
-    public NoLightPipeline(Scene scene)
+    public NoLightPipeline(Scene scene) : base(scene)
     {
+        var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
+            .AddTexture("Color", TextureFormat.Rgba16f)
+            .SetDepthTexture(Settings.DepthFormat);
+
+        var gammaOutput = RegisterRenderTarget("GammaOutput")
+            .AddTexture("Color", TextureFormat.Rgba8)
+            .SetDepthTexture(Settings.DepthFormat);
+
         var noLightPass = new NoLightPass(this);
 
         // Register RenderPasses (executed in registration order)
         RegisterRenderPass(
-            new BackgroundPass(this).SetOutPutRenderTarget("BaseRenderTarget"),
+            new BackgroundPass(this).SetOutput(baseRenderTarget),
             RenderPassGroup.EveryCamera);
 
         RegisterRenderPass(
-            noLightPass.SetOutPutRenderTarget("BaseRenderTarget"),
+            noLightPass.SetOutput(baseRenderTarget),
             RenderPassGroup.EveryCamera);
 
         RegisterRenderPass(
-            new GammaCorrectionPass(this, "BaseRenderTarget", "Color")
-                .SetOutPutRenderTarget("GammaOutput"),
+            new GammaCorrectionPass(this, baseRenderTarget.GetTexture("Color"))
+                .SetOutput(gammaOutput),
             RenderPassGroup.EveryCamera);
 
         RegisterRenderPass(
-            new FxaaPass(this, "GammaOutput", "Color"),
+            new FxaaPass(this, gammaOutput.GetTexture("Color"))
+                .SetOutput(CameraOutput),
             RenderPassGroup.EveryCamera);
-
-        // Register RenderTargets (framebuffers)
-        RegisterRenderTarget("BaseRenderTarget")
-            .AddTexture("Color", TextureFormat.Rgba16f)
-            .SetDepthTexture(TextureFormat.DepthComponent16);
-
-        RegisterRenderTarget("GammaOutput")
-            .AddTexture("Color", TextureFormat.Rgba8)
-            .SetDepthTexture(TextureFormat.DepthComponent16);
     }
 }
 ```
@@ -383,10 +383,8 @@ Real example — Gamma Correction Pass ([GammaCorrectionPass.cs](../../src/Aura3
 ```csharp
 public override void Render(Camera camera)
 {
-    BindOutPutRenderTarget(camera);
-
-    var rt = GetRenderTarget(inputRenderTargetName,
-        new Size((int)camera.RenderTarget.Width, (int)camera.RenderTarget.Height));
+    BindOutputRenderTarget(camera);
+    var source = GetTexture(inputTexture, camera);
 
     gl.Disable(EnableCap.DepthTest);
     gl.Disable(EnableCap.Blend);
@@ -394,7 +392,7 @@ public override void Render(Camera camera)
     UseShader();               // No macros needed, can be omitted
     ClearTextureUnit();         // Reset texture unit counter
     UseShader_Internal();       // ← Manual activation! No Material context, passes null
-    UniformTexture("colorTexture", rt.GetTexture(inputTextureName));
+    UniformTexture("colorTexture", source);
     RenderQuad();               // Draw fullscreen quad, sampling input texture for gamma correction
 }
 ```
@@ -816,11 +814,11 @@ foreach (var res in resources)
 ### RenderPass Context Methods
 
 ```csharp
-// Get a RenderTarget by name
-var rt = GetRenderTarget("BaseRenderTarget", new Size(1920, 1080));
+// Resolve a saved handle at the current camera size
+var rt = GetRenderTarget(baseRenderTarget, camera);
 
-// Bind output RenderTarget (auto-handled by SetOutPutRenderTarget; usually not called manually)
-BindOutPutRenderTarget(camera);
+// Bind the SetOutput target (defaults to CameraOutput when unset)
+BindOutput(camera);
 
 // Render a fullscreen quad (common for post-processing)
 RenderQuad();

@@ -41,12 +41,12 @@ public class Scene
     /// <summary>
     /// Gets or sets the mesh octree.
     /// </summary>
-    public Octree<Mesh> MeshOctree { get; set; }
+    public Octree<Mesh> MeshOctree { get; private set; }
 
     /// <summary>
     /// Gets or sets the render pipeline.
     /// </summary>
-    public RenderPipeline RenderPipeline { get; set; }
+    public RenderPipeline RenderPipeline { get; private set; }
 
     /// <summary>
     /// Gets the background.
@@ -310,20 +310,23 @@ public class Scene
         if (ray == null)
             return results;
 
-        // 拾取所有 Mesh（包括 Model 的子 Mesh）
+        // Use the scene octree as the broad phase for regular meshes.
+        var meshCandidates = new List<Mesh>();
+        MeshOctree.Query(box => ray.Value.Intersects(box).HasValue, meshCandidates);
+        foreach (var mesh in meshCandidates)
+        {
+            if (mesh.Enable && IsPickable(mesh))
+                PickMesh(mesh, ray.Value, results);
+        }
+
+        // Instanced meshes currently have their own per-instance broad phase.
         foreach (var node in _nodes)
         {
             if (node.Enable == false)
                 continue;
 
-            if (node is Mesh mesh && IsPickable(mesh))
-            {
-                PickMesh(mesh, ray.Value, results);
-            }
-            else if (node is InstancedMesh instancedMesh)
-            {
+            if (node is InstancedMesh instancedMesh)
                 PickInstancedMesh(instancedMesh, ray.Value, results);
-            }
         }
 
         // 按距离排序（由近到远）

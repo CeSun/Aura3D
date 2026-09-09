@@ -25,12 +25,40 @@ public class InstancedMeshGroup : Node
     /// <summary>
     /// Gets or sets the max instances per group.
     /// </summary>
-    public int MaxInstancesPerGroup { get; set; } = 1024;
+    public int MaxInstancesPerGroup
+    {
+        get => _maxInstancesPerGroup;
+        set
+        {
+            if (value <= 0)
+                throw new ArgumentOutOfRangeException(nameof(MaxInstancesPerGroup), "Group capacity must be greater than zero.");
+            if (_maxInstancesPerGroup == value)
+                return;
+            _maxInstancesPerGroup = value;
+            InvalidateAndCancelBuild();
+        }
+    }
+
+    private int _maxInstancesPerGroup = 1024;
 
     /// <summary>
     /// Gets or sets the max depth.
     /// </summary>
-    public int MaxDepth { get; set; } = 6;
+    public int MaxDepth
+    {
+        get => _maxDepth;
+        set
+        {
+            if (value < 0)
+                throw new ArgumentOutOfRangeException(nameof(MaxDepth), "Maximum depth cannot be negative.");
+            if (_maxDepth == value)
+                return;
+            _maxDepth = value;
+            InvalidateAndCancelBuild();
+        }
+    }
+
+    private int _maxDepth = 6;
 
     /// <summary>
     /// Gets the groups.
@@ -71,15 +99,17 @@ public class InstancedMeshGroup : Node
     private bool _built;
 
     // 异步重建
-    private Task? _buildTask;
-    private BuildResult? _pendingResult;
+    private Task<BuildResult?>? _buildTask;
     private CancellationTokenSource? _buildCts;
+    private long _dataVersion;
+    private long _activeBuildVersion;
 
     /// <summary>
     /// Represents the build result type.
     /// </summary>
     private sealed class BuildResult
     {
+        public long DataVersion;
         public InstanceOctreeNode RootNode = null!;
         public List<InstancedMesh> Groups = null!;
         public List<int> InstanceGroupIndex = null!;
@@ -95,10 +125,10 @@ public class InstancedMeshGroup : Node
     /// </summary>
     public void SetInstances(IReadOnlyList<Matrix4x4> transforms)
     {
-        CancelBuild();
+        ArgumentNullException.ThrowIfNull(transforms);
         _transforms.Clear();
         _transforms.AddRange(transforms);
-        Invalidate();
+        InvalidateAndCancelBuild();
     }
 
     /// <summary>
@@ -107,7 +137,7 @@ public class InstancedMeshGroup : Node
     public int AddInstance(Matrix4x4 transform)
     {
         _transforms.Add(transform);
-        _needsBuild = true;
+        InvalidateAndCancelBuild();
         return _transforms.Count - 1;
     }
 
@@ -116,8 +146,9 @@ public class InstancedMeshGroup : Node
     /// </summary>
     public void AddInstances(IEnumerable<Matrix4x4> transforms)
     {
+        ArgumentNullException.ThrowIfNull(transforms);
         _transforms.AddRange(transforms);
-        _needsBuild = true;
+        InvalidateAndCancelBuild();
     }
 
     /// <summary>
@@ -130,10 +161,21 @@ public class InstancedMeshGroup : Node
 
         _transforms[index] = transform;
 
-        if (TryIncrementalUpdate(index, transform))
+        // A running build owns an older immutable snapshot. It must never be
+        // allowed to replace this update, even if an in-place update is possible.
+        if (_buildTask != null)
+        {
+            InvalidateAndCancelBuild();
             return;
+        }
 
-        _needsBuild = true;
+        if (TryIncrementalUpdate(index, transform))
+        {
+            _dataVersion++;
+            return;
+        }
+
+        InvalidateAndCancelBuild();
     }
 
     /// <summary>
@@ -145,7 +187,7 @@ public class InstancedMeshGroup : Node
             throw new ArgumentOutOfRangeException(nameof(index));
 
         _transforms.RemoveAt(index);
-        _needsBuild = true;
+        InvalidateAndCancelBuild();
     }
 
     /// <summary>
@@ -153,9 +195,8 @@ public class InstancedMeshGroup : Node
     /// </summary>
     public void ClearInstances()
     {
-        CancelBuild();
         _transforms.Clear();
-        Invalidate();
+        InvalidateAndCancelBuild();
     }
 
     /// <summary>
@@ -163,13 +204,18 @@ public class InstancedMeshGroup : Node
     /// </summary>
     public void Build()
     {
+        if (_buildTask != null)
+        {
+            _needsBuild = true;
+            CancelBuild();
+            return;
+        }
+
         if (_transforms.Count == 0)
         {
             FinalizeEmpty();
             return;
         }
-
-        CancelBuild();
 
         // 快照当前数据，防止后台线程读取时被主线程修改
         var transforms = new List<Matrix4x4>(_transforms);
@@ -177,17 +223,20 @@ public class InstancedMeshGroup : Node
         var maxPerGroup = MaxInstancesPerGroup;
         var maxDepth = MaxDepth;
         var name = Name;
+        var dataVersion = _dataVersion;
 
         _buildCts = new CancellationTokenSource();
         var token = _buildCts.Token;
+        _activeBuildVersion = dataVersion;
+        _needsBuild = false;
 
         _buildTask = Task.Run(() =>
         {
-            if (token.IsCancellationRequested) return;
+            if (token.IsCancellationRequested) return null;
 
             // 计算整体包围盒
             var overallBB = ComputeOverallBoundingBox(sourceMesh, transforms);
-            if (overallBB == null || token.IsCancellationRequested) return;
+            if (overallBB == null || token.IsCancellationRequested) return null;
 
             // 构建八叉树
             var rootNode = new InstanceOctreeNode(overallBB, -1);
@@ -195,13 +244,13 @@ public class InstancedMeshGroup : Node
             {
                 rootNode.Insert(i, transforms[i].Translation);
             }
-            if (token.IsCancellationRequested) return;
+            if (token.IsCancellationRequested) return null;
             rootNode.Subdivide(transforms, maxPerGroup, maxDepth);
 
             // 收集叶子节点
             var leafNodes = new List<InstanceOctreeNode>();
             rootNode.CollectLeaves(leafNodes);
-            if (token.IsCancellationRequested) return;
+            if (token.IsCancellationRequested) return null;
 
             // 创建 InstancedMesh 并填充实例数据（纯 CPU，不上传 GPU）
             var groups = new List<InstancedMesh>();
@@ -210,7 +259,7 @@ public class InstancedMeshGroup : Node
 
             foreach (var leaf in leafNodes)
             {
-                if (token.IsCancellationRequested) return;
+                if (token.IsCancellationRequested) return null;
                 if (leaf.InstanceIndices.Count == 0) continue;
 
                 var groupIdx = groups.Count;
@@ -230,10 +279,11 @@ public class InstancedMeshGroup : Node
                 groups.Add(im);
             }
 
-            if (token.IsCancellationRequested) return;
+            if (token.IsCancellationRequested) return null;
 
-            _pendingResult = new BuildResult
+            return new BuildResult
             {
+                DataVersion = dataVersion,
                 RootNode = rootNode,
                 Groups = groups,
                 InstanceGroupIndex = instanceGroupIndex,
@@ -247,14 +297,36 @@ public class InstancedMeshGroup : Node
     /// </summary>
     public void BuildIfNeeded()
     {
-        // 1. 后台构建完成 → 主线程收尾
-        if (_pendingResult != null)
+        // 1. 后台构建完成 → 主线程观察结果并按版本收尾
+        if (_buildTask is { IsCompleted: true } completedTask)
         {
-            FinalizeBuild(_pendingResult);
-            _pendingResult = null;
             _buildTask = null;
             _buildCts?.Dispose();
             _buildCts = null;
+
+            try
+            {
+                var result = completedTask.GetAwaiter().GetResult();
+                if (result != null &&
+                    result.DataVersion == _dataVersion &&
+                    result.DataVersion == _activeBuildVersion)
+                {
+                    FinalizeBuild(result);
+                }
+                else
+                {
+                    _needsBuild = true;
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                _needsBuild = true;
+            }
+            catch
+            {
+                _needsBuild = true;
+                throw;
+            }
         }
 
         // 2. 需要构建且没有进行中的任务 → 启动后台构建
@@ -280,10 +352,15 @@ public class InstancedMeshGroup : Node
     private void CancelBuild()
     {
         _buildCts?.Cancel();
-        _buildCts?.Dispose();
-        _buildCts = null;
-        _buildTask = null;
-        _pendingResult = null;
+    }
+
+    private void InvalidateAndCancelBuild()
+    {
+        _dataVersion++;
+        _needsBuild = true;
+        _built = false;
+        _rootNode = null;
+        CancelBuild();
     }
 
     /// <summary>
@@ -327,13 +404,6 @@ public class InstancedMeshGroup : Node
         RebuildCount++;
         _needsBuild = false;
         _built = true;
-    }
-
-    private void Invalidate()
-    {
-        _needsBuild = true;
-        _built = false;
-        _rootNode = null;
     }
 
     private void DestroyGroups()

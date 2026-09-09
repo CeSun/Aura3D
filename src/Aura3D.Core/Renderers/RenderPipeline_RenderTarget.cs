@@ -11,6 +11,11 @@ public abstract partial class RenderPipeline
 
     private readonly Dictionary<string, RenderTargetHandle> renderTargetHandles = [];
 
+    private void ClearRenderTargetCaches()
+    {
+        renderTargets.Clear();
+    }
+
     private void UpdateRenderTargetsLRU()
     {
         foreach (var (name, rtMap) in renderTargets)

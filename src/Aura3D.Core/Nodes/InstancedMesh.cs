@@ -114,6 +114,7 @@ public class InstancedMesh : Node
     /// Performs the new operation.
     /// </summary>
     private readonly List<BoundingBox?> _instanceWorldBoundingBoxes = new();
+    private bool _usesStaticWorldBoundingBox;
 
     /// <summary>
     /// Gets the world bounding box dirty.
@@ -291,8 +292,14 @@ public class InstancedMesh : Node
         geometry.SetInstances(transforms);
         _instanceCount = geometry.InstanceCount;
 
-        _worldBoundingBoxDirty = true;
+        if (!_usesStaticWorldBoundingBox)
+        {
+            _instanceWorldBoundingBoxes.Clear();
+            for (var i = 0; i < transforms.Count; i++)
+                UpdateInstanceWorldBoundingBox(i, transforms[i]);
+        }
 
+        _worldBoundingBoxDirty = true;
     }
 
     /// <summary>
@@ -301,6 +308,7 @@ public class InstancedMesh : Node
     /// </summary>
     public void SetStaticWorldBoundingBox(BoundingBox box)
     {
+        _usesStaticWorldBoundingBox = true;
         _instanceWorldBoundingBoxes.Clear();
         _instanceWorldBoundingBoxes.Add(box);
         _worldBoundingBoxDirty = true;

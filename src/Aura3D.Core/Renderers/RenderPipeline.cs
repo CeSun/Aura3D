@@ -60,38 +60,45 @@ public abstract partial class RenderPipeline
     /// <summary>
     /// Gets the meshes.
     /// </summary>
-    public List<Mesh> Meshes { get; } = new List<Mesh>();
+    public IReadOnlyList<Mesh> Meshes => _meshes;
+    private readonly List<Mesh> _meshes = new();
 
 
     /// <summary>
     /// Gets the instanced meshes.
     /// </summary>
-    public List<InstancedMesh> InstancedMeshes { get; } = new List<InstancedMesh>();
+    public IReadOnlyList<InstancedMesh> InstancedMeshes => _instancedMeshes;
+    private readonly List<InstancedMesh> _instancedMeshes = new();
 
     /// <summary>
     /// Gets the particle systems.
     /// </summary>
-    public List<ParticleSystem> ParticleSystems { get; } = new List<ParticleSystem>();
+    public IReadOnlyList<ParticleSystem> ParticleSystems => _particleSystems;
+    private readonly List<ParticleSystem> _particleSystems = new();
 
     /// <summary>
     /// Gets the cameras.
     /// </summary>
-    public List<Camera> Cameras { get; } = new List<Camera>();
+    public IReadOnlyList<Camera> Cameras => _cameras;
+    private readonly List<Camera> _cameras = new();
 
     /// <summary>
     /// Gets the point lights.
     /// </summary>
-    public List<PointLight> PointLights { get; } = new List<PointLight>();
+    public IReadOnlyList<PointLight> PointLights => _pointLights;
+    private readonly List<PointLight> _pointLights = new();
 
     /// <summary>
     /// Gets the spot lights.
     /// </summary>
-    public List<SpotLight> SpotLights { get; } = new List<SpotLight>();
+    public IReadOnlyList<SpotLight> SpotLights => _spotLights;
+    private readonly List<SpotLight> _spotLights = new();
 
     /// <summary>
     /// Gets the directional lights.
     /// </summary>
-    public List<DirectionalLight> DirectionalLights { get; } = new List<DirectionalLight>();
+    public IReadOnlyList<DirectionalLight> DirectionalLights => _directionalLights;
+    private readonly List<DirectionalLight> _directionalLights = new();
 
     /// <summary>
     /// Gets or sets the gl.
@@ -102,14 +109,17 @@ public abstract partial class RenderPipeline
     /// <summary>
     /// Gets the every camera render passes.
     /// </summary>
-    public List<RenderPass> EveryCameraRenderPasses { get; } = new List<RenderPass>();
+    public IReadOnlyList<RenderPass> EveryCameraRenderPasses => _everyCameraRenderPasses;
+    private readonly List<RenderPass> _everyCameraRenderPasses = new();
 
     /// <summary>
     /// Gets the once render passes.
     /// </summary>
-    public List<RenderPass> OnceRenderPasses { get; } = new List<RenderPass>();
+    public IReadOnlyList<RenderPass> OnceRenderPasses => _onceRenderPasses;
+    private readonly List<RenderPass> _onceRenderPasses = new();
 
     private HashSet<IGpuState> GpuStates { get; } = new HashSet<IGpuState>();
+    private int _rendersUntilGpuCollection = 120;
 
     private ConditionalWeakTable<Material, MaterialGpuState> materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
     private ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState> boneMatrixBufferGpuStates = new ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState>();
@@ -179,9 +189,9 @@ public abstract partial class RenderPipeline
     protected void RegisterRenderPass(RenderPass renderPass, RenderPassGroup renderPassGroup)
     {
         if (renderPassGroup == RenderPassGroup.EveryCamera)
-            EveryCameraRenderPasses.Add(renderPass);
+            _everyCameraRenderPasses.Add(renderPass);
         else if (renderPassGroup == RenderPassGroup.Once)
-            OnceRenderPasses.Add(renderPass);
+            _onceRenderPasses.Add(renderPass);
     }
 
     /// <summary>
@@ -256,6 +266,15 @@ public abstract partial class RenderPipeline
     internal void RemoveGpuState(IGpuState gpuState)
     {
         GpuStates.Remove(gpuState);
+    }
+
+    internal void ReleaseGpuState(IGpuState gpuState)
+    {
+        if (!GpuStates.Remove(gpuState))
+            return;
+
+        if (gl != null)
+            gpuState.Destroy(gl);
     }
 
     /// <summary>
@@ -490,25 +509,26 @@ public abstract partial class RenderPipeline
         switch (node)
         {
             case Mesh mesh:
-                Meshes.Add(mesh);
+                _meshes.Add(mesh);
                 break;
             case InstancedMesh instancedMesh:
-                InstancedMeshes.Add(instancedMesh);
+                _instancedMeshes.Add(instancedMesh);
                 break;
             case Camera camera:
-                Cameras.Add(camera);
+                _cameras.Add(camera);
                 break;
             case PointLight pointLight:
-                PointLights.Add(pointLight);
+                _pointLights.Add(pointLight);
                 break;
             case SpotLight spotLight:
-                SpotLights.Add(spotLight);
+                _spotLights.Add(spotLight);
                 break;
             case DirectionalLight directionalLight:
-                DirectionalLights.Add(directionalLight);
+                _directionalLights.Add(directionalLight);
                 break;
             case ParticleSystem particleSystem:
-                ParticleSystems.Add(particleSystem);
+                particleSystem.EnsureGpuResources();
+                _particleSystems.Add(particleSystem);
                 break;
         }
     }
@@ -521,25 +541,26 @@ public abstract partial class RenderPipeline
         switch (node)
         {
             case Mesh mesh:
-                Meshes.Remove(mesh);
+                _meshes.Remove(mesh);
                 break;
             case InstancedMesh instancedMesh:
-                InstancedMeshes.Remove(instancedMesh);
+                _instancedMeshes.Remove(instancedMesh);
                 break;
             case Camera camera:
-                Cameras.Remove(camera);
+                _cameras.Remove(camera);
                 break;
             case PointLight pointLight:
-                PointLights.Remove(pointLight);
+                _pointLights.Remove(pointLight);
                 break;
             case SpotLight spotLight:
-                SpotLights.Remove(spotLight);
+                _spotLights.Remove(spotLight);
                 break;
             case DirectionalLight directionalLight:
-                DirectionalLights.Remove(directionalLight);
+                _directionalLights.Remove(directionalLight);
                 break;
             case ParticleSystem particleSystem:
-                ParticleSystems.Remove(particleSystem);
+                particleSystem.ReleaseGpuResources(this);
+                _particleSystems.Remove(particleSystem);
                 break;
         }
     }
@@ -560,6 +581,12 @@ public abstract partial class RenderPipeline
     /// </summary>
     public virtual void Render()
     {
+        if (--_rendersUntilGpuCollection <= 0)
+        {
+            CollectUnusedGpuStates();
+            _rendersUntilGpuCollection = 120;
+        }
+
         UpdateRenderTargetsLRU();
         UpdateLightLimit();
 
@@ -874,16 +901,20 @@ public abstract partial class RenderPipeline
         materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
         boneMatrixBufferGpuStates = new ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState>();
         geometryGpuStates = new ConditionalWeakTable<Geometry, GeometryGpuState>();
+        instancedGeometryGpuStates = new ConditionalWeakTable<InstancedGeometry, InstancedGeometryGpuState>();
         textureGpuStates = new ConditionalWeakTable<Resources.Texture, TextureGpuState>();
         writableTextureGpuStates = new ConditionalWeakTable<WritableTexture, WritableTextureGpuState>();
         cubeTextureGpuStates = new ConditionalWeakTable<CubeTexture, CubeTextureGpuState>();
 
-        Meshes.Clear();
-
-        Cameras.Clear();
-
-        PointLights.Clear();
-
-        SpotLights.Clear();
+        _meshes.Clear();
+        _instancedMeshes.Clear();
+        _particleSystems.Clear();
+        _cameras.Clear();
+        _pointLights.Clear();
+        _spotLights.Clear();
+        _directionalLights.Clear();
+        _visibleMeshesInCamera.Clear();
+        _visibleInstancedMeshesInCamera.Clear();
+        ClearRenderTargetCaches();
     }
 }
