@@ -36,6 +36,7 @@ public class RenderTarget : RenderTargetBase<RenderTexture, RenderTarget>
     /// </summary>
     public override unsafe void Upload(GL gl)
     {
+        Destroy(gl);
         FrameBufferId = gl.GenFramebuffer();
         gl.BindFramebuffer(GLEnum.Framebuffer, FrameBufferId);
 

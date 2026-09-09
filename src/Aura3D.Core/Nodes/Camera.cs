@@ -14,22 +14,67 @@ public class Camera : Node
     /// <summary>
     /// Gets or sets the near plane.
     /// </summary>
-    public float NearPlane { get; set; } = 1f; // 近裁剪面
+    public float NearPlane
+    {
+        get => _nearPlane;
+        set
+        {
+            ValidatePositiveFinite(value, nameof(NearPlane));
+            if (value >= _farPlane)
+                throw new ArgumentOutOfRangeException(nameof(NearPlane), "Near plane must be less than the far plane.");
+            _nearPlane = value;
+        }
+    }
+
+    private float _nearPlane = 1f;
 
     /// <summary>
     /// Gets or sets the far plane.
     /// </summary>
-    public float FarPlane { get; set; } = 100f; // 远裁剪面
+    public float FarPlane
+    {
+        get => _farPlane;
+        set
+        {
+            ValidatePositiveFinite(value, nameof(FarPlane));
+            if (value <= _nearPlane)
+                throw new ArgumentOutOfRangeException(nameof(FarPlane), "Far plane must be greater than the near plane.");
+            _farPlane = value;
+        }
+    }
+
+    private float _farPlane = 100f;
 
     /// <summary>
     /// Gets or sets the field of view.
     /// </summary>
-    public float FieldOfView { get; set; } = 75f; // 视野角度（度数）
+    public float FieldOfView
+    {
+        get => _fieldOfView;
+        set
+        {
+            if (!float.IsFinite(value) || value <= 0f || value >= 180f)
+                throw new ArgumentOutOfRangeException(nameof(FieldOfView), "Field of view must be finite and between 0 and 180 degrees.");
+            _fieldOfView = value;
+        }
+    }
+
+    private float _fieldOfView = 75f;
 
     /// <summary>
     /// Gets or sets the orthographic size.
     /// </summary>
-    public float OrthographicSize { get; set; } = 5f; // 正交投影时的大小
+    public float OrthographicSize
+    {
+        get => _orthographicSize;
+        set
+        {
+            ValidatePositiveFinite(value, nameof(OrthographicSize));
+            _orthographicSize = value;
+        }
+    }
+
+    private float _orthographicSize = 5f;
 
     /// <summary>
     /// Gets the view.
@@ -99,7 +144,18 @@ public class Camera : Node
     /// <summary>
     /// Gets or sets the projection type.
     /// </summary>
-    public ProjectionType ProjectionType { get; set; } = ProjectionType.Perspective; // 投影类型
+    public ProjectionType ProjectionType
+    {
+        get => _projectionType;
+        set
+        {
+            if (!Enum.IsDefined(value))
+                throw new ArgumentOutOfRangeException(nameof(ProjectionType), value, "Unsupported projection type.");
+            _projectionType = value;
+        }
+    }
+
+    private ProjectionType _projectionType = ProjectionType.Perspective;
 
     /// <summary>
     /// Gets the width.
@@ -199,7 +255,8 @@ public class Camera : Node
     {
         var camera = this;
         ArgumentNullException.ThrowIfNull(aabb);
-        if (padding < 0 || padding > 1) throw new ArgumentOutOfRangeException(nameof(padding));
+        if (!float.IsFinite(padding) || padding < 0 || padding > 1)
+            throw new ArgumentOutOfRangeException(nameof(padding), "Padding must be finite and between 0 and 1.");
 
         Vector3 boxCenter = aabb.Center;
         Vector3 boxSize = aabb.Size;
@@ -218,17 +275,38 @@ public class Camera : Node
 
         float boxDiagonal = boxSize.Length();
 
-        camera.NearPlane = distance - boxDiagonal * 0.6f;
-        camera.FarPlane = distance + boxDiagonal * 1.2f;
+        float nearPlane = distance - boxDiagonal * 0.6f;
+        float farPlane = distance + boxDiagonal * 1.2f;
 
-        if (camera.NearPlane < 0)
+        if (nearPlane <= 0)
         {
-            camera.NearPlane = -camera.NearPlane;
-
-            camera.FarPlane = camera.FarPlane + 2 * camera.NearPlane;
+            nearPlane = MathF.Max(float.Epsilon, -nearPlane);
+            farPlane += 2 * nearPlane;
         }
 
+        camera.SetClippingPlanes(nearPlane, farPlane);
+
         camera.LookAt(boxCenter);
+    }
+
+    /// <summary>
+    /// Atomically updates the clipping planes after validating their relationship.
+    /// </summary>
+    public void SetClippingPlanes(float nearPlane, float farPlane)
+    {
+        ValidatePositiveFinite(nearPlane, nameof(nearPlane));
+        ValidatePositiveFinite(farPlane, nameof(farPlane));
+        if (nearPlane >= farPlane)
+            throw new ArgumentOutOfRangeException(nameof(nearPlane), "Near plane must be less than the far plane.");
+
+        _nearPlane = nearPlane;
+        _farPlane = farPlane;
+    }
+
+    private static void ValidatePositiveFinite(float value, string paramName)
+    {
+        if (!float.IsFinite(value) || value <= 0f)
+            throw new ArgumentOutOfRangeException(paramName, "Value must be finite and greater than zero.");
     }
 }
 

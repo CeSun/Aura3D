@@ -198,6 +198,16 @@ public abstract class RenderTargetBase<TTexture, TSelf> : IRuntimeGpuState
             FrameBufferId = 0;
         }
 
+        Invalidate();
+    }
+
+    /// <inheritdoc />
+    public void Invalidate()
+    {
+        foreach (var texture in renderTextures)
+            texture.TextureId = 0;
+        depthStencilTexture.TextureId = 0;
+        FrameBufferId = 0;
         SyncedVersion = 0;
     }
 

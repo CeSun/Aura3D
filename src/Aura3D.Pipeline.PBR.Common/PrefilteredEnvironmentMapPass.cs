@@ -107,9 +107,10 @@ public class PrefilteredEnvironmentMapPass : RenderPass<PBRPipelineBase>
 
 
         var perfilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap");
-        if (perfilteredEnvMap != null)
-             return;
-        else
+        if (perfilteredEnvMap != null && perfilteredEnvMap.FrameBufferId != 0)
+            return;
+
+        if (perfilteredEnvMap == null)
         {
             perfilteredEnvMap = new CubeRenderTarget();
 
@@ -118,14 +119,11 @@ public class PrefilteredEnvironmentMapPass : RenderPass<PBRPipelineBase>
             perfilteredEnvMap.SetEnableMipMapLevel(true);
 
             perfilteredEnvMap.SetSize(PREFILTER_WIDTH, PREFILTER_WIDTH);
-
-            renderPipeline.EnsureSynced(perfilteredEnvMap);
-
             perfilteredEnvMap.SetDepthTexture(TextureFormat.DepthComponent16);
-
             camera.SetPipelineGpuState("PrefilteredEnvironmentMap", perfilteredEnvMap);
-
         }
+
+        renderPipeline.EnsureSynced(perfilteredEnvMap);
 
         UseShader();
         UseShader_Internal();

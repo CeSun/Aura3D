@@ -23,6 +23,13 @@ internal sealed class WritableTextureGpuState : TextureGpuState
         base.Destroy(gl);
     }
 
+    public override void Invalidate()
+    {
+        FramebufferId = 0;
+        DepthTextureId = 0;
+        base.Invalidate();
+    }
+
     public override unsafe void Upload(GL gl)
     {
         DestroyFramebuffer(gl);

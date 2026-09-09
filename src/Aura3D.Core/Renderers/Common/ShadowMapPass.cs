@@ -73,9 +73,9 @@ public class ShadowMapPass : RenderPass
             if (rt == null)
             {
                 rt = new CubeRenderTarget().SetDepthTexture(TextureFormat.DepthComponent24).SetSize(1024, 1024);
-                renderPipeline.EnsureSynced(rt);
                 pointLight.SetPipelineGpuState("ShadowMapRenderTarget", rt);
             }
+            renderPipeline.EnsureSynced(rt);
 
             gl.Viewport(0, 0, rt.Width, rt.Height);
             gl.BindFramebuffer(GLEnum.Framebuffer, rt.FrameBufferId);
@@ -121,9 +121,9 @@ public class ShadowMapPass : RenderPass
             if (rt == null)
             {
                 rt = new RenderTarget().SetDepthTexture(TextureFormat.DepthComponent24).SetSize(1024, 1024);
-                renderPipeline.EnsureSynced(rt);
                 spotLight.SetPipelineGpuState("ShadowMapRenderTarget", rt);
             }
+            renderPipeline.EnsureSynced(rt);
 
             gl.Viewport(0, 0, rt.Width, rt.Height);
             gl.BindFramebuffer(GLEnum.Framebuffer, rt.FrameBufferId);
@@ -178,10 +178,12 @@ public class ShadowMapPass : RenderPass
                 var csmData = directionalLight.GetPipelineGpuState<CsmShadowData>(nameof(CsmShadowData));
                 if (csmData == null ||
                     csmData.Resolution != csmRes ||
-                    csmData.CascadeCount != cascades)
+                    csmData.CascadeCount != cascades ||
+                    csmData.TextureArrayId == 0 ||
+                    csmData.FboId == 0)
                 {
-                    // 销毁旧资源
-                    csmData?.Destroy(gl);
+                    if (csmData != null)
+                        renderPipeline.ReleaseGpuState(csmData);
 
                     csmData = new CsmShadowData
                     {
@@ -204,6 +206,7 @@ public class ShadowMapPass : RenderPass
 
                     csmData.FboId = gl.GenFramebuffer();
 
+                    renderPipeline.EnsureSynced(csmData);
                     directionalLight.SetPipelineGpuState(nameof(CsmShadowData), csmData);
                 }
 
@@ -255,8 +258,7 @@ public class ShadowMapPass : RenderPass
                 var oldRt = directionalLight.GetPipelineGpuState<RenderTarget>("ShadowMapRenderTarget");
                 if (oldRt != null)
                 {
-                    renderPipeline.RemoveGpuState(oldRt);
-                    oldRt.Destroy(gl);
+                    renderPipeline.ReleaseGpuState(oldRt);
                     directionalLight.RemovePipelineGpuState("ShadowMapRenderTarget");
                 }
             }
@@ -267,7 +269,7 @@ public class ShadowMapPass : RenderPass
                 var oldCsm = directionalLight.GetPipelineGpuState<CsmShadowData>(nameof(CsmShadowData));
                 if (oldCsm != null)
                 {
-                    oldCsm.Destroy(gl);
+                    renderPipeline.ReleaseGpuState(oldCsm);
                     directionalLight.RemovePipelineGpuState(nameof(CsmShadowData));
                 }
 
@@ -276,9 +278,9 @@ public class ShadowMapPass : RenderPass
                 if (rt == null)
                 {
                     rt = new RenderTarget().SetDepthTexture(TextureFormat.DepthComponent24).SetSize(DefaultShadowMapRes, DefaultShadowMapRes);
-                    renderPipeline.EnsureSynced(rt);
                     directionalLight.SetPipelineGpuState("ShadowMapRenderTarget", rt);
                 }
+                renderPipeline.EnsureSynced(rt);
 
                 gl.Viewport(0, 0, rt.Width, rt.Height);
 

@@ -181,6 +181,7 @@ public class LightPass : RenderPass
     /// </summary>
     public override void Destroy()
     {
+        base.Destroy();
     }
 
     /// <summary>

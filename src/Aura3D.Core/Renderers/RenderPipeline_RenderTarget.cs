@@ -102,6 +102,7 @@ public abstract partial class RenderPipeline
                 rt.Item2 = DateTime.Now;
                 rtMap[size] = rt;
             }
+            EnsureSynced(rt.Item1);
             return rt.Item1;
         }
 

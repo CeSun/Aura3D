@@ -52,6 +52,16 @@ internal class GeometryGpuState : IResourceGpuState<Geometry>
             gl.DeleteVertexArray(Vao);
             Vao = 0;
         }
+
+        Invalidate();
+    }
+
+    public virtual void Invalidate()
+    {
+        vboIds.Clear();
+        Ebo = 0;
+        Vao = 0;
+        SyncedVersion = 0;
     }
 
     public virtual unsafe void Upload(GL gl)

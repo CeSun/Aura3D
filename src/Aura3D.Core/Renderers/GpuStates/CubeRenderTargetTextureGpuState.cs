@@ -19,6 +19,13 @@ internal sealed class CubeRenderTargetTextureGpuState : CubeTextureGpuState
 
     public override void Destroy(GL gl)
     {
+        Invalidate();
+    }
+
+    public override void Invalidate()
+    {
+        // The render target owns the texture name; this adapter only caches sync state.
+        SyncedVersion = 0;
     }
 
     public override void Upload(GL gl)

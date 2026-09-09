@@ -49,6 +49,13 @@ internal unsafe class ParticleQuadGeometry : IRuntimeGpuState
     {
         if (QuadVbo != 0) { gl.DeleteBuffer(QuadVbo); QuadVbo = 0; }
         if (QuadEbo != 0) { gl.DeleteBuffer(QuadEbo); QuadEbo = 0; }
+        Invalidate();
+    }
+
+    public void Invalidate()
+    {
+        QuadVbo = 0;
+        QuadEbo = 0;
         SyncedVersion = 0;
     }
 }

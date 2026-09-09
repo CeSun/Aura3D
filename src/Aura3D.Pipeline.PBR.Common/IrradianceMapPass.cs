@@ -89,20 +89,20 @@ void main()
 
         var irradianceMap = camera.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap");
 
-        if (irradianceMap != null)
+        if (irradianceMap != null && irradianceMap.FrameBufferId != 0)
             return;
-        else
+
+        if (irradianceMap == null)
         {
             irradianceMap = new CubeRenderTarget()
             .SetSize(_irradianceMapSize, _irradianceMapSize)
             .AddRenderTexture("Irradiance", TextureFormat.Rgb16f)
             .SetDepthTexture(TextureFormat.DepthComponent16);
 
-            renderPipeline.EnsureSynced(irradianceMap);
+            camera.SetPipelineGpuState("IrradianceMap", irradianceMap);
         }
 
-
-        camera.SetPipelineGpuState("IrradianceMap", irradianceMap);
+        renderPipeline.EnsureSynced(irradianceMap);
 
         var texture = irradianceMap.GetTexture(0)!;
 

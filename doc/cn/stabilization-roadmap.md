@@ -24,8 +24,8 @@
 - [x] HISM、动画时间缩放和 BlendSpace IDW 参数增加基础校验。
 - [x] InstancedMesh 批量替换实例时同步刷新拾取包围盒。
 - [x] Shader 编译、链接失败时释放临时 GL 对象。
-- [ ] 为 Camera、PipelineSettings 和 ParticleEmitter 建立一致的参数校验规则。
-- [ ] 定义并文档化所有 GPU 资源的所有权、上下文丢失与重复销毁语义。
+- [x] 为 Camera、PipelineSettings 和 ParticleEmitter 建立一致的参数校验规则。
+- [x] 定义并文档化所有 GPU 资源的所有权、上下文丢失与重复销毁语义。
 
 验收标准：固定 deltaTime 输入产生确定结果；外部调用者无法绕过 Scene 修改 Pipeline 注册集合；资源释放路径可重复调用。
 

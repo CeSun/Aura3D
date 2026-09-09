@@ -87,5 +87,12 @@ internal sealed class BoneMatrixBufferGpuState : IResourceGpuState<BoneMatrixBuf
             gl.DeleteBuffer(BufferId);
             BufferId = 0;
         }
+        Invalidate();
+    }
+
+    public void Invalidate()
+    {
+        BufferId = 0;
+        SyncedVersion = 0;
     }
 }

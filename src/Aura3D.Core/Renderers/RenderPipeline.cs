@@ -24,6 +24,9 @@ public interface IRenderPipelineCreateInstance
 /// </summary>
 public abstract partial class RenderPipeline
 {
+    private bool _setupComplete;
+    private bool _isDestroyed;
+
     /// <summary>
     /// Initializes a new instance of the render pipeline type.
     /// </summary>
@@ -104,6 +107,12 @@ public abstract partial class RenderPipeline
     /// Gets or sets the gl.
     /// </summary>
     public GL? gl { get; protected set; }
+
+    /// <summary>Gets whether a usable GL context is currently attached.</summary>
+    public bool IsInitialized => gl != null && !_isDestroyed;
+
+    /// <summary>Gets whether this pipeline has been permanently destroyed.</summary>
+    public bool IsDestroyed => _isDestroyed;
 
 
     /// <summary>
@@ -228,18 +237,44 @@ public abstract partial class RenderPipeline
     /// </summary>
     public void Initialize(Func<string, nint> getProcAddressFunctionPtr)
     {
+        ArgumentNullException.ThrowIfNull(getProcAddressFunctionPtr);
+        ObjectDisposedException.ThrowIf(_isDestroyed, this);
+        if (gl != null)
+            throw new InvalidOperationException("The render pipeline is already initialized. Report context loss before attaching a replacement context.");
+
         gl = GL.GetApi(getProcAddressFunctionPtr);
 
-        Setup();
+        if (!_setupComplete)
+        {
+            Setup();
 
-        foreach (var renderPass in EveryCameraRenderPasses)
-        {
-            renderPass.Setup();
+            foreach (var renderPass in EveryCameraRenderPasses)
+                renderPass.Setup();
+            foreach (var renderPass in OnceRenderPasses)
+                renderPass.Setup();
+
+            _setupComplete = true;
         }
-        foreach (var renderPass in OnceRenderPasses)
-        {
-            renderPass.Setup();
-        }
+    }
+
+    /// <summary>
+    /// Invalidates all context-owned names without issuing GL calls. Call this after the
+    /// current context is lost, then call <see cref="Initialize"/> with the replacement context.
+    /// CPU resources and pipeline registrations are preserved for lazy recreation.
+    /// </summary>
+    public void HandleContextLost()
+    {
+        if (_isDestroyed)
+            return;
+
+        foreach (var pass in OnceRenderPasses)
+            pass.InvalidateGpuResources();
+        foreach (var pass in EveryCameraRenderPasses)
+            pass.InvalidateGpuResources();
+        foreach (var gpuState in GpuStates)
+            gpuState.Invalidate();
+
+        gl = null;
     }
 
     /// <summary>
@@ -255,11 +290,14 @@ public abstract partial class RenderPipeline
     /// </summary>
     public void EnsureSynced(IGpuState resource)
     {
+        ArgumentNullException.ThrowIfNull(resource);
+        ObjectDisposedException.ThrowIf(_isDestroyed, this);
         GpuStates.Add(resource);
 
         if (resource.SyncedVersion != resource.Version)
         {
-            resource.Upload(gl!);
+            var currentGl = gl ?? throw new InvalidOperationException("The render pipeline has no current GL context.");
+            resource.Upload(currentGl);
         }
     }
 
@@ -275,6 +313,8 @@ public abstract partial class RenderPipeline
 
         if (gl != null)
             gpuState.Destroy(gl);
+        else
+            gpuState.Invalidate();
     }
 
     /// <summary>
@@ -884,18 +924,26 @@ public abstract partial class RenderPipeline
     /// </summary>
     public virtual void Destroy()
     {
-        foreach (var pass in OnceRenderPasses)
-        {
-            pass.Destroy();
-        }
-        foreach (var pass in EveryCameraRenderPasses)
-        {
-            pass.Destroy();
-        }
+        if (_isDestroyed)
+            return;
 
-        foreach (var gpuState in GpuStates)
+        if (gl != null)
         {
-            gpuState.Destroy(gl!);
+            foreach (var pass in OnceRenderPasses)
+                pass.Destroy();
+            foreach (var pass in EveryCameraRenderPasses)
+                pass.Destroy();
+            foreach (var gpuState in GpuStates)
+                gpuState.Destroy(gl);
+        }
+        else
+        {
+            foreach (var pass in OnceRenderPasses)
+                pass.InvalidateGpuResources();
+            foreach (var pass in EveryCameraRenderPasses)
+                pass.InvalidateGpuResources();
+            foreach (var gpuState in GpuStates)
+                gpuState.Invalidate();
         }
         GpuStates.Clear();
         materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
@@ -916,5 +964,7 @@ public abstract partial class RenderPipeline
         _visibleMeshesInCamera.Clear();
         _visibleInstancedMeshesInCamera.Clear();
         ClearRenderTargetCaches();
+        gl = null;
+        _isDestroyed = true;
     }
 }

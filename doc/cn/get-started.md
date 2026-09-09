@@ -158,6 +158,8 @@ Matrix4x4 projMatrix = camera.Projection;
 Matrix4x4 vpMatrix = camera.ViewProjection;
 ```
 
+投影参数会在赋值时校验：`NearPlane > 0`、`FarPlane > NearPlane`、`FieldOfView` 位于 `(0, 180)` 度、`OrthographicSize > 0`，且数值必须有限。需要同时大幅调整远近裁剪面时，使用 `camera.SetClippingPlanes(near, far)` 原子更新，避免中间状态无效。
+
 ## 模型
 
 ### 加载 glTF/GLB 模型

@@ -204,6 +204,8 @@ Each emitter owns its particles, rendering resources, and runtime state.
 | `Gravity` | `Vector3` | `(0, -9.8, 0)` | Gravity applied to particles. Positive Y = upward. |
 | `Damping` | `float` | `0` | Velocity damping factor. |
 
+Values are validated when assigned: rates, duration, damping, and shape dimensions must be finite and non-negative; lifetime must be positive; ranges must be finite with `Min <= Max`; `ConeAngle` accepts `[0, 90)` degrees; `MaxParticles` and `MeshScale` must be positive; and both `FlipbookTiles` components must be positive integers. Unknown enum values are rejected as well.
+
 #### Mesh Mode Only
 
 | Property | Type | Default | Description |

@@ -497,9 +497,9 @@ public partial class RenderPass
     {
         foreach(var shader in Shaders)
         {
-            gl.DeleteProgram(shader.Value.ProgramId);
+            if (shader.Value.ProgramId != 0)
+                gl.DeleteProgram(shader.Value.ProgramId);
         }
-        Shaders.Clear();
 
         if (_immVbo != 0)
         {
@@ -509,8 +509,20 @@ public partial class RenderPass
         if (_immVao != 0)
         {
             gl.DeleteVertexArray(_immVao);
-            _immVao = 0;
         }
+
+        InvalidateGpuResources();
+    }
+
+    /// <summary>
+    /// Forgets render-pass handles without issuing GL calls after context loss.
+    /// </summary>
+    public virtual void InvalidateGpuResources()
+    {
+        Shaders.Clear();
+        CurrentShader = null;
+        _immVbo = 0;
+        _immVao = 0;
     }
 }
 

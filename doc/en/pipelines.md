@@ -508,7 +508,7 @@ Cap the number of lights that take effect simultaneously. Lights beyond the limi
 | `PointLightLimit` | Max point lights (default 4) — for bulbs, candles, omnidirectional sources |
 | `SpotLightLimit` | Max spot lights (default 4) — for flashlights, stage spotlights |
 
-> Lower limits improve performance; raise them to support more lights. If you placed 6 lights but only 4 are working, increase the corresponding limit.
+> Each light limit accepts `1..10`. Lower limits improve performance; raise them to support more lights.
 
 #### Tone Mapping & Brightness
 
@@ -549,7 +549,7 @@ view.Scene.MainDirectionalLight = dl;  // This directional light uses CSM
 | `CsmSplitLambda` | PSSM split parameter. 0=uniform, 1=logarithmic | `0.5` |
 | `CsmShadowMapResolution` | Shadow map resolution per cascade | `1024` |
 
-> `CsmCascadeCount` and `CsmShadowMapResolution` must be set before pipeline creation. `CsmSplitLambda` can be adjusted at runtime.
+> `CsmCascadeCount` accepts `1..4`, `CsmSplitLambda` accepts `0..1`, and resolution must be positive. Set cascade count and resolution before pipeline creation; split lambda may change at runtime. All intensity and tone-mapping floats must be finite and non-negative, and `Debug` cannot be null.
 
 #### Debug Visualization (DebugSettings)
 

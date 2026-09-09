@@ -22,6 +22,13 @@ internal class InternalCube : IRuntimeGpuState
             gl.DeleteBuffer(Vbo);
             Vbo = 0;
         }
+        Invalidate();
+    }
+
+    public void Invalidate()
+    {
+        Vao = 0;
+        Vbo = 0;
         SyncedVersion = 0;
     }
 

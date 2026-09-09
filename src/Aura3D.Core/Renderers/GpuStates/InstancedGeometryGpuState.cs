@@ -26,6 +26,12 @@ internal sealed class InstancedGeometryGpuState : GeometryGpuState
         base.Destroy(gl);
     }
 
+    public override void Invalidate()
+    {
+        instanceVboIds.Clear();
+        base.Invalidate();
+    }
+
     public override unsafe void Upload(GL gl)
     {
         base.Upload(gl);

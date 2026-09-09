@@ -38,6 +38,14 @@ public class TextureGpuState : IResourceGpuState
     public virtual void Destroy(GL gl)
     {
         DestroyTexture(gl);
+        Invalidate();
+    }
+
+    /// <inheritdoc />
+    public virtual void Invalidate()
+    {
+        TextureId = 0;
+        SyncedVersion = 0;
     }
 
     /// <summary>

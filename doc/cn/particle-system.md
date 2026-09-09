@@ -204,6 +204,8 @@ private void CreateDebrisSystem(Aura3DView view)
 | `Gravity` | `Vector3` | `(0, -9.8, 0)` | 施加给粒子的重力。正 Y = 向上。 |
 | `Damping` | `float` | `0` | 速度阻尼系数。 |
 
+所有数值在赋值时立即校验：速率、持续时间、阻尼和形状尺寸必须为有限非负数；生命周期必须大于 0；范围必须有限且 `Min <= Max`；`ConeAngle` 为 `[0, 90)` 度；`MaxParticles` 和 `MeshScale` 必须大于 0；`FlipbookTiles` 的两个分量必须是正整数。非法枚举值同样会被拒绝。
+
 #### 网格模式专用
 
 | 属性 | 类型 | 默认值 | 说明 |

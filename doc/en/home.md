@@ -11,6 +11,7 @@ Welcome to Aura3D. This documentation covers everything from installation to cus
 | **[Animation System](./animation.md)** | Skeletal animation / Loop modes / External animation import → 2D blend space → Animation graph → Bone manipulation |
 | **[Instanced Rendering](./instanced-rendering.md)** | GPU instancing (InstancedMesh) → Per-instance attributes / Transform updates → Hierarchical instancing (HISM) → Incremental updates |
 | **[Rendering Topics](./rendering.md)** | Shadows / Point clouds / Primitive rendering → Advanced materials → Node operations (bounding box / clone / batch transform / find children) |
+| **[GPU Resource Lifecycle](./gpu-resource-lifecycle.md)** | GPU-state ownership → Idempotent destruction → Context loss and recovery → Custom-state contract |
 
 ## Example Project
 

@@ -74,6 +74,13 @@ public class MaterialGpuState : IResourceGpuState<Material>
         {
             gl.DeleteProgram(shader.Value.ProgramId);
         }
+        Invalidate();
+    }
+
+    /// <inheritdoc />
+    public void Invalidate()
+    {
         Shaders.Clear();
+        SyncedVersion = 0;
     }
 }

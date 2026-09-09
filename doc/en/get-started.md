@@ -158,6 +158,8 @@ Matrix4x4 projMatrix = camera.Projection;
 Matrix4x4 vpMatrix = camera.ViewProjection;
 ```
 
+Projection values are validated on assignment: `NearPlane > 0`, `FarPlane > NearPlane`, `FieldOfView` is in `(0, 180)` degrees, `OrthographicSize > 0`, and every value must be finite. Use `camera.SetClippingPlanes(near, far)` to update both planes atomically when a large change would otherwise create an invalid intermediate state.
+
 ## Models
 
 ### Loading glTF/GLB Models

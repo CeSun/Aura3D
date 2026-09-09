@@ -92,9 +92,17 @@ public unsafe class ParticleGpuBuffer : IRuntimeGpuState
     {
         if (_vao != 0) { gl.DeleteVertexArray(_vao); _vao = 0; }
         if (_instanceVbo != 0) { gl.DeleteBuffer(_instanceVbo); _instanceVbo = 0; }
+        Invalidate();
+    }
+
+    /// <inheritdoc />
+    public void Invalidate()
+    {
+        _vao = 0;
+        _instanceVbo = 0;
         _bufferCapacityInstances = 0;
-        _activeCount = 0;
         SyncedVersion = 0;
+        _dataDirty = _activeCount > 0;
     }
 
     // ---- Internal ----

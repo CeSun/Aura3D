@@ -35,6 +35,14 @@ internal class InternalQuad : IRuntimeGpuState
             gl.DeleteBuffer(Ebo);
             Ebo = 0;
         }
+        Invalidate();
+    }
+
+    public void Invalidate()
+    {
+        Vao = 0;
+        Vbo = 0;
+        Ebo = 0;
         SyncedVersion = 0;
     }
 

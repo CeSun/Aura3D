@@ -37,7 +37,7 @@ public class CubeRenderTarget : RenderTargetBase<RenderCubeTexture, CubeRenderTa
     /// </summary>
     public override unsafe void Upload(GL gl)
     {
-
+        Destroy(gl);
         FrameBufferId = gl.GenFramebuffer();
 
         gl.BindFramebuffer(GLEnum.Framebuffer, FrameBufferId);

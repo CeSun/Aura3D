@@ -4,7 +4,8 @@ using Silk.NET.OpenGLES;
 namespace Aura3D.Core.Renderers;
 
 /// <summary>
-/// Defines the contract for gpu state.
+/// Defines GPU state owned by the render pipeline that first synchronizes it.
+/// Implementations retain any CPU-side source data needed for recreation.
 /// </summary>
 public interface IGpuState
 {
@@ -19,14 +20,22 @@ public interface IGpuState
     public ulong SyncedVersion { get; }
 
     /// <summary>
-    /// Uploads the associated data.
+    /// Creates or updates handles in the supplied current GL context.
     /// </summary>
     public void Upload(GL gl);
 
     /// <summary>
-    /// Destroys the associated data.
+    /// Releases owned handles from the supplied current GL context.
+    /// This operation must be safe to call repeatedly.
     /// </summary>
     public void Destroy(GL gl);
+
+    /// <summary>
+    /// Forgets all context-owned handles without issuing GL calls.
+    /// Called after context loss; this operation must be safe to call repeatedly.
+    /// A later upload must recreate the complete GPU state.
+    /// </summary>
+    public void Invalidate();
 }
 
 /// <summary>

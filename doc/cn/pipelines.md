@@ -508,7 +508,7 @@ view.Scene.RenderPipeline.Settings.EnableFxaa = false;
 | `PointLightLimit` | 点光源上限（默认 4）—— 灯泡、蜡烛等向四周发光的光源 |
 | `SpotLightLimit` | 聚光灯上限（默认 4）—— 手电筒、舞台追光等锥形光源 |
 
-> 调小可以提升性能，调大可以支持更多光源。如果放了 6 盏灯只有 4 盏亮，把这个值调大就行。
+> 三种上限的有效范围均为 `1..10`。调小可以提升性能，调大可以支持更多光源。
 
 #### 色调映射与亮度（ToneMapping）
 
@@ -549,7 +549,7 @@ view.Scene.MainDirectionalLight = dl;  // 该方向光使用 CSM
 | `CsmSplitLambda` | PSSM 分割参数。0=均匀分割，1=对数分割 | `0.5` |
 | `CsmShadowMapResolution` | 每级联的阴影贴图分辨率 | `1024` |
 
-> `CsmCascadeCount` 和 `CsmShadowMapResolution` 需在管线创建前设置。`CsmSplitLambda` 可运行时调整。
+> `CsmCascadeCount` 有效范围为 `1..4`，`CsmSplitLambda` 为 `0..1`，分辨率必须大于 0。`CsmCascadeCount` 和 `CsmShadowMapResolution` 需在管线创建前设置；`CsmSplitLambda` 可运行时调整。所有强度和色调映射浮点参数必须为有限非负数，`Debug` 不能为 null。
 
 #### 调试可视化（DebugSettings）
 

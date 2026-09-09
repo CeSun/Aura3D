@@ -61,6 +61,14 @@ public class CsmShadowData : IRuntimeGpuState
     {
         if (TextureArrayId != 0) { gl.DeleteTexture(TextureArrayId); TextureArrayId = 0; }
         if (FboId != 0) { gl.DeleteFramebuffer(FboId); FboId = 0; }
+        Invalidate();
+    }
+
+    /// <inheritdoc />
+    public void Invalidate()
+    {
+        TextureArrayId = 0;
+        FboId = 0;
         SyncedVersion = 0;
     }
 }
