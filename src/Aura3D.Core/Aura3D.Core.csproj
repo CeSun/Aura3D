@@ -14,6 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Aura3D.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
 	<Compile Update="ShaderResource.Designer.cs">
 		<DesignTime>True</DesignTime>
 		<AutoGen>True</AutoGen>

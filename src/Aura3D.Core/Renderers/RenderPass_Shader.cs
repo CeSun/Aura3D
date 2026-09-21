@@ -5,6 +5,7 @@ using Silk.NET.OpenGLES;
 using System.Drawing;
 using System.Numerics;
 using System.Text;
+using System.Text.RegularExpressions;
 using ShaderType = Silk.NET.OpenGLES.ShaderType;
 
 namespace Aura3D.Core.Renderers;
@@ -123,6 +124,21 @@ public partial class RenderPass
         CurrentShader = shader;
     }
 
+    private static readonly Regex PrecisionDeclarationRegex = new(
+        @"^[ \t]*precision[ \t]+(?:lowp|mediump|highp)[ \t]+\w+[ \t]*;[ \t]*(?://[^\r\n]*)?\r?$",
+        RegexOptions.Multiline | RegexOptions.Compiled);
+
+    /// <summary>
+    /// Converts an ES shader source to desktop GLSL: swaps the version directive and removes
+    /// precision declarations, which desktop GLSL rejects before version 4.10.
+    /// </summary>
+    internal static string ConvertToDesktopGLSL(string source)
+    {
+        var converted = source.Replace("#version 300 es", "#version 330 core");
+
+        return PrecisionDeclarationRegex.Replace(converted, string.Empty);
+    }
+
     private Shader CreateShaderProgram(string[] defines, string vertexShader, string fragmentShader)
     {
         var shader = new Shader();
@@ -145,8 +161,8 @@ public partial class RenderPass
 
             if (System.OperatingSystem.IsMacOS())
             {
-                vs = vs.Replace("#version 300 es", "#version 330 core");
-                fs = fs.Replace("#version 300 es", "#version 330 core");
+                vs = ConvertToDesktopGLSL(vs);
+                fs = ConvertToDesktopGLSL(fs);
             }
 
             gl.ShaderSource(vertex, vs);

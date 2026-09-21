@@ -339,7 +339,7 @@ A given defines combination compiles only once; subsequent frames reuse the cach
 2. If Material provides custom source → check Material cache; on miss, compile with Material source
 3. Otherwise check Pass cache; on miss, compile with Pass's `VertexShader`/`FragmentShader`
 4. During compilation, inject `#define SKINNED_MESH\n#define BLENDMODE_MASKED` at `//{{defines}}`
-5. On macOS, automatically replace `#version 300 es` with `#version 330 core`
+5. On macOS, automatically replace `#version 300 es` with `#version 330 core`, and strip all `precision` declarations (illegal in desktop GLSL before 4.10)
 6. Link shader, enumerate all uniform locations, and cache them
 
 > **Note**: Defines order affects the cache key. `UseShader("A").AddDefines("B")` produces key `"A;B"`, and `UseShader("A", "B")` also produces `"A;B"` — they match. But `UseShader("B")` then `AddDefines("A")` produces `"B;A"`, a different variant. Prefer declaring all needed macros at once with `UseShader`.
