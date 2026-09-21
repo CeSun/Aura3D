@@ -19,17 +19,16 @@ namespace Aura3D.Avalonia;
 public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlControlBase, ICustomHitTest
 {
     /// <summary>
-    /// 获取或设置当前关联的 3D 场景。控件从未初始化或已销毁时为 <c>null</c>。
+    /// 获取或设置当前关联的 3D 场景。控件从未初始化、或调用了 <see cref="DestroyScene"/> 之后为 <c>null</c>。
+    /// 控件从视觉树分离不会清空该属性。
     /// </summary>
     public Scene? Scene { get; protected set; }
 
     /// <summary>
-    /// 获取当前 OpenGL 上下文是否已丢失且尚未恢复。丢失期间场景、节点与 CPU 资源保持不变，
-    /// GPU 句柄会在取得新上下文后按需重建。
+    /// 获取当前 GPU 句柄是否处于失效状态且尚未重建。上下文丢失或控件从视觉树分离后为 <c>true</c>；
+    /// 两种情况下场景、节点与 CPU 资源均保持不变，GPU 对象会在下次渲染时按需重建。
     /// </summary>
     public bool IsContextLost { get; private set; }
-
-    bool sceneInitialized;
 
     Stopwatch Stopwatch;
 
@@ -67,26 +66,43 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
 
         UpdateRenderSurfaceSize();
 
-        Scene ??= new Scene(CreateRenderPipeline, PipelineSettings, renderSurface);
+        EnsureScene(gl);
+    }
 
-        Scene.RenderPipeline.Initialize(gl.GetProcAddress);
-
-        Stopwatch.Restart();
-
-        UpdateRenderSurfaceSize();
-
-        IsContextLost = false;
-
-        if (sceneInitialized)
+    /// <summary>
+    /// 确保场景存在并与当前上下文绑定。首次创建时触发 <see cref="OnSceneInitialized"/>，
+    /// 复用已有场景时触发 <see cref="OnContextRestored"/>。
+    /// </summary>
+    private Scene EnsureScene(GlInterface gl)
+    {
+        if (Scene == null)
         {
-            // 上下文重建：场景、节点与材质均为原实例，仅 GPU 状态需要重建。
+            Scene = new Scene(CreateRenderPipeline, PipelineSettings, renderSurface);
+
+            Scene.RenderPipeline.Initialize(gl.GetProcAddress);
+
+            Stopwatch.Restart();
+
+            IsContextLost = false;
+
+            OnSceneInitialized();
+
+            return Scene;
+        }
+
+        if (!Scene.RenderPipeline.IsInitialized)
+        {
+            // 上下文已重建（控件重新挂载或宿主替换了上下文）：场景、节点与材质均为原实例。
+            Scene.RenderPipeline.Initialize(gl.GetProcAddress);
+
+            Stopwatch.Restart();
+
+            IsContextLost = false;
+
             OnContextRestored();
         }
-        else
-        {
-            sceneInitialized = true;
-            OnSceneInitialized();
-        }
+
+        return Scene;
     }
 
     protected override void OnOpenGlLost()
@@ -110,7 +126,57 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
         RequestNextFrameRendering();
     }
 
+    /// <summary>
+    /// 释放场景在 GPU 上分配的全部对象以归还显存，场景、节点与 CPU 资源全部保留，
+    /// 下次渲染时按需重建。GL 调用只能在渲染线程执行，因此实际释放发生在下一帧渲染开始时。
+    /// </summary>
+    public void ReleaseGpuResources()
+    {
+        if (Scene == null)
+            return;
+
+        releaseGpuResourcesRequested = true;
+
+        RequestNextFrameRendering();
+    }
+
+    /// <summary>
+    /// 销毁当前场景及其全部 GPU 资源，并清空 <see cref="Scene"/>。销毁在下一帧渲染开始时执行，
+    /// 若控件仍在渲染，同一帧会自动创建新场景并重新触发 <see cref="OnSceneInitialized"/>。
+    /// </summary>
+    public void DestroyScene()
+    {
+        if (Scene == null)
+            return;
+
+        destroySceneRequested = true;
+
+        RequestNextFrameRendering();
+    }
+
+    private void ApplyDestroyScene()
+    {
+        if (Scene == null)
+            return;
+
+        if (!Scene.RenderPipeline.IsDestroyed)
+            Scene.RenderPipeline.Destroy();
+
+        // 事件参数仍携带即将销毁的场景引用，先触发再置空。
+        OnSceneDestroyed();
+
+        Scene = null;
+        fb = -1;
+        IsContextLost = false;
+
+        Stopwatch.Stop();
+    }
+
     private RenderSurface renderSurface = new RenderSurface();
+
+    private bool releaseGpuResourcesRequested;
+
+    private bool destroySceneRequested;
     private void UpdateRenderSurfaceSize()
     {
         if (isSizeChanged == true)
@@ -140,21 +206,26 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
 
     protected override void OnOpenGlRender(GlInterface gl, int fb)
     {
-        if (Scene == null || Scene.RenderPipeline.IsDestroyed)
+        if (destroySceneRequested)
+        {
+            destroySceneRequested = false;
+            releaseGpuResourcesRequested = false;
+
+            ApplyDestroyScene();
+        }
+
+        // 管线被显式销毁后不再渲染，也不会自动重建场景。
+        if (Scene is { RenderPipeline.IsDestroyed: true })
             return;
 
-        if (!Scene.RenderPipeline.IsInitialized)
+        if (releaseGpuResourcesRequested)
         {
-            // 上下文已重建但没有触发 OnOpenGlInit（例如宿主直接调用了 OnOpenGlLost
-            // 或替换了上下文）：用当前回调的上下文重新挂载管线。
-            Scene.RenderPipeline.Initialize(gl.GetProcAddress);
+            releaseGpuResourcesRequested = false;
 
-            Stopwatch.Restart();
-
-            IsContextLost = false;
-
-            OnContextRestored();
+            Scene?.RenderPipeline.ReleaseGpuResources();
         }
+
+        var scene = EnsureScene(gl);
 
         var deltaTime = Stopwatch.Elapsed.TotalSeconds;
 
@@ -170,9 +241,9 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
 
         // Update first: process animation + dirty octree nodes,
         // so Render() culls with up-to-date bounding boxes.
-        Scene.Update(deltaTime);
+        scene.Update(deltaTime);
 
-        Scene.RenderPipeline.Render();
+        scene.RenderPipeline.Render();
 
         OnSceneUpdated(deltaTime);
 
@@ -190,16 +261,19 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
         if (Scene == null)
             return;
 
-        Scene.RenderPipeline.Destroy();
+        // 此刻上下文尚未销毁，可以真正删除 GL 对象以释放显存，而不是仅仅失效句柄。
+        if (!Scene.RenderPipeline.IsDestroyed)
+            Scene.RenderPipeline.ReleaseGpuResources();
 
-        // 事件参数仍携带即将销毁的场景引用，先触发再置空。
-        OnSceneDestroyed();
+        // 清空 gl 引用，使重新挂载时能再次 Initialize；重复失效是无副作用的空操作。
+        Scene.RenderPipeline.HandleContextLost();
 
-        Scene = null;
-        sceneInitialized = false;
-        IsContextLost = false;
+        IsContextLost = true;
+        fb = -1;
 
         Stopwatch.Stop();
+
+        OnContextLost();
     }
 
     protected abstract void OnSceneInitialized();
@@ -209,7 +283,7 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
     protected abstract void OnSceneUpdated(double deltaTime);
 
     /// <summary>
-    /// 当 OpenGL 上下文丢失、全部 GPU 句柄失效时调用。此时不能执行任何 GL 调用；
+    /// 当 GPU 句柄全部失效时调用：上下文丢失或控件从视觉树分离均会触发。此时不能执行任何 GL 调用；
     /// 场景、节点与 CPU 资源保持不变，恢复后按需重建。
     /// </summary>
     protected virtual void OnContextLost()
@@ -217,8 +291,8 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
     }
 
     /// <summary>
-    /// 当渲染管线在新上下文中重新就绪后调用。<see cref="Scene"/> 与其中的节点保持不变，
-    /// 不会再次触发 <see cref="OnSceneInitialized"/>。
+    /// 当渲染管线在新上下文中重新就绪后调用。控件重新挂载或宿主替换了上下文都会触发。
+    /// <see cref="Scene"/> 与其中的节点保持不变，不会再次触发 <see cref="OnSceneInitialized"/>。
     /// </summary>
     protected virtual void OnContextRestored()
     {

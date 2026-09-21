@@ -495,6 +495,15 @@ public partial class RenderPass
     /// </summary>
     public virtual void Destroy()
     {
+        ReleaseGpuResources();
+    }
+
+    /// <summary>
+    /// Deletes the GL objects owned by this pass while keeping the pass reusable.
+    /// Requires a live context; after context loss use <see cref="InvalidateGpuResources"/> instead.
+    /// </summary>
+    public virtual void ReleaseGpuResources()
+    {
         foreach(var shader in Shaders)
         {
             if (shader.Value.ProgramId != 0)

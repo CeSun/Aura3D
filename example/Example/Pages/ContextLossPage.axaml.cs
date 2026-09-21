@@ -125,8 +125,8 @@ public partial class ContextLossPage : UserControl
         box = null;
         SimulateButton.IsEnabled = false;
 
-        SetStatus("已分离", "#FFD93D");
-        Log($"场景已销毁：管线终止，节点 {e.Scene.Nodes.Count} 个随场景释放");
+        SetStatus("场景已销毁", "#FFD93D");
+        Log($"场景已销毁：GPU 资源已释放、管线终止，节点 {e.Scene.Nodes.Count} 个随场景丢弃");
     }
 
     private void Aura3DView_ContextLost(object? sender, ContextLostRoutedEventArgs e)
@@ -137,7 +137,7 @@ public partial class ContextLossPage : UserControl
         lossStopwatch.Restart();
         SimulateButton.IsEnabled = false;
 
-        SetStatus("上下文丢失", "#FF6B6B");
+        SetStatus("GPU 句柄失效", "#FF6B6B");
         Log($"上下文丢失：GPU 句柄失效，场景与 {e.Scene.Nodes.Count} 个节点保留");
     }
 
@@ -149,7 +149,7 @@ public partial class ContextLossPage : UserControl
         SimulateButton.IsEnabled = true;
 
         SetStatus("渲染中", "#6BCB77");
-        Log($"上下文恢复：管线重新挂载，节点 {e.Scene.Nodes.Count} 个，耗时 {lossStopwatch.Elapsed.TotalMilliseconds:F0} ms");
+        Log($"上下文恢复：GPU 资源已重建，节点 {e.Scene.Nodes.Count} 个，耗时 {lossStopwatch.Elapsed.TotalMilliseconds:F0} ms");
     }
 
     private void Aura3DView_SceneUpdated(object? sender, UpdateRoutedEventArgs e)
@@ -185,12 +185,12 @@ public partial class ContextLossPage : UserControl
         if (ViewHost.Content == null)
         {
             ViewHost.Content = aura3DView;
-            AttachButton.Content = "分离视图（触发 Destroy）";
+            AttachButton.Content = "分离视图（释放 GPU 资源）";
 
             if (Vm is { } vm)
                 vm.ViewStateText = "视图已挂载";
 
-            Log("重新挂载视图：将创建新的 GL 上下文与场景");
+            Log("重新挂载视图：复用原场景，仅按需重建 GPU 资源");
         }
         else
         {
@@ -200,8 +200,32 @@ public partial class ContextLossPage : UserControl
             if (Vm is { } vm)
                 vm.ViewStateText = "视图已分离";
 
-            Log("视图已分离：触发 OnOpenGlDeinit → RenderPipeline.Destroy()");
+            Log("视图已分离：OnOpenGlDeinit → ReleaseGpuResources()，显存已归还且场景保留");
         }
+    }
+
+    private void ReleaseGpuResources_Click(object? sender, RoutedEventArgs e)
+    {
+        if (aura3DView.Scene == null)
+        {
+            Log("视图尚未初始化，无法释放 GPU 资源");
+            return;
+        }
+
+        aura3DView.ReleaseGpuResources();
+        Log("GPU 资源已释放：显存归还，场景与节点保留，下一帧按需重建");
+    }
+
+    private void DestroyScene_Click(object? sender, RoutedEventArgs e)
+    {
+        if (aura3DView.Scene == null)
+        {
+            Log("视图尚未初始化，无法销毁场景");
+            return;
+        }
+
+        aura3DView.DestroyScene();
+        Log("场景已销毁：Scene 置空，下一帧自动重建空场景");
     }
 
     private void AddNode_Click(object? sender, RoutedEventArgs e)

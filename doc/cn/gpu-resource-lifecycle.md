@@ -6,9 +6,9 @@ Aura3D 将 CPU 资源与 OpenGL 上下文中的 GPU 状态分离。`Texture`、`
 
 | 对象 | 所有者 | 释放方式 |
 |---|---|---|
-| `IResourceGpuState`（纹理、几何、材质、骨骼缓冲） | 首次同步它的 `RenderPipeline` | CPU 资源被回收后由管线定期收集，或随管线销毁 |
-| `IRuntimeGpuState`（RenderTarget、粒子缓冲、内部几何） | 将它传给 `EnsureSynced` 的 `RenderPipeline` | 从场景移除时由管线释放，或随管线销毁 |
-| RenderPass 着色器和即时绘制缓冲 | 对应 `RenderPass` | 随管线销毁 |
+| `IResourceGpuState`（纹理、几何、材质、骨骼缓冲） | 首次同步它的 `RenderPipeline` | CPU 资源被回收后由管线定期收集，或随管线释放/销毁 |
+| `IRuntimeGpuState`（RenderTarget、粒子缓冲、内部几何） | 将它传给 `EnsureSynced` 的 `RenderPipeline` | 从场景移除时由管线释放，或随管线释放/销毁 |
+| RenderPass 着色器和即时绘制缓冲 | 对应 `RenderPass` | `ReleaseGpuResources()` 或随管线销毁 |
 | RenderTarget 附件纹理适配器 | RenderTarget | 适配器不单独删除纹理名 |
 
 CPU 资源本身不拥有 GL 句柄。调用方不应对仍注册在管线中的状态直接调用 `Destroy(GL)`；应通过场景/管线的移除流程释放，避免重复所有权。
@@ -18,6 +18,24 @@ CPU 资源本身不拥有 GL 句柄。调用方不应对仍注册在管线中的
 - `Upload(GL)`：仅在参数所代表的 GL 上下文当前有效时调用。它必须能够从 CPU 数据完整创建或更新 GPU 状态。
 - `Destroy(GL)`：上下文仍有效时释放该状态拥有的全部句柄。实现必须可重复调用；第二次调用不得再次删除旧句柄。
 - `Invalidate()`：上下文已经丢失时使用，不执行任何 GL 调用，只清零句柄与同步版本。实现必须可重复调用，后续 `Upload(GL)` 必须可以完整重建资源。
+
+## 释放与重建 GPU 资源
+
+上下文仍然有效、但需要归还显存时（例如控件从视觉树分离、标签页切到后台、低内存降级），调用：
+
+```csharp
+scene.RenderPipeline.ReleaseGpuResources();
+```
+
+它真正删除管线拥有的全部 GL 对象（RenderPass 程序、纹理、几何缓冲、RenderTarget、阴影图与 IBL 贴图），同时保留场景、节点、CPU 资源、节点注册与 GPU 状态跟踪。`gl` 引用不变，因此同一上下文中的下一次渲染会立刻按需重建全部资源，画面自动恢复。与上下文丢失不同，这条路径不要求创建新上下文，也不需要重新 `Initialize`。
+
+`ReleaseGpuResources()` 是"释放并复用"，`HandleContextLost()` 是"上下文没了，只能失效句柄"，`Destroy()` 是终止操作——三者的取舍：
+
+| 场景 | 调用 | GL 对象 | 场景/节点 | 后续 |
+|---|---|---|---|---|
+| 上下文仍有效，只想省显存 | `ReleaseGpuResources()` | 真正删除 | 保留 | 同上下文下一帧重建 |
+| 上下文丢失/被替换 | `HandleContextLost()` | 仅清零句柄 | 保留 | `Initialize()` 后按需重建 |
+| 彻底结束渲染 | `Destroy()` | 真正删除（有上下文时） | 清空注册，管线不可再用 | 新建管线 |
 
 ## 上下文丢失与恢复
 
@@ -41,13 +59,14 @@ scene.RenderPipeline.Initialize(getProcAddress);
 
 - 上下文丢失与恢复不影响场景、节点与材质：恢复后不会再次触发 `SceneInitialized`，页面只需在首次初始化时构建一次场景。
 - 恢复后第一帧起，全部 GPU 状态按需重建；模拟丢失（复用同一上下文）不会删除旧 GL 名称，真实丢失时由驱动回收。
-- 控件从视觉树分离会触发 `OnOpenGlDeinit`，此时 `Destroy()` 立即执行且 `Scene` 置为 `null`；重新挂载会创建新的场景并重新触发 `SceneInitialized`。`MainCamera` 等场景成员在分离期间不可访问。
+- 控件从视觉树分离时，Avalonia 会在销毁上下文之前调用 `OnOpenGlDeinit`：控件在此执行 `ReleaseGpuResources()` 真正删除 GL 对象释放显存，随后执行 `HandleContextLost()` 使管线可被重新挂载。`Scene`、节点与 `MainCamera` 全部保留，分离期间仍可访问；重新挂载复用同一场景实例，只重建 GPU 资源，不会再次触发 `SceneInitialized`。分离与重新挂载同样会触发 `ContextLost` / `ContextRestored`。
+- 需要显式释放显存而不分离控件时，调用 `Aura3DView.ReleaseGpuResources()`；需要彻底结束当前场景时调用 `Aura3DView.DestroyScene()`，它会释放 GPU 资源、清空 `Scene` 并触发 `SceneDestroyed`，控件仍在渲染时下一帧会自动创建新场景并重新触发 `SceneInitialized`。
 
 ## 最终销毁
 
-`RenderPipeline.Destroy()` 是终止操作：它释放仍有效上下文中的资源，清空管线缓存和场景注册，并且可以安全地重复调用。调用后该管线不能再次初始化；需要继续渲染时应创建新的管线实例。
+`RenderPipeline.Destroy()` 是终止操作：它先执行 `ReleaseGpuResources()`，再清空 GPU 状态跟踪、资源缓存与场景注册。它可以安全地重复调用，但调用后该管线不能再次初始化；需要继续渲染时应创建新的管线实例。
 
-如果销毁时已经没有有效上下文，管线自动采用 `Invalidate()` 路径，不会尝试调用 GL。
+如果销毁时已经没有有效上下文，`Destroy()` 自动退化为 `HandleContextLost()` 路径，不执行任何 GL 调用。
 
 ## 自定义 GPU 状态
 

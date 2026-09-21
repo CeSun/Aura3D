@@ -6,9 +6,9 @@ Aura3D separates CPU resources from GPU state stored in an OpenGL context. CPU r
 
 | Object | Owner | Release path |
 |---|---|---|
-| `IResourceGpuState` (textures, geometry, materials, bone buffers) | The first `RenderPipeline` that synchronizes it | Periodic collection after the CPU resource dies, or pipeline destruction |
-| `IRuntimeGpuState` (render targets, particle buffers, internal geometry) | The `RenderPipeline` receiving it through `EnsureSynced` | Scene removal or pipeline destruction |
-| Render-pass programs and immediate buffers | Their `RenderPass` | Pipeline destruction |
+| `IResourceGpuState` (textures, geometry, materials, bone buffers) | The first `RenderPipeline` that synchronizes it | Periodic collection after the CPU resource dies, or pipeline release/destruction |
+| `IRuntimeGpuState` (render targets, particle buffers, internal geometry) | The `RenderPipeline` receiving it through `EnsureSynced` | Scene removal, or pipeline release/destruction |
+| Render-pass programs and immediate buffers | Their `RenderPass` | `ReleaseGpuResources()` or pipeline destruction |
 | Render-target texture adapters | Their render target | The adapter never deletes the borrowed texture name |
 
 CPU resources do not own GL names. Callers must not invoke `Destroy(GL)` directly on state that is still registered with a pipeline; release it through the scene or pipeline path so ownership remains unique.
@@ -18,6 +18,24 @@ CPU resources do not own GL names. Callers must not invoke `Destroy(GL)` directl
 - `Upload(GL)` may only run while the supplied context is current. It must be able to create or update the complete GPU state from CPU data.
 - `Destroy(GL)` releases every owned name while the context remains valid. It must be idempotent.
 - `Invalidate()` handles an already-lost context. It performs no GL calls and resets names and synchronization state. It must be idempotent, and a later `Upload(GL)` must fully recreate the state.
+
+## Releasing and rebuilding GPU resources
+
+When the context is still valid but VRAM should be given back — a control detaching from the visual tree, a tab moving to the background, a low-memory fallback — call:
+
+```csharp
+scene.RenderPipeline.ReleaseGpuResources();
+```
+
+This really deletes every GL object owned by the pipeline (render-pass programs, textures, geometry buffers, render targets, shadow maps and IBL maps) while keeping the scene, nodes, CPU resources, node registrations, and GPU-state tracking. The `gl` reference is unchanged, so the next frame in the same context rebuilds everything lazily and the picture returns. Unlike context loss, no replacement context is needed and `Initialize` must not be called again.
+
+`ReleaseGpuResources()` releases and reuses, `HandleContextLost()` only invalidates handles because the context is gone, and `Destroy()` is terminal:
+
+| Situation | Call | GL objects | Scene/nodes | Afterwards |
+|---|---|---|---|---|
+| Context valid, free VRAM | `ReleaseGpuResources()` | Actually deleted | Preserved | Rebuilt next frame, same context |
+| Context lost or replaced | `HandleContextLost()` | Names zeroed only | Preserved | `Initialize()`, then lazy rebuild |
+| Rendering is over | `Destroy()` | Actually deleted (with a context) | Registrations cleared, pipeline unusable | Create a new pipeline |
 
 ## Context loss and recovery
 
@@ -41,13 +59,14 @@ Resources are recreated lazily. Shadow maps, IBL convolution maps, and cached re
 
 - Loss and recovery leave the scene, nodes, and materials untouched: `SceneInitialized` is not raised again, so a page builds its scene only once.
 - Every GPU state is rebuilt lazily from the first frame after recovery. Simulated loss (which keeps the same context) does not delete the previous GL names; a real loss leaves them to the driver.
-- Detaching the control from the visual tree runs `OnOpenGlDeinit`, which destroys the pipeline immediately and sets `Scene` to `null`. Re-attaching creates a new scene and raises `SceneInitialized` again. Scene members such as `MainCamera` are unavailable while detached.
+- When the control detaches from the visual tree, Avalonia calls `OnOpenGlDeinit` before destroying the context: the control runs `ReleaseGpuResources()` to actually delete GL objects and free VRAM, then `HandleContextLost()` so the pipeline can be attached again. `Scene`, its nodes, and `MainCamera` are all preserved and remain accessible while detached; re-attaching reuses the same scene instance and only rebuilds GPU resources, without raising `SceneInitialized` again. Detaching and re-attaching also raise `ContextLost` / `ContextRestored`.
+- To free VRAM without detaching, call `Aura3DView.ReleaseGpuResources()`. To end the current scene deliberately, call `Aura3DView.DestroyScene()`, which releases GPU resources, clears `Scene`, and raises `SceneDestroyed`; if the control is still rendering, the next frame creates a fresh scene and raises `SceneInitialized` again.
 
 ## Final destruction
 
-`RenderPipeline.Destroy()` is terminal. It releases resources when a context remains valid, clears caches and registrations, and is safe to call repeatedly. A destroyed pipeline cannot be initialized again; create a new pipeline to resume rendering.
+`RenderPipeline.Destroy()` is terminal. It first runs `ReleaseGpuResources()`, then clears GPU-state tracking, resource caches, and scene registrations. It is safe to call repeatedly, but a destroyed pipeline cannot be initialized again; create a new pipeline to resume rendering.
 
-If no context exists when destruction occurs, the pipeline automatically follows the no-GL `Invalidate()` path.
+If no context exists when destruction occurs, `Destroy()` degrades to the no-GL `HandleContextLost()` path.
 
 ## Custom GPU state
 

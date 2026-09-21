@@ -62,7 +62,8 @@ public class Aura3DView : Aura3DViewBase
      RoutedEvent.Register<Aura3DView, ContextLostRoutedEventArgs>(nameof(ContextLost), RoutingStrategies.Direct);
 
     /// <summary>
-    /// 当 OpenGL 上下文丢失、场景资源失效时触发。场景与节点保持不变，可在新上下文中自动恢复。
+    /// 当 GPU 句柄全部失效、场景资源需要重建时触发：OpenGL 上下文丢失或控件从视觉树分离均会触发。
+    /// 场景与节点保持不变，重新挂载或取得新上下文后会触发 <see cref="ContextRestored"/> 并自动恢复。
     /// </summary>
     public event EventHandler<ContextLostRoutedEventArgs> ContextLost
     {

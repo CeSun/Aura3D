@@ -278,6 +278,41 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
+    /// Deletes every context-owned GPU object while the current context is still valid.
+    /// Unlike <see cref="HandleContextLost"/> the GL names are actually released, freeing VRAM.
+    /// CPU resources, node registrations and GPU-state tracking are preserved, so every object
+    /// is recreated lazily on the next frame. This is the operation to use while a control is
+    /// detached from the visual tree.
+    /// </summary>
+    public void ReleaseGpuResources()
+    {
+        ObjectDisposedException.ThrowIf(_isDestroyed, this);
+
+        if (gl == null)
+        {
+            HandleContextLost();
+            return;
+        }
+
+        foreach (var (_, rtMap) in renderTargets)
+        {
+            foreach (var (_, (rt, _)) in rtMap)
+            {
+                RemoveGpuState(rt);
+                rt.Destroy(gl);
+            }
+        }
+        ClearRenderTargetCaches();
+
+        foreach (var pass in OnceRenderPasses)
+            pass.ReleaseGpuResources();
+        foreach (var pass in EveryCameraRenderPasses)
+            pass.ReleaseGpuResources();
+        foreach (var gpuState in GpuStates)
+            gpuState.Destroy(gl);
+    }
+
+    /// <summary>
     /// Sets the up.
     /// </summary>
     public virtual void Setup()
@@ -927,24 +962,8 @@ public abstract partial class RenderPipeline
         if (_isDestroyed)
             return;
 
-        if (gl != null)
-        {
-            foreach (var pass in OnceRenderPasses)
-                pass.Destroy();
-            foreach (var pass in EveryCameraRenderPasses)
-                pass.Destroy();
-            foreach (var gpuState in GpuStates)
-                gpuState.Destroy(gl);
-        }
-        else
-        {
-            foreach (var pass in OnceRenderPasses)
-                pass.InvalidateGpuResources();
-            foreach (var pass in EveryCameraRenderPasses)
-                pass.InvalidateGpuResources();
-            foreach (var gpuState in GpuStates)
-                gpuState.Invalidate();
-        }
+        ReleaseGpuResources();
+
         GpuStates.Clear();
         materialGpuStates = new ConditionalWeakTable<Material, MaterialGpuState>();
         boneMatrixBufferGpuStates = new ConditionalWeakTable<BoneMatrixBuffer, BoneMatrixBufferGpuState>();
@@ -963,7 +982,6 @@ public abstract partial class RenderPipeline
         _directionalLights.Clear();
         _visibleMeshesInCamera.Clear();
         _visibleInstancedMeshesInCamera.Clear();
-        ClearRenderTargetCaches();
         gl = null;
         _isDestroyed = true;
     }

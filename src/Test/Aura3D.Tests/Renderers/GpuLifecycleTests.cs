@@ -103,6 +103,51 @@ public class GpuLifecycleTests
         Assert.Equal((uint)0, target.DepthStencilTexture.TextureId);
     }
 
+    [Fact]
+    public void ReleaseGpuResources_ShouldDestroyTrackedStateAndAllowReupload()
+    {
+        var pipeline = CreatePipeline();
+        var state = new FakeGpuState();
+        pipeline.Initialize(_ => 0);
+        pipeline.EnsureSynced(state);
+
+        pipeline.ReleaseGpuResources();
+
+        Assert.Equal(1, state.DestroyCount);
+        Assert.Equal(0, state.UploadCount);
+        Assert.Equal((ulong)0, state.SyncedVersion);
+        Assert.True(pipeline.IsInitialized);
+        Assert.False(pipeline.IsDestroyed);
+
+        pipeline.EnsureSynced(state);
+
+        Assert.Equal(1, state.UploadCount);
+        Assert.Equal((ulong)1, state.SyncedVersion);
+    }
+
+    [Fact]
+    public void ReleaseGpuResourcesWithoutContext_ShouldOnlyInvalidate()
+    {
+        var pipeline = CreatePipeline();
+        var state = new FakeGpuState();
+        pipeline.EnsureSynced(state);
+
+        pipeline.ReleaseGpuResources();
+
+        Assert.Equal(1, state.InvalidateCount);
+        Assert.Equal(0, state.DestroyCount);
+        Assert.False(pipeline.IsDestroyed);
+    }
+
+    [Fact]
+    public void ReleaseGpuResourcesAfterDestroy_ShouldThrow()
+    {
+        var pipeline = CreatePipeline();
+        pipeline.Destroy();
+
+        Assert.Throws<ObjectDisposedException>(() => pipeline.ReleaseGpuResources());
+    }
+
     private static TestPipeline CreatePipeline()
     {
         TestPipeline? pipeline = null;
