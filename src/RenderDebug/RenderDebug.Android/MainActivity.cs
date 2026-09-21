@@ -1,5 +1,6 @@
 using Aura3D.Core;
 using Aura3D.Core.Nodes;
+using Aura3D.Core.Renderers;
 using Aura3D.Core.Scenes;
 using Aura3D.Pipeline.PBR;
 using RenderDebug;
