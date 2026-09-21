@@ -513,7 +513,7 @@ public static class AssimpLoader
 
         if (assimpMesh.HasNormals && assimpMesh.HasTextureCoords(0))
         {
-            ModelHelper.CalcVerticsTbn(geometry.Indices, normals, uvs, out var tangents, out var bitangents);
+            ModelHelper.CalcVerticsTbn(geometry.Indices, positions, normals, uvs, out var tangents, out var bitangents);
             geometry.SetVertexAttribute(BuildInVertexAttribute.Tangent, 3, tangents);
             geometry.SetVertexAttribute(BuildInVertexAttribute.Bitangent, 3, bitangents);
         }

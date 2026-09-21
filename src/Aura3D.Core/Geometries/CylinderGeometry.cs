@@ -236,7 +236,7 @@ public class CylinderGeometry : Geometry
         SetIndices(indices);
 
         // calc tangents/bitangents (保持与项目中其他几何体一致的调用方式)
-        ModelHelper.CalcVerticsTbn(indices, normals, uvs, out var tangents, out var bitangents);
+        ModelHelper.CalcVerticsTbn(indices, positions, normals, uvs, out var tangents, out var bitangents);
 
         SetVertexAttribute(BuildInVertexAttribute.Tangent, 3, tangents);
         SetVertexAttribute(BuildInVertexAttribute.Bitangent, 3, bitangents);

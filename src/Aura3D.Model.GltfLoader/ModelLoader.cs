@@ -695,12 +695,13 @@ public static class ModelLoader
 
     private static void CalculateTangentsAndBitangents(Geometry geometry)
     {
+        var positions = geometry.GetAttributeData(BuildInVertexAttribute.Position);
         var normals = geometry.GetAttributeData(BuildInVertexAttribute.Normal);
         var uvs = geometry.GetAttributeData(BuildInVertexAttribute.TexCoord_0);
 
-        if (normals != null && uvs != null)
+        if (positions != null && normals != null && uvs != null)
         {
-            ModelHelper.CalcVerticsTbn(geometry.Indices, normals, uvs, out var tangents, out var bitangents);
+            ModelHelper.CalcVerticsTbn(geometry.Indices, positions, normals, uvs, out var tangents, out var bitangents);
             geometry.SetVertexAttribute(BuildInVertexAttribute.Tangent, 3, tangents);
             geometry.SetVertexAttribute(BuildInVertexAttribute.Bitangent, 3, bitangents);
         }

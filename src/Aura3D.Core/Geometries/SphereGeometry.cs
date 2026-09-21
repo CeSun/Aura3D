@@ -143,7 +143,7 @@ public class SphereGeometry : Geometry
         SetIndices(indices);
 
         // 计算切线与副切线（与 BoxGeometry 保持一致的调用顺序）
-        ModelHelper.CalcVerticsTbn(indices, normals, uvs, out var tangents, out var bitangents);
+        ModelHelper.CalcVerticsTbn(indices, positions, normals, uvs, out var tangents, out var bitangents);
 
         SetVertexAttribute(BuildInVertexAttribute.Tangent, 3, tangents);
         SetVertexAttribute(BuildInVertexAttribute.Bitangent, 3, bitangents);

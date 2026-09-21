@@ -232,22 +232,28 @@ public static class ModelHelper
     /// <summary>
     /// Performs the calc vertics tbn operation.
     /// </summary>
-    public static void CalcVerticsTbn(IReadOnlyList<uint> indices, IReadOnlyList<float> vertexNormals, IReadOnlyList<float> uvs, out List<float> tangents, out List<float> bitangents)
+    public static void CalcVerticsTbn(IReadOnlyList<uint> indices, IReadOnlyList<float> positions, IReadOnlyList<float> vertexNormals, IReadOnlyList<float> uvs, out List<float> tangents, out List<float> bitangents)
     {
-        tangents = new List<float>();
-        bitangents = new List<float>();
-
         // 参数合法性校验
         ArgumentNullException.ThrowIfNull(indices);
+        ArgumentNullException.ThrowIfNull(positions);
         ArgumentNullException.ThrowIfNull(vertexNormals);
         ArgumentNullException.ThrowIfNull(uvs);
 
         if (indices.Count % 3 != 0)
             throw Aura3D.Core.Exceptions.GeometryErrors.TriangleIndexCount(nameof(indices));
 
-        // 初始化切线和副切线数组（初始值为0）
-        float[] tan = new float[vertexNormals.Count];
-        float[] bitan = new float[vertexNormals.Count];
+        tangents = new List<float>();
+        bitangents = new List<float>();
+
+        var vertexCount = positions.Count / 3;
+
+        if (vertexCount == 0)
+            return;
+
+        // 每个顶点上按三角形累加的切线与副切线（未归一化）
+        var tan = new Vector3[vertexCount];
+        var bitan = new Vector3[vertexCount];
 
         // 遍历每个三角形（每3个索引为一组）
         for (int i = 0; i < indices.Count; i += 3)
@@ -275,116 +281,57 @@ public static class ModelHelper
             float denominator = deltaU1 * deltaV2 - deltaU2 * deltaV1;
             float r = MathF.Abs(denominator) < 1e-6f ? 0 : 1.0f / denominator;
 
-            // 提取三个顶点的法线（作为临时位置向量，实际应传入顶点位置，这里用法线替代）
-            // 注意：完整实现应传入顶点位置列表，此处为适配你的函数参数，临时用法线替代
-            float v0x = vertexNormals[(int)i0 * 3];
-            float v0y = vertexNormals[(int)i0 * 3 + 1];
-            float v0z = vertexNormals[(int)i0 * 3 + 2];
-            float v1x = vertexNormals[(int)i1 * 3];
-            float v1y = vertexNormals[(int)i1 * 3 + 1];
-            float v1z = vertexNormals[(int)i1 * 3 + 2];
-            float v2x = vertexNormals[(int)i2 * 3];
-            float v2y = vertexNormals[(int)i2 * 3 + 1];
-            float v2z = vertexNormals[(int)i2 * 3 + 2];
+            // 三个顶点的位置（切空间方向由位置对 UV 的变化率定义）
+            Vector3 p0 = new(positions[(int)i0 * 3], positions[(int)i0 * 3 + 1], positions[(int)i0 * 3 + 2]);
+            Vector3 p1 = new(positions[(int)i1 * 3], positions[(int)i1 * 3 + 1], positions[(int)i1 * 3 + 2]);
+            Vector3 p2 = new(positions[(int)i2 * 3], positions[(int)i2 * 3 + 1], positions[(int)i2 * 3 + 2]);
 
-            // 计算位置差值
-            float deltaPos1x = v1x - v0x;
-            float deltaPos1y = v1y - v0y;
-            float deltaPos1z = v1z - v0z;
-            float deltaPos2x = v2x - v0x;
-            float deltaPos2y = v2y - v0y;
-            float deltaPos2z = v2z - v0z;
+            Vector3 deltaPos1 = p1 - p0;
+            Vector3 deltaPos2 = p2 - p0;
 
-            // 计算切线和副切线的临时值
-            float tx = (deltaV2 * deltaPos1x - deltaV1 * deltaPos2x) * r;
-            float ty = (deltaV2 * deltaPos1y - deltaV1 * deltaPos2y) * r;
-            float tz = (deltaV2 * deltaPos1z - deltaV1 * deltaPos2z) * r;
+            // 该三角形上的切线与副切线
+            Vector3 triangleTangent = (deltaPos1 * deltaV2 - deltaPos2 * deltaV1) * r;
+            Vector3 triangleBitangent = (deltaPos2 * deltaU1 - deltaPos1 * deltaU2) * r;
 
-            float bx = (deltaU1 * deltaPos2x - deltaU2 * deltaPos1x) * r;
-            float by = (deltaU1 * deltaPos2y - deltaU2 * deltaPos1y) * r;
-            float bz = (deltaU1 * deltaPos2z - deltaU2 * deltaPos1z) * r;
+            // 累加到三个顶点（副切线累加值保留 UV 手性，用于最终确定方向符号）
+            tan[(int)i0] += triangleTangent;
+            tan[(int)i1] += triangleTangent;
+            tan[(int)i2] += triangleTangent;
 
-            // 将计算结果累加到对应顶点的切线/副切线
-            tan[(int)i0 * 3] += tx;
-            tan[(int)i0 * 3 + 1] += ty;
-            tan[(int)i0 * 3 + 2] += tz;
-            tan[(int)i1 * 3] += tx;
-            tan[(int)i1 * 3 + 1] += ty;
-            tan[(int)i1 * 3 + 2] += tz;
-            tan[(int)i2 * 3] += tx;
-            tan[(int)i2 * 3 + 1] += ty;
-            tan[(int)i2 * 3 + 2] += tz;
-
-            bitan[(int)i0 * 3] += bx;
-            bitan[(int)i0 * 3 + 1] += by;
-            bitan[(int)i0 * 3 + 2] += bz;
-            bitan[(int)i1 * 3] += bx;
-            bitan[(int)i1 * 3 + 1] += by;
-            bitan[(int)i1 * 3 + 2] += bz;
-            bitan[(int)i2 * 3] += bx;
-            bitan[(int)i2 * 3 + 1] += by;
-            bitan[(int)i2 * 3 + 2] += bz;
+            bitan[(int)i0] += triangleBitangent;
+            bitan[(int)i1] += triangleBitangent;
+            bitan[(int)i2] += triangleBitangent;
         }
 
-        // 对切线进行正交化（确保与法线垂直），并归一化
-        for (int i = 0; i < vertexNormals.Count / 3; i++)
+        // 逐顶点正交化并归一化，保证 T ⟂ N、B ⟂ N、B ⟂ T
+        for (int i = 0; i < vertexCount; i++)
         {
-            // 获取顶点法线
-            float nx = vertexNormals[i * 3];
-            float ny = vertexNormals[i * 3 + 1];
-            float nz = vertexNormals[i * 3 + 2];
+            Vector3 n = new(vertexNormals[i * 3], vertexNormals[i * 3 + 1], vertexNormals[i * 3 + 2]);
+            n = n.LengthSquared() > 1e-12f ? Vector3.Normalize(n) : Vector3.UnitY;
 
-            // 获取累加后的切线
-            float tx = tan[i * 3];
-            float ty = tan[i * 3 + 1];
-            float tz = tan[i * 3 + 2];
+            // T = T - N * (N · T)
+            Vector3 t = tan[i] - n * Vector3.Dot(n, tan[i]);
 
-            // 正交化：T = T - N * (N · T)
-            float dot = nx * tx + ny * ty + nz * tz;
-            tx = tx - nx * dot;
-            ty = ty - ny * dot;
-            tz = tz - nz * dot;
-
-            // 归一化切线
-            float length = (float)MathF.Sqrt(tx * tx + ty * ty + tz * tz);
-            if (length > 1e-6f)
+            if (t.LengthSquared() < 1e-12f)
             {
-                tx /= length;
-                ty /= length;
-                tz /= length;
-            }
-            else
-            {
-                // 避免零长度，使用默认值
-                tx = 1; ty = 0; tz = 0;
+                // UV 退化或与法线共线：取一个与法线不共线的方向再正交化
+                Vector3 seed = MathF.Abs(n.X) < 0.9f ? Vector3.UnitX : Vector3.UnitY;
+                t = seed - n * Vector3.Dot(n, seed);
             }
 
-            // 计算副切线（B = N × T）
-            float bx = ny * tz - nz * ty;
-            float by = nz * tx - nx * tz;
-            float bz = nx * ty - ny * tx;
+            t = Vector3.Normalize(t);
 
-            // 归一化副切线
-            length = (float)MathF.Sqrt(bx * bx + by * by + bz * bz);
-            if (length > 1e-6f)
-            {
-                bx /= length;
-                by /= length;
-                bz /= length;
-            }
-            else
-            {
-                bx = 0; by = 1; bz = 0;
-            }
+            // 副切线正交化后方向即 ±(N × T)，符号取自累加的 UV 手性，退化时按右手系
+            Vector3 axis = Vector3.Cross(n, t);
+            Vector3 b = Vector3.Dot(bitan[i], axis) < 0f ? -axis : axis;
 
-            // 将结果添加到输出列表
-            tangents.Add(tx);
-            tangents.Add(ty);
-            tangents.Add(tz);
+            tangents.Add(t.X);
+            tangents.Add(t.Y);
+            tangents.Add(t.Z);
 
-            bitangents.Add(bx);
-            bitangents.Add(by);
-            bitangents.Add(bz);
+            bitangents.Add(b.X);
+            bitangents.Add(b.Y);
+            bitangents.Add(b.Z);
         }
     }
 }

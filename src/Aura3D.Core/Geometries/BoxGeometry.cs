@@ -142,7 +142,7 @@ public class BoxGeometry : Geometry
 
         SetIndices(indices);
 
-        ModelHelper.CalcVerticsTbn(indices, normals, uvs, out var tangents, out var bitangents);
+        ModelHelper.CalcVerticsTbn(indices, positions, normals, uvs, out var tangents, out var bitangents);
 
         SetVertexAttribute(BuildInVertexAttribute.Tangent, 3, tangents);
 
