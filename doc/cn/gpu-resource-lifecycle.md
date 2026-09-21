@@ -35,6 +35,14 @@ scene.RenderPipeline.Initialize(getProcAddress);
 
 资源随后按需重建；阴影图、IBL 卷积贴图和缓存 RenderTarget 也会重新生成。不要在上下文已经丢失后调用 `Destroy(GL)`，因为旧 GL 对象名已不再属于可访问的上下文。
 
+### Avalonia 控件
+
+使用 `Aura3DView` 时无需手动调用上述接口：控件会在 `OnOpenGlLost` 中执行 `HandleContextLost()`，并在新上下文就绪时重新 `Initialize`。可订阅 `ContextLost` / `ContextRestored` 事件，或读取 `IsContextLost` 属性。
+
+- 上下文丢失与恢复不影响场景、节点与材质：恢复后不会再次触发 `SceneInitialized`，页面只需在首次初始化时构建一次场景。
+- 恢复后第一帧起，全部 GPU 状态按需重建；模拟丢失（复用同一上下文）不会删除旧 GL 名称，真实丢失时由驱动回收。
+- 控件从视觉树分离会触发 `OnOpenGlDeinit`，此时 `Destroy()` 立即执行且 `Scene` 置为 `null`；重新挂载会创建新的场景并重新触发 `SceneInitialized`。`MainCamera` 等场景成员在分离期间不可访问。
+
 ## 最终销毁
 
 `RenderPipeline.Destroy()` 是终止操作：它释放仍有效上下文中的资源，清空管线缓存和场景注册，并且可以安全地重复调用。调用后该管线不能再次初始化；需要继续渲染时应创建新的管线实例。

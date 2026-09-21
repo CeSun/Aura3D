@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:Example.ViewModels"
+             xmlns:pages="clr-namespace:Example.Pages"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
+             x:DataType="vm:ContextLossViewModel"
+             x:Class="Example.Pages.ContextLossPage">
+
+  <Design.DataContext>
+    <vm:ContextLossViewModel />
+  </Design.DataContext>
+
+  <DockPanel>
+    <!-- ═══════════════════════════════════════════════ Right Control Panel ═══ -->
+    <ScrollViewer DockPanel.Dock="Right" Width="340">
+      <StackPanel Spacing="8" Margin="8">
+
+        <Border Theme="{StaticResource CardBorder}" Padding="10">
+          <StackPanel Spacing="6">
+            <TextBlock FontSize="14" FontWeight="Bold"
+                       Foreground="{DynamicResource SemiGrey10}" Text="🎛 GPU 上下文状态" />
+            <TextBlock Text="{Binding StatusText}" FontSize="16" FontWeight="Bold"
+                       Foreground="{Binding StatusColor}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding ViewStateText}" FontSize="11" Foreground="#AAA" TextWrapping="Wrap" />
+            <Separator Height="1" Background="#444" Margin="0,2" />
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" >
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="上下文丢失" FontSize="12" Width="80" />
+              <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding LossCount}" FontSize="12" FontWeight="Bold" />
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="上下文恢复" FontSize="12" Width="80" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding RestoreCount}" FontSize="12" FontWeight="Bold" />
+            </Grid>
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Text="{Binding SceneBuildCount, StringFormat='场景重建 {0} 次'}" FontSize="11" Foreground="#AAA" />
+              <TextBlock Text="{Binding FrameCount, StringFormat='累计帧 {0}'}" FontSize="11" Foreground="#AAA" />
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <Border Theme="{StaticResource CardBorder}" Padding="10">
+          <StackPanel Spacing="6">
+            <TextBlock FontSize="14" FontWeight="Bold"
+                       Foreground="{DynamicResource SemiGrey10}" Text="🕹 操作" />
+            <Button x:Name="SimulateButton" Click="SimulateContextLost_Click"
+                    IsEnabled="False" HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center" FontWeight="Bold"
+                    Content="⚠ 模拟 GL 上下文丢失" />
+            <Button x:Name="AttachButton" Click="ToggleAttach_Click"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Content="分离视图（触发 Destroy）" />
+            <Button Click="AddNode_Click"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Content="添加立方体" />
+            <CheckBox x:Name="AutoCycleCheckBox" Click="AutoCycle_Click"
+                      Content="每 2 秒自动丢失一次上下文" />
+            <Button Click="ClearLog_Click"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Content="清空日志" />
+          </StackPanel>
+        </Border>
+
+        <Border Theme="{StaticResource CardBorder}" Padding="10">
+          <StackPanel Spacing="4">
+            <TextBlock FontSize="14" FontWeight="Bold"
+                       Foreground="{DynamicResource SemiGrey10}" Text="📖 说明" />
+            <TextBlock FontSize="11" Foreground="#AAA" TextWrapping="Wrap"
+                       Text="模拟丢失复用同一 GL 上下文：所有 GPU 句柄被判为失效并在下一帧按需重建，旧名称不会被删除（真实丢失时由驱动回收）。分离视图会走完整的 OnOpenGlDeinit → Destroy 路径，重新挂载时创建新的上下文与场景。" />
+          </StackPanel>
+        </Border>
+
+        <Border Theme="{StaticResource CardBorder}" Padding="10">
+          <StackPanel Spacing="4">
+            <TextBlock FontSize="14" FontWeight="Bold"
+                       Foreground="{DynamicResource SemiGrey10}" Text="📋 事件日志" />
+            <ListBox ItemsSource="{Binding Log}" Height="300" BorderThickness="0"
+                     Background="#1E1E2E" FontSize="11"
+                     FontFamily="Consolas,Menlo,Monospace"
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto" />
+          </StackPanel>
+        </Border>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- ═══════════════════════════════════════════════ 3D Viewport ═══ -->
+    <ContentControl x:Name="ViewHost">
+      <pages:ContextLossTestView x:Name="aura3DView"
+                                 SceneInitialized="Aura3DView_SceneInitialized"
+                                 SceneDestroyed="Aura3DView_SceneDestroyed"
+                                 SceneUpdated="Aura3DView_SceneUpdated"
+                                 ContextLost="Aura3DView_ContextLost"
+                                 ContextRestored="Aura3DView_ContextRestored" />
+    </ContentControl>
+  </DockPanel>
+</UserControl>

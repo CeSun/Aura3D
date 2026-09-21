@@ -66,6 +66,10 @@ namespace Example.ViewModels
                 new MenuViewModel {
                     Title = "Cascaded Shadow Maps",
                     ViewModel = new CascadedShadowMapsViewModel()
+                },
+                new MenuViewModel {
+                    Title = "GL Context Loss",
+                    ViewModel = new ContextLossViewModel()
                 }
             ];
             OnNavigation(this, _menus.First());

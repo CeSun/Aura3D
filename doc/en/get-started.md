@@ -45,6 +45,8 @@ dotnet add package Aura3D.Pipeline.CelShading
 
 - `SceneInitialized` — Fires after OpenGL initialization. Build your scene here.
 - `SceneUpdated` — Fires before each frame render. Args include `DeltaTime` (seconds). Update logic here.
+- `ContextLost` — Fires when the GL context is lost; GPU names are invalidated while the scene and nodes survive.
+- `ContextRestored` — Fires when a replacement context is ready. Resources rebuild lazily and `SceneInitialized` is not raised again.
 
 ### iOS / macOS Configuration
 

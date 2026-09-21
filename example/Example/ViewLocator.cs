@@ -22,6 +22,7 @@ public class ViewLocator : IDataTemplate
             RenderingPerformanceViewModel renderingPerformanceViewModel => new RenderingPerformancePage(),
             AnimationFeaturesViewModel animationFeaturesViewModel => new AnimationFeaturesPage(),
             CascadedShadowMapsViewModel cascadedShadowMapsViewModel => new CascadedShadowMapsPage(),
+            ContextLossViewModel contextLossViewModel => new ContextLossPage(),
             DebugTestViewModel debugTestViewModel => new DebugTestPage(),
             _ => new TextBlock() { Text = "NotFound" }
         };

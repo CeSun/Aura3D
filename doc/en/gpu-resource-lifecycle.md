@@ -35,6 +35,14 @@ scene.RenderPipeline.Initialize(getProcAddress);
 
 Resources are recreated lazily. Shadow maps, IBL convolution maps, and cached render targets are regenerated as well. Do not call `Destroy(GL)` after loss because the old names no longer belong to an accessible context.
 
+### Avalonia control
+
+`Aura3DView` performs the calls above for you: it invokes `HandleContextLost()` from `OnOpenGlLost` and re-initializes the pipeline when the replacement context is ready. Subscribe to `ContextLost` / `ContextRestored`, or read `IsContextLost`.
+
+- Loss and recovery leave the scene, nodes, and materials untouched: `SceneInitialized` is not raised again, so a page builds its scene only once.
+- Every GPU state is rebuilt lazily from the first frame after recovery. Simulated loss (which keeps the same context) does not delete the previous GL names; a real loss leaves them to the driver.
+- Detaching the control from the visual tree runs `OnOpenGlDeinit`, which destroys the pipeline immediately and sets `Scene` to `null`. Re-attaching creates a new scene and raises `SceneInitialized` again. Scene members such as `MainCamera` are unavailable while detached.
+
 ## Final destruction
 
 `RenderPipeline.Destroy()` is terminal. It releases resources when a context remains valid, clears caches and registrations, and is safe to call repeatedly. A destroyed pipeline cannot be initialized again; create a new pipeline to resume rendering.

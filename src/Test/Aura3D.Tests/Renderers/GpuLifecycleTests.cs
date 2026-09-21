@@ -39,6 +39,55 @@ public class GpuLifecycleTests
     }
 
     [Fact]
+    public void InitializeAfterContextLost_ShouldAttachReplacementContext()
+    {
+        var pipeline = CreatePipeline();
+        pipeline.Initialize(_ => 0);
+
+        pipeline.HandleContextLost();
+
+        Assert.False(pipeline.IsInitialized);
+
+        pipeline.Initialize(_ => 0);
+
+        Assert.True(pipeline.IsInitialized);
+        Assert.False(pipeline.IsDestroyed);
+    }
+
+    [Fact]
+    public void InitializeWithoutContextLoss_ShouldThrow()
+    {
+        var pipeline = CreatePipeline();
+        pipeline.Initialize(_ => 0);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => pipeline.Initialize(_ => 0));
+
+        Assert.Contains("context loss", exception.Message);
+        Assert.True(pipeline.IsInitialized);
+    }
+
+    [Fact]
+    public void InvalidatedState_ShouldReuploadOnReplacementContext()
+    {
+        var pipeline = CreatePipeline();
+        var state = new FakeGpuState();
+        pipeline.Initialize(_ => 0);
+        pipeline.EnsureSynced(state);
+
+        Assert.Equal(0, state.UploadCount);
+
+        pipeline.HandleContextLost();
+
+        Assert.Equal((ulong)0, state.SyncedVersion);
+
+        pipeline.Initialize(_ => 0);
+        pipeline.EnsureSynced(state);
+
+        Assert.Equal(1, state.UploadCount);
+        Assert.Equal((ulong)1, state.SyncedVersion);
+    }
+
+    [Fact]
     public void RenderTargetInvalidate_ShouldResetOwnedNamesWithoutGlCalls()
     {
         var target = new RenderTarget().SetSize(16, 16).AddRenderTexture("Color", TextureFormat.Rgba8);
@@ -69,8 +118,13 @@ public class GpuLifecycleTests
         public ulong SyncedVersion { get; private set; } = 1;
         public int DestroyCount { get; private set; }
         public int InvalidateCount { get; private set; }
+        public int UploadCount { get; private set; }
 
-        public void Upload(GL gl) => SyncedVersion = Version;
+        public void Upload(GL gl)
+        {
+            UploadCount++;
+            SyncedVersion = Version;
+        }
 
         public void Destroy(GL gl)
         {

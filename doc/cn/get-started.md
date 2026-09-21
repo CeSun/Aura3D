@@ -45,6 +45,8 @@ dotnet add package Aura3D.Pipeline.CelShading
 
 - `SceneInitialized` — OpenGL 初始化完成后触发，在此处构建场景
 - `SceneUpdated` — 每帧渲染前触发，参数中包含 `DeltaTime`（秒），在此处更新逻辑
+- `ContextLost` — GL 上下文丢失时触发，此时 GPU 句柄已失效、场景与节点保留
+- `ContextRestored` — 新上下文就绪时触发，资源按需重建，不会重复触发 `SceneInitialized`
 
 ### iOS / macOS 平台配置
 

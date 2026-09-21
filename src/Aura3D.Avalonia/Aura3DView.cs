@@ -57,9 +57,44 @@ public class Aura3DView : Aura3DViewBase
         add => AddHandler(OnSceneUpdatedEvent, value);
         remove => RemoveHandler(OnSceneUpdatedEvent, value);
     }
+
+    public static readonly RoutedEvent<ContextLostRoutedEventArgs> ContextLostEvent =
+     RoutedEvent.Register<Aura3DView, ContextLostRoutedEventArgs>(nameof(ContextLost), RoutingStrategies.Direct);
+
+    /// <summary>
+    /// 当 OpenGL 上下文丢失、场景资源失效时触发。场景与节点保持不变，可在新上下文中自动恢复。
+    /// </summary>
+    public event EventHandler<ContextLostRoutedEventArgs> ContextLost
+    {
+        add => AddHandler(ContextLostEvent, value);
+        remove => RemoveHandler(ContextLostEvent, value);
+    }
+
+    public static readonly RoutedEvent<ContextRestoredRoutedEventArgs> ContextRestoredEvent =
+     RoutedEvent.Register<Aura3DView, ContextRestoredRoutedEventArgs>(nameof(ContextRestored), RoutingStrategies.Direct);
+
+    /// <summary>
+    /// 当渲染管线在重建后的上下文中就绪时触发。不会重复触发 <see cref="SceneInitialized"/>。
+    /// </summary>
+    public event EventHandler<ContextRestoredRoutedEventArgs> ContextRestored
+    {
+        add => AddHandler(ContextRestoredEvent, value);
+        remove => RemoveHandler(ContextRestoredEvent, value);
+    }
+
     protected override void OnOpenGlInit(GlInterface gl)
     {
         base.OnOpenGlInit(gl);
+    }
+
+    protected override void OnContextLost()
+    {
+        RaiseEvent(new ContextLostRoutedEventArgs(ContextLostEvent, Scene!));
+    }
+
+    protected override void OnContextRestored()
+    {
+        RaiseEvent(new ContextRestoredRoutedEventArgs(ContextRestoredEvent, Scene!));
     }
 
     protected override void OnSceneInitialized()
@@ -105,6 +140,48 @@ public class DestroyedRoutedEventArgs : RoutedEventArgs
 {
     public Scene Scene { get; set; }
     public DestroyedRoutedEventArgs(RoutedEvent routedEvent, Scene scene) : base(routedEvent)
+    {
+        Scene = scene;
+    }
+}
+
+/// <summary>
+/// OpenGL 上下文丢失事件的参数。
+/// </summary>
+public class ContextLostRoutedEventArgs : RoutedEventArgs
+{
+    /// <summary>
+    /// 关联的场景。场景与节点未受影响，仅 GPU 状态失效。
+    /// </summary>
+    public Scene Scene { get; set; }
+
+    /// <summary>
+    /// 初始化 <see cref="ContextLostRoutedEventArgs"/> 类的新实例。
+    /// </summary>
+    /// <param name="routedEvent">路由事件。</param>
+    /// <param name="scene">关联的场景。</param>
+    public ContextLostRoutedEventArgs(RoutedEvent routedEvent, Scene scene) : base(routedEvent)
+    {
+        Scene = scene;
+    }
+}
+
+/// <summary>
+/// OpenGL 上下文恢复事件的参数。
+/// </summary>
+public class ContextRestoredRoutedEventArgs : RoutedEventArgs
+{
+    /// <summary>
+    /// 关联的场景。与丢失前为同一实例。
+    /// </summary>
+    public Scene Scene { get; set; }
+
+    /// <summary>
+    /// 初始化 <see cref="ContextRestoredRoutedEventArgs"/> 类的新实例。
+    /// </summary>
+    /// <param name="routedEvent">路由事件。</param>
+    /// <param name="scene">关联的场景。</param>
+    public ContextRestoredRoutedEventArgs(RoutedEvent routedEvent, Scene scene) : base(routedEvent)
     {
         Scene = scene;
     }
