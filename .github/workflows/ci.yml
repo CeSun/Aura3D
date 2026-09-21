@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  # 发布库的门禁：net8.0 与 net10.0 都要构建并打包成功，核心测试必须通过。
+  libraries:
+    name: Libraries & tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Pack all libraries
+        run: |
+          set -euo pipefail
+          for project in \
+            src/Aura3D.Core \
+            src/Aura3D.Avalonia \
+            src/Aura3D.Model.AssimpLoader \
+            src/Aura3D.Model.GltfLoader \
+            src/Aura3D.Pipeline.CelShading \
+            src/Aura3D.Pipeline.PBR \
+            src/Aura3D.Pipeline.PBR.Common \
+            src/Aura3D.Pipeline.PBRForward
+          do
+            echo "::group::pack $(basename "$project")"
+            dotnet pack "$project" -c Release -o packages
+            echo "::endgroup::"
+          done
+
+      - name: Test
+        run: dotnet test src/Test/Aura3D.Tests/Aura3D.Tests.csproj -c Release
+
+  # 示例与调试工程门禁（Desktop / Android / Web）。iOS 见下方 ios 作业。
+  examples:
+    name: Examples & RenderDebug (Desktop / Android / Browser)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install workloads
+        run: dotnet workload install android wasm-tools
+
+      - name: Build Example.Desktop
+        run: dotnet build example/Example.Desktop/Example.Desktop.csproj -c Release
+
+      - name: Build Example.Android
+        run: dotnet build example/Example.Android/Example.Android.csproj -c Release
+
+      - name: Build Example.Browser
+        run: dotnet build example/Example.Browser/Example.Browser.csproj -c Release
+
+      - name: Build RenderDebug.Desktop
+        run: dotnet build src/RenderDebug/RenderDebug.Desktop/RenderDebug.Desktop.csproj -c Release
+
+      - name: Build RenderDebug.Android
+        run: dotnet build src/RenderDebug/RenderDebug.Android/RenderDebug.Android.csproj -c Release
+
+  # iOS 只能在 macOS runner 上编译（需要 Xcode 与 ios workload）。
+  # 只构建不签名：dotnet build 默认面向模拟器，不会触发 codesign。
+  ios:
+    name: Examples (iOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install workload
+        run: dotnet workload install ios
+
+      - name: Build Example.iOS
+        run: dotnet build example/Example.iOS/Example.iOS.csproj -c Release
