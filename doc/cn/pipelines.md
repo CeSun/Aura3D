@@ -339,7 +339,7 @@ RenderVisibleMeshesInCamera(filter2, camera.View, camera.Projection);
 2. 若 Material 提供了自定义源码 → 查 Material 缓存，未命中则用 Material 源码编译
 3. 否则查 Pass 缓存，未命中则用 Pass 的 `VertexShader`/`FragmentShader` 编译
 4. 编译时把 `#define SKINNED_MESH\n#define BLENDMODE_MASKED` 注入到 `//{{defines}}` 位置
-5. macOS 自动将 `#version 300 es` 替换为 `#version 330 core`，并移除全部 `precision` 声明（桌面 GLSL 在 4.10 之前不允许该语句）
+5. 方言按上下文自动选择（`RenderPipeline.ShaderDialect`，首次取用就读 `GL_VERSION`）：OpenGL ES 上下文直接用原始源码；桌面 GL 上下文把 `#version 300 es` 替换为 `#version 410 core`，并移除全部 `precision` 声明（macOS 只提供桌面 GL，故走此分支；桌面侧需 GL 4.1 及以上）
 6. 链接着色器、枚举所有 Uniform 位置并缓存
 
 > **注意**：defines 的顺序影响缓存 key。`UseShader("A").AddDefines("B")` 产生 key `"A;B"`，而 `UseShader("A", "B")` 也产生 `"A;B"`，二者一致。但若先 `UseShader("B")` 再 `AddDefines("A")` 则 key 为 `"B;A"`，是不同变体。建议始终用 `UseShader` 一次性声明所有需要的宏。

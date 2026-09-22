@@ -9,6 +9,9 @@ namespace Aura3D.Tests.Renderers;
 
 public class DesktopShaderConversionTests
 {
+    private const string EsVersion = "#version 300 es";
+    private const string DesktopVersion = "#version 410 core";
+
     [Theory]
     [InlineData("precision mediump float;")]
     [InlineData("precision highp float;")]
@@ -16,36 +19,66 @@ public class DesktopShaderConversionTests
     [InlineData("precision mediump sampler2DArray;")]
     [InlineData("    precision mediump float;")]
     [InlineData("precision mediump float; // default precision")]
-    public void ConvertToDesktopGLSL_ShouldStripPrecisionDeclarations(string declaration)
+    public void ToDesktopGlsl_ShouldStripPrecisionDeclarations(string declaration)
     {
-        var source = $"#version 300 es\n{declaration}\n\nuniform sampler2D u_texture;\nvoid main() {{ }}\n";
+        var source = $"{EsVersion}\n{declaration}\n\nuniform sampler2D u_texture;\nvoid main() {{ }}\n";
 
-        var converted = RenderPass.ConvertToDesktopGLSL(source);
+        var converted = ShaderDialectConverter.ToDesktopGlsl(source);
 
         Assert.DoesNotContain("precision", converted);
-        Assert.StartsWith("#version 330 core", converted);
+        Assert.StartsWith(DesktopVersion, converted);
         Assert.Contains("uniform sampler2D u_texture;", converted);
         Assert.Contains("void main() { }", converted);
     }
 
-    [Fact]
-    public void ConvertToDesktopGLSL_ShouldBeIdempotent()
+    [Theory]
+    [InlineData("\uFEFF" + EsVersion + "\nvoid main() { }\n")]
+    [InlineData("\n" + EsVersion + "\nvoid main() { }\n")]
+    [InlineData("   " + EsVersion + "\nvoid main() { }\n")]
+    public void ToDesktopGlsl_ShouldKeepVersionDirectiveFirst(string source)
     {
-        var source = "#version 300 es\nprecision mediump float;\nvoid main() { }\n";
+        var converted = ShaderDialectConverter.ToDesktopGlsl(source);
 
-        var once = RenderPass.ConvertToDesktopGLSL(source);
-        var twice = RenderPass.ConvertToDesktopGLSL(once);
+        Assert.StartsWith(DesktopVersion, converted.TrimStart());
+        Assert.False(converted.Contains('\uFEFF'));
+    }
+
+    [Fact]
+    public void ToDesktopGlsl_ShouldAddVersionDirectiveWhenAbsent()
+    {
+        var converted = ShaderDialectConverter.ToDesktopGlsl("void main() { }\n");
+
+        Assert.StartsWith(DesktopVersion, converted);
+        Assert.Contains("void main() { }", converted);
+    }
+
+    [Fact]
+    public void ToDesktopGlsl_ShouldLeaveForeignVersionDirectiveUntouched()
+    {
+        var converted = ShaderDialectConverter.ToDesktopGlsl("#version 450\nvoid main() { }\n");
+
+        Assert.StartsWith("#version 450", converted);
+    }
+
+    [Fact]
+    public void ToDesktopGlsl_ShouldBeIdempotent()
+    {
+        var source = $"{EsVersion}\nprecision mediump float;\nvoid main() {{ }}\n";
+
+        var once = ShaderDialectConverter.ToDesktopGlsl(source);
+        var twice = ShaderDialectConverter.ToDesktopGlsl(once);
 
         Assert.Equal(once, twice);
     }
 
     [Fact]
-    public void ConvertToDesktopGLSL_ShouldHandleSourcesWithoutVersionDirective()
+    public void ToDesktopGlsl_ShouldPreserveInjectedDefines()
     {
-        var converted = RenderPass.ConvertToDesktopGLSL("precision lowp float;\nvoid main() { }\n");
+        var source = $"{EsVersion}\nprecision mediump float;\n#define ENABLE_CSM\nvoid main() {{ }}\n";
 
-        Assert.DoesNotContain("precision", converted);
-        Assert.DoesNotContain("#version", converted);
+        var converted = ShaderDialectConverter.ToDesktopGlsl(source);
+
+        Assert.Contains("#define ENABLE_CSM", converted);
     }
 
     [Fact]
@@ -61,14 +94,7 @@ public class DesktopShaderConversionTests
         Assert.Contains(sources, s => s.Source.Contains("precision"));
 
         foreach (var (name, source) in sources)
-        {
-            var converted = RenderPass.ConvertToDesktopGLSL(source);
-
-            Assert.DoesNotContain("precision", converted);
-
-            if (source.Contains("#version 300 es"))
-                Assert.Contains("#version 330 core", converted);
-        }
+            AssertDesktopCompatible(name, source);
     }
 
     [Fact]
@@ -97,14 +123,69 @@ public class DesktopShaderConversionTests
         Assert.Contains(inspected, s => s.Source.Contains("precision"));
 
         foreach (var (name, source) in inspected)
-        {
-            var converted = RenderPass.ConvertToDesktopGLSL(source);
+            AssertDesktopCompatible(name, source);
+    }
 
-            Assert.DoesNotContain("precision", converted);
+    /// <summary>
+    /// Covers the shader files shipped by every project, including the pipeline assemblies the
+    /// test project does not reference, so no authored source escapes the desktop dialect check.
+    /// </summary>
+    [Fact]
+    public void RepositoryShaderFiles_ShouldBeDesktopCompatibleAfterConversion()
+    {
+        var files = RepositoryShaderFiles();
 
-            if (source.Contains("#version 300 es"))
-                Assert.Contains("#version 330 core", converted);
-        }
+        Assert.NotEmpty(files);
+        Assert.True(files.Count > 20, $"Expected the full bundled shader set, found {files.Count}.");
+
+        foreach (var file in files)
+            AssertDesktopCompatible(Path.GetFileName(file), File.ReadAllText(file));
+    }
+
+    private static void AssertDesktopCompatible(string name, string source)
+    {
+        Assert.StartsWith(EsVersion, source.TrimStart('\uFEFF', ' ', '\t', '\r', '\n'));
+
+        var converted = ShaderDialectConverter.ToDesktopGlsl(source);
+
+        Assert.StartsWith(DesktopVersion, converted.TrimStart());
+        Assert.DoesNotContain("precision", converted);
+        Assert.Equal(1, CountOccurrences(converted, "#version"));
+    }
+
+    private static int CountOccurrences(string text, string value)
+    {
+        var count = 0;
+        for (var index = text.IndexOf(value, StringComparison.Ordinal);
+             index >= 0;
+             index = text.IndexOf(value, index + value.Length, StringComparison.Ordinal))
+            count++;
+
+        return count;
+    }
+
+    private static List<string> RepositoryShaderFiles()
+    {
+        var root = FindRepositoryRoot();
+        if (root is null)
+            return [];
+
+        return Directory
+            .GetFiles(Path.Combine(root, "src"), "*.vert", SearchOption.AllDirectories)
+            .Concat(Directory.GetFiles(Path.Combine(root, "src"), "*.frag", SearchOption.AllDirectories))
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")
+                     && !f.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}"))
+            .ToList();
+    }
+
+    private static string? FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "Aura3D.sln")))
+            directory = directory.Parent;
+
+        return directory?.FullName;
     }
 
     private static RenderPass CreatePass(Func<TestPipeline, RenderPass> factory)

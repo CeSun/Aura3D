@@ -114,6 +114,17 @@ public abstract partial class RenderPipeline
     /// <summary>Gets whether this pipeline has been permanently destroyed.</summary>
     public bool IsDestroyed => _isDestroyed;
 
+    /// <summary>
+    /// Gets the GLSL dialect the attached context accepts. Bundled shaders are authored as
+    /// <see cref="ShaderDialect.GlEs"/>; a <see cref="ShaderDialect.DesktopGl"/> context
+    /// receives them after translation. Queries the context on first use, so it reports
+    /// <see cref="ShaderDialect.GlEs"/> while no context is attached.
+    /// </summary>
+    public ShaderDialect ShaderDialect => _shaderDialect ??= gl is null
+        ? ShaderDialect.GlEs
+        : ShaderDialectConverter.Detect(gl);
+    private ShaderDialect? _shaderDialect;
+
 
     /// <summary>
     /// Gets the every camera render passes.
@@ -275,6 +286,7 @@ public abstract partial class RenderPipeline
             gpuState.Invalidate();
 
         gl = null;
+        _shaderDialect = null;
     }
 
     /// <summary>
