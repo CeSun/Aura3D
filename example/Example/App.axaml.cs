@@ -2,6 +2,7 @@ using Aura3D.Core;
 using Aura3D.Core.Nodes;
 using Aura3D.Model;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
@@ -18,6 +19,9 @@ namespace Example
     public partial class App : Application
     {
         public static Model? model;
+
+        /// <summary>临时钩子：平台工程（iOS 探针）替换根视图，验证完删除。</summary>
+        public static Func<Control>? RootViewFactory;
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
@@ -82,7 +86,7 @@ namespace Example
             }
             else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
             {
-                singleViewPlatform.MainView = new MainView
+                singleViewPlatform.MainView = RootViewFactory?.Invoke() ?? new MainView
                 {
                     DataContext = new MainViewViewModel()
                 };

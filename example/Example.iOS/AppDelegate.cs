@@ -17,9 +17,10 @@ namespace Example.iOS
     {
         protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
         {
+            // 探针：走平台默认（Metal）渲染模式，验证 Aura3D 之外还能零拷贝合成自建 Metal 纹理。
+            Example.App.RootViewFactory = () => new MetalLeaseProbe().BuildPage();
+
             return base.CustomizeAppBuilder(builder)
-                
-                .With(new iOSPlatformOptions{RenderingMode = [iOSRenderingMode.OpenGl]})
                 .WithInterFont();
         }
     }
