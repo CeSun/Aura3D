@@ -70,6 +70,8 @@ F2 只记录了"没问题"，但三个对实现有决定意义的观测没有留
 
 判定标准：四个问题都有明确答案并回填。若 `failed` 不为 0 或长跑内存持续上涨，标为不通过并停下报告。
 
+> 执行证据（2026-09-23，iPhone 17 模拟器 / iOS 27.0 (24A434)，`xcrun simctl` 安装运行，截图 `/tmp/probe1.png`、`/tmp/probe_final.png`）：`lease backend=Metal canvas=SKCanvas surface=SKSurface`（未回落 EAGL，F1/F2 成立）；TopLeft 图红在上/蓝在下/绿在左（与纹理布局一致，不翻转），BottomLeft 图红蓝上下互换（符合预期）；红蓝无对调 ⇒ `SKColorType.Rgba8888` 通道序正确；`frame=900 imported=1800 failed=0`，failed 恒为 0。5 分钟长跑 RSS 514.2→519.6 MB（+5.4 MB，远小于逐帧泄漏 256KB 纹理应有的量级，判无泄漏）。正式实现取 `GRSurfaceOrigin.TopLeft`。
+
 ### T2 判 ANGLE 生死：能不能为 iOS 构建出来（2–4 小时，只做构建，不做集成）
 
 F12 说只能从 Chromium checkout 构建。这一步的目的就是把这句话验真或验伪，因为它决定 R2 是否存在。
@@ -83,6 +85,8 @@ F12 说只能从 Chromium checkout 构建。这一步的目的就是把这句话
 5. 记录：总耗时、checkout 体积、产物体积、必需的 GN 参数、以及为了编过是否改了上游代码（改了就是维护成本，必须写明）。
 
 判定标准：拿到含 Metal 后端的 iOS 产物 ⇒ R2 存活，进 T3。以下任一情况判不通过：无法在合理时间内得到最小 checkout；必须魔改 ANGLE 源码才能编过；产物里没有 Metal 符号。判不通过就**停止**，把结论写清，转 T5。
+
+> 执行证据（2026-09-23，受阻未判定）：`git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git` 连接 75s 超时；`curl https://chromium.googlesource.com` 无响应；GitHub 侧 `chromium/depot_tools`、`chromium-mirrors/{depot_tools,angle,build}`、`chromium/build` 均不可达（无镜像）；可达项仅 `github.com/google/angle` 与 `storage.googleapis.com`。结论：本机网络环境下无法开始 T2 步骤 1（gclient sync 的 DEPS 全部指向 googlesource），需要代理/VPN 或换网络后重跑。这不是对 R2 的技术否定。
 
 ### T3 ANGLE 最小互操作实验（依赖 T2 通过；1–2 小时）
 
@@ -138,8 +142,8 @@ F2 的通路目前只是探针，正式化需要：在 `Aura3D.Avalonia` 里提�
 
 | 任务 | 结论 | 关键证据 | 日期 |
 |---|---|---|---|
-| T1 | | | |
-| T2 | | | |
+| T1 | 通过。lease backend=Metal；TopLeft 朝向正确（正式实现用 `GRSurfaceOrigin.TopLeft`）；红蓝未对调（Rgba8888 正确）；failed 恒为 0；5 分钟长跑 +5.4MB 判无泄漏 | iPhone 17 模拟器 / iOS 27.0 (24A434)，`/tmp/probe1.png`、`/tmp/probe_final.png`，T1 节执行证据 | 2026-09-23 |
+| T2 | 受阻（环境，非技术判定）：本机无法访问 `chromium.googlesource.com`（75s 连接超时），`github.com/chromium/depot_tools`、`chromium-mirrors/*`、`github.com/chromium/build` 均不存在，无法取得 depot_tools 与 DEPS 源；`github.com/google/angle` 与 `storage.googleapis.com` 可达 | 连接探测记录见执行日志；需代理或换可达网络后重跑 T2 | 2026-09-23 |
 | T3 | | | |
 | T4 | | | |
 | T5 | | | |
