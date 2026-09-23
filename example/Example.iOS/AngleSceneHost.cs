@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Avalonia;
@@ -297,6 +298,39 @@ public sealed class AngleSceneHost : Control
             visI.AddRange(pipeline.InstancedMeshes);
         }
 
+        Log($"drive meshes total={pipeline.Meshes.Count} visible={vis.Count} culling={pipeline.EnableFrustumCulling}");
+        var visSet = new HashSet<Aura3D.Core.Nodes.Mesh>(vis);
+        foreach (var m in pipeline.Meshes.Take(60))
+        {
+            var bb = m.BoundingBox;
+            Log($"drive mesh {m.Geometry?.GetType().Name} pos=({m.Position.X:F1},{m.Position.Y:F1},{m.Position.Z:F1}) " +
+                $"bb={(bb == null ? "null" : $"[{bb.Min.X:F1},{bb.Min.Y:F1},{bb.Min.Z:F1}]-[{bb.Max.X:F1},{bb.Max.Y:F1},{bb.Max.Z:F1}]")} inVis={visSet.Contains(m)}");
+        }
+
+        var vp = camera.View * camera.Projection;
+        Log($"drive cam view0=({camera.View.M11:F2},{camera.View.M12:F2},{camera.View.M13:F2}) proj0=({camera.Projection.M11:F2},{camera.Projection.M22:F2})");
+        Span<System.Numerics.Vector3> ndc = stackalloc System.Numerics.Vector3[]
+        {
+            new(-1,-1,-1), new(1,-1,-1), new(-1,1,-1), new(1,1,-1),
+            new(-1,-1,1), new(1,-1,1), new(-1,1,1), new(1,1,1)
+        };
+        System.Numerics.Matrix4x4.Invert(vp, out var invVp);
+        var cmin = new System.Numerics.Vector3(float.MaxValue);
+        var cmax = new System.Numerics.Vector3(float.MinValue);
+        foreach (var c in ndc)
+        {
+            var w = System.Numerics.Vector4.Transform(new System.Numerics.Vector4(c, 1f), invVp);
+            w /= w.W;
+            cmin = System.Numerics.Vector3.Min(cmin, new System.Numerics.Vector3(w.X, w.Y, w.Z));
+            cmax = System.Numerics.Vector3.Max(cmax, new System.Numerics.Vector3(w.X, w.Y, w.Z));
+        }
+        Log($"drive camBox [{cmin.X:F1},{cmin.Y:F1},{cmin.Z:F1}]-[{cmax.X:F1},{cmax.Y:F1},{cmax.Z:F1}]");
+        foreach (var pt in new System.Numerics.Vector3[] { new(0, 2, 3), new(0, 2, -30), new(0, 2, 60) })
+        {
+            var clip = System.Numerics.Vector4.Transform(new System.Numerics.Vector4(pt, 1f), vp);
+            Log($"drive project ({pt.X},{pt.Y},{pt.Z}) ndc=({clip.X / clip.W:F2},{clip.Y / clip.W:F2},{clip.Z / clip.W:F2}) w={clip.W:F1}");
+        }
+
         pipeline.BeforeCameraRender(camera);
         foreach (var pass in pipeline.EveryCameraRenderPasses)
         {
@@ -352,6 +386,31 @@ public sealed class AngleSceneHost : Control
             {
                 Log($"real {name} fbo={rt.FrameBufferId} status=0x{status:X} px=({pf[0]:F3},{pf[1]:F3},{pf[2]:F3},{pf[3]:F3})");
             }
+        }
+
+        // GBuffer BaseColor 网格取样：确认球体是否进了 GBuffer
+        if (map.TryGetValue("GBuffer", out var gbMap) && gbMap.TryGetValue(size, out var gbEntry))
+        {
+            var gb = gbEntry.Item1;
+            Native.glBindFramebuffer(GL_FRAMEBUFFER, gb.FrameBufferId);
+            var bcId = pipeline.EnsureSynced(gb.GetTexture("BaseColor")).TextureId;
+            Native.glGetError();
+            var sb2 = new System.Text.StringBuilder("gbuffer grid:");
+            var colors = new HashSet<string>();
+            for (var gy = 1; gy <= 9; gy++)
+            {
+                for (var gx = 1; gx <= 9; gx++)
+                {
+                    var px = new byte[4];
+                    Native.glReadPixels(size.Width * gx / 10, size.Height * gy / 10, 1, 1,
+                        GL_RGBA, GL_UNSIGNED_BYTE, px);
+                    Native.glGetError();
+                    colors.Add($"{px[0]},{px[1]},{px[2]}");
+                }
+            }
+
+            sb2.Append(string.Join(" | ", colors));
+            Log(sb2.ToString());
         }
 
         Native.glBindFramebuffer(GL_FRAMEBUFFER, _fbo);

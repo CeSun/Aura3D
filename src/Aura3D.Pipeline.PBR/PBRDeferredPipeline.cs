@@ -22,15 +22,15 @@ public class PBRDeferredPipeline : PBRPipelineBase, IRenderPipelineCreateInstanc
             .SetDepthTexture(Settings.DepthFormat);
 
         var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
-            .AddTexture("Color", TextureFormat.Rgba32f)
+            .AddTexture("Color", TextureFormat.Rgba16f)
             .SetDepthTexture(Settings.DepthFormat);
 
         var backgroundRenderTarget = RegisterRenderTarget("BackgroundRenderTarget")
-            .AddTexture("Color", TextureFormat.Rgba32f)
+            .AddTexture("Color", TextureFormat.Rgba16f)
             .SetDepthTexture(Settings.DepthFormat);
 
         var gammaOutput = RegisterRenderTarget("GammaOutput")
-            .AddTexture("Color", TextureFormat.Rgba32f)
+            .AddTexture("Color", TextureFormat.Rgba16f)
             .SetDepthTexture(Settings.DepthFormat);
 
         var shadowPass = new ShadowMapPass(this);

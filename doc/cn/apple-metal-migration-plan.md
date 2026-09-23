@@ -140,6 +140,15 @@ F12 说只能从 Chromium checkout 构建。这一步的目的就是把这句话
    > - **冷启动（F13）**：PBR 延迟管线冷启动到首帧约 4.2s（模拟器，ANGLE 首次编译 MSL、无二进制缓存），正式数字在 T4d 记录。
    > - **全量回归**：未做；预计所有走 `PBRDeferredPipeline`（HDR RT）的页都会命中同一阻断，非 HDR（BlinnPhong/NoLight）页需确认是否也开混合到浮点 RT。
 
+   > 执行证据（2026-09-23，**修复决策已批准并实施：HDR RT `Rgba32f`→`Rgba16f`，CSM 复验通过**）：
+   >
+   > - 改动：`PBRDeferredPipeline.cs:25/29/33` 与 `PBRForwardPipeline.cs:21/25` 共 5 处 HDR RT 注册 `Rgba32f`→`Rgba16f`。`dotnet test` 基线保持 89 通过 / 0 失败。
+   > - 复验（iOS 模拟器，`AURA_SCENE=CSM`）：光照/天空/地面全部落盘，真帧 BaseRT 中心 (0.651,0.879,1.138,2.000)（alpha=2 为 IBL+方向光 ONE/ONE 累积，>1.0 HDR 值经 16F 保留），最终屏中心像素 (170,182,190,255)；截图 `/tmp/csm_fix2.png`。
+   > - 阴影 A/B（`AURA_CSM_NOSHADOW=1` vs 默认，`/tmp/ab_shadow.bmp` vs `/tmp/ab_nosh.bmp`）：13.05% 采样像素差异 >12，抽样点全部为阴影侧变暗 ⇒ CSM 阴影实际生效。
+   > - FXAA A/B（`CSM` vs `CSM noFXAA`，标题栏实证 `FXAA=off`）：球体轮廓在 noFXAA 下有可见阶梯、FXAA 下平滑 ⇒ FXAA pass 在 ANGLE 上生效。CopyPass（BaseRT.Color→BackgroundRT）由"光照结果出现在最终合成"间接证实。
+   > - **附带发现（与 ANGLE 无关，桌面端同样成立）**：`CascadedShadowMapsPage` 示例相机 `RotationDegrees=(-30,-25,0)` 背对 +z 球阵——引擎约定 `ForwardVector = (0,0,-1)·旋转`（`MathHelper.cs:153`，自 0.0.1 未变），该朝向使球体全部位于视锥后方，被视锥剔除（宿主探针实测 total=49 visible=1，`(0,2,3)` 投影 w=-6.6 在相机后方）。桌面页未改（超出本任务范围），临时宿主页已改 yaw=155 镜像朝向（`AngleHostPage.cs:330-333`）。
+   > - 另一注意点：启动后约 8s 截图仍为黑屏、约 30-60s 后才有合成内容（lease 合成节奏），F13 冷启动正式数字在 T4d 一并记录。
+
 ### T5 R2 判死后的替代验证（只在 T2 或 T3 不通过时做）
 
 先做 R3 的纸面与最小实验（不需要 ANGLE）：
@@ -172,6 +181,6 @@ F2 的通路目前只是探针，正式化需要：在 `Aura3D.Avalonia` 里提�
 | T1 | 通过。lease backend=Metal；TopLeft 朝向正确（正式实现用 `GRSurfaceOrigin.TopLeft`）；红蓝未对调（Rgba8888 正确）；failed 恒为 0；5 分钟长跑 +5.4MB 判无泄漏 | iPhone 17 模拟器 / iOS 27.0 (24A434)，`/tmp/probe1.png`、`/tmp/probe_final.png`，T1 节执行证据 | 2026-09-23 |
 | T2 | **通过**：standalone ANGLE checkout 可为 iOS 模拟器 arm64 构建含 Metal 后端产物，仅需 `enable_rust=false`，未改上游源码 ⇒ R2 存活（F12 证伪）。首次尝试因 `*.googlesource.com` 直连不可达受阻，后经本地代理完成 | `~/angle_ios/out/ios/libEGL.framework`(140K/115 导出) + `libGLESv2.framework`(12M/370 Mtl 符号)，T2 节执行证据 | 2026-09-23 |
 | T3 | **通过**：MTLTexture → `eglCreateImageKHR(EGL_METAL_TEXTURE_ANGLE)` → ANGLE Metal 后端渲染（洋红+移动绿带）→ 同纹理经 Skia lease 上屏，900 帧 failed=0 ⇒ R2 技术核心成立。注意：display 需 `eglGetPlatformDisplayEXT` 显式选 Metal 后端；AOT 下入口点用 `DllImport("__Internal")` 直调并需防与 Apple OpenGLES 的符号混用 | `example/Example.iOS/AngleMetalLeaseProbe.cs`，`/tmp/angle7.png`、`/tmp/angle8.png`，T3 节执行证据 | 2026-09-23 |
-| T4 | **进行中；CSM 项不通过**（已停下报告）。根因：本 ANGLE Metal 构建（ES 3.0）不提供 `GL_EXT_float_blend`，混合使能时绘制到 Rgba32F RT 整次 draw 被 `GL_INVALID_OPERATION` 丢弃 ⇒ PBR 延迟管线全部光照/背景/Copy 累积 pass 静默失效。Base/PointCloud(F9) 项通过（pointSizeRange=[1,511]）。修复方向：HDR RT 改 Rgba16f（探针实证可行）或开 ANGLE ES3.1/float-blend 能力 | `example/Example.iOS/AngleSceneHost.cs` 真帧逐 pass 驱动 + 变体矩阵：blend+32F⇒0x502、blend+RGBA8⇒OK、blend+RGBA16F⇒OK 且保 HDR 值；`EGL_CONTEXT_MINOR_VERSION=1/2` ⇒ `eglCreateContext` 0x3009。T4 节执行证据 | 2026-09-23 |
+| T4 | **CSM 复验通过（修复后）**。原不通过根因：本 ANGLE Metal 构建（ES 3.0）不提供 `GL_EXT_float_blend`，混合使能绘制到 Rgba32F RT 整次 draw 被 `GL_INVALID_OPERATION` 丢弃。经批准将 5 处管线 HDR RT 注册 `Rgba32f`→`Rgba16f`（`PBRDeferredPipeline.cs:25/29/33`、`PBRForwardPipeline.cs:21/25`）后：光照/天空/阴影全部落盘（BaseRT 保 >1.0 HDR 值），阴影 A/B 差异 13.05%，FXAA A/B 轮廓差异可见，CopyPass 间接证实；`dotnet test` 89/0。Base/PointCloud(F9) 项此前已通过。附带发现：示例 CSM 页相机朝向与 `ForwardVector=(0,0,-1)` 约定相反致球阵被剔除（桌面同样成立，宿主探针页已改 yaw=155）。冷启动 F13 与全量回归仍在 T4d | `/tmp/csm_fix2.png`、`/tmp/ab_shadow.bmp` vs `/tmp/ab_nosh.bmp`、`/tmp/{fxaa,nofxaa}_sph.png`，T4 节两段执行证据 | 2026-09-23 |
 | T5 | | | |
 | T6 | | | |

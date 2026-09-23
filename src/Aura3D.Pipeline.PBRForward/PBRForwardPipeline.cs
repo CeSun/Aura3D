@@ -18,11 +18,11 @@ public class PBRForwardPipeline : PBRPipelineBase, IRenderPipelineCreateInstance
     public PBRForwardPipeline(Scene scene) : base(scene)
     {
         var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
-            .AddTexture("Color", TextureFormat.Rgba32f)
+            .AddTexture("Color", TextureFormat.Rgba16f)
             .SetDepthTexture(Settings.DepthFormat);
 
         var gammaOutput = RegisterRenderTarget("GammaOutput")
-            .AddTexture("Color", TextureFormat.Rgba32f)
+            .AddTexture("Color", TextureFormat.Rgba16f)
             .SetDepthTexture(Settings.DepthFormat);
 
         RegisterRenderPass(new ShadowMapPass(this), RenderPassGroup.Once);

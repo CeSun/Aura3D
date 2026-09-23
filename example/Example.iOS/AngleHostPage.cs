@@ -328,7 +328,9 @@ public static class AngleHostPage
                 scene.MainDirectionalLight = dl;
 
                 scene.MainCamera.Position = new Vector3(8, 12, -8);
-                scene.MainCamera.RotationDegrees = new Vector3(-30, -25, 0);
+                // 引擎约定 Forward = (0,0,-1) 旋转，yaw -25 会背对 +z 的球阵（视锥剔除后不可见）。
+                // yaw 155 ≈ 原意图的镜像朝向，从 -z 侧看向 +z 球阵。
+                scene.MainCamera.RotationDegrees = new Vector3(-30, 155, 0);
             },
             FrameUpdating = (scene, dt) =>
             {
