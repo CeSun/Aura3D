@@ -1,9 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
    <OutputType>Exe</OutputType>
-   <TargetFramework>net10.0-ios</TargetFramework>
-   <SupportedOSPlatformVersion>13.0</SupportedOSPlatformVersion>
+   <TargetFramework>net10.0-ios27.0</TargetFramework>
+   <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
    <Nullable>enable</Nullable>
+   <!-- MetalLeaseProbe 使用了 iOS 27 SDK 中的预览 API -->
+   <NoWarn>$(NoWarn);XCODE_27_0_PREVIEW</NoWarn>
 
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -12,6 +14,21 @@
 
   <ItemGroup>
     <PackageReference Include="Avalonia.iOS" />
+  </ItemGroup>
+
+  <!-- T3 探针：ANGLE iOS 模拟器 framework（构建产物不入库，路径可用 AngleIosOutDir 覆盖） -->
+  <PropertyGroup>
+    <AngleIosOutDir Condition=" '$(AngleIosOutDir)' == '' ">/Users/sunce/angle_ios/out/ios</AngleIosOutDir>
+  </PropertyGroup>
+  <ItemGroup Condition="Exists('$(AngleIosOutDir)/libEGL.framework')">
+    <NativeReference Include="$(AngleIosOutDir)/libEGL.framework">
+      <Kind>Framework</Kind>
+      <SmartLink>False</SmartLink>
+    </NativeReference>
+    <NativeReference Include="$(AngleIosOutDir)/libGLESv2.framework">
+      <Kind>Framework</Kind>
+      <SmartLink>False</SmartLink>
+    </NativeReference>
   </ItemGroup>
 
   <ItemGroup>

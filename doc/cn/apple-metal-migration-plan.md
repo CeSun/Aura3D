@@ -105,6 +105,13 @@ F12 说只能从 Chromium checkout 构建。这一步的目的就是把这句话
 4. 用 T1 已经验证过的 lease 导入路径把它画上屏。
 5. 截图确认：屏幕上出现洋红且逐帧变化。
 
+   > 执行证据（2026-09-23，**通过**）：闭环打通——`MTLTexture(256², RGBA8Unorm, Shared, ShaderRead|RenderTarget)` → `eglCreateImageKHR(_display, EGL_NO_CONTEXT, EGL_METAL_TEXTURE_ANGLE, handle, null)` 成功 → `glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image)` 无错 → FBO `FRAMEBUFFER_COMPLETE` → 洋红 clear + scissor 绿带逐帧移动 → T1 的 lease 路径上屏。模拟器截图 `/tmp/angle7.png`、`/tmp/angle8.png` 均见洋红+绿带，控制台 `frame=900 imported=900 failed=0`。关键落地点：
+   > 1. **display 必须显式请求 Metal 后端**：`eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE=0x3202, EGL_DEFAULT_DISPLAY, {EGL_PLATFORM_ANGLE_TYPE_ANGLE=0x3203, EGL_PLATFORM_ANGLE_TYPE_METAL_ANGLE=0x3489, EGL_NONE})`，否则 iOS 上 ANGLE 默认走 EAGL 后端、display 扩展里没有 `EGL_ANGLE_metal_texture_client_buffer`。运行时 `GL_RENDERER='ANGLE (Apple, ANGLE Metal Renderer: Apple iOS simulator GPU, Version 27.0)'`。
+   > 2. **device 约束（F8）实测满足**：.NET `MTLDevice.SystemDefault` 与 ANGLE `DisplayMtl` 内部 `MTLCreateSystemDefaultDevice()` 是同一单例，`eglCreateImageKHR` 直接成功，无需特殊处理。
+   > 3. **.NET iOS AOT 下取入口点的方式**：`Marshal.GetDelegateForFunctionPointer` 会抛 `ExecutionEngineException`（wrapper 需 JIT），改为直接 `DllImport("__Internal")`；ANGLE 两个 framework 直接导出全部所需符号（`eglGetPlatformDisplayEXT`/`eglCreateImageKHR`/`glEGLImageTargetTexture2DOES` 等），并用 `dlsym(RTLD_DEFAULT)+dladdr` 确认解析落在 app 内嵌的 ANGLE framework 而非 Apple OpenGLES.framework（两者符号同名，存在混用风险，正式实现要盯住这点）。
+   > 4. **踩坑记录**：`GL_OES_EGL_image` 在 ANGLE 里是 requestable 扩展，但非 WebGL 上下文默认全部启用（`Context.cpp` `GetExtensionsEnabled` 默认 true），无需 `glRequestExtensionANGLE`；本次排查中一路的 `GL_INVALID_ENUM` 真因是探针把 `GL_TEXTURE_2D` 写成桌面值 `0x05E1`，GLES 定义是 `0x0DE1`（`include/GLES2/gl2.h:114`）。差分定位法：`glEGLImageTargetRenderbufferStorageOES` 同 image 报 0（证明扩展位与 image 有效）、`glGetStringi` 精确 token 枚举（证明 enabled）、`FromGLenum<TextureType>` 反汇编（证明 0x05E1 落 InvalidEnum）⇒ 锁定为调用方常量错误。
+   > 5. 同步目前用 `glFinish()`，按计划在 T4 之后换 `EGL_ANGLE_metal_shared_event_sync`。
+
 判定标准：颜色出现且逐帧变化 ⇒ R2 成立，进 T4。若导入成功但画不出/画出黑图，先分别排查同步（ANGLE 的命令缓冲是否在我们读取前完成）与 device 不匹配，把两次尝试的现象都记下来再报。这一步之后，正式实现还需要把同步换成 `EGL_ANGLE_metal_shared_event_sync` 一类机制，但那属于 T4 之后。
 
 ### T4 把真实渲染搬上 ANGLE，逐项验 F9/F11 的风险点（依赖 T3 通过）
@@ -142,7 +149,7 @@ F2 的通路目前只是探针，正式化需要：在 `Aura3D.Avalonia` 里提�
 - `example/Example.iOS/AppDelegate.cs`：删掉了 `[OpenGl]` 强制，并注入 `RootViewFactory`
 - `example/Example/App.axaml.cs`：新增 `RootViewFactory` 钩子（临时用，正式实现不该保留）
 
-删除清单：删 `MetalLeaseProbe.cs`、还原 `AppDelegate.cs` 的 `CustomizeAppBuilder`、删掉 `App.RootViewFactory` 及其在 `OnFrameworkInitializationCompleted` 里的使用。
+删除清单：删 `MetalLeaseProbe.cs`、删 `AngleMetalLeaseProbe.cs`（T3 探针）、还原 `AppDelegate.cs` 的 `CustomizeAppBuilder` 与 `RootViewFactory` 注入、删 `Example.iOS.csproj` 里指向 `$(AngleIosOutDir)` 的 `NativeReference` 段、删掉 `App.RootViewFactory` 及其在 `OnFrameworkInitializationCompleted` 里的使用。
 
 ## 5. 执行结果（待填）
 
@@ -150,7 +157,7 @@ F2 的通路目前只是探针，正式化需要：在 `Aura3D.Avalonia` 里提�
 |---|---|---|---|
 | T1 | 通过。lease backend=Metal；TopLeft 朝向正确（正式实现用 `GRSurfaceOrigin.TopLeft`）；红蓝未对调（Rgba8888 正确）；failed 恒为 0；5 分钟长跑 +5.4MB 判无泄漏 | iPhone 17 模拟器 / iOS 27.0 (24A434)，`/tmp/probe1.png`、`/tmp/probe_final.png`，T1 节执行证据 | 2026-09-23 |
 | T2 | **通过**：standalone ANGLE checkout 可为 iOS 模拟器 arm64 构建含 Metal 后端产物，仅需 `enable_rust=false`，未改上游源码 ⇒ R2 存活（F12 证伪）。首次尝试因 `*.googlesource.com` 直连不可达受阻，后经本地代理完成 | `~/angle_ios/out/ios/libEGL.framework`(140K/115 导出) + `libGLESv2.framework`(12M/370 Mtl 符号)，T2 节执行证据 | 2026-09-23 |
-| T3 | | | |
+| T3 | **通过**：MTLTexture → `eglCreateImageKHR(EGL_METAL_TEXTURE_ANGLE)` → ANGLE Metal 后端渲染（洋红+移动绿带）→ 同纹理经 Skia lease 上屏，900 帧 failed=0 ⇒ R2 技术核心成立。注意：display 需 `eglGetPlatformDisplayEXT` 显式选 Metal 后端；AOT 下入口点用 `DllImport("__Internal")` 直调并需防与 Apple OpenGLES 的符号混用 | `example/Example.iOS/AngleMetalLeaseProbe.cs`，`/tmp/angle7.png`、`/tmp/angle8.png`，T3 节执行证据 | 2026-09-23 |
 | T4 | | | |
 | T5 | | | |
 | T6 | | | |
