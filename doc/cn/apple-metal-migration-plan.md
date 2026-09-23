@@ -35,6 +35,7 @@
 | F11 | Aura3D 的 GL 用量是纯 GLES 3.0 子集：67 个 `gl.*` 函数、20 处 `#version 300 es`、零 `#extension`；**没有** compute / indirect draw / texture storage / buffer mapping。`TexImage3D` 只用于 `Texture2DArray`（CSM 深度数组，`ShadowMapPass.cs`），`GenerateMipmap` 只打在 `Texture2D` 和 `TextureCubeMap` 上 ⇒ 不踩 F9 的 compute 雷。 | 实测（源码检索） |
 | F12 | **ANGLE 目前只能在 Chromium 的 checkout 里为 iOS 构建**（`doc/DevSetup.md` 明写），iOS 产物形态是 `ios_framework_bundle` 而非裸静态库。 | 源码取证 |
 | F13 | ANGLE 的 Metal 后端把 GLSL 翻成 MSL 后，运行时用 `newLibraryWithSource:` 编译着色器。有内存库缓存与并行编译开关（默认开），但管线状态对象的创建仍是同步的，且源码里没有 `MTLBinaryArchive` 一类的磁盘二进制缓存；iOS 上连 ANGLE 内部着色器的构建期预编译都默认关闭（需 `angle_metal_toolchain_dir` 才打开）。⇒ 冷启动编译开销真实存在，需要实测数字。苹果对运行时 MSL 编译的政策，源码答不了。 | 源码取证 |
+| F14 | Metal 后端下 `SKImage.FromTexture` 的朝向与通道序已确定：`GRSurfaceOrigin.TopLeft` 出图**正立**（`BottomLeft` 与之上下相反，说明 origin 参数确实生效），`MTLPixelFormatRGBA8Unorm` 配 `SKColorType.Rgba8888` **无 R/B 互换**，绿色与动画带都正常。⇒ 正式实现的导入参数就按 `TopLeft + Rgba8888` 写。 | 实测（2026-09-23 iOS 模拟器，T1 复采） |
 
 net10.0-ios 的 Metal 绑定命名有几个坑，写代码时照抄可用形式，别再试错：`MTLTextureType.k2D`（不是 `TwoD`/`Texture2D`）、`MTLRegion.Create2D(...)`（没有 `Make2D`）、`IMTLTexture` 上没有 `Region` 属性、上传用 4 参 `ReplaceRegion(MTLRegion, UIntPtr mipmapLevel, IntPtr withBytes, UIntPtr bytesPerRow)`。查签名先 grep `Microsoft.iOS.xml`（在 `Microsoft.iOS.Ref.*` pack 里，只收录有注释的成员），不足时看 Learn 的 `metal.imtltexture` 页里 `Foundation.ProtocolMember` 特性。Avalonia 12 里 `AvaloniaLocator.Current` 是 `[PrivateApi]`，编译期引用不到；要判断当前图形后端，就在 lease 里读 `GRContext.Backend`。
 
@@ -66,6 +67,7 @@ F2 只记录了"没问题"，但三个对实现有决定意义的观测没有留
    - 上图红条在上还是在下？下图与上图是否上下相反？（决定正式实现用哪个 `GRSurfaceOrigin`）
    - 红蓝有没有对调？（对调说明通道序不对，要换 `SKColorType` 或用 `GRMtlTextureInfo` 的 swizzle）
    - `imported`/`failed` 两个计数随帧数怎么变？（`failed` 必须恒为 0）
+   `imported` 不用肉眼逐帧看：日志每 1/30/120/300/600/900 帧打一行 `frame=N imported=M failed=K`，**M 应当恒等于 N×2**（每帧导入 TopLeft 与 BottomLeft 各一次）。只要 `M == N*2` 且 `K == 0` 即为通过。
 5. 顺手记录模拟器/设备的 iOS 版本与机型，以及是否出现内存上涨（`imported` 每帧 +2 但 `GRBackendTexture`/`SKImage` 是逐帧创建的，长跑 5 分钟看是否泄漏）。
 
 判定标准：四个问题都有明确答案并回填。若 `failed` 不为 0 或长跑内存持续上涨，标为不通过并停下报告。
@@ -138,7 +140,7 @@ F2 的通路目前只是探针，正式化需要：在 `Aura3D.Avalonia` 里提�
 
 | 任务 | 结论 | 关键证据 | 日期 |
 |---|---|---|---|
-| T1 | | | |
+| T1 | 通过 | `lease backend=Metal`（没有回落 EAGL，F1 成立）；`TopLeft` 出图正立、`BottomLeft` 与之上下相反 ⇒ origin 生效，正式实现取 `TopLeft`；红蓝未对调 ⇒ `Rgba8888` + `RGBA8Unorm` 通道序正确；`failed` 恒为 0。结论已固化为 F14。未采集：长跑内存曲线 | 2026-09-23 iOS 模拟器 |
 | T2 | | | |
 | T3 | | | |
 | T4 | | | |
