@@ -33,7 +33,7 @@
 | F9 | ANGLE 的 Metal 后端未实现 compute（`ContextMtl.mm` 里 `dispatchCompute` 是 `UNIMPLEMENTED()`），3D 纹理 mipmap 生成因此不可用；point sprite 是原生 `[[point_size]]` 但尺寸被限制；`BlitFramebuffer` 含缩放/格式转换有实现；数组纹理层作 RT 支持。 | 源码取证 |
 | F10 | .NET iOS（net10.0-ios）**没有**绑定 EAGL / OpenGLES / `CVOpenGLESTextureCache`；但绑定了 `IMTLDevice.CreateTexture(MTLTextureDescriptor, IOSurface, nuint plane)`。Avalonia.iOS 自己是 `dlopen` OpenGLES 框架 + `dlsym` 取函数指针的。 | 实测（`Microsoft.iOS.xml` 检索）+ 反编译 |
 | F11 | Aura3D 的 GL 用量是纯 GLES 3.0 子集：67 个 `gl.*` 函数、20 处 `#version 300 es`、零 `#extension`；**没有** compute / indirect draw / texture storage / buffer mapping。`TexImage3D` 只用于 `Texture2DArray`（CSM 深度数组，`ShadowMapPass.cs`），`GenerateMipmap` 只打在 `Texture2D` 和 `TextureCubeMap` 上 ⇒ 不踩 F9 的 compute 雷。 | 实测（源码检索） |
-| F12 | **ANGLE 目前只能在 Chromium 的 checkout 里为 iOS 构建**（`doc/DevSetup.md` 明写），iOS 产物形态是 `ios_framework_bundle` 而非裸静态库。 | 源码取证 |
+| F12 | ~~**ANGLE 目前只能在 Chromium 的 checkout 里为 iOS 构建**（`doc/DevSetup.md` 明写），iOS 产物形态是 `ios_framework_bundle` 而非裸静态库。~~ **已证伪（2026-09-23，T2）**：standalone ANGLE checkout（非 Chromium）即可为 iOS 模拟器 arm64 构建出含 Metal 后端的产物，仅需 gn 参数 `enable_rust=false`，未改上游源码；产物形态确为 framework bundle。 | 源码取证 + T2 实测（见 T2 执行证据） |
 | F13 | ANGLE 的 Metal 后端把 GLSL 翻成 MSL 后，运行时用 `newLibraryWithSource:` 编译着色器。有内存库缓存与并行编译开关（默认开），但管线状态对象的创建仍是同步的，且源码里没有 `MTLBinaryArchive` 一类的磁盘二进制缓存；iOS 上连 ANGLE 内部着色器的构建期预编译都默认关闭（需 `angle_metal_toolchain_dir` 才打开）。⇒ 冷启动编译开销真实存在，需要实测数字。苹果对运行时 MSL 编译的政策，源码答不了。 | 源码取证 |
 
 net10.0-ios 的 Metal 绑定命名有几个坑，写代码时照抄可用形式，别再试错：`MTLTextureType.k2D`（不是 `TwoD`/`Texture2D`）、`MTLRegion.Create2D(...)`（没有 `Make2D`）、`IMTLTexture` 上没有 `Region` 属性、上传用 4 参 `ReplaceRegion(MTLRegion, UIntPtr mipmapLevel, IntPtr withBytes, UIntPtr bytesPerRow)`。查签名先 grep `Microsoft.iOS.xml`（在 `Microsoft.iOS.Ref.*` pack 里，只收录有注释的成员），不足时看 Learn 的 `metal.imtltexture` 页里 `Foundation.ProtocolMember` 特性。Avalonia 12 里 `AvaloniaLocator.Current` 是 `[PrivateApi]`，编译期引用不到；要判断当前图形后端，就在 lease 里读 `GRContext.Backend`。
@@ -86,6 +86,10 @@ F12 说只能从 Chromium checkout 构建。这一步的目的就是把这句话
 
 判定标准：拿到含 Metal 后端的 iOS 产物 ⇒ R2 存活，进 T3。以下任一情况判不通过：无法在合理时间内得到最小 checkout；必须魔改 ANGLE 源码才能编过；产物里没有 Metal 符号。判不通过就**停止**，把结论写清，转 T5。
 
+> 执行证据（2026-09-23，**通过**，经代理 127.0.0.1:7897）：standalone checkout `~/angle_ios`（手写 `.gclient`：solution `.` → `angle/angle.git@main` + `target_os=['ios']`，`gclient sync --nohooks --no-history` 约 8 分钟、11G）。gn 参数：`target_os="ios" target_environment="simulator" target_cpu="arm64" is_component_build=false angle_enable_metal=true is_debug=false` + **`enable_rust=false`**（standalone DEPS 缺 `third_party/rust-toolchain`，`build/config/rust.gni` 读不到 VERSION 文件；这是配置差异，**未改任何上游源码**）。`ninja out/ios libEGL libGLESv2` 2271 targets 约 10 分钟。产物：`out/ios/libEGL.framework`（140K，导出 115 个 `_egl*`）+ `libGLESv2.framework`（12M），均 Mach-O arm64 动态库；Metal 后端 38 个 .o 编入，`nm` 命中 370 个 Mtl 符号（Obj-C++ 符号为 local，`nm -gU` 看不到，需 `nm` 全量或 `strings` 验 `ContextMtl.mm`/`DisplayMtl.mm`）。⇒ **R2 存活，且构建成本远低于 F12 预估；进 T3。**
+>
+> 注：`*.googlesource.com` 在本机直连不可达（见下方 2026-09-23 受阻记录），本次经用户开启的本地代理完成。
+
 > 执行证据（2026-09-23，受阻未判定）：`git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git` 连接 75s 超时；`curl https://chromium.googlesource.com` 无响应；`pdfium.googlesource.com`、`swift-go.googlesource.com` 同样超时 ⇒ 整个 `*.googlesource.com` 域不可达，非单主机故障。GitHub 侧 `chromium/depot_tools`、`chromium-mirrors/{depot_tools,angle,build}`、`chromium/build` 均不可达（无镜像）；可达项仅 `github.com/google/angle` 与 `storage.googleapis.com`。结论：本机网络环境下无法开始 T2 步骤 1（gclient sync 的 DEPS 全部指向 googlesource），需要代理/VPN 或换网络后重跑。这不是对 R2 的技术否定。
 
 ### T3 ANGLE 最小互操作实验（依赖 T2 通过；1–2 小时）
@@ -93,6 +97,8 @@ F12 说只能从 Chromium checkout 构建。这一步的目的就是把这句话
 目的：证明"我们分配的 `MTLTexture` → 交给 ANGLE 当 GL 渲染目标 → ANGLE 画完 → 同一张纹理交给 Skia lease 上屏"这条闭环成立。这一步是整个 R2 的技术核心，也是 F8 里唯一没逐字确认的部分。
 
 0. 先读 `extensions/EGL_ANGLE_metal_texture_client_buffer.txt` 全文，确认**入口点到底是 `eglCreatePbufferFromClientBuffer` 还是 `eglCreateImage`/`eglCreateImageKHR`**，以及需要什么 display 属性。注意已知事实：`eglCreatePbufferFromClientBuffer` 在 Metal 后端只接受 `EGL_IOSURFACE_ANGLE`，所以极可能要走 EGLImage 那条；把结论写进执行结果。
+
+   > 步骤 0 结论（2026-09-23，spec v3 2024-02-20 全文已读）：入口点是 **`eglCreateImageKHR(dpy, EGL_METAL_TEXTURE_ANGLE /*0x34A7*/, EGL_NO_CONTEXT, (EGLClientBuffer)MTLTexture, attrib_list)`**，不是 `eglCreatePbufferFromClientBuffer`。attrib 可用 `EGL_METAL_TEXTURE_ARRAY_SLICE_ANGLE`（数组切片，非 2DArray 时只许 0）与 `EGL_TEXTURE_INTERNAL_FORMAT_ANGLE`（internal format 覆盖）。spec 原文确认 device 约束："the provided Metal texture object must have been created by the same Metal device queried from the display"（经 `EGL_ANGLE_device_metal` 查询），违反报 `EGL_BAD_PARAMETER`。`<ctx>` 必须 `EGL_NO_CONTEXT`，宽高取自纹理本身。
 1. 在 `example/Example.iOS` 里新建一个临时页（复用 T1 探针的骨架），用 `[DllImport]` 或 xcframework 桥调用 ANGLE 的 EGL/GLES 入口。创建 EGL display 时**必须把 `MTLDevice.SystemDefault`（也就是 F2 里同一个 device）显式交给 ANGLE**（F8 的 device 相等约束）。
 2. 用与 T1 探针相同的方式分配一张 `MTLTexture`（`ShaderRead` 用法、非 Private 存储），把它作为 client buffer 导入成 GL 纹理并挂到 FBO 的颜色附件上。
 3. 在 ANGLE 里把这张纹理清成一个与 UI 无任何重合的可辨识颜色（例如纯洋红），并每帧改一下颜色或画一条移动的带子。
@@ -143,7 +149,7 @@ F2 的通路目前只是探针，正式化需要：在 `Aura3D.Avalonia` 里提�
 | 任务 | 结论 | 关键证据 | 日期 |
 |---|---|---|---|
 | T1 | 通过。lease backend=Metal；TopLeft 朝向正确（正式实现用 `GRSurfaceOrigin.TopLeft`）；红蓝未对调（Rgba8888 正确）；failed 恒为 0；5 分钟长跑 +5.4MB 判无泄漏 | iPhone 17 模拟器 / iOS 27.0 (24A434)，`/tmp/probe1.png`、`/tmp/probe_final.png`，T1 节执行证据 | 2026-09-23 |
-| T2 | 受阻（环境，非技术判定）：本机无法访问 `chromium.googlesource.com`（75s 连接超时），`github.com/chromium/depot_tools`、`chromium-mirrors/*`、`github.com/chromium/build` 均不存在，无法取得 depot_tools 与 DEPS 源；`github.com/google/angle` 与 `storage.googleapis.com` 可达 | 连接探测记录见执行日志；需代理或换可达网络后重跑 T2 | 2026-09-23 |
+| T2 | **通过**：standalone ANGLE checkout 可为 iOS 模拟器 arm64 构建含 Metal 后端产物，仅需 `enable_rust=false`，未改上游源码 ⇒ R2 存活（F12 证伪）。首次尝试因 `*.googlesource.com` 直连不可达受阻，后经本地代理完成 | `~/angle_ios/out/ios/libEGL.framework`(140K/115 导出) + `libGLESv2.framework`(12M/370 Mtl 符号)，T2 节执行证据 | 2026-09-23 |
 | T3 | | | |
 | T4 | | | |
 | T5 | | | |
