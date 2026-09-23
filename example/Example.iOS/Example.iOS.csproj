@@ -5,7 +5,7 @@
    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
    <Nullable>enable</Nullable>
    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-   <!-- MetalLeaseProbe 使用了 iOS 27 SDK 中的预览 API -->
+   <!-- iOS 27 SDK 预览版：抑制 Xcode 版本预览告警 -->
    <NoWarn>$(NoWarn);XCODE_27_0_PREVIEW</NoWarn>
 
   </PropertyGroup>

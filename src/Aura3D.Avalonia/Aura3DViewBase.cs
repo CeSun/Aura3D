@@ -3,7 +3,6 @@ using Aura3D.Core.Scenes;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.OpenGL;
 using Avalonia.Rendering;
 using System.Diagnostics;
 using Aura3D.Core.Resources;
@@ -14,9 +13,14 @@ using Avalonia.VisualTree;
 namespace Aura3D.Avalonia;
 
 /// <summary>
-/// Avalonia OpenGL 渲染控件的基类，负责管理场景生命周期、渲染循环以及节点操作。
+/// Avalonia 3D 渲染控件的基类，负责管理场景生命周期、渲染循环以及节点操作。
+/// 主体流程与平台无关：场景创建、管线初始化、逐帧 Update/Render 与 GPU 资源释放/重建均在
+/// 本文件中实现；平台差异只存在于两个后端 partial：
+/// 桌面/Android 走 <c>Aura3DViewBase.OpenGl.cs</c>（Avalonia OpenGlControlBase），
+/// iOS 走 <c>Aura3DViewBase.Angle.cs</c>（自持 ANGLE Metal 上下文 + Skia lease 合成）。
+/// 应用侧无论哪个平台都以相同签名引用 <see cref="Aura3DView"/>。
 /// </summary>
-public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlControlBase, ICustomHitTest
+public abstract partial class Aura3DViewBase : ICustomHitTest
 {
     /// <summary>
     /// 获取或设置当前关联的 3D 场景。控件从未初始化、或调用了 <see cref="DestroyScene"/> 之后为 <c>null</c>。
@@ -34,9 +38,14 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
 
     int fb = 0;
 
+    /// <summary>
+    /// 每帧渲染结束后是否自动请求下一帧。设为 <c>false</c> 后需手动调用
+    /// <see cref="RequestNextFrameRendering"/> 驱动渲染。
+    /// </summary>
     public bool AutoRequestNextFrameRendering { get; set; } = true;
 
     protected bool isSizeChanged = true;
+
     /// <summary>
     /// 初始化 <see cref="Aura3DViewBase"/> 类的新实例。
     /// </summary>
@@ -56,63 +65,53 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
     public Func<Scene, RenderPipeline> CreateRenderPipeline = scene => new BlinnPhongPipeline(scene);
 
     /// <summary>
-    /// 渲染管线的用户可配置设置。需在 OpenGL 初始化前设置，构造时配置在管线创建后修改不会再生效。
+    /// 渲染管线的用户可配置设置。需在渲染上下文初始化前设置，构造时配置在管线创建后修改不会再生效。
     /// </summary>
     public PipelineSettings PipelineSettings { get; set; } = new PipelineSettings();
 
-    protected override void OnOpenGlInit(GlInterface gl)
-    {
-        base.OnOpenGlInit(gl);
-
-        UpdateRenderSurfaceSize();
-
-        EnsureScene(gl);
-    }
-
     /// <summary>
-    /// 确保场景存在并与当前上下文绑定。首次创建时触发 <see cref="OnSceneInitialized"/>，
+    /// 确保场景存在并与当前渲染上下文绑定。首次创建时触发 <see cref="OnSceneInitialized"/>，
     /// 复用已有场景时触发 <see cref="OnContextRestored"/>。
     /// </summary>
-    private Scene EnsureScene(GlInterface gl)
+    private void EnsureScene(Func<string, nint> getProcAddress)
     {
         if (Scene == null)
         {
             Scene = new Scene(CreateRenderPipeline, PipelineSettings, renderSurface);
 
-            Scene.RenderPipeline.Initialize(gl.GetProcAddress);
+            Scene.RenderPipeline.Initialize(getProcAddress);
 
             Stopwatch.Restart();
 
             IsContextLost = false;
 
-            OnSceneInitialized();
+            DispatchSceneEvent(OnSceneInitialized);
 
-            return Scene;
+            return;
         }
 
         if (!Scene.RenderPipeline.IsInitialized)
         {
             // 上下文已重建（控件重新挂载或宿主替换了上下文）：场景、节点与材质均为原实例。
-            Scene.RenderPipeline.Initialize(gl.GetProcAddress);
+            Scene.RenderPipeline.Initialize(getProcAddress);
 
             Stopwatch.Restart();
 
             IsContextLost = false;
 
-            OnContextRestored();
+            DispatchSceneEvent(OnContextRestored);
         }
-
-        return Scene;
     }
 
-    protected override void OnOpenGlLost()
+    /// <summary>
+    /// 上下文丢失的共享处理：只失效 GPU 句柄，不执行任何 GL 调用；
+    /// 场景、节点与 CPU 资源保持不变，下一帧按 <see cref="EnsureScene"/> 路径重建。
+    /// </summary>
+    private protected void ContextLostCore()
     {
-        base.OnOpenGlLost();
-
         if (Scene == null || Scene.RenderPipeline.IsDestroyed)
             return;
 
-        // 上下文已不可用：只失效 GPU 句柄，不执行任何 GL 调用。
         Scene.RenderPipeline.HandleContextLost();
 
         IsContextLost = true;
@@ -120,10 +119,32 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
         // 强制下一帧重新绑定输出帧缓冲，旧句柄可能已属于丢失的上下文。
         fb = -1;
 
-        OnContextLost();
+        DispatchSceneEvent(OnContextLost);
 
         // 若控件当前空闲，需要一次渲染回调驱动恢复流程。
-        RequestNextFrameRendering();
+        RequestNextFrameCore();
+    }
+    /// <summary>
+    /// 控件分离时的共享处理：上下文仍有效，真正删除 GL 对象归还显存，随后按上下文丢失路径失效句柄。
+    /// </summary>
+    private protected void DetachAndReleaseGpu()
+    {
+        if (Scene == null)
+            return;
+
+        // 此刻上下文尚未销毁，可以真正删除 GL 对象以释放显存，而不是仅仅失效句柄。
+        if (!Scene.RenderPipeline.IsDestroyed)
+            Scene.RenderPipeline.ReleaseGpuResources();
+
+        // 清空 gl 引用，使重新挂载时能再次 Initialize；重复失效是无副作用的空操作。
+        Scene.RenderPipeline.HandleContextLost();
+
+        IsContextLost = true;
+        fb = -1;
+
+        Stopwatch.Stop();
+
+        DispatchSceneEvent(OnContextLost);
     }
 
     /// <summary>
@@ -162,14 +183,16 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
         if (!Scene.RenderPipeline.IsDestroyed)
             Scene.RenderPipeline.Destroy();
 
-        // 事件参数仍携带即将销毁的场景引用，先触发再置空。
-        OnSceneDestroyed();
+        var destroyedScene = Scene;
 
         Scene = null;
         fb = -1;
         IsContextLost = false;
 
         Stopwatch.Stop();
+
+        // 事件参数携带已销毁的场景引用，异步派发时不得再读 Scene。
+        DispatchSceneEvent(() => OnSceneDestroyed(destroyedScene));
     }
 
     private RenderSurface renderSurface = new RenderSurface();
@@ -177,24 +200,36 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
     private bool releaseGpuResourcesRequested;
 
     private bool destroySceneRequested;
+
+    /// <summary>
+    /// 计算当前应分配的输出缓冲像素尺寸（逻辑尺寸 × RenderScaling，至少 1×1）。
+    /// </summary>
+    private protected (uint Width, uint Height, float Scale) ComputePixelSize()
+    {
+        uint width = (uint)Bounds.Width;
+        uint height = (uint)Bounds.Height;
+        float scale = 1.0f;
+
+        width = Math.Max(width, 1);
+        height = Math.Max(height, 1);
+        if (this.GetPresentationSource() is { } source)
+        {
+            scale = (float)source.RenderScaling;
+            width = (uint)(Bounds.Width * scale);
+            height = (uint)(Bounds.Height * scale);
+        }
+
+        width = Math.Max(width, 1);
+        height = Math.Max(height, 1);
+
+        return (width, height, scale);
+    }
+
     private void UpdateRenderSurfaceSize()
     {
         if (isSizeChanged == true)
         {
-            var source = this.GetPresentationSource();
-
-            uint width = (uint)Bounds.Width;
-            uint height = (uint)Bounds.Height;
-            float scale = 1.0f;
-
-            width = Math.Max(width, 1);
-            height = Math.Max(height, 1);
-            if (source != null)
-            {
-                scale = (float)source.RenderScaling;
-                width = (uint)(Bounds.Width * scale);
-                height = (uint)(Bounds.Height * scale);
-            }
+            var (width, height, scale) = ComputePixelSize();
 
             renderSurface.Width = width;
             renderSurface.Height = height;
@@ -204,7 +239,13 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
         }
     }
 
-    protected override void OnOpenGlRender(GlInterface gl, int fb)
+    /// <summary>
+    /// 平台无关的单帧驱动：处理挂起的销毁/释放请求，确保场景就绪，更新并渲染一帧。
+    /// 由两个渲染后端在渲染回调（渲染线程）中调用。
+    /// </summary>
+    /// <param name="getProcAddress">当前渲染上下文的 GL 入口点解析委托。</param>
+    /// <param name="frameBufferId">输出帧缓冲句柄（默认帧缓冲为 0）。</param>
+    protected void RenderFrameCore(Func<string, nint> getProcAddress, uint frameBufferId)
     {
         if (destroySceneRequested)
         {
@@ -225,7 +266,7 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
             Scene?.RenderPipeline.ReleaseGpuResources();
         }
 
-        var scene = EnsureScene(gl);
+        EnsureScene(getProcAddress);
 
         var deltaTime = Stopwatch.Elapsed.TotalSeconds;
 
@@ -233,11 +274,13 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
 
         UpdateRenderSurfaceSize();
 
-        if (this.fb != fb)
+        if (this.fb != (int)frameBufferId)
         {
-            this.fb = fb;
-            renderSurface.FrameBufferId = (uint)fb;
+            this.fb = (int)frameBufferId;
+            renderSurface.FrameBufferId = frameBufferId;
         }
+
+        var scene = Scene!;
 
         // Update first: process animation + dirty octree nodes,
         // so Render() culls with up-to-date bounding boxes.
@@ -245,42 +288,31 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
 
         scene.RenderPipeline.Render();
 
-        OnSceneUpdated(deltaTime);
+        DispatchSceneEvent(() => OnSceneUpdated(deltaTime));
 
         if (AutoRequestNextFrameRendering)
         {
             RequestNextFrameRendering();
         }
-
     }
 
-    protected override void OnOpenGlDeinit(GlInterface gl)
-    {
-        base.OnOpenGlDeinit(gl);
+#if !ANGLE_HOST
+    /// <summary>
+    /// 请求再调度一次渲染帧。遮蔽 OpenGlControlBase 同名方法并转发到本后端，
+    /// 保证应用侧在任一平台以相同签名驱动渲染。
+    /// </summary>
+    public new void RequestNextFrameRendering() => RequestNextFrameCore();
+#else
+    /// <summary>
+    /// 请求再调度一次渲染帧（与桌面端 OpenGlControlBase 同名同签名）。
+    /// </summary>
+    public void RequestNextFrameRendering() => RequestNextFrameCore();
+#endif
 
-        if (Scene == null)
-            return;
-
-        // 此刻上下文尚未销毁，可以真正删除 GL 对象以释放显存，而不是仅仅失效句柄。
-        if (!Scene.RenderPipeline.IsDestroyed)
-            Scene.RenderPipeline.ReleaseGpuResources();
-
-        // 清空 gl 引用，使重新挂载时能再次 Initialize；重复失效是无副作用的空操作。
-        Scene.RenderPipeline.HandleContextLost();
-
-        IsContextLost = true;
-        fb = -1;
-
-        Stopwatch.Stop();
-
-        OnContextLost();
-    }
-
-    protected abstract void OnSceneInitialized();
-
-    protected abstract void OnSceneDestroyed();
-
-    protected abstract void OnSceneUpdated(double deltaTime);
+    /// <summary>
+    /// 各平台后端把"再来一帧"的意图翻译成自己的调度机制。
+    /// </summary>
+    partial void RequestNextFrameCore();
 
     /// <summary>
     /// 当 GPU 句柄全部失效时调用：上下文丢失或控件从视觉树分离均会触发。此时不能执行任何 GL 调用；
@@ -297,6 +329,18 @@ public abstract class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlCo
     protected virtual void OnContextRestored()
     {
     }
+
+    /// <summary>
+    /// 各平台后端把场景事件翻译成自己的线程语义：桌面端内联触发；
+    /// iOS 宿主帧回调在渲染线程，事件必须切回 UI 线程，页面处理器才能安全访问控件。
+    /// </summary>
+    partial void DispatchSceneEvent(Action callback);
+
+    protected abstract void OnSceneInitialized();
+
+    protected abstract void OnSceneDestroyed(Scene scene);
+
+    protected abstract void OnSceneUpdated(double deltaTime);
 
     /// <summary>
     /// 向场景中添加指定节点。

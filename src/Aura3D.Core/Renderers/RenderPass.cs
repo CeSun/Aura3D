@@ -207,6 +207,9 @@ public partial class RenderPass
         if (primitive == GLEnum.Points)
         {
             gl.Enable(EnableCap.ProgramPointSize);
+            // ANGLE/ES 上下文无此桌面枚举（GL_INVALID_ENUM）；ES 的 gl_PointSize 无需使能。
+            // 立即吞掉该错误，避免污染后续 glGetError 队列。
+            gl.GetError();
         }
         if (mesh.Geometry.IndicesCount > 0)
             gl.DrawElements(primitive, (uint)mesh.Geometry.IndicesCount, GLEnum.UnsignedInt, (void*)0);
@@ -230,6 +233,9 @@ public partial class RenderPass
         if (primitive == GLEnum.Points)
         {
             gl.Enable(EnableCap.ProgramPointSize);
+            // ANGLE/ES 上下文无此桌面枚举（GL_INVALID_ENUM）；ES 的 gl_PointSize 无需使能。
+            // 立即吞掉该错误，避免污染后续 glGetError 队列。
+            gl.GetError();
         }
         if (instancedMesh.IndicesCount > 0)
             gl.DrawElementsInstanced(primitive, (uint)instancedMesh.IndicesCount, GLEnum.UnsignedInt, (void*)0, (uint)instancedMesh.InstanceCount);

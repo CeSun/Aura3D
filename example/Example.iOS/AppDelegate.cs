@@ -1,7 +1,10 @@
+using System;
 using Avalonia;
-using Avalonia.Controls;
+using Avalonia.Threading;
 using Avalonia.iOS;
-using Avalonia.Media;
+using CommunityToolkit.Mvvm.Messaging;
+using Example;
+using Example.ViewModels;
 using Foundation;
 using UIKit;
 
@@ -17,26 +20,49 @@ namespace Example.iOS
     {
         protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
         {
-            // T4 A/B：true = ANGLE 宿主（默认 Metal 合成模式）；false = Aura3DView 基线（强制 OpenGL）。
-            const bool useAngleHost = true;
-            const bool useRealMainView = false;
-
-            if (!useRealMainView)
-            {
-                Example.App.RootViewFactory = useAngleHost
-                    ? AngleHostPage.BuildAnglePage
-                    : AngleHostPage.BuildGlBaselinePage;
-            }
-
-            if (useAngleHost)
-            {
-                return base.CustomizeAppBuilder(builder)
-                    .WithInterFont();
-            }
-
+            // iOS 上 Aura3DView 走 Aura3D.Avalonia 内置的 ANGLE(Metal) 后端，
+            // 应用侧无需任何平台特判；宿主 App 渲染器不再被强制为 OpenGL。
             return base.CustomizeAppBuilder(builder)
-                .With(new iOSPlatformOptions { RenderingMode = [iOSRenderingMode.OpenGl] })
                 .WithInterFont();
+        }
+
+        private bool _navScheduled;
+
+        public AppDelegate()
+        {
+            // 验证辅助（仅存在于本工程）：AURA_PAGE=<菜单标题片段> 启动时直接跳转到该页，
+            // 用于模拟器截图回归。.NET 10 统一绑定下生命周期方法不可覆写，改用通知观察。
+            UIApplication.Notifications.ObserveDidBecomeActive((_, _) =>
+            {
+                if (_navScheduled)
+                    return;
+                var target = NSProcessInfo.ProcessInfo.Environment?["AURA_PAGE"]?.ToString();
+                if (string.IsNullOrEmpty(target))
+                    return;
+                _navScheduled = true;
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
+                    timer.Tick += (_, _) =>
+                    {
+                        timer.Stop();
+                        if (global::Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes
+                                .ISingleViewApplicationLifetime { MainView: { DataContext: MainViewViewModel vm } })
+                        {
+                            foreach (var menu in vm.Menus)
+                            {
+                                if (menu.Title!.Contains(target, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    WeakReferenceMessenger.Default.Send(menu, "JumpTo");
+                                    break;
+                                }
+                            }
+                        }
+                    };
+                    timer.Start();
+                });
+            });
         }
     }
 }

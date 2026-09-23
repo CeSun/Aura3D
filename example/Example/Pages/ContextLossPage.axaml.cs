@@ -17,12 +17,11 @@ using System.Threading.Tasks;
 namespace Example.Pages;
 
 /// <summary>
-/// 测试用视图：把受保护的 <see cref="Aura3DViewBase.OnOpenGlLost"/> 暴露出来，
-/// 以便在不真正丢失上下文的情况下驱动与真实丢失相同的处理路径。
+/// 测试用视图：<see cref="Aura3DViewBase.SimulateContextLost"/> 已在控件基类的全部平台后端上公开，
+/// 该子类保留仅作类型标识用。
 /// </summary>
 public class ContextLossTestView : Aura3DView
 {
-    public void SimulateContextLost() => OnOpenGlLost();
 }
 
 public partial class ContextLossPage : UserControl

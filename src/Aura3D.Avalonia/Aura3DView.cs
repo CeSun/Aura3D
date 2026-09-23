@@ -83,11 +83,6 @@ public class Aura3DView : Aura3DViewBase
         remove => RemoveHandler(ContextRestoredEvent, value);
     }
 
-    protected override void OnOpenGlInit(GlInterface gl)
-    {
-        base.OnOpenGlInit(gl);
-    }
-
     protected override void OnContextLost()
     {
         RaiseEvent(new ContextLostRoutedEventArgs(ContextLostEvent, Scene!));
@@ -105,9 +100,9 @@ public class Aura3DView : Aura3DViewBase
         RaiseEvent(args);
     }
 
-    protected override void OnSceneDestroyed()
+    protected override void OnSceneDestroyed(Scene scene)
     {
-        RoutedEventArgs args = new DestroyedRoutedEventArgs(SceneDestroyedEvent, Scene!);
+        RoutedEventArgs args = new DestroyedRoutedEventArgs(SceneDestroyedEvent, scene);
         RaiseEvent(args);
     }
 

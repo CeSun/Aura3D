@@ -20,8 +20,6 @@ namespace Example
     {
         public static Model? model;
 
-        /// <summary>临时钩子：平台工程（iOS 探针）替换根视图，验证完删除。</summary>
-        public static Func<Control>? RootViewFactory;
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
@@ -86,7 +84,7 @@ namespace Example
             }
             else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
             {
-                singleViewPlatform.MainView = RootViewFactory?.Invoke() ?? new MainView
+                singleViewPlatform.MainView = new MainView
                 {
                     DataContext = new MainViewViewModel()
                 };

@@ -4,10 +4,23 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <!-- iOS 走 ANGLE(Metal) + Skia lease 后端，需要平台 TFM 以引用 Metal 绑定 -->
+    <TargetFrameworks>net8.0;net10.0;net10.0-ios26.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-ios26.0'">
+    <DefineConstants>$(DefineConstants);ANGLE_HOST</DefineConstants>
+    <!-- lease 合成使用 Avalonia 标注为 Unstable 的 ISkiaSharpApiLeaseFeature -->
+    <NoWarn>$(NoWarn);AVA1700</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios26.0'">
+    <PackageReference Include="Avalonia.Skia" />
   </ItemGroup>
 
   <ItemGroup>

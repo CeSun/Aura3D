@@ -171,6 +171,17 @@ R3 与 R2 的取舍要点：两者都不动 Core，但 R3 继续绑在 Apple 已
 
 F2 的通路目前只是探针，正式化需要：在 `Aura3D.Avalonia` 里提供一个"外部纹理宿主件"，取代在 Apple 上走不通的 `OpenGlControlBase` 互操作路；它应当只依赖"渲染侧给一张与合成器同 API 的纹理句柄 + 尺寸 + 朝向"，并带单元测试。R1/R2/R3 三条路线最终都要接这个件，所以先做不会错。注意：给 `Aura3D.Avalonia` 增加对 `Avalonia.Skia` 的依赖要有意识地决策（目前探针放在 `example/Example.iOS` 就是为了不顺手把 Skia 依赖塞进库）。
 
+   > 执行证据（2026-09-23，**通过：宿主件已正式化进 `Aura3D.Avalonia`，共享 Example 无任何 iOS 特判**）：
+   >
+   > **实现结构**：`Aura3D.Avalonia.csproj` 多 TFM `net8.0;net10.0;net10.0-ios26.0`，ios TFM 定义 `ANGLE_HOST` 并直接包引用 `Avalonia.Skia`（决策：经批准采用直接引用，不建独立 iOS 程序集、不用反射软依赖）。`Aura3DViewBase` 拆为共享主体 partial（`RenderFrameCore` 单套主流程 + `ComputePixelSize`/`EnsureScene`/`ContextLostCore`/`DetachAndReleaseGpu`）+ 双后端 partial：`Aura3DViewBase.OpenGl.cs`（桌面/Android/Browser，基类 `OpenGlControlBase`）与 `Aura3DViewBase.Angle.cs`（iOS，基类 `Control`，ANGLE + lease 合成）。ANGLE 桥（`Angle/AngleGlesSession.cs`、`Angle/AngleNative.cs`）入库；应用侧仅需在 csproj 提供 ANGLE framework 的 `NativeReference`。两端 `Aura3DView` 签名一致（`RequestNextFrameRendering`/`SimulateContextLost` 直接声明在 `Aura3DViewBase` 上，规避共享 Example.dll 按 net10.0 资产编译后在 iOS 上的 callvirt 声明类型错配）。Core 仅一处无害改动：`RenderPass.cs` 两处 `EnableCap.ProgramPointSize` 后吞掉 ANGLE 不支持该枚举产生的 0x500。
+   >
+   > **关键发现（线程模型差异，桌面没有的坑）**：iOS 上 Avalonia 合成器的自定义绘制回调运行在**渲染线程**（≠ UI 线程），而桌面窗口模式的 GL 渲染回调实际在 UI 线程。示例页处理器普遍在 `SceneUpdated` 里直接读写控件（如 PointCloud 页 `infoText.Text`/`shapeComboBox.SelectedIndex`），在 iOS 触发 `AvaloniaObject.VerifyAccess` 异常（"The calling thread cannot access this object…"）致视口空白。修复：共享主体新增 `partial void DispatchSceneEvent(Action)` 缝——桌面内联（行为与拆分前完全一致），iOS 切回 UI 线程触发 `SceneInitialized/Updated/Destroyed/ContextLost/ContextRestored`；`ApplyDestroyScene` 改为携带场景参数触发事件以兼容异步派发。分离释放同理延迟：`OnDetachedFromVisualTree` 只置 `_detachReleasePending`，重挂载后第一帧在渲染线程先 `DetachAndReleaseGpu` 再走 ContextRestored。
+   >
+   > **验证**（iPhone 17 模拟器 / iOS 27.0，真实 `MainView`（Ursa 导航）+ 真实示例页，无探针页）：首页 + Base Geometries 渲染正常（`/tmp/t6-home.png`）；Point Cloud 20000 点彩色点云正常（修复线程派发后，`/tmp/t6-points3.png`）；日志 `[aura3d-angle] egl 1.5 ok … ANGLE Metal Renderer … output 439x2016 fbo=1`。CSM 与 GL Context Loss 页在 iPhone **竖屏**下视口列为 0 宽（固定侧栏 220/340pt > 内容区宽），宿主从未收到帧请求——示例页布局限制而非宿主缺陷（其 PBR/CSM 渲染路径已在 T4d 探针宿主验证）；竖屏适配列为后续项。`dotnet test` 89/0；库 3 个 TFM 与 Example.Desktop/Example.iOS 编译 0 错误。
+   >
+   > **遗留**：① 每帧 `glFinish` 同步，应升级 `EGL_ANGLE_metal_shared_event_sync`；② 宿主生命周期单元测试未建（需 headless 测试宿主），列为后续项；③ 手机竖屏下固定侧栏示例页的布局适配。
+
+
 ## 4. 探针代码与清理
 
 探针在提交 4a10035（分支 `feature/metal-lease-presentation`）里，共三处改动，验证结束后按需删除或转正：
@@ -181,6 +192,8 @@ F2 的通路目前只是探针，正式化需要：在 `Aura3D.Avalonia` 里提�
 
 删除清单：删 `MetalLeaseProbe.cs`、删 `AngleMetalLeaseProbe.cs`（T3 探针）、还原 `AppDelegate.cs` 的 `CustomizeAppBuilder` 与 `RootViewFactory` 注入、删 `Example.iOS.csproj` 里指向 `$(AngleIosOutDir)` 的 `NativeReference` 段、删掉 `App.RootViewFactory` 及其在 `OnFrameworkInitializationCompleted` 里的使用。
 
+> 清单执行状态（2026-09-23，T6）：`MetalLeaseProbe.cs`、`AngleMetalLeaseProbe.cs`、`AngleSceneHost.cs`、`AngleHostPage.cs` 已删；`App.axaml.cs` 的 `RootViewFactory` 已删，`MainView` 恢复直建；`AppDelegate.cs` 的 `CustomizeAppBuilder` 已还原为无平台特判（不再强制 `iOSRenderingMode.OpenGl`），仅保留一个工程内验证辅助（`AURA_PAGE` 环境变量经 `JumpTo` 消息导航，不触共享工程）。**例外**：`Example.iOS.csproj` 的 ANGLE `NativeReference` 段**有意保留**——宿主件已入库但 ANGLE framework 仍由应用提供（`DllImport("__Internal")` 经主可执行文件解析），这是正式化的设计而非探针残留。
+
 ## 5. 执行结果（待填）
 
 | 任务 | 结论 | 关键证据 | 日期 |
@@ -190,4 +203,4 @@ F2 的通路目前只是探针，正式化需要：在 `Aura3D.Avalonia` 里提�
 | T3 | **通过**：MTLTexture → `eglCreateImageKHR(EGL_METAL_TEXTURE_ANGLE)` → ANGLE Metal 后端渲染（洋红+移动绿带）→ 同纹理经 Skia lease 上屏，900 帧 failed=0 ⇒ R2 技术核心成立。注意：display 需 `eglGetPlatformDisplayEXT` 显式选 Metal 后端；AOT 下入口点用 `DllImport("__Internal")` 直调并需防与 Apple OpenGLES 的符号混用 | `example/Example.iOS/AngleMetalLeaseProbe.cs`，`/tmp/angle7.png`、`/tmp/angle8.png`，T3 节执行证据 | 2026-09-23 |
 | T4 | **通过**（含 T4a-T4d 全部判定项）。CSM 原判不通过，根因：本 ANGLE Metal 构建（ES 3.0）不提供 `GL_EXT_float_blend`，混合使能绘制到 Rgba32F RT 整次 draw 被 `GL_INVALID_OPERATION` 丢弃；经批准将 5 处管线 HDR RT 注册 `Rgba32f`→`Rgba16f`（`PBRDeferredPipeline.cs:25/29/33`、`PBRForwardPipeline.cs:21/25`）后复验通过：光照/天空/阴影落盘（保 >1.0 HDR 值）、阴影 A/B 差异 13.05%、FXAA A/B 生效、CopyPass 间接证实。Base/PointCloud(F9) 通过。**冷启动 F13**：CSM 首帧冷/热启动均约 5.6-5.9s（无 MSL 磁盘缓存，每次启动重编译）；Base 0.7s、Points 0.4s。**全量回归**：10 个宿主场景（含 Cel/Forward/粒子/实例化/7 图元/glb 蒙皮）全部正常；未复刻页及原因见 T4 执行证据（缺口：HISM/InstancedMeshGroup）。附带发现：示例 CSM 页相机朝向与 `ForwardVector=(0,0,-1)` 约定相反致球阵被剔除（桌面同样成立，宿主探针页已改 yaw=155）。`dotnet test` 89/0 | `/tmp/csm_fix2.png`、`/tmp/ab_shadow.bmp` vs `/tmp/ab_nosh.bmp`、`/tmp/reg_{Cel,Forward,Particles,Instancing,Primitives,Anim}.png`，T4 节三段执行证据 | 2026-09-23 |
 | T5 | | | |
-| T6 | | | |
+| T6 | **通过**：外部纹理宿主件正式化进 `Aura3D.Avalonia`（多 TFM + `ANGLE_HOST` 双 partial，`Avalonia.Skia` 直接包引用已获批准），主体流程单套，共享 Example 无 iOS 特判；修复 iOS 渲染线程/UI 线程差异（`DispatchSceneEvent` 缝 + 分离释放延迟到渲染线程）。真实 MainView 下 Base Geometries/Point Cloud 模拟器渲染通过；CSM/ContextLoss 页竖屏视口 0 宽为示例页布局限制（管线路径已在 T4d 验证）。`dotnet test` 89/0。遗留：shared_event_sync、生命周期单测、竖屏适配 | T6 节执行证据；`/tmp/t6-home.png`、`/tmp/t6-points3.png`；`src/Aura3D.Avalonia/{Aura3DViewBase.Angle.cs,Angle/AngleGlesSession.cs}` | 2026-09-23 |
