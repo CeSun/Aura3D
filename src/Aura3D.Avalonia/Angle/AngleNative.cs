@@ -41,6 +41,10 @@ internal static class AngleNative
 
     [DllImport(Lib)] public static extern bool eglDestroyImageKHR(IntPtr dpy, IntPtr image);
 
+    [DllImport(Lib)] public static extern bool eglDestroyContext(IntPtr dpy, IntPtr ctx);
+
+    [DllImport(Lib)] public static extern bool eglDestroySurface(IntPtr dpy, IntPtr surface);
+
     // ---- GLES（仅宿主自身使用的子集；管线内部走 Silk.NET + GetProcAddress）----
     [DllImport(Lib)] public static extern IntPtr glGetString(int name);
 

@@ -20,7 +20,6 @@ public abstract partial class Aura3DViewBase : Control
     private AngleGlesSession? _angleSession;
     private AngleLeaseOperation? _leaseOperation;
     private DispatcherTimer? _frameTimer;
-    private bool _detachReleasePending;
     private bool _zeroBoundsTraced;
 
     partial void RequestNextFrameCore()
@@ -64,15 +63,19 @@ public abstract partial class Aura3DViewBase : Control
     {
         base.OnAttachedToVisualTree(e);
 
-        _frameTimer ??= new DispatcherTimer(DispatcherPriority.Render)
+        // 定时器与 Tick 处理只建一次：重挂载时若再次 += 会让每帧重复请求多帧。
+        if (_frameTimer is null)
         {
-            Interval = TimeSpan.FromMilliseconds(16),
-        };
-        _frameTimer.Tick += (_, _) =>
-        {
-            if (AutoRequestNextFrameRendering)
-                InvalidateVisual();
-        };
+            _frameTimer = new DispatcherTimer(DispatcherPriority.Render)
+            {
+                Interval = TimeSpan.FromMilliseconds(16),
+            };
+            _frameTimer.Tick += (_, _) =>
+            {
+                if (AutoRequestNextFrameRendering)
+                    InvalidateVisual();
+            };
+        }
         _frameTimer.Start();
 
         InvalidateVisual();
@@ -84,11 +87,17 @@ public abstract partial class Aura3DViewBase : Control
 
         _frameTimer?.Stop();
 
-        // 与桌面端 OnOpenGlDeinit 语义对齐：上下文仍有效时真正释放 GPU 对象归还显存，
-        // 场景与节点保留，重新挂载后按 ContextRestored 路径重建。
-        // EGL 上下文归属渲染线程，分离（UI 线程）不能直接执行 GL，标记后在下一帧（重挂载时）
-        // 由渲染线程先释放旧资源再走重建路径。
-        _detachReleasePending = true;
+        // 与桌面端 OnOpenGlDeinit 语义一致：分离即销毁上下文，真正删除 GL 对象归还显存。
+        // 上下文归属渲染线程，但每帧结束已解除 current，故此处可在 UI 线程接管；
+        // Session.Release 与帧渲染互斥，会等待进行中的那一帧。
+        // 场景与节点保留，重新挂载后走 ContextRestored 路径在新上下文上重建。
+        if (_angleSession is { } session)
+        {
+            _angleSession = null;
+
+            if (!session.Release(DetachAndReleaseGpu))
+                ContextLostCore();
+        }
     }
 
     internal void RenderAngleFrame(ImmediateDrawingContext drawingContext)
@@ -105,33 +114,31 @@ public abstract partial class Aura3DViewBase : Control
         }
         _zeroBoundsTraced = false;
 
+        _angleSession ??= new AngleGlesSession();
+        var session = _angleSession;
+
         try
         {
-            _angleSession ??= new AngleGlesSession();
-
-            if (_detachReleasePending)
-            {
-                _detachReleasePending = false;
-                if (_angleSession is { IsFailed: false } && _angleSession.TryMakeCurrent())
-                    DetachAndReleaseGpu();
-            }
-
             var (width, height, _) = ComputePixelSize();
 
-            // EnsureOutput 会把上下文 make-current 并把输出 FBO 绑定为当前，
-            // 首帧的场景/管线初始化（RenderFrameCore → EnsureScene）依赖该前提。
-            if (!_angleSession.EnsureOutput(width, height))
-                return;
+            // 整段（含合成）持锁：合成读的是输出 MTLTexture，须与 UI 线程上的 Release 销毁互斥。
+            lock (session.SyncRoot)
+            {
+                // EnsureOutput 会把上下文 make-current 并把输出 FBO 绑定为当前，
+                // 首帧的场景/管线初始化（RenderFrameCore → EnsureScene）依赖该前提。
+                if (!session.EnsureOutput(width, height))
+                    return;
 
-            RenderFrameCore(AngleGlesSession.GetProcAddress, _angleSession.OutputFrameBufferId);
+                RenderFrameCore(AngleGlesSession.GetProcAddress, session.OutputFrameBufferId);
 
-            _angleSession.FinishFrame();
+                session.FinishFrame();
 
-            _angleSession.Compose(drawingContext, Bounds.Width, Bounds.Height);
+                session.Compose(drawingContext, Bounds.Width, Bounds.Height);
+            }
         }
         catch (Exception ex)
         {
-            (_angleSession ??= new AngleGlesSession()).FailFromOwner(ex.ToString());
+            session.FailFromOwner(ex.ToString());
         }
     }
 

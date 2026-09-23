@@ -60,6 +60,12 @@ internal sealed class AngleGlesSession
     private uint _pixelH;
     private bool _ready;
 
+    /// <summary>
+    /// 串行化整段 GLES 帧与 <see cref="Release"/>。EGL 上下文同一时刻只能被一个线程持有，
+    /// 而回收发生在 UI 线程，宿主必须把「EnsureOutput → 渲染 → FinishFrame → Compose」整段放在该锁内。
+    /// </summary>
+    public object SyncRoot { get; } = new();
+
     /// <summary>初始化或渲染出现不可恢复错误。失败后宿主停止驱动本会话。</summary>
     public bool IsFailed { get; private set; }
 
@@ -203,9 +209,15 @@ internal sealed class AngleGlesSession
         return true;
     }
 
-    /// <summary>帧结束：glFinish 保证纹理内容就绪（正式同步机制待 shared event 升级），并上报残留 GL 错误。</summary>
+    /// <summary>
+    /// 帧结束：glFinish 保证纹理内容就绪（正式同步机制待 shared event 升级），上报残留 GL 错误，
+    /// 并把上下文从当前线程解除。解除后上下文不属于任何线程，分离时的 UI 线程回收才能合法接管它。
+    /// </summary>
     public void FinishFrame()
     {
+        if (IsFailed || !_ready)
+            return;
+
         AngleNative.glFinish();
 
         var count = 0;
@@ -221,9 +233,11 @@ internal sealed class AngleGlesSession
 
         if (count > 0)
             Trace($"glError 0x{first:X} x{count}");
+
+        AngleNative.eglMakeCurrent(_display, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
     }
 
-    /// <summary>把输出纹理经 lease 合成到 Skia 画布（渲染线程调用）。</summary>
+    /// <summary>把输出纹理经 lease 合成到 Skia 画布（渲染线程调用，须在 <see cref="SyncRoot"/> 内）。</summary>
     public void Compose(ImmediateDrawingContext drawingContext,
         double logicalWidth, double logicalHeight)
     {
@@ -263,27 +277,64 @@ internal sealed class AngleGlesSession
         canvas.Restore();
     }
 
-    public bool TryMakeCurrent() =>
-        _ready && !IsFailed && AngleNative.eglMakeCurrent(_display, _surface, _surface, _context);
-
     /// <summary>宿主捕获到渲染异常时调用，使会话进入不可恢复状态，避免每帧重复抛出。</summary>
     public void FailFromOwner(string message) => Fail("owner: " + message);
 
-    /// <summary>会话脱离使用后可显式销毁原生资源。</summary>
-    public void Dispose()
+    /// <summary>
+    /// 销毁会话的全部 GLES/EGL/Metal 对象，幂等。因为帧间已解除 current，调用线程（可以是 UI 线程）
+    /// 可以合法接管上下文：先在该上下文上执行 <paramref name="releaseGpuResources"/> 逐个归还管线的
+    /// GL 对象以立即释放显存，再删除宿主自身的 FBO/纹理，最后销毁 image/surface/context。
+    /// 与帧渲染互斥，因此会等待进行中的那一帧结束。
+    /// </summary>
+    /// <returns>上下文是否被成功接管。为 false 时 <paramref name="releaseGpuResources"/> 未执行，
+    /// 调用方须按上下文丢失路径失效句柄。</returns>
+    public bool Release(Action? releaseGpuResources = null)
     {
-        if (!_ready)
-            return;
+        lock (SyncRoot)
+        {
+            if (_display == IntPtr.Zero)
+                return false;
 
-        AngleNative.eglMakeCurrent(_display, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+            var taken = _ready && AngleNative.eglMakeCurrent(_display, _surface, _surface, _context);
 
-        if (_fbo != 0)
-            AngleNative.glDeleteFramebuffers(1, ref _fbo);
-        if (_glTexture != 0)
-            AngleNative.glDeleteTextures(1, ref _glTexture);
-        if (_eglImage != IntPtr.Zero)
-            AngleNative.eglDestroyImageKHR(_display, _eglImage);
-        _texture?.Dispose();
+            if (taken)
+            {
+                try
+                {
+                    releaseGpuResources?.Invoke();
+                }
+                catch (Exception ex)
+                {
+                    Trace("release failed: " + ex);
+                }
+
+                if (_fbo != 0)
+                    AngleNative.glDeleteFramebuffers(1, ref _fbo);
+                if (_glTexture != 0)
+                    AngleNative.glDeleteTextures(1, ref _glTexture);
+
+                AngleNative.eglMakeCurrent(_display, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+            }
+
+            // 接管失败时（会话已失败或 EGL 报错）跳过逐个删除：GL 对象随 context 销毁一并释放。
+            if (_eglImage != IntPtr.Zero)
+                AngleNative.eglDestroyImageKHR(_display, _eglImage);
+            AngleNative.eglDestroySurface(_display, _surface);
+            AngleNative.eglDestroyContext(_display, _context);
+            // 有意不调 eglTerminate：ANGLE 缓存 platform display，同进程内其他会话可能仍依赖它。
+
+            _texture?.Dispose();
+
+            _display = _context = _surface = _config = _eglImage = IntPtr.Zero;
+            _texture = null;
+            _fbo = 0;
+            _glTexture = 0;
+            _pixelW = 0;
+            _pixelH = 0;
+            _ready = false;
+
+            return taken;
+        }
     }
 
     private bool Fail(string message)
