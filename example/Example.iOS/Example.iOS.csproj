@@ -4,6 +4,7 @@
    <TargetFramework>net10.0-ios27.0</TargetFramework>
    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
    <Nullable>enable</Nullable>
+   <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
    <!-- MetalLeaseProbe 使用了 iOS 27 SDK 中的预览 API -->
    <NoWarn>$(NoWarn);XCODE_27_0_PREVIEW</NoWarn>
 

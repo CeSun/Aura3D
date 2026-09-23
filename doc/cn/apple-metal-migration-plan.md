@@ -126,6 +126,20 @@ F12 说只能从 Chromium checkout 构建。这一步的目的就是把这句话
 
 判定标准：以上四项全部有明确记录，且没有阻断性错图。
 
+   > 执行证据（2026-09-23，进行中；**CSM 项判定不通过，按约定停下报告**）：
+   >
+   > - **Base Geometries**：通过。ANGLE Metal 下几何/纹理/PBR GBuffer 内容正确（真帧回读 baseColor=(220,220,220,255)、深度 0.987）。
+   > - **PointCloud（F9）**：通过。点可见、尺寸正常；`GL_ALIASED_POINT_SIZE_RANGE=[1,511]`。附带发现：`RenderPass.cs:209` 无条件 `glEnable(GL_PROGRAM_POINT_SIZE)`（桌面 GL 扩展名）在 ANGLE 下每帧刷 0x500，不影响结果，属 Core 清理项。
+   > - **CSM：不通过**。根因已定位，且与 CSM/`Texture2DArray`/阴影本身无关（NOSHADOW 仍全黑）——**ANGLE Metal 后端的 ES 3.0 上下文不提供 `GL_EXT_float_blend`，按 ES 规范"使能混合绘制到 32 位浮点 RT"即 `GL_INVALID_OPERATION`，整次 draw 被静默丢弃**。PBR 延迟管线三张主 RT（BaseRenderTarget/BackgroundRenderTarget/GammaOutput，`PBRDeferredPipeline.cs:25/29/33` 硬编码 `Rgba32f`）上的光照/背景/Copy 累积全部开着混合 ⇒ IBLAmbient、Directional、Background、Copy 四个全屏 quad 无一落盘。证据链（临时宿主探针，`example/Example.iOS/AngleSceneHost.cs`，`AURA_DEBUG_DRIVE` / `AURA_DEBUG_REAL` / `AURA_ES32` 开关，入 §4 删除清单）：
+   >   1. 真帧逐 pass 驱动回读：IBL/Dir/Background/Copy 的 `Render()` 之后恰好各 1 个 0x502，BaseRT 保持 (0,0,0,0)、无像素写入；该错误在正常路径不可见，因为 Core 多处（如 `TranslucentIBLAmbientPass.cs:51`）`var error = gl.GetError();` 先行吞掉。
+   >   2. 宿主内隔离复现（同一 IBL 片元 shader 经 reflection 取内嵌资源 + 同款 defines + 同 7 sampler 绑定 + InternalQuad 复刻）：blend 关闭 → 正常出像素 (0.550,0.779,1.032,1.000)；ONE/ONE 或 SRC_ALPHA/ONE_MINUS 到 **RGBA32F → 0x502 无像素**；到 **RGBA8 → 正常**（byte=(140,199,255,255)）；到 **RGBA16F → 正常且保 HDR 值**（0.550,0.778,1.032,1.000）。
+   >   3. `GL_EXTENSIONS`（95 项）无 `GL_EXT_float_blend`（blend/float 相关只有 `GL_EXT_blend_func_extended`/`blend_minmax`/`color_buffer_float`/`color_buffer_half_float`/`OES_texture_float`）；向 ANGLE 请求 ES 3.1/3.2 上下文（`EGL_CONTEXT_MINOR_VERSION=1/2`）→ `eglCreateContext` 报 `EGL_BAD_MATCH(0x3009)`，该构建只到 ES 3.0。
+   >   4. 此前"BackgroundRT 天空全黑"疑点为同因连带（blend 状态跨 pass 残留 + 32F RT），非 HDR cubemap 独立问题；待 RT 格式决策后复核。
+   >   - 修复方向（超出本验证任务范围，待决策）：a) 管线 HDR RT 由 `Rgba32f` 改 `Rgba16f`（探针实证 16F 混合可行、保留 >1.0 值，代价是位深）；b) 开 ANGLE 构建能力（ES 3.1+ / EXT_float_blend）。
+   > - **FXAA / CopyPass**：CopyPass 受同因阻断（blend→32F 目标）；Fxaa 输出到相机目标（RGBA8）的 draw 无错。整页效果待 HDR RT 决策后回归。
+   > - **冷启动（F13）**：PBR 延迟管线冷启动到首帧约 4.2s（模拟器，ANGLE 首次编译 MSL、无二进制缓存），正式数字在 T4d 记录。
+   > - **全量回归**：未做；预计所有走 `PBRDeferredPipeline`（HDR RT）的页都会命中同一阻断，非 HDR（BlinnPhong/NoLight）页需确认是否也开混合到浮点 RT。
+
 ### T5 R2 判死后的替代验证（只在 T2 或 T3 不通过时做）
 
 先做 R3 的纸面与最小实验（不需要 ANGLE）：
@@ -158,6 +172,6 @@ F2 的通路目前只是探针，正式化需要：在 `Aura3D.Avalonia` 里提�
 | T1 | 通过。lease backend=Metal；TopLeft 朝向正确（正式实现用 `GRSurfaceOrigin.TopLeft`）；红蓝未对调（Rgba8888 正确）；failed 恒为 0；5 分钟长跑 +5.4MB 判无泄漏 | iPhone 17 模拟器 / iOS 27.0 (24A434)，`/tmp/probe1.png`、`/tmp/probe_final.png`，T1 节执行证据 | 2026-09-23 |
 | T2 | **通过**：standalone ANGLE checkout 可为 iOS 模拟器 arm64 构建含 Metal 后端产物，仅需 `enable_rust=false`，未改上游源码 ⇒ R2 存活（F12 证伪）。首次尝试因 `*.googlesource.com` 直连不可达受阻，后经本地代理完成 | `~/angle_ios/out/ios/libEGL.framework`(140K/115 导出) + `libGLESv2.framework`(12M/370 Mtl 符号)，T2 节执行证据 | 2026-09-23 |
 | T3 | **通过**：MTLTexture → `eglCreateImageKHR(EGL_METAL_TEXTURE_ANGLE)` → ANGLE Metal 后端渲染（洋红+移动绿带）→ 同纹理经 Skia lease 上屏，900 帧 failed=0 ⇒ R2 技术核心成立。注意：display 需 `eglGetPlatformDisplayEXT` 显式选 Metal 后端；AOT 下入口点用 `DllImport("__Internal")` 直调并需防与 Apple OpenGLES 的符号混用 | `example/Example.iOS/AngleMetalLeaseProbe.cs`，`/tmp/angle7.png`、`/tmp/angle8.png`，T3 节执行证据 | 2026-09-23 |
-| T4 | | | |
+| T4 | **进行中；CSM 项不通过**（已停下报告）。根因：本 ANGLE Metal 构建（ES 3.0）不提供 `GL_EXT_float_blend`，混合使能时绘制到 Rgba32F RT 整次 draw 被 `GL_INVALID_OPERATION` 丢弃 ⇒ PBR 延迟管线全部光照/背景/Copy 累积 pass 静默失效。Base/PointCloud(F9) 项通过（pointSizeRange=[1,511]）。修复方向：HDR RT 改 Rgba16f（探针实证可行）或开 ANGLE ES3.1/float-blend 能力 | `example/Example.iOS/AngleSceneHost.cs` 真帧逐 pass 驱动 + 变体矩阵：blend+32F⇒0x502、blend+RGBA8⇒OK、blend+RGBA16F⇒OK 且保 HDR 值；`EGL_CONTEXT_MINOR_VERSION=1/2` ⇒ `eglCreateContext` 0x3009。T4 节执行证据 | 2026-09-23 |
 | T5 | | | |
 | T6 | | | |

@@ -17,10 +17,25 @@ namespace Example.iOS
     {
         protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
         {
-            // 探针：走平台默认（Metal）渲染模式；T3 阶段验证 ANGLE 渲染的 MTLTexture 经 lease 上屏。
-            Example.App.RootViewFactory = () => new AngleMetalLeaseProbe().BuildPage();
+            // T4 A/B：true = ANGLE 宿主（默认 Metal 合成模式）；false = Aura3DView 基线（强制 OpenGL）。
+            const bool useAngleHost = true;
+            const bool useRealMainView = false;
+
+            if (!useRealMainView)
+            {
+                Example.App.RootViewFactory = useAngleHost
+                    ? AngleHostPage.BuildAnglePage
+                    : AngleHostPage.BuildGlBaselinePage;
+            }
+
+            if (useAngleHost)
+            {
+                return base.CustomizeAppBuilder(builder)
+                    .WithInterFont();
+            }
 
             return base.CustomizeAppBuilder(builder)
+                .With(new iOSPlatformOptions { RenderingMode = [iOSRenderingMode.OpenGl] })
                 .WithInterFont();
         }
     }
