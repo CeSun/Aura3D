@@ -86,7 +86,7 @@ F12 说只能从 Chromium checkout 构建。这一步的目的就是把这句话
 
 判定标准：拿到含 Metal 后端的 iOS 产物 ⇒ R2 存活，进 T3。以下任一情况判不通过：无法在合理时间内得到最小 checkout；必须魔改 ANGLE 源码才能编过；产物里没有 Metal 符号。判不通过就**停止**，把结论写清，转 T5。
 
-> 执行证据（2026-09-23，受阻未判定）：`git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git` 连接 75s 超时；`curl https://chromium.googlesource.com` 无响应；GitHub 侧 `chromium/depot_tools`、`chromium-mirrors/{depot_tools,angle,build}`、`chromium/build` 均不可达（无镜像）；可达项仅 `github.com/google/angle` 与 `storage.googleapis.com`。结论：本机网络环境下无法开始 T2 步骤 1（gclient sync 的 DEPS 全部指向 googlesource），需要代理/VPN 或换网络后重跑。这不是对 R2 的技术否定。
+> 执行证据（2026-09-23，受阻未判定）：`git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git` 连接 75s 超时；`curl https://chromium.googlesource.com` 无响应；`pdfium.googlesource.com`、`swift-go.googlesource.com` 同样超时 ⇒ 整个 `*.googlesource.com` 域不可达，非单主机故障。GitHub 侧 `chromium/depot_tools`、`chromium-mirrors/{depot_tools,angle,build}`、`chromium/build` 均不可达（无镜像）；可达项仅 `github.com/google/angle` 与 `storage.googleapis.com`。结论：本机网络环境下无法开始 T2 步骤 1（gclient sync 的 DEPS 全部指向 googlesource），需要代理/VPN 或换网络后重跑。这不是对 R2 的技术否定。
 
 ### T3 ANGLE 最小互操作实验（依赖 T2 通过；1–2 小时）
 
