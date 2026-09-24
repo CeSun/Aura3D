@@ -41,6 +41,12 @@ jobs:
       - name: Install workloads
         run: dotnet workload install ios
 
+      # 依赖前置：Aura3D.Avalonia 的 iOS 目标以精确区间 [0.1.0] 引用 Aura3D.Angle.iOS，
+      # 而这个包在 CI 里还没发到 nuget.org。先按 NuGet.config 声明的路径 pack 出 local-feed，
+      # 后面任何 restore 才有它可用——这一步同时验证了消费方拿到的就是包里的切片。
+      - name: Build local ANGLE package feed
+        run: dotnet pack src/Aura3D.Angle.iOS -c Release -o local-feed
+
       - name: Pack all libraries
         run: |
           set -euo pipefail
@@ -90,6 +96,9 @@ jobs:
       - name: Install workloads
         run: dotnet workload install android wasm-tools ios
 
+      - name: Build local ANGLE package feed
+        run: dotnet pack src/Aura3D.Angle.iOS -c Release -o local-feed
+
       - name: Build Example.Desktop
         run: dotnet build example/Example.Desktop/Example.Desktop.csproj -c Release
 
@@ -122,6 +131,9 @@ jobs:
 
       - name: Install workload
         run: dotnet workload install ios
+
+      - name: Build local ANGLE package feed
+        run: dotnet pack src/Aura3D.Angle.iOS -c Release -o local-feed
 
       - name: Build Example.iOS
         run: |

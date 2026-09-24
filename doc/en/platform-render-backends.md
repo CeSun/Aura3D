@@ -26,29 +26,29 @@ Both paths are compiled into one binary and ownership is decided once, on the fi
 
 The decision is logged as `[aura3d-angle] compositor backend=..., path=...` — check that line first when debugging.
 
-## iOS: providing the ANGLE frameworks
+## iOS: where the ANGLE frameworks come from
 
-The native ANGLE libraries must be linked into the **application** executable (`Aura3D.Avalonia` resolves them through `DllImport("__Internal")` to avoid clashing with Apple's own OpenGLES symbols), so they cannot ride along inside the class library.
+`Aura3D.Avalonia` resolves ANGLE's EGL/GLES2 symbols through `DllImport("__Internal")` (to avoid clashing with Apple's own OpenGLES symbols), so the two frameworks have to be linked into the **application** executable rather than living inside the class library.
 
-**Recommended: the `Aura3D.Angle.iOS` package.** Installing it is enough — its targets inject the `NativeReference` items, no project configuration required:
-
-```shell
-dotnet add package Aura3D.Angle.iOS
-```
-
-The package ships two ANGLE slices, `iossimulator-arm64` and `ios-arm64`. It is released by `.github/workflows/angle-ios-release.yml` (pushing an `angle-ios-v<version>` tag packs it and pushes to nuget.org). Until the package is actually public, build it locally inside the repository and consume it from that folder:
+**That part is now automatic.** `Aura3D.Avalonia`'s iOS target depends on `Aura3D.Angle.iOS`, and the package's `buildTransitive` targets pick the slice by `$(RuntimeIdentifier)` and inject the `NativeReference` items into the app project — an app needs zero ANGLE configuration, and `example/Example.iOS` has none. The dependency is pinned to an exact range (`[0.1.0]`): the slice and the P/Invoke signatures are an ABI pair, so a consumer must never be silently upgraded onto a slice that was not tested against them. Replacing the slices therefore means bumping that version and releasing `Aura3D.Avalonia` again.
 
 ```shell
-dotnet pack src/Aura3D.Angle.iOS -c Release -o artifacts/nupkgs
+dotnet add package Aura3D.Avalonia   # pulls Aura3D.Angle.iOS in on iOS
 ```
 
-It only affects iOS target frameworks, so referencing it from a desktop or Android project is harmless. A missing slice fails the build loudly instead of quietly producing a blank viewport.
+The package ships two ANGLE slices, `iossimulator-arm64` and `ios-arm64`, and rides the `pack.yml` release train together with the other libraries (same commit, so the pinned version is by construction the one just published). There is no separate channel for hot-fixing a slice: bump `<Version>` here, bump the range in `Directory.Packages.props`, and run `pack.yml`. A missing slice fails the build loudly instead of quietly producing a blank viewport.
 
-**Manual route** (when you build ANGLE yourself):
+Inside this repository you have to produce that package once first (`NuGet.config` declares `local-feed/` as a package source):
+
+```shell
+dotnet pack src/Aura3D.Angle.iOS -c Release -o local-feed
+```
+
+Every CI job does the same thing before it restores. **Manual route** (when you build ANGLE yourself):
 
 1. Build ANGLE for iOS from a standalone ANGLE checkout (not a Chromium checkout) with the Metal backend enabled; the only required gn argument is `enable_rust=false`. Drop the resulting `libEGL.framework` and `libGLESv2.framework` into `src/Aura3D.Angle.iOS/native/iossimulator-arm64/` and `native/ios-arm64/` (both slices are committed to the repository and packed as-is). `src/Aura3D.Angle.iOS/build-angle-ios.sh --device` codifies this; the device slice additionally needs `ios_enable_code_signing = false`, otherwise `gn gen` fails while looking for an "Apple Development" identity — which is exactly the situation in a certificate-free CI.
-2. Reference both frameworks from the iOS application project as `NativeReference` items (`Kind=Framework`, `SmartLink=False`). `example/Example.iOS/Example.iOS.csproj` just `Import`s the very same `build/Aura3D.Angle.iOS.targets` that the package ships, so the sample exercises the consumer code path.
-3. Do not guard such an `ItemGroup` with an `Exists(...)` condition: when the frameworks are missing the group is skipped silently, the app still compiles, and the viewport stays blank because the ANGLE session fails. Verify the frameworks really were linked before looking elsewhere.
+2. Adding `<PackageReference Include="Aura3D.Angle.iOS" />` to your own app works just as well as getting it transitively from `Aura3D.Avalonia`.
+3. Do not guard such an `ItemGroup` with an `Exists(...)` condition: when the frameworks are missing the group is skipped silently, the app still compiles, and the viewport stays blank because the ANGLE session fails. Verify the frameworks really were linked — check that they appear under `<App>.app/Frameworks/`.
 4. Hardware requirements: ANGLE's Metal backend needs Metal GPU family 4 (A11 or later); tvOS is not supported. The committed slices are built with ANGLE's default `ios_deployment_target`, i.e. `minos` 18.0, so an app deployment target below that produces a linker version mismatch warning.
 
 ## The GLES 3.0 subset: constraints for custom passes

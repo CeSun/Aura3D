@@ -27,11 +27,20 @@ jobs:
     - name: Install workloads
       run: dotnet workload install ios
 
+    # Aura3D.Avalonia 的 iOS 目标以精确区间依赖 Aura3D.Angle.iOS，先发它、发到 local-feed，
+    # 后面所有 pack/restore 才有包可用；同一次运行末尾它和其他包一起被推送，
+    # 于是 nuspec 里钉的那个版本必定是本次产出的那一个。
+    - name: Pack Aura3D.Angle.iOS into local-feed
+      run: dotnet pack src/Aura3D.Angle.iOS -c Release -o local-feed
+
     - name: Test
       run: dotnet test src/Test/Aura3D.Tests/Aura3D.Tests.csproj -c Release
 
     - name: Pack Aura3D.Core
       run: dotnet pack src/Aura3D.Core -o packages -c Release
+
+    - name: Pack Aura3D.Angle.iOS
+      run: dotnet pack src/Aura3D.Angle.iOS -o packages -c Release
         
     - name: Pack Aura3D.Avalonia
       run: dotnet pack src/Aura3D.Avalonia -o packages -c Release

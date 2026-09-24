@@ -13,7 +13,9 @@
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />
-    <PackageVersion Include="Aura3D.Angle.iOS" Version="0.1.0" />
+    <!-- 精确区间：ANGLE 的 native 切片与 Aura3D.Avalonia 里的 DllImport 签名是 ABI 配对，
+         不能让消费方被动升到一个没配套测过的切片上。 -->
+    <PackageVersion Include="Aura3D.Angle.iOS" Version="[0.1.0]" />
     <PackageVersion Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />

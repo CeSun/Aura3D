@@ -52,7 +52,7 @@ dotnet add package Aura3D.Pipeline.CelShading
 
 iOS 上**不需要**任何平台特判：`Aura3DView` 会自行选用该平台的渲染后端（iOS 走内置的 ANGLE(Metal) 后端，桌面/Android/macOS 走宿主 OpenGL）。早先"在 `AppBuilder` 里强制 `iOSRenderingMode.OpenGl`"的写法已经废弃。
 
-iOS 工程额外要做的只有一件事——把 ANGLE 的原生库链接进主可执行文件（`Aura3D.Avalonia` 用 `DllImport("__Internal")` 解析符号，库不能只放在类包里）。装 `Aura3D.Angle.iOS` 包即可，不用写任何配置；手工链接两个 framework 的做法见 [平台与渲染后端](./platform-render-backends.md)。
+iOS 工程不需要为 ANGLE 写任何配置：`Aura3D.Avalonia` 的 iOS 目标依赖 `Aura3D.Angle.iOS`，包里的 targets 会在应用工程里把两个 framework 以 `NativeReference` 链进主可执行文件（`DllImport("__Internal")` 要求如此）。切片的来源、版本锁定策略与手工方式见 [平台与渲染后端](./platform-render-backends.md)。
 
 macOS 桌面工程按示例把宿主渲染器显式钉在 OpenGL 上（`Example.Desktop` 就是这么写的）：
 

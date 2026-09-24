@@ -8,6 +8,15 @@
 
 ## 用法
 
+不需要单独装。`Aura3D.Avalonia` 的 iOS 目标以精确区间依赖本包，包里的 `buildTransitive` targets
+会穿透到应用工程生效，所以应用侧一行 ANGLE 配置都不用写：
+
+```shell
+dotnet add package Aura3D.Avalonia
+```
+
+想显式控制切片版本时再直接引用本包也可以：
+
 ```shell
 dotnet add package Aura3D.Angle.iOS
 ```
@@ -33,22 +42,24 @@ LICENSE.angle.txt                               ANGLE 的 BSD-3-Clause 原文
 
 ## 发布
 
-先改本目录 `Aura3D.Angle.iOS.csproj` 里的 `<Version>`，再打标签：
+本包没有独立的发布通道，跟 `pack.yml` 的发版列车一起发：同一次运行里先 pack 到 `local-feed/`
+（供仓库自身的 restore 使用，`NuGet.config` 把这个目录声明成了包源），再 pack 进 `packages/`
+与其他库一起推到 nuget.org（secret `NUGET_API_KEY`）。因为一切出自同一个 commit，
+`Aura3D.Avalonia` 的 nuspec 里钉的那个版本必定是本次刚发布的那一个。
 
-```shell
-git tag angle-ios-v0.1.0 && git push origin angle-ios-v0.1.0
-```
+切片热修 = 改本目录 `Aura3D.Angle.iOS.csproj` 的 `<Version>` + **同一次提交里**改
+`Directory.Packages.props` 的区间 + 跑一次 `pack.yml`。之所以要成对改：`Aura3D.Avalonia`
+钉的是精确区间 `[<版本>]`，切片与 `Aura3D.Avalonia` 里的 `DllImport` 签名是 ABI 配对，
+不能让消费方被动升到一个没配套测过的切片上。也就是说换切片就意味着重发 `Aura3D.Avalonia`。
 
-`.github/workflows/angle-ios-release.yml` 会校验两份切片齐全、`dotnet pack`、检查包内容，
-然后推到 nuget.org（用仓库 secret `NUGET_API_KEY`）。也可以用 `workflow_dispatch` 手动触发，
-勾上 dry_run 只出产物不推送。
+`native/` 下没有任何切片时 `dotnet pack` 会直接失败（`AngleNativeCheck`），不会发出空壳包。
 
 ## 重新构建切片
 
 ```shell
 ./build-angle-ios.sh            # 模拟器切片
 ./build-angle-ios.sh --device   # 追加真机切片
-dotnet pack -c Release -o artifacts/nupkgs
+dotnet pack -c Release -o local-feed
 ```
 
 脚本会把 framework 放进 `native/`。当前版本对应 ANGLE

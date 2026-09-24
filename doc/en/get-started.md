@@ -52,7 +52,7 @@ dotnet add package Aura3D.Pipeline.CelShading
 
 On iOS no platform special-casing is needed at all: `Aura3DView` picks the right backend by itself (iOS uses the built-in ANGLE(Metal) backend, desktop/Android/macOS use the host OpenGL). The older advice of forcing `iOSRenderingMode.OpenGl` in `AppBuilder` is obsolete.
 
-The only extra step for an iOS app is linking ANGLE's native libraries into the main executable (`Aura3D.Avalonia` resolves them via `DllImport("__Internal")`, so they cannot live in the class library). Referencing the `Aura3D.Angle.iOS` package does that for you with no configuration; the manual framework setup is described in [Platforms and Render Backends](./platform-render-backends.md).
+An iOS app needs no ANGLE configuration at all: `Aura3D.Avalonia`'s iOS target depends on `Aura3D.Angle.iOS`, and that package's targets link both frameworks into the main executable as `NativeReference` (which is what `DllImport("__Internal")` requires). Where the slices come from, why the dependency is version-pinned, and the manual route are covered in [Platforms and Render Backends](./platform-render-backends.md).
 
 For a macOS desktop app, pin the host renderer to OpenGL as the sample does (`Example.Desktop`):
 

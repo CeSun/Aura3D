@@ -5,8 +5,8 @@
     libGLESv2.framework 连同一段注入 NativeReference 的 targets 发成 NuGet 包，
     让外部 iOS 应用不必自己去找 ANGLE 产物。
 
-    构建产物不入库：framework 由同目录的 build-angle-ios.sh 放进 native/<切片目录>/，
-    该目录已在 .gitignore 里。
+    切片直接提交在 native/<RuntimeIdentifier 目录>/ 下（由同目录的 build-angle-ios.sh 产出后
+    更新），所以打包不需要 depot_tools 与 Xcode，任何 runner 都能出这个包。
   -->
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>

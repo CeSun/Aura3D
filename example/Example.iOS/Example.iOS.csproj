@@ -18,12 +18,10 @@
   </ItemGroup>
 
   <!--
-    ANGLE 的 iOS framework 由 Aura3D.Angle.iOS 的 targets 注入：仓库内直接 Import 包里的
-    同一份文件（切片已入库），外部用户则通过 PackageReference 从 nuget.org 拿到它。
-    按 $(RuntimeIdentifier) 在 simulator / device 切片间自动选择。
+    这里不写任何 ANGLE 相关的配置：Aura3D.Angle.iOS 由 Aura3D.Avalonia 的精确区间依赖带进来，
+    包内 buildTransitive targets 按 $(RuntimeIdentifier) 在 simulator / device 切片间选择并注入
+    NativeReference。Example 与外部用户走的是完全同一条消费路径。
   -->
-  <Import Project="$(MSBuildThisFileDirectory)../../src/Aura3D.Angle.iOS/build/Aura3D.Angle.iOS.targets" />
-
   <ItemGroup>
     <ProjectReference Include="..\Example\Example.csproj" />
   </ItemGroup>
