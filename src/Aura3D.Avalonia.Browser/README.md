@@ -22,6 +22,19 @@ dotnet add package Aura3D.Avalonia
 
 应用本身仍按 .NET WASM 的常规方式跑：`dotnet run --project <App>.Browser`。
 
+## 前置条件：wasm-tools workload
+
+`WasmBuildNative=true` 只是必要条件——本机 SDK 还得装 `wasm-tools`（含 emscripten），否则原生链接不会发生：
+构建 0 错误、`dotnet.native.wasm` 只有 3 MB 出头（链上后约 25 MB），应用启动即
+`System.DllNotFoundException: libSkiaSharp`。这种情况由包内 `buildTransitive` targets 在构建期直接报 Error
+并给出命令：
+
+```shell
+dotnet workload install wasm-tools
+```
+
+确实不需要本后端的工程（比如只在桌面上跑）可设 `Aura3DSkipWasmWorkloadCheck=true` 关掉这条检查。
+
 ## 版本策略
 
 包里没有二进制，只有构建属性，但 `Aura3D.Avalonia` 仍以精确区间 `[0.1.0]` 依赖它：这些开关与

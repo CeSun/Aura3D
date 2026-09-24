@@ -65,9 +65,11 @@ Avalonia.Browser 的 `WebGlContext` 是单例式的：`CanCreateSharedContext` �
 
 ## 浏览器：wasm 链接开关从哪来
 
-GLES 入口点必须由**应用**自己的 wasm 模块带出来：不链原生库时，`libSkiaSharp` 会退化成运行时从 CDN 拉的预构建副本，那份副本没有我们需要的 GLES3 shim。所以三件事要在应用工程里成立——`WasmBuildNative=true`、`-s FULL_ES3=1`、`-s MIN/MAX_WEBGL_VERSION=2`（GLES3 的 VAO / UBO / 3D 纹理 / blit 入口点只存在于 WebGL2 上下文）。
+GLES 入口点必须由**应用**自己的 wasm 模块带出来：不链原生库时模块里没有 `libSkiaSharp` 的符号，应用启动即 `System.DllNotFoundException: libSkiaSharp`（在 `SKImageInfo` 的静态构造里，没有任何上下文线索）。所以三件事要在应用工程里成立——`WasmBuildNative=true`、`-s FULL_ES3=1`、`-s MIN/MAX_WEBGL_VERSION=2`（GLES3 的 VAO / UBO / 3D 纹理 / blit 入口点只存在于 WebGL2 上下文）。
 
 **这三件事是自动的。** `Aura3D.Avalonia` 的 browser 目标以精确区间依赖 `Aura3D.Avalonia.Browser`，包里的 `buildTransitive` props 只对 `*-browser` 目标注入上述开关——应用工程一行配置都不用写，`example/Example.Browser` 里一行都没有。与 iOS 的切片包同构，也同样是精确锁 `[0.1.0]`：开关与库的 GLES 调用面配对，升级要和库一起过一遍浏览器验证。
+
+但 `WasmBuildNative=true` 只是**必要条件**：本机 SDK 没有 wasm-tools/emsdk workload 时链接同样不会发生，而构建是成功的。SDK 自己那条 warning 的文案是固定的 "neither $(WasmBuildNative), nor $(RunAOTCompilation) are 'true'"，此时 `WasmBuildNative` 明明是 true，会把人支到错的方向（实测：`dotnet.native.wasm` 3.0 MB vs 链上后的 25.6 MB）。所以包内的 `buildTransitive` targets 会在 `RuntimeIdentifier=browser-wasm` 且 `WasmNativeWorkloadAvailable!=true` 时直接报 Error 并给出 `dotnet workload install wasm-tools`；不需要本后端的工程可以设 `Aura3DSkipWasmWorkloadCheck=true` 关掉。与 iOS 侧"缺切片就 Error、不静默不出图"同构。
 
 在仓库内开发需要先自产一次这个包（`NuGet.config` 已把 `local-feed/` 声明成包源）：
 
@@ -75,7 +77,7 @@ GLES 入口点必须由**应用**自己的 wasm 模块带出来：不链原生�
 dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
 ```
 
-构建产物里可以自查开关是否生效：`dotnet msbuild <App>.Browser.csproj -getProperty:EmccExtraLDFlags -getProperty:WasmBuildNative`；再确认链接出的 `dotnet.native.wasm` 里有 `glGenVertexArrays` 等 GLES3 符号，就说明 shim 真的链进来了。
+构建产物里可以自查开关是否生效：`dotnet msbuild <App>.Browser.csproj -getProperty:EmccExtraLDFlags -getProperty:WasmBuildNative -getProperty:WasmNativeWorkloadAvailable`（最后一项是 workload 在不在的直接判据）；再确认链接出的 `dotnet.native.wasm` 里有 `glGenVertexArrays` 等 GLES3 符号，就说明 shim 真的链进来了。
 
 ## GLES 3.0 子集：写自定义 Pass 要知道的限制
 

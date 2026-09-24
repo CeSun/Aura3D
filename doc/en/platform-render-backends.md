@@ -65,9 +65,11 @@ Ownership is decided once, exactly like iOS, with the `[aura3d-webgl]` log prefi
 
 ## Browser: where the wasm link switches come from
 
-The GLES entry points have to come out of the **application's own** wasm module. Without native linking, `libSkiaSharp` degrades to a prebuilt copy fetched from a CDN at runtime, and that copy carries no GLES3 shim. Three things must therefore hold in the app project: `WasmBuildNative=true`, `-s FULL_ES3=1`, and `-s MIN/MAX_WEBGL_VERSION=2` (GLES3 entry points — VAO, UBO, 3D textures, blit — only exist on a WebGL2 context).
+The GLES entry points have to come out of the **application's own** wasm module. Without native linking the module simply has no `libSkiaSharp` symbols, and the app dies at startup with `System.DllNotFoundException: libSkiaSharp` (thrown from `SKImageInfo`'s static constructor, with no context to go on). Three things must therefore hold in the app project: `WasmBuildNative=true`, `-s FULL_ES3=1`, and `-s MIN/MAX_WEBGL_VERSION=2` (GLES3 entry points — VAO, UBO, 3D textures, blit — only exist on a WebGL2 context).
 
 **That part is automatic.** `Aura3D.Avalonia`'s browser target depends on `Aura3D.Avalonia.Browser`, whose `buildTransitive` props inject those switches for `*-browser` targets only — an app writes zero configuration, and `example/Example.Browser` writes none. It mirrors the iOS slice package, including the exact `[0.1.0]` pin: the switches are paired with the library's GLES call surface, so they bump together with a browser verification run.
+
+`WasmBuildNative=true` is however only a **necessary** condition: if the local SDK has no wasm-tools/emsdk workload, linking still does not happen and the build still succeeds. The SDK's own warning reads "neither $(WasmBuildNative), nor $(RunAOTCompilation) are 'true'" — a hardcoded string, misleading here because `WasmBuildNative` is in fact true (measured: `dotnet.native.wasm` is 3.0 MB, versus 25.6 MB once native is linked). The package's `buildTransitive` targets therefore raise an error when `RuntimeIdentifier=browser-wasm` and `WasmNativeWorkloadAvailable!=true`, naming `dotnet workload install wasm-tools`; projects that do not need this backend can set `Aura3DSkipWasmWorkloadCheck=true`. Same stance as on iOS: error out rather than silently render nothing.
 
 Inside this repository you have to produce that package once first (`NuGet.config` declares `local-feed/` as a package source):
 
@@ -75,7 +77,7 @@ Inside this repository you have to produce that package once first (`NuGet.confi
 dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
 ```
 
-To check the wiring landed: `dotnet msbuild <App>.Browser.csproj -getProperty:EmccExtraLDFlags -getProperty:WasmBuildNative`, and confirm the linked `dotnet.native.wasm` exports GLES3 symbols such as `glGenVertexArrays` — that is the shim being present.
+To check the wiring landed: `dotnet msbuild <App>.Browser.csproj -getProperty:EmccExtraLDFlags -getProperty:WasmBuildNative -getProperty:WasmNativeWorkloadAvailable` (the last one is the direct verdict on the workload), and confirm the linked `dotnet.native.wasm` exports GLES3 symbols such as `glGenVertexArrays` — that is the shim being present.
 
 ## The GLES 3.0 subset: constraints for custom passes
 

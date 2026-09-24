@@ -15,7 +15,8 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
 
     <PackageId>Aura3D.Avalonia.Browser</PackageId>
-    <Version>0.1.0</Version>
+    <!-- 版本单点在 Directory.Packages.props；改这里不会同步改依赖区间，别在这加 MinVer -->
+    <Version>$(Aura3DAvaloniaBrowserVersion)</Version>
     <Authors>CeSun</Authors>
     <RepositoryUrl>https://github.com/CeSun/Aura3d</RepositoryUrl>
     <PackageTags>wasm;browser;webgl;opengles;avalonia;aura3d</PackageTags>
@@ -29,6 +30,8 @@
     <!-- 同一份 props 打进 build/ 与 buildTransitive/ 两个约定目录，文件里用哨兵防重复注入 -->
     <None Include="build/Aura3D.Avalonia.Browser.props" Pack="true" PackagePath="build/" />
     <None Include="build/Aura3D.Avalonia.Browser.props" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="build/Aura3D.Avalonia.Browser.targets" Pack="true" PackagePath="build/" />
+    <None Include="build/Aura3D.Avalonia.Browser.targets" Pack="true" PackagePath="buildTransitive/" />
     <None Include="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 

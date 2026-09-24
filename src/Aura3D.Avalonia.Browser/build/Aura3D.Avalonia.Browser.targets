@@ -1,0 +1,25 @@
+<Project>
+  <!--
+    浏览器后端要求应用自己的 wasm 模块里链进原生库（Avalonia 的 WebGL 渲染目标与 Aura3D 的
+    GLES 入口点都要从模块里取 libSkiaSharp 符号），而 WasmBuildNative=true 只是**必要条件**：
+    本机 SDK 没有 wasm-tools/emsdk workload 时，链接照样不会发生。
+
+    实测这种"构建成功、运行必崩"的形态（.NET SDK 11 preview / 无 wasm-tools）：
+      - 构建 0 错误，只有 SDK 的一条 warning；
+      - 那条 warning 的文案是固定的 "neither $(WasmBuildNative), nor $(RunAOTCompilation) are 'true'"，
+        而这里 $(WasmBuildNative) 明明是 true —— 真实门槛在 workload，文案会把人支到错的方向；
+      - dotnet.native.wasm 只有 3.0 MB（链上原生后 25.6 MB），应用启动即
+        System.DllNotFoundException: libSkiaSharp（在 SKImageInfo 的静态构造里）。
+
+    所以这里直接报 Error，把 workload 命令写在诊断里，而不是等运行时那一条没有上下文的异常。
+    与 Aura3D.Angle.iOS 的"缺切片就 Error、不静默不出图"同构。
+  -->
+  <Target Name="Aura3DCheckWasmNativeWorkload"
+          Condition=" '$(Aura3DSkipWasmWorkloadCheck)' != 'true'
+                      And '$(RuntimeIdentifier)' == 'browser-wasm'
+                      And '$(_BrowserWorkloadDisabled)' != 'true'
+                      And '$(WasmNativeWorkloadAvailable)' != 'true' "
+          BeforeTargets="Build;Publish">
+    <Error Text="Aura3D 的浏览器（WebGL2）后端需要把原生库链进应用的 wasm 模块（WasmBuildNative=true 已由 Aura3D.Avalonia.Browser 注入），但当前 SDK 没有 wasm-tools/emsdk workload：原生链接不会发生，构建看着成功，应用启动即 System.DllNotFoundException: libSkiaSharp。请执行 `dotnet workload install wasm-tools`（必要时先 `dotnet workload restore`）；确实不需要本后端的工程可设 %24(Aura3DSkipWasmWorkloadCheck)=true。" />
+  </Target>
+</Project>
