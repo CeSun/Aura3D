@@ -5,11 +5,13 @@
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
-    <!-- iOS 走 ANGLE(Metal) + Skia lease 后端，需要平台 TFM 以引用 Metal 绑定 -->
-    <TargetFrameworks>net8.0;net10.0;net10.0-ios26.0</TargetFrameworks>
+    <!-- iOS 走 ANGLE(Metal) + Skia lease 后端，需要平台 TFM 以引用 Metal 绑定。
+         这里刻意不钉平台版本号：库只用到 API 面，钉死 net10.0-ios26.0 会让缺少该 band 的
+         机器（含 CI runner）连 restore 都过不去。应用工程才需要与本机 Xcode 对齐。 -->
+    <TargetFrameworks>net8.0;net10.0;net10.0-ios</TargetFrameworks>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-ios26.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
     <DefineConstants>$(DefineConstants);ANGLE_HOST</DefineConstants>
     <!-- lease 合成使用 Avalonia 标注为 Unstable 的 ISkiaSharpApiLeaseFeature -->
     <NoWarn>$(NoWarn);AVA1700</NoWarn>
@@ -19,7 +21,7 @@
     <PackageReference Include="Avalonia" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios26.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
     <PackageReference Include="Avalonia.Skia" />
   </ItemGroup>
 

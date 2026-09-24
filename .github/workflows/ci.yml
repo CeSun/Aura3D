@@ -35,6 +35,9 @@ jobs:
             8.0.x
             10.0.x
 
+      - name: Install workloads
+        run: dotnet workload install ios
+
       - name: Pack all libraries
         run: |
           set -euo pipefail
@@ -76,7 +79,7 @@ jobs:
           java-version: 17
 
       - name: Install workloads
-        run: dotnet workload install android wasm-tools
+        run: dotnet workload install android wasm-tools ios
 
       - name: Build Example.Desktop
         run: dotnet build example/Example.Desktop/Example.Desktop.csproj -c Release
