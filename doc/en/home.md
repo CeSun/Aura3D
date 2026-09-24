@@ -12,6 +12,7 @@ Welcome to Aura3D. This documentation covers everything from installation to cus
 | **[Instanced Rendering](./instanced-rendering.md)** | GPU instancing (InstancedMesh) → Per-instance attributes / Transform updates → Hierarchical instancing (HISM) → Incremental updates |
 | **[Rendering Topics](./rendering.md)** | Shadows / Point clouds / Primitive rendering → Advanced materials → Node operations (bounding box / clone / batch transform / find children) |
 | **[GPU Resource Lifecycle](./gpu-resource-lifecycle.md)** | GPU-state ownership → Idempotent destruction → Context loss and recovery → Custom-state contract |
+| **[Platforms and Render Backends](./platform-render-backends.md)** | Which path each platform takes → iOS ANGLE(Metal) backend and framework setup → GLES 3.0 subset constraints → Frame scheduling and thread semantics |
 
 ## Example Project
 

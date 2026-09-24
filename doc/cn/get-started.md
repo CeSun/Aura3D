@@ -50,10 +50,14 @@ dotnet add package Aura3D.Pipeline.CelShading
 
 ### iOS / macOS 平台配置
 
-在 iOS 和 macOS 上，需要在 `AppBuilder` 中指定 OpenGL 渲染模式：
+iOS 上**不需要**任何平台特判：`Aura3DView` 会自行选用该平台的渲染后端（iOS 走内置的 ANGLE(Metal) 后端，桌面/Android/macOS 走宿主 OpenGL）。早先"在 `AppBuilder` 里强制 `iOSRenderingMode.OpenGl`"的写法已经废弃。
+
+iOS 工程额外要做的只有一件事——把 ANGLE 的 `libEGL.framework` 与 `libGLESv2.framework` 链接进主可执行文件（`NativeReference`），否则 iOS 视口不会出图。
+
+macOS 桌面工程按示例把宿主渲染器显式钉在 OpenGL 上（`Example.Desktop` 就是这么写的）：
 
 ```csharp
-// Program.cs 或 App.axaml.cs
+// 仅 macOS 桌面工程需要显式指定宿主渲染器；iOS 不要写这段。
 public static AppBuilder BuildAvaloniaApp()
     => AppBuilder.Configure<App>()
         .UsePlatformDetect()
@@ -62,6 +66,8 @@ public static AppBuilder BuildAvaloniaApp()
             RenderingMode = new[] { AvaloniaNativeRenderingMode.OpenGl }
         });
 ```
+
+各平台的后端归属、ANGLE framework 的获取方式与 GLES 子集限制见 [平台与渲染后端](./platform-render-backends.md)。
 
 ### 初始化场景
 

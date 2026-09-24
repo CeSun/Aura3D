@@ -50,10 +50,14 @@ dotnet add package Aura3D.Pipeline.CelShading
 
 ### iOS / macOS Configuration
 
-On iOS and macOS, specify OpenGL rendering mode in `AppBuilder`:
+On iOS no platform special-casing is needed at all: `Aura3DView` picks the right backend by itself (iOS uses the built-in ANGLE(Metal) backend, desktop/Android/macOS use the host OpenGL). The older advice of forcing `iOSRenderingMode.OpenGl` in `AppBuilder` is obsolete.
+
+The only extra step for an iOS app is linking ANGLE's `libEGL.framework` and `libGLESv2.framework` into the main executable (`NativeReference`) — without them the iOS viewport stays blank.
+
+For a macOS desktop app, pin the host renderer to OpenGL as the sample does (`Example.Desktop`):
 
 ```csharp
-// Program.cs or App.axaml.cs
+// macOS desktop projects only; do not write this for iOS.
 public static AppBuilder BuildAvaloniaApp()
     => AppBuilder.Configure<App>()
         .UsePlatformDetect()
@@ -62,6 +66,8 @@ public static AppBuilder BuildAvaloniaApp()
             RenderingMode = new[] { AvaloniaNativeRenderingMode.OpenGl }
         });
 ```
+
+Backend ownership per platform, how to obtain the ANGLE frameworks and the GLES-subset constraints are covered in [Platforms and Render Backends](./platform-render-backends.md).
 
 ### Initialize the Scene
 

@@ -12,6 +12,7 @@
 | **[实例化渲染](./instanced-rendering.md)** | GPU 实例化（InstancedMesh）→ 逐实例属性 / 更新变换 → 层次化实例化（HISM）→ 增量更新 |
 | **[渲染专题](./rendering.md)** | 阴影 / 点云 / 图元渲染 → 材质高级用法 → 节点操作（包围盒 / 克隆 / 批量变换 / 查找子节点） |
 | **[GPU 资源生命周期](./gpu-resource-lifecycle.md)** | GPU 状态所有权 → 重复销毁 → 上下文丢失与恢复 → 自定义状态契约 |
+| **[平台与渲染后端](./platform-render-backends.md)** | 各平台走哪条渲染路径 → iOS 的 ANGLE(Metal) 后端与 framework 准备 → GLES 3.0 子集限制 → 帧调度与线程语义 |
 
 ## 示例项目
 
