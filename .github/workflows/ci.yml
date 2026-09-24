@@ -36,7 +36,12 @@ jobs:
             10.0.x
 
       - name: Install workloads
-        run: dotnet workload install ios
+        run: |
+          set +e
+          out=$(dotnet workload install ios 2>&1); code=$?
+          [ "$code" = 0 ] && exit 0
+          printf '::error::workload install ios exit %s :: %s\n' "$code" "$(printf '%s' "$out" | tr '\n' '|' | tr -d '\r' | cut -c1-1500)"
+          exit "$code"
 
       - name: Pack all libraries
         run: |
@@ -53,7 +58,12 @@ jobs:
             src/Aura3D.Pipeline.PBRForward
           do
             echo "::group::pack $(basename "$project")"
-            dotnet pack "$project" -c Release -o packages
+            if ! out=$(dotnet pack "$project" -c Release -o packages 2>&1); then
+              printf '%s\n' "$out"
+              printf '::error::pack %s 失败 :: %s\n' "$(basename "$project")" \
+                "$(printf '%s' "$out" | grep -iE "error|workload" | tail -15 | tr '\n' '|' | tr -d '\r' | cut -c1-1200)"
+              exit 1
+            fi
             echo "::endgroup::"
           done
 
@@ -79,7 +89,12 @@ jobs:
           java-version: 17
 
       - name: Install workloads
-        run: dotnet workload install android wasm-tools ios
+        run: |
+          set +e
+          out=$(dotnet workload install android wasm-tools ios 2>&1); code=$?
+          [ "$code" = 0 ] && exit 0
+          printf '::error::workload install (android wasm-tools ios) exit %s :: %s\n' "$code" "$(printf '%s' "$out" | tr '\n' '|' | tr -d '\r' | cut -c1-1500)"
+          exit "$code"
 
       - name: Build Example.Desktop
         run: dotnet build example/Example.Desktop/Example.Desktop.csproj -c Release
@@ -113,4 +128,10 @@ jobs:
         run: dotnet workload install ios
 
       - name: Build Example.iOS
-        run: dotnet build example/Example.iOS/Example.iOS.csproj -c Release
+        run: |
+          set +e
+          out=$(dotnet build example/Example.iOS/Example.iOS.csproj -c Release 2>&1); code=$?
+          printf '%s\n' "$out"
+          [ "$code" = 0 ] && exit 0
+          printf '::error::Example.iOS exit %s :: %s\n' "$code" "$(printf '%s' "$out" | grep -iE "error|warning XDOC|ValidateXcode" | tail -20 | tr '\n' '|' | tr -d '\r' | cut -c1-1500)"
+          exit "$code"
