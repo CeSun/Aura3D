@@ -20,9 +20,12 @@ env:
 
 jobs:
   # 发布库的门禁：net8.0 与 net10.0 都要构建并打包成功，核心测试必须通过。
+  # 必须在 macOS/Windows 上跑：Aura3D.Avalonia 含 net10.0-ios 目标，而
+  # `dotnet workload install ios` 在 Linux runner 上是 "Workload ID ios isn't supported on this platform"，
+  # 连 restore 引用图里这个 TFM 都做不了（ubuntu 上曾报 "workloads must be installed"）。
   libraries:
     name: Libraries & tests
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,12 +39,7 @@ jobs:
             10.0.x
 
       - name: Install workloads
-        run: |
-          set +e
-          out=$(dotnet workload install ios 2>&1); code=$?
-          [ "$code" = 0 ] && exit 0
-          printf '::error::workload install ios exit %s :: %s\n' "$code" "$(printf '%s' "$out" | tr '\n' '|' | tr -d '\r' | cut -c1-1500)"
-          exit "$code"
+        run: dotnet workload install ios
 
       - name: Pack all libraries
         run: |
@@ -71,9 +69,10 @@ jobs:
         run: dotnet test src/Test/Aura3D.Tests/Aura3D.Tests.csproj -c Release
 
   # 示例与调试工程门禁（Desktop / Android / Web）。iOS 见下方 ios 作业。
+  # 同样要 macOS：Example.Desktop 的引用图里有 Aura3D.Avalonia 的 iOS 目标，restore 需要 ios workload。
   examples:
     name: Examples & RenderDebug (Desktop / Android / Browser)
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -89,12 +88,7 @@ jobs:
           java-version: 17
 
       - name: Install workloads
-        run: |
-          set +e
-          out=$(dotnet workload install android wasm-tools ios 2>&1); code=$?
-          [ "$code" = 0 ] && exit 0
-          printf '::error::workload install (android wasm-tools ios) exit %s :: %s\n' "$code" "$(printf '%s' "$out" | tr '\n' '|' | tr -d '\r' | cut -c1-1500)"
-          exit "$code"
+        run: dotnet workload install android wasm-tools ios
 
       - name: Build Example.Desktop
         run: dotnet build example/Example.Desktop/Example.Desktop.csproj -c Release
@@ -112,10 +106,12 @@ jobs:
         run: dotnet build src/RenderDebug/RenderDebug.Android/RenderDebug.Android.csproj -c Release
 
   # iOS 只能在 macOS runner 上编译（需要 Xcode 与 ios workload）。
+  # Example.iOS 钉的是 net10.0-ios27.0（与本机 Xcode 27.0/27A266a 一致），而 macos-latest
+  # 默认 Xcode 只有 26.6，.NET for iOS 27 的包会硬校验版本；所以这里用官方 xcode-27 预览标签。
   # 只构建不签名：dotnet build 默认面向模拟器，不会触发 codesign。
   ios:
     name: Examples (iOS)
-    runs-on: macos-latest
+    runs-on: xcode-27
     steps:
       - uses: actions/checkout@v4
 

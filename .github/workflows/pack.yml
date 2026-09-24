@@ -7,8 +7,10 @@ permissions:
   contents: read
 
 jobs:
+  # 必须在 macOS 上跑：Aura3D.Avalonia 含 net10.0-ios 目标，Linux runner 装不了 ios workload，
+  # 在 ubuntu 上这个流水线连 restore 都过不去（更糟的是会发布出缺 iOS 目标的包）。
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -21,6 +23,9 @@ jobs:
         dotnet-version: |
           8.0.x
           10.0.x
+
+    - name: Install workloads
+      run: dotnet workload install ios
 
     - name: Test
       run: dotnet test src/Test/Aura3D.Tests/Aura3D.Tests.csproj -c Release
