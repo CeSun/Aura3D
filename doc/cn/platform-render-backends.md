@@ -30,27 +30,26 @@ Avalonia 的 iOS 宿主默认使用 Metal 合成器，而该模式下 Avalonia �
 
 ANGLE 的原生库必须由**应用**链接进主可执行文件（`Aura3D.Avalonia` 用 `DllImport("__Internal")` 解析符号，为的是避开 Apple 自带的 OpenGLES 符号），所以它不在类库里、也不能只靠 `Aura3D.Avalonia` 带过来。
 
-**推荐方式：`Aura3D.Angle.iOS` 包。** 装上即生效，targets 自动注入 `NativeReference`，工程里不用写任何配置：
+**推荐方式：`Aura3D.Angle.iOS` 包。** 装上即生效，包里的 targets 按 `$(RuntimeIdentifier)` 选择切片并自动注入 `NativeReference`，工程里不用写任何配置：
 
 ```shell
 dotnet add package Aura3D.Angle.iOS
 ```
 
-该包目前还没发布到 nuget.org，仓库内可以自己打包后走本地源：
+包内含 `iossimulator-arm64` 与 `ios-arm64` 两份 ANGLE 切片。发布由 `.github/workflows/angle-ios-release.yml` 完成（打 tag `angle-ios-v<版本>` 即打包并推送到 nuget.org）。在包公开发布之前，仓库内可以先本地打包再走本地源：
 
 ```shell
 dotnet pack src/Aura3D.Angle.iOS -c Release -o artifacts/nupkgs
-dotnet build example/Example.iOS -p:Aura3DAngleFromPackage=true
 ```
 
 包只含 iOS 目标框架需要的东西，桌面/Android 工程装了也没有副作用。切片缺失时构建会直接报错，不会静默出图失败。
 
 **手工方式**（需要自己出 ANGLE 产物时）：
 
-1. 用 standalone ANGLE checkout（非 Chromium checkout）为 iOS 构建含 Metal 后端的产物，gn 参数只需 `enable_rust=false`，得到 `libEGL.framework` 与 `libGLESv2.framework`。构建产物不入仓库；`src/Aura3D.Angle.iOS/build-angle-ios.sh` 把这条流程固化了下来。
-2. 在 iOS 应用工程中以 `NativeReference`（`Kind=Framework`、`SmartLink=False`）引入两个 framework。`example/Example.iOS/Example.iOS.csproj` 默认就走这条，用 `AngleIosOutDir` 指定产物目录。
-3. 注意这种写法的 `ItemGroup` 带 `Exists(...)` 条件：framework 不在时这段会静默跳过，编译照样通过，运行时 ANGLE 会话失败、视口不出图。找不到出图原因时先确认这两个 framework 真的被链接了。
-4. 设备要求：ANGLE 的 Metal 后端需要 Metal GPU family 4（A11 及以后）；tvOS 不支持。`Aura3D.Avalonia` 的 iOS 目标 `SupportedOSPlatformVersion` 为 15.0。
+1. 用 standalone ANGLE checkout（非 Chromium checkout）为 iOS 构建含 Metal 后端的产物，gn 参数只需 `enable_rust=false`，得到 `libEGL.framework` 与 `libGLESv2.framework`，放到 `src/Aura3D.Angle.iOS/native/iossimulator-arm64/` 与 `native/ios-arm64/`（这两份切片随包一起入库）。`src/Aura3D.Angle.iOS/build-angle-ios.sh --device` 把这条流程固化了下来；真机切片必须额外传 `ios_enable_code_signing = false`，否则 gn 阶段会因为找不到 "Apple Development" 身份而失败（CI 等无证书环境同理）。
+2. 在 iOS 应用工程中以 `NativeReference`（`Kind=Framework`、`SmartLink=False`）引入两个 framework。仓库内的 `example/Example.iOS/Example.iOS.csproj` 直接 `Import` 包里那份 `build/Aura3D.Angle.iOS.targets`，与外部用户走的是同一条注入逻辑。
+3. 注意不要在 `ItemGroup` 上写 `Exists(...)` 条件：framework 不在时这段会静默跳过，编译照样通过，运行时 ANGLE 会话失败、视口不出图。找不到出图原因时先确认这两个 framework 真的被链接了。
+4. 设备要求：ANGLE 的 Metal 后端需要 Metal GPU family 4（A11 及以后）；tvOS 不支持。入库切片按 ANGLE 默认的 `ios_deployment_target` 构建，`minos` 为 18.0，宿主 App 的最低系统版本低于它时链接器会提示版本不匹配。
 
 ## GLES 3.0 子集：写自定义 Pass 要知道的限制
 

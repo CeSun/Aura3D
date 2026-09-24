@@ -1,0 +1,119 @@
+name: Release Aura3D.Angle.iOS
+
+# ANGLE 的 iOS framework 切片直接提交在 src/Aura3D.Angle.iOS/native/ 下，
+# 所以这里不需要 depot_tools / Xcode，只需打包并推送，分钟级完成。
+# 切片由 src/Aura3D.Angle.iOS/build-angle-ios.sh 在开发机上构建后更新。
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '只打包上传产物，不推送到 nuget.org'
+        type: boolean
+        default: false
+  push:
+    tags: [ 'angle-ios-v*' ]
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  pack:
+    name: Pack native package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check ANGLE slices are committed
+        run: |
+          set -euo pipefail
+          missing=0
+          for slice in iossimulator-arm64 ios-arm64; do
+            for fw in libEGL libGLESv2; do
+              path="src/Aura3D.Angle.iOS/native/$slice/$fw.framework/$fw"
+              if [ ! -f "$path" ]; then
+                echo "::error file=$path::缺少 $path"
+                missing=1
+              fi
+            done
+          done
+          [ "$missing" = 0 ] || exit 1
+
+      - name: Check tag matches package version
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          declared=$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' src/Aura3D.Angle.iOS/Aura3D.Angle.iOS.csproj | head -1)
+          tag=${GITHUB_REF_NAME#angle-ios-v}
+          if [ "$declared" != "$tag" ]; then
+            echo "::error::标签 $GITHUB_REF_NAME 与 csproj 里的 Version=$declared 不一致，先改 <Version> 再打标签"
+            exit 1
+          fi
+
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Pack
+        run: dotnet pack src/Aura3D.Angle.iOS -c Release -o artifacts/nupkgs
+
+      - name: Verify package contents
+        run: |
+          set -euo pipefail
+          nupkg=$(ls artifacts/nupkgs/*.nupkg)
+          echo "包：$nupkg"
+          unzip -l "$nupkg"
+          listing=$(unzip -l "$nupkg")
+          for slice in iossimulator-arm64 ios-arm64; do
+            for fw in libEGL libGLESv2; do
+              if ! grep -F "native/$slice/$fw.framework/$fw" <<<"$listing" >/dev/null; then
+                echo "::error::包里没有 $slice 的 $fw"
+                exit 1
+              fi
+            done
+          done
+          if ! grep -F 'buildTransitive/Aura3D.Angle.iOS.targets' <<<"$listing" >/dev/null; then
+            echo "::error::包里没有 buildTransitive targets"
+            exit 1
+          fi
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: aura3d-angle-ios-nupkg
+          path: artifacts/nupkgs/*.nupkg
+
+  publish:
+    name: Publish to nuget.org
+    needs: pack
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || inputs.dry_run != true
+    steps:
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: aura3d-angle-ios-nupkg
+          path: packages
+
+      - name: Push to NuGet
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$NUGET_API_KEY" ]; then
+            echo "::error::仓库 Settings→Secrets 里没有 NUGET_API_KEY，无法推送"
+            exit 1
+          fi
+          dotnet nuget push "packages/*.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate

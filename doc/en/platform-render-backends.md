@@ -36,21 +36,20 @@ The native ANGLE libraries must be linked into the **application** executable (`
 dotnet add package Aura3D.Angle.iOS
 ```
 
-The package is not on nuget.org yet; inside the repository you can produce it and consume it from a local feed:
+The package ships two ANGLE slices, `iossimulator-arm64` and `ios-arm64`. It is released by `.github/workflows/angle-ios-release.yml` (pushing an `angle-ios-v<version>` tag packs it and pushes to nuget.org). Until the package is actually public, build it locally inside the repository and consume it from that folder:
 
 ```shell
 dotnet pack src/Aura3D.Angle.iOS -c Release -o artifacts/nupkgs
-dotnet build example/Example.iOS -p:Aura3DAngleFromPackage=true
 ```
 
 It only affects iOS target frameworks, so referencing it from a desktop or Android project is harmless. A missing slice fails the build loudly instead of quietly producing a blank viewport.
 
 **Manual route** (when you build ANGLE yourself):
 
-1. Build ANGLE for iOS from a standalone ANGLE checkout (not a Chromium checkout) with the Metal backend enabled; the only required gn argument is `enable_rust=false`. The result is `libEGL.framework` and `libGLESv2.framework`. Build outputs are not committed to the repository — `src/Aura3D.Angle.iOS/build-angle-ios.sh` codifies this step.
-2. Reference both frameworks from the iOS application project as `NativeReference` items (`Kind=Framework`, `SmartLink=False`). `example/Example.iOS/Example.iOS.csproj` does exactly this by default, pointing at the build output through `AngleIosOutDir`.
-3. Note that this `ItemGroup` is guarded by an `Exists(...)` condition: when the frameworks are missing the item group is skipped silently, the app still compiles, and the viewport stays blank because the ANGLE session fails. Verify the frameworks really were linked before looking elsewhere.
-4. Hardware requirements: ANGLE's Metal backend needs Metal GPU family 4 (A11 or later); tvOS is not supported. The iOS target of `Aura3D.Avalonia` sets `SupportedOSPlatformVersion` to 15.0.
+1. Build ANGLE for iOS from a standalone ANGLE checkout (not a Chromium checkout) with the Metal backend enabled; the only required gn argument is `enable_rust=false`. Drop the resulting `libEGL.framework` and `libGLESv2.framework` into `src/Aura3D.Angle.iOS/native/iossimulator-arm64/` and `native/ios-arm64/` (both slices are committed to the repository and packed as-is). `src/Aura3D.Angle.iOS/build-angle-ios.sh --device` codifies this; the device slice additionally needs `ios_enable_code_signing = false`, otherwise `gn gen` fails while looking for an "Apple Development" identity — which is exactly the situation in a certificate-free CI.
+2. Reference both frameworks from the iOS application project as `NativeReference` items (`Kind=Framework`, `SmartLink=False`). `example/Example.iOS/Example.iOS.csproj` just `Import`s the very same `build/Aura3D.Angle.iOS.targets` that the package ships, so the sample exercises the consumer code path.
+3. Do not guard such an `ItemGroup` with an `Exists(...)` condition: when the frameworks are missing the group is skipped silently, the app still compiles, and the viewport stays blank because the ANGLE session fails. Verify the frameworks really were linked before looking elsewhere.
+4. Hardware requirements: ANGLE's Metal backend needs Metal GPU family 4 (A11 or later); tvOS is not supported. The committed slices are built with ANGLE's default `ios_deployment_target`, i.e. `minos` 18.0, so an app deployment target below that produces a linker version mismatch warning.
 
 ## The GLES 3.0 subset: constraints for custom passes
 

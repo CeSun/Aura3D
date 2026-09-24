@@ -41,6 +41,7 @@ jobs:
           for project in \
             src/Aura3D.Core \
             src/Aura3D.Avalonia \
+            src/Aura3D.Angle.iOS \
             src/Aura3D.Model.AssimpLoader \
             src/Aura3D.Model.GltfLoader \
             src/Aura3D.Pipeline.CelShading \

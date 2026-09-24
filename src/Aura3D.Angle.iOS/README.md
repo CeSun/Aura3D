@@ -21,13 +21,27 @@ dotnet add package Aura3D.Angle.iOS
 ```
 native/iossimulator-arm64/libEGL.framework      模拟器切片
 native/iossimulator-arm64/libGLESv2.framework
-native/ios-arm64/...                            真机切片（有则打包）
-build/Aura3D.Angle.iOS.targets                  注入 NativeReference
+native/ios-arm64/libEGL.framework               真机切片
+native/ios-arm64/libGLESv2.framework
+build/Aura3D.Angle.iOS.targets                  按 $(RuntimeIdentifier) 选切片并注入 NativeReference
 buildTransitive/Aura3D.Angle.iOS.targets        同上（传递消费时命中）
 LICENSE.angle.txt                               ANGLE 的 BSD-3-Clause 原文
 ```
 
+两份切片都随包入库（约 24 MB），所以发布不需要 depot_tools 也不需要 Xcode。
 切片缺失时构建会直接报错，不会静默出一个"能编译、运行时不出图"的包。
+
+## 发布
+
+先改本目录 `Aura3D.Angle.iOS.csproj` 里的 `<Version>`，再打标签：
+
+```shell
+git tag angle-ios-v0.1.0 && git push origin angle-ios-v0.1.0
+```
+
+`.github/workflows/angle-ios-release.yml` 会校验两份切片齐全、`dotnet pack`、检查包内容，
+然后推到 nuget.org（用仓库 secret `NUGET_API_KEY`）。也可以用 `workflow_dispatch` 手动触发，
+勾上 dry_run 只出产物不推送。
 
 ## 重新构建切片
 
@@ -37,16 +51,18 @@ LICENSE.angle.txt                               ANGLE 的 BSD-3-Clause 原文
 dotnet pack -c Release -o artifacts/nupkgs
 ```
 
-脚本会把 framework 放进 `native/`（已 gitignore，构建产物不入库）。当前版本对应
-ANGLE `58f8882372e8a4e83da821ac5d16f0323c3fa1af`，gn 参数
+脚本会把 framework 放进 `native/`。当前版本对应 ANGLE
+`58f8882372e8a4e83da821ac5d16f0323c3fa1af`，gn 参数
 `angle_enable_metal=true`、`is_debug=false`、`enable_rust=false`（standalone checkout 即可，
-不需要 Chromium 全量 checkout）。
+不需要 Chromium 全量 checkout），真机切片额外需要 `ios_enable_code_signing=false`。
+切片按 ANGLE 默认的 `ios_deployment_target` 构建，`minos` 为 18.0。
 
 ## 验证状态
 
 - 模拟器 arm64：已验证。`Example.iOS` 去掉本地路径引用、只靠这个包出包，
   `otool -L` 可见 `@rpath/libEGL.framework/libEGL`，Base Geometries 与 PBR RenderPipeline 两页正常出图。
-- 真机 arm64：**未验证**。没有可用设备，切片本身能构建但运行时行为未知。
+- 真机 arm64：**未验证运行时**。没有可用设备；切片构建通过、按 `ios-arm64` RID 注入正确，
+  但真机上的实际渲染没有跑过。
 
 ## 许可
 

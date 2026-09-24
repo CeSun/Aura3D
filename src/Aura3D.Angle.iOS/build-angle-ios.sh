@@ -24,8 +24,8 @@ cd "$ANGLE_DIR"
 git checkout "$ANGLE_REVISION"
 gclient sync -D
 
-build_slice() { # $1 = out 子目录, $2 = target_environment, $3 = native 切片目录名
-  local out="out/$1" env_name="$2" slice="$3"
+build_slice() { # $1 = out 子目录, $2 = target_environment, $3 = native 切片目录名, $4 = 额外 gn 参数
+  local out="out/$1" env_name="$2" slice="$3" extra="${4:-}"
   echo "== $slice ($out) =="
   gn gen "$out" --args="target_os = \"ios\"
 target_environment = \"$env_name\"
@@ -33,7 +33,8 @@ target_cpu = \"arm64\"
 is_component_build = false
 angle_enable_metal = true
 is_debug = false
-enable_rust = false"
+enable_rust = false
+$extra"
   ninja -C "$out" libEGL libGLESv2
 
   rm -rf "$NATIVE_DIR/$slice"
@@ -44,7 +45,9 @@ enable_rust = false"
 build_slice ios_simulator simulator iossimulator-arm64
 if [ "$WITH_DEVICE" = 1 ]; then
   # 真机切片只能证明编译与打包通过；能不能跑需要一台设备，目前未验证。
-  build_slice ios_device device ios-arm64
+  # ios_enable_code_signing = false 是必须的：gn 阶段会自动选取唯一的 "Apple Development"
+  # 身份，无证书环境（含 CI）会直接报 "0 valid identities found" 失败。
+  build_slice ios_device device ios-arm64 'ios_enable_code_signing = false'
 fi
 
 echo
