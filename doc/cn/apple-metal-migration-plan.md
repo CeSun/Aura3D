@@ -189,6 +189,63 @@ F2 的通路目前只是探针，正式化需要：在 `Aura3D.Avalonia` 里提�
    >
    > 验证（iPhone 17 模拟器 / iOS 27.0，真实 MainView 导航触发分离）：`AURA_PAGE="Point Cloud"` 与 `AURA_PAGE="PBR RenderPipeline"` 两轮，日志均为「会话 A `egl 1.5 ok` + `output 1483x936`」→ 约 0.6s 后「会话 B `egl 1.5 ok` + `output 1483x828`/`1483x1092`」，即首个上下文被销毁后新会话在同一 platform display 上重建成功；全程无 `FAIL`、无 `release failed`、无 `glError`；截图 `/tmp/life-1.png`（点云 20000 点）、`/tmp/life-4.png`（PBR HDR 天空+球阵+glb 凳）内容正确。`dotnet test` 89/0，`Aura3D.Avalonia` 三 TFM 与 `Example.iOS` 编译 0 错误。**未覆盖**：同一控件 attach→detach→attach 的实机回退导航（模拟器输入通道不可用），该路径与已验证的"新建会话"路径共用 `EnsureScene` 恢复支路，桌面端与 GL Context Loss 页亦覆盖。
 
+   > 执行证据（2026-09-23，**T6-补2：iOS 开启 `iOSRenderingMode.OpenGl` 时运行时回退到 `OpenGlControlBase`（单二进制双后端）**）：
+   >
+   > 结构：`Aura3DViewBase.OpenGl.cs` 从 `#if !ANGLE_HOST` 改为**全 TFM 编译**，`Aura3DViewBase` 的基类恒为 `Avalonia.OpenGL.Controls.OpenGlControlBase`；`Aura3DViewBase.Angle.cs` 只保留 ANGLE 分支成员，不再声明基类。`RequestNextFrameRendering()` 统一用 `new` 遮蔽基类同名方法，按当前归属转发。桌面/Android/Browser 行为不变（`#if !ANGLE_HOST` 内的 partial 实现原样保留）。
+   >
+   > 归属判定 `BackendPath{Undecided, Angle, OpenGl}`，**权威信号优先**：`OpenGlControlBase` 只有在宿主合成器提供 `ICompositionGpuInterop` 时才会回调 `OnOpenGlInit`，故 iOS 的 `OnGlContextReady` partial 实现直接把归属置为 `OpenGl` 并停掉 ANGLE 帧定时器；次级信号是首帧 `Render` 里读一次 Skia lease 的 `GRContext.Backend`（`Metal`→`Angle`，其余→`OpenGl`）。判定完成前不创建 ANGLE 会话，避免两条后端抢同一视口出图。
+   >
+   > **陷阱 1（`new` 遮蔽）**：`OpenGlControlBase` 用 `public new void InvalidateVisual() => RequestNextFrameRendering()` 遮蔽了 `Visual` 的同名方法，且 GL 初始化失败后其 `RequestNextFrameRendering` 因 `_initialization` 守卫永久空转。ANGLE 分支必须显式 `((Visual)this).InvalidateVisual()`，否则 Metal 模式下帧调度被静默吞掉。
+   >
+   > **陷阱 2（异常被吞）**：`OnOpenGlInit` 抛出的异常会被 `InitializeAsync` 的传播链吞进 `ContinueOnInitialization` 的空 `catch`，`IsInitializedSuccessfully` 从此恒假——画面全白、os_log 里没有任何痕迹。已在 `OnOpenGlInit` 内改为「打日志后原样抛出」，使场景构建失败可见。
+   >
+   > 验证开关：`example/Example.iOS/AppDelegate.cs` 读 `AURA_IOS_OPENGL=1` 时把 `iOSRenderingMode` 设为 `OpenGl`（仅存在于 iOS 示例工程，不进共享工程）。注入环境变量须用 `xcrun simctl` 的 `SIMCTL_CHILD_*` 前缀。
+   >
+   > 验证（iPhone 17 模拟器 / iOS 27.0，真实 MainView）：
+   > - **Metal（默认）**：`[aura3d-angle] compositor backend=Metal, path=Angle` → `egl 1.5 ok … ANGLE Metal Renderer … output 1483x1092 fbo=1`，全程无 `GL context ready`。PBR 页 35s 内出图正确（`/tmp/metal-pbr.png`），点云页见 T6-补。
+   > - **GL**：`[aura3d-angle] GL context ready, rendering driven by OpenGlControlBase`（先于探测出现，证明权威信号未被 ANGLE 抢跑）+ `compositor backend=OpenGL, path=OpenGl`，全程无 ANGLE 会话日志，即回退分支被正确选中。全 14 页结果见下方矩阵。
+   > - **GL 全 14 页回归矩阵**（每页 `AURA_IOS_OPENGL=1 AURA_PAGE=<标题>` 冷启动 + 30s 截图，`/tmp/glm-*.png`，其中 Base Geometries 为 `/tmp/gl-base.png`、Point Cloud 为 `/tmp/gl-B2.png`；对照组为同页 Metal 模式（本轮补拍 Animation/Debug Test/CSM 三页 `/tmp/mtl-*.png` 与 PBR `/tmp/metal-pbr.png`，其余页沿用 T4d/T6 的 Metal 模式通过结论）：
+   >
+   >   | 页面 | Metal（默认） | GL 回退 |
+   >   |---|---|---|
+   >   | Base Geometries | 通过 | 通过 |
+   >   | Load Model File | 通过 | 通过 |
+   >   | Animation | **崩溃** | 视口空白 |
+   >   | Robotic Arm | 通过 | 通过 |
+   >   | PBR RenderPipeline | 通过 | **通过**（T6-补3 修复后复验 `/tmp/clean-pbr.png`） |
+   >   | Cel Shading | 通过 | 通过 |
+   >   | Cel Shading Material Editor | 通过 | 通过 |
+   >   | Rendering Performance | 通过 | 通过（FPS 面板 0，按需出帧） |
+   >   | Particle Editor | 通过 | 通过（11 FPS） |
+   >   | Point Cloud | 通过 | 通过 |
+   >   | Primitive Types | 通过 | 通过（FPS 2） |
+   >   | Debug Test | 通过 | **通过**（T6-补3 修复后复验 `/tmp/clean-dbg.png`） |
+   >   | Cascaded Shadow Maps | 通过 | **部分通过**（T6-补3 复验：背景/光照正常，地面网格缺画 `/tmp/clean-csm-1.png`） |
+   >   | GL Context Loss | 通过 | 通过（累计帧 21） |
+   >
+   > - **不通过项 1 → T6-补3 已定位并部分修复，此处更正原结论**：原判"三个走 PBR Deferred 的页视口不出图"实为两个独立成因叠加，均已修复：
+  >   1. **渲染目标按挂钟 1s TTL 回收**（`src/Aura3D.Core/Renderers/RenderPipeline_RenderTarget.cs`）：模拟器 EAGL 单帧分钟级，GBuffer/HDR RT 在两帧之间就被判为空闲并销毁重建，延迟管线整帧合成为黑。已改为**按渲染序号回收**（`IdleRenderTargetReclaimRenders = 30`，连续 30 次渲染未被引用才回收），语义与帧时长无关。
+  >   2. **`pbr_ibl_ambient.frag` 在 GBuffer 无有效数据时产出 NaN**，经 Copy/ToneMapping 传播把整屏抹黑。已在 `src/Aura3D.Pipeline.PBR/Assets/Shaders/pbr_ibl_ambient.frag` 加有限性保护。
+  >   两处修复后 GL 模式 **PBR RenderPipeline 页与 Debug Test 页完整出图**（`/tmp/clean-pbr.png`：球阵 PBR 材质/光照/全景背景正确；`/tmp/clean-dbg.png`：地面、glb 模型阵、阴影、三色点光、粒子均正确），"整页不出图"结论作废。至于"单帧 >160s"属模拟器 EAGL 性能，按本次任务口径不在修复范围。
+  >   **残留缺陷（判定不通过，按 §0 停下未扩大改动）**：CSM 页那块 80×80 地面网格（`example/Example/Pages/CascadedShadowMapsPage.axaml.cs:39-49`，`BaseColor=Texture.CreateFromColor(220,220,220)`）在 GL 模式下自第 3 帧起该笔 draw 不再产生任何片元，视口只剩背景全景（对照 Metal 同页有灰色地面 `/tmp/mtl-csm-fixed.png`）。取证见 `/tmp/l12.log`–`/tmp/l20.log`（探针代码已在 T6-补3 全部删除）：同一坏帧内新建 1/3 附件 FBO（`CheckFramebufferStatus=0x8CD5`）、以纯白 clear 作对照（`c=255,255,255,255` 证明 clear 与回读通路健康，故"0 片元"不是"片元写成黑"）、关深度测试 / 关背面剔除 / 翻转绕序 / `depthFunc=Always` 逐档重画，全部 0 落地；而**无采样器、无顶点属性、只吃 `gl_VertexID` 的最小 program** 在同一坏帧的新建 FBO 上稳定落地（`mid=0,255,0,255`）。同时排除：附件-采样器交叉绑定（`collide=0`）、几何 GPU 对象陈旧（顶点缓冲 id 与字节数 `b1 sz48 / b7 sz32` 在好坏帧逐字一致，全量 `Invalidate()+Upload()` 换新 id 亦无效）、矩阵与 uniform（`projectionMatrix`/`modelMatrix` 回读逐值一致）、FBO 完整性与 colorMask、GL 错误（`err=0x0000`）。⇒ 判定为 Apple 模拟器 EAGL（GLES-on-Metal）层对这笔 draw 的静默丢弃，非本仓库可控；同页在 ANGLE(Metal) 与桌面路径正常（同一干净构建复验：`/tmp/clean-metal-csm.png` 地面出图正确）。**须真机复验**（无可用设备）。
+  >   **取证陷阱（务必记录）**：诊断期在 `BasePass` 内对同一 FBO 追加的多次试画会耗尽该 FBO 的"可落地 draw 预算"（第 1 帧容 4 笔、第 2 帧 2 笔、第 3 帧起 0 笔），使"永久坏帧"在带探针的构建上被显著放大——本轮所有结论已在**移除探针后的干净构建**上复核（`/tmp/clean-*.png`）。
+   >
+   > - **不通过项 2（既有缺陷，与本次改动无关）**：Animation 页在 **Metal 模式下直接崩溃**——`System.InvalidOperationException: Cannot determine OS-specific implementation.` @ `Aura3D.Model.AssimpLoader.Load(...)`，即 Assimp 未提供 iOS 原生实现，未捕获异常终止进程。GL 模式该页视口空白是同一崩溃的另一表现。T4d 的"全量回归含 Anim 页通过"结论对应的是探针宿主页而非真实 Animation 页，此处更正。
+   >
+   > `dotnet test` 89/0 不变；`Example.iOS`（`net10.0-ios27.0`）与 `Aura3D.Avalonia` 三 TFM 编译 0 错误。改 `Aura3D.Avalonia` 后必须对 `Example.iOS` 走 `-t:Rebuild`，否则 AOT 模块陈旧导致启动即崩（`Failed to load AOT module 'Ursa' … out of date`）。
+
+   > 执行证据（2026-09-24，**T6-补3：GL 回退模式下 PBR Deferred 出黑的定位与修复**）：
+   >
+   > 触发：宿主开 `iOSRenderingMode.OpenGl` 时 3 个走 PBR Deferred 的页不出图（不通过项 1）。经核对判定为"确有问题"而非"只是慢"（同页 Metal 模式 <1s 出图且内容正确），故进入定位。
+   >
+   > **成因 1（已修）**：`RenderPipeline.UpdateRenderTargetsLRU()` 用挂钟 `TimeSpan.FromSeconds(1)` 作空闲阈值。模拟器 EAGL 单帧分钟级 ⇒ GBuffer/HDR 渲染目标在每两帧之间都被判为空闲并 `Destroy(gl)` 重建，延迟管线整帧出黑；这同时解释了诊断期"重建过 FBO 的那一帧就能画出来"的现象。改为**按渲染序号**空闲判定：`src/Aura3D.Core/Renderers/RenderPipeline_RenderTarget.cs` 缓存值类型 `DateTime`→`long`（:10），新增 `_renderSequence`（:21，:30 每次自增）与常量 `IdleRenderTargetReclaimRenders = 30`（:19），写入点 :102/:113。语义与帧时长无关，快帧下 30 帧即回收、慢帧不误回收。
+   >
+   > **成因 2（已修）**：`src/Aura3D.Pipeline.PBR/Assets/Shaders/pbr_ibl_ambient.frag:68-75`，空 GBuffer 像素的法线为 `(0,0,0)`，`normalize()` 在该处产出 NaN 并污染整张 IBL 输出，再经 Copy/ToneMapping 传播为整屏黑。改为 `dot(n,n) < 0.0001 ⇒ o_iblColor = vec4(0.0); return;` 早退。
+   >
+   > 复验（iPhone 17 模拟器 / iOS 27.0，`AURA_IOS_OPENGL=1`，**诊断探针全部移除后的干净构建**）：PBR RenderPipeline 页 `/tmp/clean-pbr.png` 通过（球阵 PBR 材质/光照/全景背景正确）；Debug Test 页 `/tmp/clean-dbg.png` 通过（地面、glb 模型阵、阴影、红绿橙三色点光、粒子均正确）。⇒ 不通过项 1 由"三页整页不出图"更正为"仅 CSM 页地面网格缺画"，该残留项判定不通过并已停下报告（取证见上条）。Metal 模式无回归（同一干净构建、同一 CSM 页复拍 `/tmp/clean-metal-csm.png`：灰色地面正常，日志无 `GL context ready`，即走 ANGLE/Metal；与 `/tmp/clean-csm-1.png` 构成同构建 A/B 对照）。`dotnet test` **89 通过 / 0 失败**；`Example.iOS -t:Rebuild` 0 错误。
+   >
+   > 清理：`src/Aura3D.Core/Renderers/RenderPass.cs`（+323 行）与 `src/Aura3D.Pipeline.PBR/BasePass.cs`（+140 行）经 `git diff` 确认为纯增量后整体还原，6 个 pass 的 `ProbeRead` 调用点（`Common/{CopyPass,FxaaPass,GammaCorrectionPass,ToneMappingPass}.cs`、`PBR/{IBLAmbientPass,DirectionalLightingPass}.cs`）同步还原；`grep -rn "aura3d-probe|ProbeRead|TempProbe" src/ example/` 无命中。诊断期试过的两个假设均已证伪并还原：`PipelineSettings.DepthFormat` 改 `DepthComponent16` 无效（该实验基于"32F 属 ES 3.1"的误判——`DEPTH_COMPONENT16/24/32F` 与两种 `DEPTH*_STENCIL8` 都是 **ES 3.0** core，ANGLE 只到 ES 3.0 并不构成障碍），已还原为 `DepthComponent32f`；`deferredbase.frag` 常量输出实验已还原为真实 GBuffer 写入。
+
 
 ## 4. 探针代码与清理
 
@@ -211,4 +268,5 @@ F2 的通路目前只是探针，正式化需要：在 `Aura3D.Avalonia` 里提�
 | T3 | **通过**：MTLTexture → `eglCreateImageKHR(EGL_METAL_TEXTURE_ANGLE)` → ANGLE Metal 后端渲染（洋红+移动绿带）→ 同纹理经 Skia lease 上屏，900 帧 failed=0 ⇒ R2 技术核心成立。注意：display 需 `eglGetPlatformDisplayEXT` 显式选 Metal 后端；AOT 下入口点用 `DllImport("__Internal")` 直调并需防与 Apple OpenGLES 的符号混用 | `example/Example.iOS/AngleMetalLeaseProbe.cs`，`/tmp/angle7.png`、`/tmp/angle8.png`，T3 节执行证据 | 2026-09-23 |
 | T4 | **通过**（含 T4a-T4d 全部判定项）。CSM 原判不通过，根因：本 ANGLE Metal 构建（ES 3.0）不提供 `GL_EXT_float_blend`，混合使能绘制到 Rgba32F RT 整次 draw 被 `GL_INVALID_OPERATION` 丢弃；经批准将 5 处管线 HDR RT 注册 `Rgba32f`→`Rgba16f`（`PBRDeferredPipeline.cs:25/29/33`、`PBRForwardPipeline.cs:21/25`）后复验通过：光照/天空/阴影落盘（保 >1.0 HDR 值）、阴影 A/B 差异 13.05%、FXAA A/B 生效、CopyPass 间接证实。Base/PointCloud(F9) 通过。**冷启动 F13**：CSM 首帧冷/热启动均约 5.6-5.9s（无 MSL 磁盘缓存，每次启动重编译）；Base 0.7s、Points 0.4s。**全量回归**：10 个宿主场景（含 Cel/Forward/粒子/实例化/7 图元/glb 蒙皮）全部正常；未复刻页及原因见 T4 执行证据（缺口：HISM/InstancedMeshGroup）。附带发现：示例 CSM 页相机朝向与 `ForwardVector=(0,0,-1)` 约定相反致球阵被剔除（桌面同样成立，宿主探针页已改 yaw=155）。`dotnet test` 89/0 | `/tmp/csm_fix2.png`、`/tmp/ab_shadow.bmp` vs `/tmp/ab_nosh.bmp`、`/tmp/reg_{Cel,Forward,Particles,Instancing,Primitives,Anim}.png`，T4 节三段执行证据 | 2026-09-23 |
 | T5 | | | |
-| T6 | **通过**：外部纹理宿主件正式化进 `Aura3D.Avalonia`（多 TFM + `ANGLE_HOST` 双 partial，`Avalonia.Skia` 直接包引用已获批准），主体流程单套，共享 Example 无 iOS 特判；修复 iOS 渲染线程/UI 线程差异（`DispatchSceneEvent` 缝 + 分离释放延迟到渲染线程）。真实 MainView 下 Base Geometries/Point Cloud 模拟器渲染通过；CSM/ContextLoss 页竖屏视口 0 宽为示例页布局限制（管线路径已在 T4d 验证）。`dotnet test` 89/0。遗留：shared_event_sync、生命周期单测、竖屏适配。**T6-补（同日）已收口宿主生命周期**：分离即销毁上下文（帧间解除 current ⇒ UI 线程可合法接管）、`SyncRoot` 互斥、timer 单次订阅，与桌面 `OnOpenGlDeinit` 语义对齐 | T6 节执行证据；`/tmp/t6-home.png`、`/tmp/t6-points3.png`；T6-补 `/tmp/life-1.png`、`/tmp/life-4.png`；`src/Aura3D.Avalonia/{Aura3DViewBase.Angle.cs,Angle/AngleGlesSession.cs}` | 2026-09-23 |
+| T6 | **通过**：外部纹理宿主件正式化进 `Aura3D.Avalonia`（多 TFM + `ANGLE_HOST` 双 partial，`Avalonia.Skia` 直接包引用已获批准），主体流程单套，共享 Example 无 iOS 特判；修复 iOS 渲染线程/UI 线程差异（`DispatchSceneEvent` 缝 + 分离释放延迟到渲染线程）。真实 MainView 下 Base Geometries/Point Cloud 模拟器渲染通过；CSM/ContextLoss 页竖屏视口 0 宽为示例页布局限制（管线路径已在 T4d 验证）。`dotnet test` 89/0。遗留：shared_event_sync、生命周期单测、竖屏适配。**T6-补（同日）已收口宿主生命周期**：分离即销毁上下文（帧间解除 current ⇒ UI 线程可合法接管）、`SyncRoot` 互斥、timer 单次订阅，与桌面 `OnOpenGlDeinit` 语义对齐。**T6-补2（同日）单二进制双后端**：iOS 基类恒为 `OpenGlControlBase`，宿主开 `iOSRenderingMode.OpenGl` 时运行时自动回退（权威信号 `OnOpenGlInit` + 次级 Skia lease `GRContext.Backend` 判定）。Metal 模式全页无回归；GL 模式 14 页中 **11 页出图正确**（含 Cel Shading/点云/粒子/glb 蒙皮），**3 个走 PBR Deferred 的页（PBR/CSM/Debug Test）不出图**——CSM 页等满 210s 后视口转纯黑，且模拟器单帧 >160s，失败面与管线一一对应，未真机验证。另发现既有缺陷：Animation 页在 Metal 模式下因 Assimp 无 iOS 实现直接崩溃（`Cannot determine OS-specific implementation`） | T6 节执行证据；`/tmp/t6-home.png`、`/tmp/t6-points3.png`；T6-补 `/tmp/life-1.png`、`/tmp/life-4.png`；T6-补2 `/tmp/metal-pbr.png`、`/tmp/glm-*.png`、`/tmp/mtl-*.png`、`/tmp/glm-CSM-wait.png`；`src/Aura3D.Avalonia/{Aura3DViewBase.Angle.cs,Angle/AngleGlesSession.cs}`；T6-补2 `/tmp/metal-pbr.png`、`/tmp/gl-base.png`、`/tmp/gl-B2.png`、`/tmp/gl-B6.png` | 2026-09-23 |
+| T6-补3 | **部分通过**：定位并修复 GL 回退模式下 PBR Deferred 整页出黑的两个成因——① 渲染目标按挂钟 1s TTL 回收（慢帧下每帧之间即销毁重建 GBuffer/HDR RT），改为按渲染序号回收 `IdleRenderTargetReclaimRenders=30`；② `pbr_ibl_ambient.frag` 在空 GBuffer 像素 `normalize(0,0,0)` 产出 NaN 污染整屏，加有限性早退。复验后 **PBR RenderPipeline 页与 Debug Test 页在 GL 模式完整出图**（原"三页不出图"更正）。**残留不通过（已停下报告，未扩大改动）**：CSM 页 80×80 地面网格在 GL 模式自第 3 帧起该笔 draw 零片元落地，同帧新建 FBO / 关深度 / 关剔除 / 翻绕序 / 全量重传几何均无效，而只吃 `gl_VertexID` 的最小 program 在同一坏帧稳定落地 ⇒ 判为模拟器 EAGL(GLES-on-Metal) 层静默丢弃该 draw，须真机复验。诊断探针已全部删除，`PipelineSettings.DepthFormat` 实验值已还原。`dotnet test` 89/0；Metal 模式无回归 | T6-补3 执行证据；`/tmp/clean-pbr.png`、`/tmp/clean-dbg.png`、`/tmp/clean-csm-1.png`（Metal 同构建对照 `/tmp/clean-metal-csm.png`，历史对照 `/tmp/mtl-csm-fixed.png`）；取证日志 `/tmp/l12.log`–`/tmp/l20.log`；`src/Aura3D.Core/Renderers/RenderPipeline_RenderTarget.cs:10/19/21/30/37/102/113`、`src/Aura3D.Pipeline.PBR/Assets/Shaders/pbr_ibl_ambient.frag:68-75` | 2026-09-24 |

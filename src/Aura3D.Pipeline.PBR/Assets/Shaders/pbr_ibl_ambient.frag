@@ -65,7 +65,14 @@ void main() {
     vec3 albedo = basecolor.rgb;
     float alpha = basecolor.a;
     // Sample normal and roughness
-    vec3 normal = normalize(texture(gBufferNormalRoughness, v_texCoord).rgb);
+    vec3 gbufferNormal = texture(gBufferNormalRoughness, v_texCoord).rgb;
+    // Empty GBuffer pixels have normal (0,0,0); normalize() there yields NaN that pollutes the whole output.
+    if (dot(gbufferNormal, gbufferNormal) < 0.0001)
+    {
+        o_iblColor = vec4(0.0);
+        return;
+    }
+    vec3 normal = normalize(gbufferNormal);
 	normal = normalize(normal * 2.0 - 1.0);
     float roughness = texture(gBufferNormalRoughness, v_texCoord).a;
 

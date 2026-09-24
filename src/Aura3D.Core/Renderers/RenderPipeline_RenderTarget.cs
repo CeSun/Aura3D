@@ -7,9 +7,18 @@ namespace Aura3D.Core.Renderers;
 /// </summary>
 public abstract partial class RenderPipeline
 {
-    private readonly Dictionary<string, Dictionary<Size, (RenderTarget, DateTime)>> renderTargets = [];
+    private readonly Dictionary<string, Dictionary<Size, (RenderTarget, long)>> renderTargets = [];
 
     private readonly Dictionary<string, RenderTargetHandle> renderTargetHandles = [];
+
+    /// <summary>
+    /// Number of consecutive <see cref="Render"/> calls without a hit before a cached render target is reclaimed.
+    /// Must stay frame based rather than wall-clock based: a slow frame would otherwise evict targets that are
+    /// still in use every frame.
+    /// </summary>
+    private const int IdleRenderTargetReclaimRenders = 30;
+
+    private long _renderSequence;
 
     private void ClearRenderTargetCaches()
     {
@@ -18,12 +27,14 @@ public abstract partial class RenderPipeline
 
     private void UpdateRenderTargetsLRU()
     {
+        _renderSequence++;
+
         foreach (var (name, rtMap) in renderTargets)
         {
             var expiredSizes = new List<Size>();
-            foreach (var (rtSize, (rt, dateTime)) in rtMap)
+            foreach (var (rtSize, (rt, lastUsedRender)) in rtMap)
             {
-                if (DateTime.Now - dateTime > TimeSpan.FromSeconds(1))
+                if (_renderSequence - lastUsedRender > IdleRenderTargetReclaimRenders)
                 {
                     RemoveGpuState(rt);
                     rt.Destroy(gl!);
@@ -88,7 +99,7 @@ public abstract partial class RenderPipeline
             {
                 rt = (new RenderTarget()
                     .SetSize((uint)size.Width, (uint)size.Height)
-                    .SetDepthTexture(rtConf.DepthTextureFormat), DateTime.Now);
+                    .SetDepthTexture(rtConf.DepthTextureFormat), _renderSequence);
 
                 foreach (var (textureName, textureFormat) in rtConf.Textures)
                 {
@@ -99,7 +110,7 @@ public abstract partial class RenderPipeline
             }
             else
             {
-                rt.Item2 = DateTime.Now;
+                rt.Item2 = _renderSequence;
                 rtMap[size] = rt;
             }
             EnsureSynced(rt.Item1);
