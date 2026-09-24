@@ -415,7 +415,7 @@ public partial class RenderPass
     /// </summary>
     public unsafe void UniformMatrix4Array(string name, Span<Matrix4x4> values)
     {
-        if (CurrentShader == null || values == null || values.Length == 0)
+        if (CurrentShader == null || values.Length == 0)
             return;
         var location = CurrentShader.GetUniformLocation(name, gl);
         if (location == -1)
@@ -431,7 +431,7 @@ public partial class RenderPass
     /// </summary>
     public unsafe void UniformVector3Array(string name, Span<Vector3> values)
     {
-        if (CurrentShader == null || values == null || values.Length == 0)
+        if (CurrentShader == null || values.Length == 0)
             return;
         var location = CurrentShader.GetUniformLocation(name, gl);
         if (location == -1)
@@ -447,7 +447,7 @@ public partial class RenderPass
     /// </summary>
     public unsafe void UniformVector4Array(string name, Span<Vector4> values)
     {
-        if (CurrentShader == null || values == null || values.Length == 0)
+        if (CurrentShader == null || values.Length == 0)
             return;
         var location = CurrentShader.GetUniformLocation(name, gl);
         if (location == -1)
