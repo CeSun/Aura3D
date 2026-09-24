@@ -17,7 +17,8 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
 
     <PackageId>Aura3D.Angle.iOS</PackageId>
-    <Version>0.1.0</Version>
+    <!-- 版本单点在 Directory.Packages.props；改这里不会同步改依赖区间，别在这加 MinVer -->
+    <Version>$(Aura3DAngleIosVersion)</Version>
     <Authors>CeSun</Authors>
     <RepositoryUrl>https://github.com/CeSun/Aura3d</RepositoryUrl>
     <PackageTags>angle;ios;opengles;metal;avalonia;aura3d</PackageTags>

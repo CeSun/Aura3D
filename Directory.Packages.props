@@ -3,6 +3,10 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <AvaloniaVersion>12.0.0</AvaloniaVersion>
+    <!-- 两颗切片包的版本单点：切片工程自己的 <Version> 与下面的精确区间都取这两个属性，
+         换切片 = 改这一行。切片工程不走 MinVer（版本不来自 git tag），所以必须显式钉。 -->
+    <Aura3DAngleIosVersion>0.1.0</Aura3DAngleIosVersion>
+    <Aura3DAvaloniaBrowserVersion>0.1.0</Aura3DAvaloniaBrowserVersion>
   </PropertyGroup>
   <ItemGroup>
     <!-- Avalonia packages -->
@@ -15,9 +19,9 @@
     <PackageVersion Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />
     <!-- 精确区间：ANGLE 的 native 切片与 Aura3D.Avalonia 里的 DllImport 签名是 ABI 配对，
          不能让消费方被动升到一个没配套测过的切片上。 -->
-    <PackageVersion Include="Aura3D.Angle.iOS" Version="[0.1.0]" />
+    <PackageVersion Include="Aura3D.Angle.iOS" Version="[$(Aura3DAngleIosVersion)]" />
     <!-- 同样是精确区间：包里的 wasm 链接开关与浏览器后端的 GLES 调用面配对，升降级要和库一起过验证。 -->
-    <PackageVersion Include="Aura3D.Avalonia.Browser" Version="[0.1.0]" />
+    <PackageVersion Include="Aura3D.Avalonia.Browser" Version="[$(Aura3DAvaloniaBrowserVersion)]" />
     <PackageVersion Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
