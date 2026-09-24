@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    纯打包工程：没有一行代码，唯一职责是把 ANGLE 为 iOS 构建出的 libEGL.framework /
+    libGLESv2.framework 连同一段注入 NativeReference 的 targets 发成 NuGet 包，
+    让外部 iOS 应用不必自己去找 ANGLE 产物。
+
+    构建产物不入库：framework 由同目录的 build-angle-ios.sh 放进 native/<切片目录>/，
+    该目录已在 .gitignore 里。
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependencies>true</SuppressDependencies>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+
+    <PackageId>Aura3D.Angle.iOS</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>CeSun</Authors>
+    <RepositoryUrl>https://github.com/CeSun/Aura3d</RepositoryUrl>
+    <PackageTags>angle;ios;opengles;metal;avalonia;aura3d</PackageTags>
+    <Description>ANGLE (Metal backend) iOS frameworks for the Aura3D.Avalonia render path.</Description>
+    <!-- 包体只有 ANGLE 的二进制，许可证按 ANGLE 自己的 BSD-3-Clause 走，原文随包分发 -->
+    <PackageLicenseFile>LICENSE.angle.txt</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>ANGLE 58f8882372e8a4e83da821ac5d16f0323c3fa1af, gn: angle_enable_metal=true, is_debug=false, enable_rust=false。
+模拟器切片已验证出图；真机切片由 scripts/build-angle-ios.sh 产出，未在设备上验证。</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="native/**" Pack="true" PackagePath="native/" />
+    <!-- 同一份 targets 打进 build/ 与 buildTransitive/ 两个约定目录，文件里用哨兵防重复注入 -->
+    <None Include="build/Aura3D.Angle.iOS.targets" Pack="true" PackagePath="build/" />
+    <None Include="build/Aura3D.Angle.iOS.targets" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="LICENSE.angle.txt" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <!-- 忘了先构建 ANGLE 就打包时，给出可执行的提示，而不是发一个空壳包出去 -->
+  <Target Name="AngleNativeCheck" BeforeTargets="Pack">
+    <Error Condition=" !Exists('$(MSBuildProjectDirectory)/native/iossimulator-arm64/libEGL.framework')
+                   And !Exists('$(MSBuildProjectDirectory)/native/ios-arm64/libEGL.framework') "
+           Text="native/ 下没有任何 ANGLE 切片。先运行 build-angle-ios.sh，或手工把已构建的 framework 放进 native/iossimulator-arm64/ 与 native/ios-arm64/。" />
+  </Target>
+
+</Project>

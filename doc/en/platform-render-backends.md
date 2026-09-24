@@ -28,8 +28,27 @@ The decision is logged as `[aura3d-angle] compositor backend=..., path=...` — 
 
 ## iOS: providing the ANGLE frameworks
 
-1. Build ANGLE for iOS from a standalone ANGLE checkout (not a Chromium checkout) with the Metal backend enabled; the only required gn argument is `enable_rust=false`. The result is `libEGL.framework` and `libGLESv2.framework`. Build outputs are not committed to the repository.
-2. Reference both frameworks from the iOS application project as `NativeReference` items (`Kind=Framework`, `SmartLink=False`). `example/Example.iOS/Example.iOS.csproj` points at the build output through the `AngleIosOutDir` property.
+The native ANGLE libraries must be linked into the **application** executable (`Aura3D.Avalonia` resolves them through `DllImport("__Internal")` to avoid clashing with Apple's own OpenGLES symbols), so they cannot ride along inside the class library.
+
+**Recommended: the `Aura3D.Angle.iOS` package.** Installing it is enough — its targets inject the `NativeReference` items, no project configuration required:
+
+```shell
+dotnet add package Aura3D.Angle.iOS
+```
+
+The package is not on nuget.org yet; inside the repository you can produce it and consume it from a local feed:
+
+```shell
+dotnet pack src/Aura3D.Angle.iOS -c Release -o artifacts/nupkgs
+dotnet build example/Example.iOS -p:Aura3DAngleFromPackage=true
+```
+
+It only affects iOS target frameworks, so referencing it from a desktop or Android project is harmless. A missing slice fails the build loudly instead of quietly producing a blank viewport.
+
+**Manual route** (when you build ANGLE yourself):
+
+1. Build ANGLE for iOS from a standalone ANGLE checkout (not a Chromium checkout) with the Metal backend enabled; the only required gn argument is `enable_rust=false`. The result is `libEGL.framework` and `libGLESv2.framework`. Build outputs are not committed to the repository — `src/Aura3D.Angle.iOS/build-angle-ios.sh` codifies this step.
+2. Reference both frameworks from the iOS application project as `NativeReference` items (`Kind=Framework`, `SmartLink=False`). `example/Example.iOS/Example.iOS.csproj` does exactly this by default, pointing at the build output through `AngleIosOutDir`.
 3. Note that this `ItemGroup` is guarded by an `Exists(...)` condition: when the frameworks are missing the item group is skipped silently, the app still compiles, and the viewport stays blank because the ANGLE session fails. Verify the frameworks really were linked before looking elsewhere.
 4. Hardware requirements: ANGLE's Metal backend needs Metal GPU family 4 (A11 or later); tvOS is not supported. The iOS target of `Aura3D.Avalonia` sets `SupportedOSPlatformVersion` to 15.0.
 

@@ -1,0 +1,38 @@
+<Project>
+  <!--
+    把包里的 ANGLE framework 变成应用的 NativeReference。消费方不需要写任何东西：
+    装包即生效。同一份文件会经 build/ 与 buildTransitive/ 两个约定目录命中，
+    用哨兵属性保证只生效一次。
+  -->
+  <PropertyGroup Condition=" '$(Aura3DAngleNativeTargetsImported)' == 'true' Or !$(TargetFramework.Contains('-ios')) ">
+    <Aura3DAngleNativeTargetsSkip>true</Aura3DAngleNativeTargetsSkip>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Aura3DAngleNativeTargetsSkip)' != 'true' ">
+    <Aura3DAngleNativeTargetsImported>true</Aura3DAngleNativeTargetsImported>
+    <Aura3DAngleNativeRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../native'))</Aura3DAngleNativeRoot>
+    <!-- 不带 RID 的 dotnet build 面向模拟器，与 .NET iOS 的默认行为一致 -->
+    <Aura3DAngleSlice Condition=" '$(RuntimeIdentifier)' == '' Or $(RuntimeIdentifier.StartsWith('iossimulator')) ">iossimulator-arm64</Aura3DAngleSlice>
+    <Aura3DAngleSlice Condition=" $(RuntimeIdentifier.StartsWith('ios-')) ">ios-arm64</Aura3DAngleSlice>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(Aura3DAngleNativeTargetsSkip)' != 'true' ">
+    <NativeReference Include="$(Aura3DAngleNativeRoot)/$(Aura3DAngleSlice)/libEGL.framework">
+      <Kind>Framework</Kind>
+      <SmartLink>False</SmartLink>
+    </NativeReference>
+    <NativeReference Include="$(Aura3DAngleNativeRoot)/$(Aura3DAngleSlice)/libGLESv2.framework">
+      <Kind>Framework</Kind>
+      <SmartLink>False</SmartLink>
+    </NativeReference>
+  </ItemGroup>
+
+  <!--
+    切片缺失必须在这里失败。Aura3D.Avalonia 的 iOS 后端用 DllImport("__Internal") 解析
+    ANGLE 符号，链接期不报错的话，代价就是运行时整块视口不出图且没有任何异常。
+  -->
+  <Target Name="Aura3DAngleNativeCheck" BeforeTargets="PrepareForBuild" Condition=" '$(Aura3DAngleNativeTargetsSkip)' != 'true' ">
+    <Error Condition=" !Exists('$(Aura3DAngleNativeRoot)/$(Aura3DAngleSlice)/libEGL.framework') "
+           Text="Aura3D.Angle.iOS 包里没有 $(Aura3DAngleSlice) 切片（RuntimeIdentifier='$(RuntimeIdentifier)'）。真机构建需要包内带 native/ios-arm64/，只发布了模拟器切片时请改用模拟器目标。" />
+  </Target>
+</Project>

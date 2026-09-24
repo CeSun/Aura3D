@@ -17,11 +17,21 @@
     <PackageReference Include="Avalonia.iOS" />
   </ItemGroup>
 
-  <!-- T3 探针：ANGLE iOS 模拟器 framework（构建产物不入库，路径可用 AngleIosOutDir 覆盖） -->
+  <!--
+    ANGLE 的 iOS framework 有两种来源，二选一：
+      默认：本地 ANGLE 构建目录（AngleIosOutDir），CI 上没有可还原的包，走这条；
+      -p:Aura3DAngleFromPackage=true：改由 Aura3D.Angle.iOS 包注入，先执行
+        dotnet pack src/Aura3D.Angle.iOS -o artifacts/nupkgs
+    两者都没有时仍然构建成功，只是运行时视口不出图（宿主符号解析不到 ANGLE）。
+  -->
   <PropertyGroup>
-    <AngleIosOutDir Condition=" '$(AngleIosOutDir)' == '' ">/Users/sunce/angle_ios/out/ios</AngleIosOutDir>
+    <AngleIosOutDir Condition=" '$(AngleIosOutDir)' == '' ">$([System.Environment]::GetEnvironmentVariable('HOME'))/angle_ios/out/ios</AngleIosOutDir>
+    <RestoreAdditionalProjectSources Condition=" Exists('$(MSBuildThisFileDirectory)../../artifacts/nupkgs') ">$(MSBuildThisFileDirectory)../../artifacts/nupkgs</RestoreAdditionalProjectSources>
   </PropertyGroup>
-  <ItemGroup Condition="Exists('$(AngleIosOutDir)/libEGL.framework')">
+  <ItemGroup Condition=" '$(Aura3DAngleFromPackage)' == 'true' ">
+    <PackageReference Include="Aura3D.Angle.iOS" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(Aura3DAngleFromPackage)' != 'true' And Exists('$(AngleIosOutDir)/libEGL.framework') ">
     <NativeReference Include="$(AngleIosOutDir)/libEGL.framework">
       <Kind>Framework</Kind>
       <SmartLink>False</SmartLink>
