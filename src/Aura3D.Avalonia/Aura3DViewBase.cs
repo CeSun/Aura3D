@@ -296,18 +296,11 @@ public abstract partial class Aura3DViewBase : ICustomHitTest
         }
     }
 
-#if !ANGLE_HOST
     /// <summary>
-    /// 请求再调度一次渲染帧。遮蔽 OpenGlControlBase 同名方法并转发到本后端，
+    /// 请求再调度一次渲染帧。遮蔽 <c>OpenGlControlBase</c> 同名方法并转发到当前后端，
     /// 保证应用侧在任一平台以相同签名驱动渲染。
     /// </summary>
     public new void RequestNextFrameRendering() => RequestNextFrameCore();
-#else
-    /// <summary>
-    /// 请求再调度一次渲染帧（与桌面端 OpenGlControlBase 同名同签名）。
-    /// </summary>
-    public void RequestNextFrameRendering() => RequestNextFrameCore();
-#endif
 
     /// <summary>
     /// 各平台后端把"再来一帧"的意图翻译成自己的调度机制。

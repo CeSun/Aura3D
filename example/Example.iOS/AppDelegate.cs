@@ -22,8 +22,15 @@ namespace Example.iOS
         {
             // iOS 上 Aura3DView 走 Aura3D.Avalonia 内置的 ANGLE(Metal) 后端，
             // 应用侧无需任何平台特判；宿主 App 渲染器不再被强制为 OpenGL。
-            return base.CustomizeAppBuilder(builder)
+            var result = base.CustomizeAppBuilder(builder)
                 .WithInterFont();
+
+            // 验证辅助（仅存在于本工程）：AURA_IOS_OPENGL=1 把渲染模式设为 OpenGl(EAGL)，
+            // 用于在模拟器上验证 Aura3D 回退到 OpenGlControlBase 的那条路径。
+            var forceGl = !string.IsNullOrEmpty(NSProcessInfo.ProcessInfo.Environment?["AURA_IOS_OPENGL"]?.ToString());
+            return forceGl
+                ? result.With(new iOSPlatformOptions { RenderingMode = [iOSRenderingMode.OpenGl] })
+                : result;
         }
 
         private bool _navScheduled;
