@@ -94,7 +94,12 @@ public class CubeRenderTarget : RenderTargetBase<RenderCubeTexture, CubeRenderTa
         gl.TexParameter(GLEnum.TextureCubeMap, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
         gl.TexParameter(GLEnum.TextureCubeMap, GLEnum.TextureWrapR, (int)GLEnum.ClampToEdge);
         gl.FramebufferTexture2D(GLEnum.Framebuffer, depthStencilTexture.InternalFormat.ToGlAttachment(), GLEnum.TextureCubeMapPositiveX, depthStencilTexture.TextureId, 0);
-        gl.DrawBuffers(ColorAttachmentSet);
+        // 同 RenderTarget：depth-only 的立方体阴影 FBO 必须显式置 GL_NONE，
+        // 否则 WebGL2 会因为"启用的 draw buffer 没有对应片元输出"而丢弃整条 draw。
+        if (renderTextures.Count == 0)
+            gl.DrawBuffers(stackalloc GLEnum[] { (GLEnum)0 /* GL_NONE */ });
+        else
+            gl.DrawBuffers(ColorAttachmentSet);
         state = gl.CheckFramebufferStatus(GLEnum.Framebuffer);
 
         if (state != GLEnum.FramebufferComplete)

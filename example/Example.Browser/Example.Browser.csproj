@@ -6,6 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!--
+    这里不写任何 wasm/emscripten 配置：浏览器后端需要的 WasmBuildNative 与
+    -s FULL_ES3 / WEBGL_VERSION 开关由 Aura3D.Avalonia.Browser 的 buildTransitive props 注入
+    （经 Aura3D.Avalonia 的 browser 目标依赖带进来）。Example 与外部用户走的是完全同一条消费路径。
+  -->
+
   <ItemGroup>
     <PackageReference Include="Avalonia.Browser" />
   </ItemGroup>

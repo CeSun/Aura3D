@@ -5,10 +5,12 @@ namespace Aura3D.Avalonia;
 /// <summary>
 /// Avalonia GL 宿主侧：渲染上下文由 <c>OpenGlControlBase</c> 提供，本文件只做回调转发，
 /// 主体流程全部在共享的 <see cref="Aura3DViewBase"/> 中。
-/// 桌面/Android/Browser 上这是唯一后端。iOS 上与 <c>Aura3DViewBase.Angle.cs</c> 的自持 ANGLE
+/// 桌面/Android 上这是唯一后端。iOS 上与 <c>Aura3DViewBase.Angle.cs</c> 的自持 ANGLE
 /// 后端共存：宿主 App 显式设成 <c>iOSRenderingMode.OpenGl</c> 时走这里；默认的 Metal 合成器下
 /// Avalonia 不提供 GL 互操作，<c>OpenGlControlBase</c> 会静默初始化失败，由 ANGLE 后端接管
 /// （归属判定见该文件的 <c>BackendPath</c>）。
+/// Browser 上 <c>WebGlContext</c> 同样不提供共享上下文/GPU 互操作，本回调永不触发，
+/// 由 <c>Aura3DViewBase.WebGl.cs</c> 的自持 WebGL2 分支接管（结构与 iOS ANGLE 分支同构）。
 /// </summary>
 public abstract partial class Aura3DViewBase : global::Avalonia.OpenGL.Controls.OpenGlControlBase
 {
@@ -58,7 +60,7 @@ public abstract partial class Aura3DViewBase : global::Avalonia.OpenGL.Controls.
     /// </summary>
     partial void OnGlContextReady();
 
-#if !ANGLE_HOST
+#if !ANGLE_HOST && !WEBGL_HOST
     partial void RequestNextFrameCore() => base.RequestNextFrameRendering();
 
     // 桌面端渲染回调与 UI 线程同线程，事件内联触发，行为与拆分前完全一致。

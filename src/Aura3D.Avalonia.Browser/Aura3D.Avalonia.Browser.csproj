@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    纯打包工程：没有一行代码，唯一职责是把浏览器后端需要的应用侧 wasm 链接开关
+    （WasmBuildNative + emscripten 的 FULL_ES3 / WEBGL_VERSION）作为 props 发成 NuGet 包，
+    让应用装上 Aura3D.Avalonia 就自动拿到，不必自己去查 emcc 开关。
+    与 Aura3D.Angle.iOS 同构：那个包替 iOS 应用注入 NativeReference，这个包替浏览器应用注入构建属性。
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependencies>true</SuppressDependencies>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+
+    <PackageId>Aura3D.Avalonia.Browser</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>CeSun</Authors>
+    <RepositoryUrl>https://github.com/CeSun/Aura3d</RepositoryUrl>
+    <PackageTags>wasm;browser;webgl;opengles;avalonia;aura3d</PackageTags>
+    <Description>Build-time wiring for the Aura3D.Avalonia browser (WebGL2) render path.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>注入 WasmBuildNative 与 emscripten 的 -s FULL_ES3=1 -s MIN/MAX_WEBGL_VERSION=2 链接开关，仅对 *-browser 目标生效。</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 同一份 props 打进 build/ 与 buildTransitive/ 两个约定目录，文件里用哨兵防重复注入 -->
+    <None Include="build/Aura3D.Avalonia.Browser.props" Pack="true" PackagePath="build/" />
+    <None Include="build/Aura3D.Avalonia.Browser.props" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>

@@ -25,13 +25,16 @@ jobs:
           10.0.x
 
     - name: Install workloads
-      run: dotnet workload install ios
+      # wasm-tools：Aura3D.Avalonia 含 net10.0-browser 目标，pack 它就要 browser 运行时引用包。
+      run: dotnet workload install ios wasm-tools
 
-    # Aura3D.Avalonia 的 iOS 目标以精确区间依赖 Aura3D.Angle.iOS，先发它、发到 local-feed，
-    # 后面所有 pack/restore 才有包可用；同一次运行末尾它和其他包一起被推送，
-    # 于是 nuspec 里钉的那个版本必定是本次产出的那一个。
-    - name: Pack Aura3D.Angle.iOS into local-feed
-      run: dotnet pack src/Aura3D.Angle.iOS -c Release -o local-feed
+    # Aura3D.Avalonia 的 iOS / browser 目标以精确区间分别依赖 Aura3D.Angle.iOS 与
+    # Aura3D.Avalonia.Browser，先发它们、发到 local-feed，后面所有 pack/restore 才有包可用；
+    # 同一次运行末尾它们和其他包一起被推送，于是 nuspec 里钉的那些版本必定是本次产出的。
+    - name: Pack prerequisite packages into local-feed
+      run: |
+        dotnet pack src/Aura3D.Angle.iOS -c Release -o local-feed
+        dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
 
     - name: Test
       run: dotnet test src/Test/Aura3D.Tests/Aura3D.Tests.csproj -c Release
@@ -41,6 +44,9 @@ jobs:
 
     - name: Pack Aura3D.Angle.iOS
       run: dotnet pack src/Aura3D.Angle.iOS -o packages -c Release
+
+    - name: Pack Aura3D.Avalonia.Browser
+      run: dotnet pack src/Aura3D.Avalonia.Browser -o packages -c Release
         
     - name: Pack Aura3D.Avalonia
       run: dotnet pack src/Aura3D.Avalonia -o packages -c Release

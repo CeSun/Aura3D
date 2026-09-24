@@ -4,15 +4,23 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
     <!-- iOS 走 ANGLE(Metal) + Skia lease 后端，需要平台 TFM 以引用 Metal 绑定。
          这里刻意不钉平台版本号：库只用到 API 面，钉死 net10.0-ios26.0 会让缺少该 band 的
-         机器（含 CI runner）连 restore 都过不去。应用工程才需要与本机 Xcode 对齐。 -->
-    <TargetFrameworks>net8.0;net10.0;net10.0-ios</TargetFrameworks>
+         机器（含 CI runner）连 restore 都过不去。应用工程才需要与本机 Xcode 对齐。
+         Browser 走 WebGL2 + Skia lease 后端：Avalonia.Browser 的合成器 WebGL 上下文经
+         emscripten GLES shim 暴露真函数指针，库自身不需要额外原生依赖。 -->
+    <TargetFrameworks>net8.0;net10.0;net10.0-ios;net10.0-browser</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
     <DefineConstants>$(DefineConstants);ANGLE_HOST</DefineConstants>
+    <!-- lease 合成使用 Avalonia 标注为 Unstable 的 ISkiaSharpApiLeaseFeature -->
+    <NoWarn>$(NoWarn);AVA1700</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-browser'">
+    <DefineConstants>$(DefineConstants);WEBGL_HOST</DefineConstants>
     <!-- lease 合成使用 Avalonia 标注为 Unstable 的 ISkiaSharpApiLeaseFeature -->
     <NoWarn>$(NoWarn);AVA1700</NoWarn>
   </PropertyGroup>
@@ -21,13 +29,24 @@
     <PackageReference Include="Avalonia" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios' Or '$(TargetFramework)' == 'net10.0-browser'">
+    <!-- lease 合成需要 ISkiaSharpApiLeaseFeature 与 SkiaSharp 类型 -->
     <PackageReference Include="Avalonia.Skia" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios'">
     <!-- iOS 后端用 DllImport("__Internal") 打 ANGLE 的 EGL/GLES2 符号，framework 必须由应用侧链进来。
          这里声明精确区间依赖，是为了让 nuget.org 上的消费方装 Aura3D.Avalonia 时自动拿到配套切片
          （包内 buildTransitive targets 会把 NativeReference 注入到应用工程）；区间语义见
          Directory.Packages.props。 -->
     <PackageReference Include="Aura3D.Angle.iOS" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-browser'">
+    <!-- 浏览器后端的 GLES 调用要经应用 wasm 模块里的 emscripten shim 落到 WebGL2，而链接开关
+         （WasmBuildNative + FULL_ES3 + WEBGL_VERSION=2）只作用于最终可执行文件。与 iOS 的切片包
+         同构：精确区间依赖，包内 buildTransitive props 穿透到应用工程，应用侧零配置。 -->
+    <PackageReference Include="Aura3D.Avalonia.Browser" />
   </ItemGroup>
 
   <ItemGroup>

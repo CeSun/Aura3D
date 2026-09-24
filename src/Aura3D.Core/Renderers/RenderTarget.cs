@@ -76,7 +76,15 @@ public class RenderTarget : RenderTargetBase<RenderTexture, RenderTarget>
 
         gl.FramebufferTexture2D(GLEnum.Framebuffer, depthStencilTexture.InternalFormat.ToGlAttachment(), GLEnum.Texture2D, DepthStencilTexture.TextureId, 0);
 
-        gl.DrawBuffers(ColorAttachmentSet);
+        // 没有颜色附件时（depth-only 阴影贴图）必须显式把 draw buffer 置为 GL_NONE：
+        // FBO 的 GL_DRAW_BUFFER0 默认值是 COLOR_ATTACHMENT0，而 WebGL2 会校验
+        // "启用的 draw buffer 必须有对应的片元输出"。阴影片元着色器没有颜色输出，
+        // 于是整条 draw 被判 GL_INVALID_OPERATION 直接丢弃（桌面 GL 与 ANGLE 对此宽容，
+        // 所以同一份代码在 Windows/Linux/iOS 上表现正常）。
+        if (renderTextures.Count == 0)
+            gl.DrawBuffers(stackalloc GLEnum[] { (GLEnum)0 /* GL_NONE */ });
+        else
+            gl.DrawBuffers(ColorAttachmentSet);
         state = gl.CheckFramebufferStatus(GLEnum.Framebuffer);
 
 

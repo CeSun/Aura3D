@@ -50,8 +50,8 @@ public class BackgroundPass: RenderPass
         if (camera.IsRenderBackground == false)
             return;
 
-        ClearTextureUnit(); 
-        UseShader_Internal();
+        ClearTextureUnit();
+
         if (Scene.Background.IsT0 && Scene.Background.AsT0 != null)
         {
             Matrix4x4 projection = default;
@@ -60,9 +60,16 @@ public class BackgroundPass: RenderPass
 
             var view = Matrix4x4.CreateLookAt(Vector3.Zero, Vector3.Zero + worldTransform.ForwardVector(), worldTransform.UpVector());
 
+            // 与其它 pass 一致：先 UseShader 设定宏，再 UseShader_Internal 绑定程序。
+            // 反过来写会让本帧绑定上一帧（或首帧的空宏）变体：uniform 位置查不到被静默跳过，
+            // 而空宏变体的 background.frag 两条 #ifdef 都不成立，片元输出 outColor 从未被写入，
+            // 编译后程序没有任何片元输出。桌面 GL 与 ANGLE 宽容，WebGL2 会按
+            // "missing fragment shader outputs" 判 GL_INVALID_OPERATION 丢弃这条 draw。
             if (camera.ProjectionType == ProjectionType.Orthographic)
             {
                 UseShader("SKYBOX", "ORTHOGRAPHIC");
+                UseShader_Internal();
+
                 UniformMatrix4("viewRot", camera.View);
                 UniformFloat("farPlane", camera.FarPlane);
                 float aspectRatio = camera.Width / (float)camera.Height;
@@ -72,7 +79,8 @@ public class BackgroundPass: RenderPass
             }
             else
             {
-                UseShader("SKYBOX"); 
+                UseShader("SKYBOX");
+                UseShader_Internal();
 
                 var fovRadians = camera.FieldOfView.DegreeToRadians();
 
@@ -88,6 +96,7 @@ public class BackgroundPass: RenderPass
         else if (Scene.Background.IsT1 && Scene.Background.AsT1 != null)
         {
             UseShader("BACKGROUND_TEXTURE");
+            UseShader_Internal();
             UniformTexture("uBackgroundTexture", Scene.Background.AsT1);
             RenderQuad();
         }

@@ -96,7 +96,10 @@ void main()
         {
             irradianceMap = new CubeRenderTarget()
             .SetSize(_irradianceMapSize, _irradianceMapSize)
-            .AddRenderTexture("Irradiance", TextureFormat.Rgb16f)
+            // 用 Rgba16f 而非 Rgb16f：WebGL2 把 RGB 族内部格式（RGB8/RGB16F/RGB32F）排除在
+            // color-renderable 之外，挂成 draw buffer 会得到 FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+            // （桌面 GL 与 ANGLE 允许，所以 Windows/Linux/iOS 上没暴露）。与其余 HDR RT 一致。
+            .AddRenderTexture("Irradiance", TextureFormat.Rgba16f)
             .SetDepthTexture(TextureFormat.DepthComponent16);
 
             camera.SetPipelineGpuState("IrradianceMap", irradianceMap);

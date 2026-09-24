@@ -114,7 +114,8 @@ public class PrefilteredEnvironmentMapPass : RenderPass<PBRPipelineBase>
         {
             perfilteredEnvMap = new CubeRenderTarget();
 
-            perfilteredEnvMap.AddRenderTexture("perfilteredEnv", TextureFormat.Rgb16f);
+            // 同 IrradianceMapPass：RGB 族格式在 WebGL2 里不可作为颜色附件，改用 Rgba16f。
+            perfilteredEnvMap.AddRenderTexture("perfilteredEnv", TextureFormat.Rgba16f);
 
             perfilteredEnvMap.SetEnableMipMapLevel(true);
 

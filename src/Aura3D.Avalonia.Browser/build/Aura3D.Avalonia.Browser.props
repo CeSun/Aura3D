@@ -1,0 +1,25 @@
+<Project>
+  <!--
+    浏览器（WebGL2）后端对应用工程有两个硬性要求，两者都只能在**应用**的构建属性里成立：
+
+    1. WasmBuildNative：Avalonia 的 WebGL 渲染目标与 Aura3D 的 GLES 入口点都从应用自己的
+       wasm 模块里取 libSkiaSharp 符号。不链原生库时这些符号会退化成运行时从 CDN 拉取的
+       预构建副本，那份副本没有 -s 开关定制出来的 GLES shim。
+    2. emscripten 的链接开关：FULL_ES3 把 GLES2/GLES3 实现链进模块（默认只有 WebGL1 通道），
+       MIN/MAX_WEBGL_VERSION=2 保证创建的是 WebGL2 上下文——GLES3 的入口点（VAO、UBO、
+       3D 纹理、blitFramebuffer）在 WebGL1 上下文上取不到，管线会整块不出图。
+
+    库自己设置不了这些（它们作用于最终可执行的 wasm 链接），所以由本包在装包时注入。
+    应用侧只需引用 Aura3D.Avalonia，和 iOS 上 Aura3D.Angle.iOS 注入 NativeReference 同构。
+  -->
+  <PropertyGroup Condition=" '$(Aura3DBrowserWasmPropsImported)' == 'true' Or !$(TargetFramework.Contains('-browser')) ">
+    <Aura3DBrowserWasmPropsSkip>true</Aura3DBrowserWasmPropsSkip>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Aura3DBrowserWasmPropsSkip)' != 'true' ">
+    <!-- 同一份文件会被 build/ 与 buildTransitive/ 两个约定目录命中，哨兵保证只生效一次 -->
+    <Aura3DBrowserWasmPropsImported>true</Aura3DBrowserWasmPropsImported>
+    <WasmBuildNative Condition=" '$(WasmBuildNative)' == '' ">true</WasmBuildNative>
+    <EmccExtraLDFlags>$(EmccExtraLDFlags) -s FULL_ES3=1 -s MAX_WEBGL_VERSION=2 -s MIN_WEBGL_VERSION=2</EmccExtraLDFlags>
+  </PropertyGroup>
+</Project>

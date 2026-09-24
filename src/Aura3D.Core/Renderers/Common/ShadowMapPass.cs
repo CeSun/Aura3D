@@ -13,6 +13,11 @@ namespace Aura3D.Core.Renderers;
 public class ShadowMapPass : RenderPass
 {
     /// <summary>
+    /// GL_NONE draw buffer, required by depth-only framebuffers (see the use site in Render).
+    /// </summary>
+    private static readonly GLEnum[] DrawBufferNone = [(GLEnum)0 /* GL_NONE */];
+
+    /// <summary>
     /// Initializes a new instance of the shadow map pass type.
     /// </summary>
     public ShadowMapPass(RenderPipeline renderPipeline) : base(renderPipeline)
@@ -215,6 +220,13 @@ public class ShadowMapPass : RenderPass
                     csmData.CascadeSplitDepths[c] = csmSplits[c];
 
                 gl.BindFramebuffer(GLEnum.Framebuffer, csmData.FboId);
+
+                // 该 FBO 只挂深度附件（每级联用 FramebufferTextureLayer 挂 DepthAttachment）。
+                // 与 RenderTarget 的 depth-only 路径同理，WebGL2 要求显式把 draw buffer 置为
+                // GL_NONE，否则无颜色输出的阴影片元着色器会让每级联的 draw 被判
+                // GL_INVALID_OPERATION（"Active draw buffers with missing fragment shader outputs"）。
+                gl.DrawBuffers(DrawBufferNone);
+
                 gl.Viewport(0, 0, (uint)csmRes, (uint)csmRes);
 
                 var lightPos = directionalLight.WorldTransform.Translation;
