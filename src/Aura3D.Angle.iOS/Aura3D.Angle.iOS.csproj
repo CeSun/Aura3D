@@ -39,10 +39,18 @@
     <None Include="LICENSE.angle.txt" Pack="true" PackagePath="/" />
   </ItemGroup>
 
-  <!-- 忘了先构建 ANGLE 就打包时，给出可执行的提示，而不是发一个空壳包出去 -->
+  <!-- 忘了先构建 ANGLE 就打包时，给出可执行的提示，而不是发一个空壳包出去。文案默认英文，构建进程 UI 语言为中文时换中文 -->
+  <PropertyGroup>
+    <Aura3DBuildUICulture Condition=" '$(Aura3DBuildUICulture)' == '' ">$([System.Globalization.CultureInfo]::CurrentUICulture.TwoLetterISOLanguageName)</Aura3DBuildUICulture>
+  </PropertyGroup>
   <Target Name="AngleNativeCheck" BeforeTargets="Pack">
     <Error Condition=" !Exists('$(MSBuildProjectDirectory)/native/iossimulator-arm64/libEGL.framework')
-                   And !Exists('$(MSBuildProjectDirectory)/native/ios-arm64/libEGL.framework') "
+                   And !Exists('$(MSBuildProjectDirectory)/native/ios-arm64/libEGL.framework')
+                   And '$(Aura3DBuildUICulture)' != 'zh' "
+           Text="No ANGLE slices under native/. Run build-angle-ios.sh first, or manually place built frameworks into native/iossimulator-arm64/ and native/ios-arm64/." />
+    <Error Condition=" !Exists('$(MSBuildProjectDirectory)/native/iossimulator-arm64/libEGL.framework')
+                   And !Exists('$(MSBuildProjectDirectory)/native/ios-arm64/libEGL.framework')
+                   And '$(Aura3DBuildUICulture)' == 'zh' "
            Text="native/ 下没有任何 ANGLE 切片。先运行 build-angle-ios.sh，或手工把已构建的 framework 放进 native/iossimulator-arm64/ 与 native/ios-arm64/。" />
   </Target>
 

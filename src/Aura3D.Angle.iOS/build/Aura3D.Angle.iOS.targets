@@ -16,6 +16,11 @@
     <Aura3DAngleSlice Condition=" $(RuntimeIdentifier.StartsWith('ios-')) ">ios-arm64</Aura3DAngleSlice>
   </PropertyGroup>
 
+  <!-- 报错文案默认英文，构建进程 UI 语言为中文时换中文；哨兵防 build/buildTransitive 重复定义 -->
+  <PropertyGroup Condition=" '$(Aura3DBuildUICulture)' == '' ">
+    <Aura3DBuildUICulture>$([System.Globalization.CultureInfo]::CurrentUICulture.TwoLetterISOLanguageName)</Aura3DBuildUICulture>
+  </PropertyGroup>
+
   <ItemGroup Condition=" '$(Aura3DAngleNativeTargetsSkip)' != 'true' ">
     <NativeReference Include="$(Aura3DAngleNativeRoot)/$(Aura3DAngleSlice)/libEGL.framework">
       <Kind>Framework</Kind>
@@ -32,7 +37,9 @@
     ANGLE 符号，链接期不报错的话，代价就是运行时整块视口不出图且没有任何异常。
   -->
   <Target Name="Aura3DAngleNativeCheck" BeforeTargets="PrepareForBuild" Condition=" '$(Aura3DAngleNativeTargetsSkip)' != 'true' ">
-    <Error Condition=" !Exists('$(Aura3DAngleNativeRoot)/$(Aura3DAngleSlice)/libEGL.framework') "
+    <Error Condition=" !Exists('$(Aura3DAngleNativeRoot)/$(Aura3DAngleSlice)/libEGL.framework') And '$(Aura3DBuildUICulture)' != 'zh' "
+           Text="The Aura3D.Angle.iOS package does not contain the $(Aura3DAngleSlice) slice (RuntimeIdentifier='$(RuntimeIdentifier)'). Device builds require native/ios-arm64/ inside the package; if only the simulator slice was published, switch to a simulator target." />
+    <Error Condition=" !Exists('$(Aura3DAngleNativeRoot)/$(Aura3DAngleSlice)/libEGL.framework') And '$(Aura3DBuildUICulture)' == 'zh' "
            Text="Aura3D.Angle.iOS 包里没有 $(Aura3DAngleSlice) 切片（RuntimeIdentifier='$(RuntimeIdentifier)'）。真机构建需要包内带 native/ios-arm64/，只发布了模拟器切片时请改用模拟器目标。" />
   </Target>
 </Project>

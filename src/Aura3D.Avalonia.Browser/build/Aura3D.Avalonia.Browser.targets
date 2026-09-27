@@ -1,5 +1,14 @@
 <Project>
   <!--
+    报错文案默认英文；构建进程 UI 语言为中文时（LANG/DOTNET_CLI_UI_LANGUAGE 决定）换中文文案。
+    MSBuild 自身没有 Error 文案的本地化机制，这是唯一不改消费方体验的双语通道。
+    哨兵属性防重复定义：本文件会经 build/ 与 buildTransitive/ 命中两次。
+  -->
+  <PropertyGroup Condition=" '$(Aura3DBuildUICulture)' == '' ">
+    <Aura3DBuildUICulture>$([System.Globalization.CultureInfo]::CurrentUICulture.TwoLetterISOLanguageName)</Aura3DBuildUICulture>
+  </PropertyGroup>
+
+  <!--
     浏览器后端要求应用自己的 wasm 模块里链进原生库（Avalonia 的 WebGL 渲染目标与 Aura3D 的
     GLES 入口点都要从模块里取 libSkiaSharp 符号），而 WasmBuildNative=true 只是**必要条件**：
     本机 SDK 没有 wasm-tools/emsdk workload 时，链接照样不会发生。
@@ -20,6 +29,9 @@
                       And '$(_BrowserWorkloadDisabled)' != 'true'
                       And '$(WasmNativeWorkloadAvailable)' != 'true' "
           BeforeTargets="Build;Publish">
-    <Error Text="Aura3D 的浏览器（WebGL2）后端需要把原生库链进应用的 wasm 模块（WasmBuildNative=true 已由 Aura3D.Avalonia.Browser 注入），但当前 SDK 没有 wasm-tools/emsdk workload：原生链接不会发生，构建看着成功，应用启动即 System.DllNotFoundException: libSkiaSharp。请执行 `dotnet workload install wasm-tools`（必要时先 `dotnet workload restore`）；确实不需要本后端的工程可设 %24(Aura3DSkipWasmWorkloadCheck)=true。" />
+    <Error Condition=" '$(Aura3DBuildUICulture)' != 'zh' "
+           Text="The Aura3D browser (WebGL2) backend requires native libraries to be linked into the app's wasm module (WasmBuildNative=true is already injected by Aura3D.Avalonia.Browser), but the current SDK has no wasm-tools/emsdk workload: native linking will not happen, the build appears to succeed, and the app crashes at startup with System.DllNotFoundException: libSkiaSharp. Run `dotnet workload install wasm-tools` (precede with `dotnet workload restore` if needed); projects that genuinely do not need this backend can set %24(Aura3DSkipWasmWorkloadCheck)=true." />
+    <Error Condition=" '$(Aura3DBuildUICulture)' == 'zh' "
+           Text="Aura3D 的浏览器（WebGL2）后端需要把原生库链进应用的 wasm 模块（WasmBuildNative=true 已由 Aura3D.Avalonia.Browser 注入），但当前 SDK 没有 wasm-tools/emsdk workload：原生链接不会发生，构建看着成功，应用启动即 System.DllNotFoundException: libSkiaSharp。请执行 `dotnet workload install wasm-tools`（必要时先 `dotnet workload restore`）；确实不需要本后端的工程可设 %24(Aura3DSkipWasmWorkloadCheck)=true。" />
   </Target>
 </Project>
