@@ -79,10 +79,22 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     needs: build
     runs-on: ubuntu-latest
+    # 可信发布：必须显式授予 id-token: write，GitHub 才会为该 job 签发 OIDC 令牌；
+    # contents: read 用于覆盖顶层权限声明，保证下载 artifact 等步骤正常。
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: packages
           path: packages
+      # OIDC 令牌换取临时 API Key（有效期仅 1 小时），因此紧跟推送步骤，不做多余动作。
+      - name: NuGet login (OIDC -> temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          # 必须是 nuget.org 的“用户名/Profile name”，不是邮箱；建议存为仓库 secret NUGET_USER。
+          user: ${{ secrets.NUGET_USER }}
       - name: Push to NuGet
-        run: dotnet nuget push "packages/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push "packages/*.nupkg" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
