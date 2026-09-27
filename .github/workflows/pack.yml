@@ -79,6 +79,9 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     needs: build
     runs-on: ubuntu-latest
+    # 必须与 nuget.org 可信发布策略里填的「环境」一致，否则 OIDC 令牌 environment 声明为空、校验失败：
+    # Environment mismatch for policy 'aura3d': expected 'production', actual ''。
+    environment: production
     # 可信发布：必须显式授予 id-token: write，GitHub 才会为该 job 签发 OIDC 令牌；
     # contents: read 用于覆盖顶层权限声明，保证下载 artifact 等步骤正常。
     permissions:
