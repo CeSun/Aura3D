@@ -99,7 +99,9 @@ jobs:
           java-version: 17
 
       - name: Install workloads
-        run: dotnet workload install android wasm-tools emscripten ios
+        # emsdk 没有独立的 workload ID：.NET 10 里它是 wasm-tools 的 extends（抽象 workload
+        # microsoft-net-sdk-emscripten），`workload install emscripten` 直接报"未识别工作负载 ID"。
+        run: dotnet workload install android wasm-tools ios
 
       - name: Build local Aura3D package feed
         run: |
