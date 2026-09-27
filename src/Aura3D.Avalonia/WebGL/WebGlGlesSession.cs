@@ -174,9 +174,10 @@ internal sealed class WebGlGlesSession
     public void FailFromOwner(string message) => Fail("owner: " + message);
 
     /// <summary>
-    /// 在渲染线程上释放 GPU 资源（上下文由合成器持有且仍然有效）：先经
-    /// <paramref name="releaseGpuResources"/> 逐个归还管线的 GL 对象，再删除宿主自身的
-    /// FBO/纹理。只能从绘制操作或 Compositor 服务器任务中调用。
+    /// 在渲染线程上释放 GPU 资源：先经 <paramref name="releaseGpuResources"/> 逐个归还管线的
+    /// GL 对象，再删除宿主自身的 FBO/纹理。只能从自定义绘制操作内调用——上下文由合成器持有，
+    /// 仅在合成器自己的绘制期间 current；Compositor 服务器任务里发 GL 调用会因上下文已解绑而
+    /// 从 wasm 抛出不可捕获的 JS TypeError。
     /// </summary>
     public bool ReleaseOnRenderThread(Action? releaseGpuResources = null)
     {

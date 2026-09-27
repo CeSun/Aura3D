@@ -2,8 +2,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Rendering;
-using Avalonia.Rendering.Composition;
 using Avalonia.Rendering.SceneGraph;
 using Avalonia.Skia;
 using Avalonia.Threading;
@@ -42,7 +40,21 @@ public abstract partial class Aura3DViewBase
     private DispatcherTimer? _frameTimer;
     private BackendPath _backendPath;
     private bool _zeroBoundsTraced;
-    private Compositor? _compositor;
+
+    /// <summary>
+    /// 已分离视图欠着的显存归还。入队在 UI 线程、出队在渲染线程，故需加锁。
+    /// </summary>
+    private static readonly object PendingReleasesLock = new();
+    private static readonly List<PendingRelease> PendingReleases = new();
+
+    /// <summary>
+    /// 迟迟等不到下一个 WebGL 帧时（已导航离开全部 3D 页面）不能无限期扣住场景，
+    /// 超出上限的最旧一条退化为仅失效句柄，GL 对象留给上下文销毁时一并回收。
+    /// </summary>
+    private const int MaxPendingReleases = 8;
+
+    private readonly record struct PendingRelease(
+        WebGlGlesSession Session, Action Release, Action Invalidate);
 
     partial void RequestNextFrameCore()
     {
@@ -111,7 +123,6 @@ public abstract partial class Aura3DViewBase
         // 基类会取 Compositor 并请求一次 GL 帧：浏览器上 OpenGlControlBase 会静默初始化失败。
         base.OnAttachedToVisualTree(e);
 
-        _compositor = ElementComposition.GetElementVisual(this)?.Compositor;
         _backendPath = BackendPath.Undecided;
         EnsureFrameTimer();
 
@@ -130,39 +141,58 @@ public abstract partial class Aura3DViewBase
 
         _frameTimer?.Stop();
 
-        // 与桌面端 OnOpenGlDeinit 语义一致：分离即归还显存。但 WebGL2 上下文归合成器所有、
-        // 线程亲和于渲染 worker，UI 线程不能直接发 GL 调用——把释放投递为合成器更新任务
-        // 在渲染线程执行（与 OpenGlControlBase 内部用法一致）。拿不到 Compositor 时退化为
-        // 仅失效句柄（GL 对象随上下文存活，重新挂载后按 ContextRestored 路径重建，
-        // 不再引用旧句柄）。场景与节点保留。
+        // 与桌面端 OnOpenGlDeinit 语义一致：分离即归还显存。但 WebGL2 上下文归合成器所有，
+        // 且只在合成器自己的绘制期间 current——RequestCompositionUpdate 的回调跑在解绑之后，
+        // 在那里发任何 GL 调用都会让 emscripten 从 wasm 里抛出不可捕获的 JS TypeError
+        // （GLctx 为 undefined）。故挂到下一个自定义绘制操作里执行；场景与节点保留。
         if (_webGlSession is { } session)
         {
             _webGlSession = null;
+            EnqueuePendingRelease(session, DetachAndReleaseGpu, ContextLostCore);
+        }
 
-            if (_compositor is { } compositor)
+        _backendPath = BackendPath.Undecided;
+    }
+
+    private static void EnqueuePendingRelease(
+        WebGlGlesSession session, Action release, Action invalidate)
+    {
+        PendingRelease dropped = default;
+        var hasDropped = false;
+
+        lock (PendingReleasesLock)
+        {
+            PendingReleases.Add(new PendingRelease(session, release, invalidate));
+            if (PendingReleases.Count > MaxPendingReleases)
             {
-                try
-                {
-                    compositor.RequestCompositionUpdate(() =>
-                    {
-                        if (!session.ReleaseOnRenderThread(DetachAndReleaseGpu))
-                            ContextLostCore();
-                    });
-                }
-                catch
-                {
-                    // 合成器已停（应用关闭等）：只失效句柄，不发 GL 调用。
-                    ContextLostCore();
-                }
-            }
-            else
-            {
-                ContextLostCore();
+                dropped = PendingReleases[0];
+                PendingReleases.RemoveAt(0);
+                hasDropped = true;
             }
         }
 
-        _compositor = null;
-        _backendPath = BackendPath.Undecided;
+        if (hasDropped)
+            dropped.Invalidate();
+    }
+
+    /// <summary>在自定义绘制操作内（上下文必然 current）归还已分离视图扣下的显存。</summary>
+    private static void DrainPendingReleases()
+    {
+        while (true)
+        {
+            PendingRelease pending;
+            lock (PendingReleasesLock)
+            {
+                if (PendingReleases.Count == 0)
+                    return;
+
+                pending = PendingReleases[0];
+                PendingReleases.RemoveAt(0);
+            }
+
+            if (!pending.Session.ReleaseOnRenderThread(pending.Release))
+                pending.Invalidate();
+        }
     }
 
     /// <summary>
@@ -217,6 +247,8 @@ public abstract partial class Aura3DViewBase
 
         if (_backendPath != BackendPath.WebGl)
             return;
+
+        DrainPendingReleases();
 
         if (Bounds.Width < 1 || Bounds.Height < 1)
         {
