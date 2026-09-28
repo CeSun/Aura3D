@@ -67,6 +67,23 @@ dotnet add package Aura3D.Avalonia
 dotnet add package Aura3D.Model.GltfLoader
 ```
 
+> [!IMPORTANT]
+> **Browser（`net10.0-browser`）项目：**当前 .NET 10 下，Release/静态发布必须在应用
+> `.csproj` 中同时加入以下三项配置：
+>
+> ```xml
+> <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+>   <PublishTrimmed>false</PublishTrimmed>
+>   <RunAOTCompilation>false</RunAOTCompilation>
+>   <WasmLinkIcalls>false</WasmLinkIcalls>
+> </PropertyGroup>
+> ```
+>
+> 原因是默认裁剪会漏掉 Silk.NET 函数指针调用需要的 WASM trampoline，而 icall linking
+> 还可能造成运行时与 `System.Private.CoreLib` 不同步；三项不能只配置一部分。
+> 错误特征、完整原因及干净发布要求见
+> [Browser Release/静态发布说明](doc/cn/platform-render-backends.md#browser-net10-release-config)。
+
 > 至少需要安装一个模型加载库。`Aura3D.Model.GltfLoader` 用于加载 glTF/GLB 格式。
 > 如需加载 FBX、OBJ、3DS 等 50+ 格式，请额外安装 `Aura3D.Model.AssimpLoader`。
 

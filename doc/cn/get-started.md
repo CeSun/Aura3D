@@ -12,6 +12,22 @@ dotnet add package Aura3D.Avalonia
 
 此包会自动引入 `Aura3D.Core`，包含默认渲染管线（BlinnPhong）和基础功能。
 
+> [!IMPORTANT]
+> **Browser（`net10.0-browser`）项目：**当前 .NET 10 下，Release/静态发布必须在应用
+> `.csproj` 中同时加入以下三项配置：
+>
+> ```xml
+> <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+>   <PublishTrimmed>false</PublishTrimmed>
+>   <RunAOTCompilation>false</RunAOTCompilation>
+>   <WasmLinkIcalls>false</WasmLinkIcalls>
+> </PropertyGroup>
+> ```
+>
+> 默认裁剪会漏掉 Silk.NET 函数指针调用需要的 WASM trampoline，icall linking 还可能造成
+> 运行时与 `System.Private.CoreLib` 不同步，因此三项必须一起使用。错误特征、完整原因及干净发布要求见
+> [Browser Release/静态发布说明](./platform-render-backends.md#browser-net10-release-config)。
+
 ### 按需安装扩展包
 
 ```shell
