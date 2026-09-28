@@ -20,20 +20,20 @@
         <Border Theme="{StaticResource CardBorder}" Padding="10">
           <StackPanel Spacing="6">
             <TextBlock FontSize="14" FontWeight="Bold"
-                       Foreground="{DynamicResource SemiGrey10}" Text="🎛 GPU 上下文状态" />
+                       Foreground="{DynamicResource SemiGrey10}" Text="🎛 GPU Context State" />
             <TextBlock Text="{Binding StatusText}" FontSize="16" FontWeight="Bold"
                        Foreground="{Binding StatusColor}" TextWrapping="Wrap" />
             <TextBlock Text="{Binding ViewStateText}" FontSize="11" Foreground="#AAA" TextWrapping="Wrap" />
             <Separator Height="1" Background="#444" Margin="0,2" />
             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" >
-              <TextBlock Grid.Row="0" Grid.Column="0" Text="上下文丢失" FontSize="12" Width="80" />
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="Context Lost" FontSize="12" Width="80" />
               <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding LossCount}" FontSize="12" FontWeight="Bold" />
-              <TextBlock Grid.Row="1" Grid.Column="0" Text="上下文恢复" FontSize="12" Width="80" />
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="Context Restored" FontSize="12" Width="80" />
               <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding RestoreCount}" FontSize="12" FontWeight="Bold" />
             </Grid>
             <StackPanel Orientation="Horizontal" Spacing="12">
-              <TextBlock Text="{Binding SceneBuildCount, StringFormat='场景重建 {0} 次'}" FontSize="11" Foreground="#AAA" />
-              <TextBlock Text="{Binding FrameCount, StringFormat='累计帧 {0}'}" FontSize="11" Foreground="#AAA" />
+              <TextBlock Text="{Binding SceneBuildCount, StringFormat='Scene Rebuilds {0}'}" FontSize="11" Foreground="#AAA" />
+              <TextBlock Text="{Binding FrameCount, StringFormat='Total Frames {0}'}" FontSize="11" Foreground="#AAA" />
             </StackPanel>
           </StackPanel>
         </Border>
@@ -41,44 +41,44 @@
         <Border Theme="{StaticResource CardBorder}" Padding="10">
           <StackPanel Spacing="6">
             <TextBlock FontSize="14" FontWeight="Bold"
-                       Foreground="{DynamicResource SemiGrey10}" Text="🕹 操作" />
+                       Foreground="{DynamicResource SemiGrey10}" Text="🕹 Actions" />
             <Button x:Name="SimulateButton" Click="SimulateContextLost_Click"
                     IsEnabled="False" HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center" FontWeight="Bold"
-                    Content="⚠ 模拟 GL 上下文丢失" />
+                    Content="⚠ Simulate GL Context Loss" />
             <Button x:Name="AttachButton" Click="ToggleAttach_Click"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                    Content="分离视图（释放 GPU 资源）" />
+                    Content="Detach View (Release GPU Resources)" />
             <Button Click="ReleaseGpuResources_Click"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                    Content="释放 GPU 资源（保留场景）" />
+                    Content="Release GPU Resources (Keep Scene)" />
             <Button Click="DestroyScene_Click"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                    Content="销毁场景" />
+                    Content="Destroy Scene" />
             <Button Click="AddNode_Click"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                    Content="添加立方体" />
+                    Content="Add Cube" />
             <CheckBox x:Name="AutoCycleCheckBox" Click="AutoCycle_Click"
-                      Content="每 2 秒自动丢失一次上下文" />
+                      Content="Auto context loss every 2 seconds" />
             <Button Click="ClearLog_Click"
                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
-                    Content="清空日志" />
+                    Content="Clear Log" />
           </StackPanel>
         </Border>
 
         <Border Theme="{StaticResource CardBorder}" Padding="10">
           <StackPanel Spacing="4">
             <TextBlock FontSize="14" FontWeight="Bold"
-                       Foreground="{DynamicResource SemiGrey10}" Text="📖 说明" />
+                       Foreground="{DynamicResource SemiGrey10}" Text="📖 Notes" />
             <TextBlock FontSize="11" Foreground="#AAA" TextWrapping="Wrap"
-                       Text="模拟丢失复用同一 GL 上下文：句柄判为失效但不删除（真实丢失时由驱动回收）。分离视图走 OnOpenGlDeinit → ReleaseGpuResources()，在上下文销毁前真正删除 GL 对象以释放显存，场景与节点保留；重新挂载复用同一场景，只重建 GPU 资源，不再触发 SceneInitialized。销毁场景会释放 GPU 资源并清空 Scene，下一帧自动重建空场景。" />
+                       Text="A simulated loss reuses the same GL context: handles are marked invalid but not deleted (a real loss is reclaimed by the driver). Detaching the view runs OnOpenGlDeinit → ReleaseGpuResources(), which really deletes the GL objects before the context is destroyed to free video memory, while the scene and its nodes are retained; re-attaching reuses the same scene and only rebuilds GPU resources, without raising SceneInitialized again. Destroying the scene releases GPU resources and clears Scene, and an empty scene is rebuilt automatically on the next frame." />
           </StackPanel>
         </Border>
 
         <Border Theme="{StaticResource CardBorder}" Padding="10">
           <StackPanel Spacing="4">
             <TextBlock FontSize="14" FontWeight="Bold"
-                       Foreground="{DynamicResource SemiGrey10}" Text="📋 事件日志" />
+                       Foreground="{DynamicResource SemiGrey10}" Text="📋 Event Log" />
             <ListBox ItemsSource="{Binding Log}" Height="300" BorderThickness="0"
                      Background="#1E1E2E" FontSize="11"
                      FontFamily="Consolas,Menlo,Monospace"

@@ -9,7 +9,7 @@ public partial class ContextLossViewModel : ViewModelBase
     private const int MaxLogEntries = 200;
 
     [ObservableProperty]
-    private string _statusText = "等待 OpenGL 初始化…";
+    private string _statusText = "Waiting for OpenGL initialization…";
 
     [ObservableProperty]
     private string _statusColor = "#888888";
@@ -27,7 +27,7 @@ public partial class ContextLossViewModel : ViewModelBase
     private int _frameCount;
 
     [ObservableProperty]
-    private string _viewStateText = "视图未挂载";
+    private string _viewStateText = "View not attached";
 
     public ObservableCollection<string> Log { get; } = [];
 

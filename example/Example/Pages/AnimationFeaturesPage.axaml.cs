@@ -413,23 +413,23 @@ public partial class AnimationFeaturesPage : UserControl
 
         var boneMap = model.Skeleton.GetBoneIndexMap();
 
-        // 输出所有骨骼名，便于调试
+        // Print all bone names for easier debugging
         System.Diagnostics.Debug.WriteLine("=== Skeleton Bones ===");
         foreach (var kv in boneMap)
             System.Diagnostics.Debug.WriteLine($"  [{kv.Value}] {kv.Key}");
 
-        // 按匹配优先级查找右手骨骼
+        // Find the right-hand bone by matching priority
         string? rightHandName = null;
         var boneNames = boneMap.Keys.ToList();
 
-        // 策略1：精确匹配 hand_r / hand_r_end
+        // Strategy 1: exact match on hand_r / hand_r_end
         rightHandName = boneNames.FirstOrDefault(b =>
         {
             var l = b.ToLowerInvariant();
             return l.EndsWith("hand_r") || l.EndsWith("hand_r_end");
         });
 
-        // 策略2：包含 right + hand
+        // Strategy 2: contains right + hand
         if (rightHandName == null)
             rightHandName = boneNames.FirstOrDefault(b =>
             {
@@ -437,20 +437,20 @@ public partial class AnimationFeaturesPage : UserControl
                 return l.Contains("righthand") || l.Contains("right_hand");
             });
 
-        // 策略3：包含 hand_r
+        // Strategy 3: contains hand_r
         if (rightHandName == null)
             rightHandName = boneNames.FirstOrDefault(b =>
                 b.ToLowerInvariant().Contains("hand_r"));
 
-        // 策略4：兜底，包含 hand
+        // Strategy 4: fallback - contains hand
         if (rightHandName == null)
             rightHandName = boneNames.FirstOrDefault(b =>
                 b.ToLowerInvariant().Contains("hand"));
 
         System.Diagnostics.Debug.WriteLine($"Right hand bone: {rightHandName ?? "NOT FOUND"}");
 
-        // 取模型层级中的第一个 Mesh，使用其 WorldTransform
-        //（正确传递 Model 与 Mesh 之间可能的中间节点变换）
+        // Take the first Mesh in the model hierarchy and use its WorldTransform
+        // (correctly propagates the transforms of any intermediate nodes between Model and Mesh)
         var targetMesh = model.Meshes.FirstOrDefault();
         if (rightHandName != null && targetMesh != null)
         {
@@ -459,11 +459,11 @@ public partial class AnimationFeaturesPage : UserControl
                 Name = "RightHandAttachment",
                 Mesh = targetMesh,
                 BoneName = rightHandName,
-                // 沿 X 轴旋转 90 度让圆柱从手部向前伸出
+                // Rotate 90 degrees around the X axis so the cylinder extends forward from the hand
                 LocalOffset = Matrix4x4.CreateFromYawPitchRoll(0, MathF.PI / 2, 0)
             };
 
-            // 火把柄：细长圆柱
+            // Torch handle: a thin, long cylinder
             var torchHandle = new Mesh
             {
                 Name = "TorchHandle",
@@ -474,16 +474,16 @@ public partial class AnimationFeaturesPage : UserControl
                 }
             };
 
-            // 火焰粒子系统
+            // Flame particle system
             var fire = new ParticleSystem
             {
                 Name = "TorchFire",
                 MaxParticles = 200
             };
-            // 放在手柄顶端
+            // Placed at the tip of the handle
             fire.Position = new Vector3(0, 15, 0);
 
-            // 内焰：亮黄/白色，小而快
+            // Inner flame: bright yellow/white, small and fast
             fire.Emitters.Add(new ParticleEmitter
             {
                 BlendMode = BlendMode.Translucent,
@@ -499,7 +499,7 @@ public partial class AnimationFeaturesPage : UserControl
                 Gravity = new Vector3(0, -2, 0)
             });
 
-            // 外焰：橙红，大而慢
+            // Outer flame: orange-red, large and slow
             fire.Emitters.Add(new ParticleEmitter
             {
                 BlendMode = BlendMode.Translucent,
@@ -518,7 +518,7 @@ public partial class AnimationFeaturesPage : UserControl
             torchHandle.AddChild(fire, AttachToParentRule.KeepLocal);
             fire.Play();
 
-            // 点光源跟随火焰
+            // Point light follows the flame
             var torchLight = new PointLight
             {
                 Name = "TorchLight",

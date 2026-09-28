@@ -17,8 +17,8 @@ using System.Threading.Tasks;
 namespace Example.Pages;
 
 /// <summary>
-/// 测试用视图：<see cref="Aura3DViewBase.SimulateContextLost"/> 已在控件基类的全部平台后端上公开，
-/// 该子类保留仅作类型标识用。
+/// Test view: <see cref="Aura3DViewBase.SimulateContextLost"/> is already public on every platform backend of the control base class,
+/// this subclass is kept only as a type marker.
 /// </summary>
 public class ContextLossTestView : Aura3DView
 {
@@ -59,13 +59,13 @@ public partial class ContextLossPage : UserControl
             return;
 
         vm.SceneBuildCount++;
-        vm.ViewStateText = "视图已挂载";
+        vm.ViewStateText = "View attached";
 
         var view = aura3DView;
 
         texture ??= await LoadTextureAsync();
 
-        // 加载期间视图可能已被分离，此时不再向已销毁的场景添加节点。
+        // The view may have been detached while loading; in that case do not add nodes to an already destroyed scene.
         if (view.Scene is not { } scene)
             return;
 
@@ -98,8 +98,8 @@ public partial class ContextLossPage : UserControl
 
         SimulateButton.IsEnabled = true;
 
-        SetStatus("渲染中", "#6BCB77");
-        Log($"场景初始化：新上下文 + 新场景，节点 {scene.Nodes.Count} 个");
+        SetStatus("Rendering", "#6BCB77");
+        Log($"Scene initialized: new context + new scene, {scene.Nodes.Count} nodes");
     }
 
     private async Task<Texture?> LoadTextureAsync()
@@ -114,7 +114,7 @@ public partial class ContextLossPage : UserControl
         }
         catch (Exception ex)
         {
-            Log($"纹理加载失败：{ex.Message}");
+            Log($"Texture load failed: {ex.Message}");
             return null;
         }
     }
@@ -124,8 +124,8 @@ public partial class ContextLossPage : UserControl
         box = null;
         SimulateButton.IsEnabled = false;
 
-        SetStatus("场景已销毁", "#FFD93D");
-        Log($"场景已销毁：GPU 资源已释放、管线终止，节点 {e.Scene.Nodes.Count} 个随场景丢弃");
+        SetStatus("Scene destroyed", "#FFD93D");
+        Log($"Scene destroyed: GPU resources released, pipeline terminated, {e.Scene.Nodes.Count} nodes discarded with the scene");
     }
 
     private void Aura3DView_ContextLost(object? sender, ContextLostRoutedEventArgs e)
@@ -136,8 +136,8 @@ public partial class ContextLossPage : UserControl
         lossStopwatch.Restart();
         SimulateButton.IsEnabled = false;
 
-        SetStatus("GPU 句柄失效", "#FF6B6B");
-        Log($"上下文丢失：GPU 句柄失效，场景与 {e.Scene.Nodes.Count} 个节点保留");
+        SetStatus("GPU handles invalidated", "#FF6B6B");
+        Log($"Context lost: GPU handles invalidated, the scene and its {e.Scene.Nodes.Count} nodes are retained");
     }
 
     private void Aura3DView_ContextRestored(object? sender, ContextRestoredRoutedEventArgs e)
@@ -147,8 +147,8 @@ public partial class ContextLossPage : UserControl
 
         SimulateButton.IsEnabled = true;
 
-        SetStatus("渲染中", "#6BCB77");
-        Log($"上下文恢复：GPU 资源已重建，节点 {e.Scene.Nodes.Count} 个，耗时 {lossStopwatch.Elapsed.TotalMilliseconds:F0} ms");
+        SetStatus("Rendering", "#6BCB77");
+        Log($"Context restored: GPU resources rebuilt, {e.Scene.Nodes.Count} nodes, elapsed {lossStopwatch.Elapsed.TotalMilliseconds:F0} ms");
     }
 
     private void Aura3DView_SceneUpdated(object? sender, UpdateRoutedEventArgs e)
@@ -169,7 +169,7 @@ public partial class ContextLossPage : UserControl
     {
         if (aura3DView.Scene == null)
         {
-            Log("视图尚未初始化，无法模拟上下文丢失");
+            Log("View not initialized yet; cannot simulate a context loss");
             return;
         }
 
@@ -184,22 +184,22 @@ public partial class ContextLossPage : UserControl
         if (ViewHost.Content == null)
         {
             ViewHost.Content = aura3DView;
-            AttachButton.Content = "分离视图（释放 GPU 资源）";
+            AttachButton.Content = "Detach View (Release GPU Resources)";
 
             if (Vm is { } vm)
-                vm.ViewStateText = "视图已挂载";
+                vm.ViewStateText = "View attached";
 
-            Log("重新挂载视图：复用原场景，仅按需重建 GPU 资源");
+            Log("View re-attached: reuses the existing scene and rebuilds GPU resources on demand");
         }
         else
         {
             ViewHost.Content = null;
-            AttachButton.Content = "重新挂载视图";
+            AttachButton.Content = "Re-attach View";
 
             if (Vm is { } vm)
-                vm.ViewStateText = "视图已分离";
+                vm.ViewStateText = "View detached";
 
-            Log("视图已分离：OnOpenGlDeinit → ReleaseGpuResources()，显存已归还且场景保留");
+            Log("View detached: OnOpenGlDeinit → ReleaseGpuResources(); video memory is returned and the scene is retained");
         }
     }
 
@@ -207,31 +207,31 @@ public partial class ContextLossPage : UserControl
     {
         if (aura3DView.Scene == null)
         {
-            Log("视图尚未初始化，无法释放 GPU 资源");
+            Log("View not initialized yet; cannot release GPU resources");
             return;
         }
 
         aura3DView.ReleaseGpuResources();
-        Log("GPU 资源已释放：显存归还，场景与节点保留，下一帧按需重建");
+        Log("GPU resources released: video memory returned, scene and nodes retained, rebuilt on demand next frame");
     }
 
     private void DestroyScene_Click(object? sender, RoutedEventArgs e)
     {
         if (aura3DView.Scene == null)
         {
-            Log("视图尚未初始化，无法销毁场景");
+            Log("View not initialized yet; cannot destroy the scene");
             return;
         }
 
         aura3DView.DestroyScene();
-        Log("场景已销毁：Scene 置空，下一帧自动重建空场景");
+        Log("Scene destroyed: Scene is set to null, an empty scene is rebuilt automatically next frame");
     }
 
     private void AddNode_Click(object? sender, RoutedEventArgs e)
     {
         if (aura3DView.Scene is not { } scene)
         {
-            Log("视图尚未初始化，无法添加节点");
+            Log("View not initialized yet; cannot add nodes");
             return;
         }
 
@@ -243,7 +243,7 @@ public partial class ContextLossPage : UserControl
         };
 
         aura3DView.AddNode(mesh);
-        Log($"添加立方体：当前节点 {scene.Nodes.Count} 个（丢失后仍然存在）");
+        Log($"Cube added: {scene.Nodes.Count} nodes now (they still exist after a context loss)");
     }
 
     private void AutoCycle_Click(object? sender, RoutedEventArgs e)
@@ -251,12 +251,12 @@ public partial class ContextLossPage : UserControl
         if (AutoCycleCheckBox.IsChecked == true)
         {
             autoCycleTimer.Start();
-            Log("自动丢失已开启：每 2 秒触发一次");
+            Log("Auto context loss enabled: triggers every 2 seconds");
         }
         else
         {
             autoCycleTimer.Stop();
-            Log("自动丢失已停止");
+            Log("Auto context loss stopped");
         }
     }
 

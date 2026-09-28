@@ -21,7 +21,7 @@ public partial class PrimitiveTypePage : UserControl
     Node? container;
     List<double> deltaTimes = new();
 
-    // 纯色顶点着色器
+    // Solid color vertex shader
     private const string SolidColorVertexShader = """
         #version 300 es
         precision mediump float;
@@ -42,7 +42,7 @@ public partial class PrimitiveTypePage : UserControl
         }
         """;
 
-    // 纯色片段着色器
+    // Solid color fragment shader
     private const string SolidColorFragmentShader = """
         #version 300 es
         precision mediump float;
@@ -61,7 +61,7 @@ public partial class PrimitiveTypePage : UserControl
         InitializeComponent();
         _cameraController = new CameraController(aura3Dview);
 
-        // 用户手动旋转时停止自动旋转
+        // Stop auto-rotation as soon as the user rotates manually
         aura3Dview.PointerPressed += (s, e) => { _autoRotate = false; };
     }
 
@@ -95,7 +95,7 @@ public partial class PrimitiveTypePage : UserControl
         float x = -7.5f;
         const float step = 2.5f;
 
-        // ── TRIANGLES ── 蓝色三角形
+        // ── TRIANGLES ── blue triangle
         CreateAndAdd(
             Aura3D.Core.Resources.PrimitiveType.Triangles,
             new List<float> { -0.5f, -0.4f, 0, 0.5f, -0.4f, 0, 0f, 0.5f, 0 },
@@ -104,7 +104,7 @@ public partial class PrimitiveTypePage : UserControl
             new Vector3(x, 0, 0));
         x += step;
 
-        // ── POINTS ── 红色散点
+        // ── POINTS ── red scattered points
         CreateAndAdd(
             Aura3D.Core.Resources.PrimitiveType.Points,
             new List<float> { 0,0,0, 0.3f,0.25f,0, -0.25f,0.35f,0, 0.15f,-0.3f,0, -0.35f,-0.1f,0 },
@@ -113,7 +113,7 @@ public partial class PrimitiveTypePage : UserControl
             new Vector3(x, 0, 0));
         x += step;
 
-        // ── LINES ── 绿色独立线段
+        // ── LINES ── green independent line segments
         CreateAndAdd(
             Aura3D.Core.Resources.PrimitiveType.Lines,
             new List<float> { -0.4f,0,0, -0.15f,0.3f,0, 0,0.1f,0, 0.2f,0.35f,0, 0.4f,0,0, 0.15f,-0.3f,0 },
@@ -122,7 +122,7 @@ public partial class PrimitiveTypePage : UserControl
             new Vector3(x, 0, 0));
         x += step;
 
-        // ── LINE_STRIP ── 黄色折线
+        // ── LINE_STRIP ── yellow polyline
         CreateAndAdd(
             Aura3D.Core.Resources.PrimitiveType.LineStrip,
             new List<float> { -0.5f,-0.3f,0, -0.2f,0.35f,0, 0.1f,-0.35f,0, 0.45f,0.3f,0 },
@@ -131,7 +131,7 @@ public partial class PrimitiveTypePage : UserControl
             new Vector3(x, 0, 0));
         x += step;
 
-        // ── LINE_LOOP ── 青色五边形
+        // ── LINE_LOOP ── cyan pentagon
         {
             var positions = new List<float>();
             for (int i = 0; i < 5; i++)
@@ -146,7 +146,7 @@ public partial class PrimitiveTypePage : UserControl
         }
         x += step;
 
-        // ── TRIANGLE_STRIP ── 品红色带状（逆时针绕序，从右侧往左侧走，首三角形 CCW）
+        // ── TRIANGLE_STRIP ── magenta strip (counter-clockwise winding, walking right to left, first triangle CCW)
         CreateAndAdd(
             Aura3D.Core.Resources.PrimitiveType.TriangleStrip,
             new List<float> { 0.3f,-0.25f,0, 0.3f,0.25f,0, -0.1f,-0.35f,0, -0.1f,0.35f,0, -0.5f,-0.3f,0, -0.5f,0.3f,0 },
@@ -155,7 +155,7 @@ public partial class PrimitiveTypePage : UserControl
             new Vector3(x, 0, 0));
         x += step;
 
-        // ── TRIANGLE_FAN ── 橙色六边形扇（逆时针绕序，与 Triangles 一致）
+        // ── TRIANGLE_FAN ── orange hexagon fan (counter-clockwise winding, consistent with Triangles)
         {
             var positions = new List<float> { 0f, 0f, 0f };
             for (int i = 0; i <= 6; i++)

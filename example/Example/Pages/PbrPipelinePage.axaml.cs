@@ -97,7 +97,7 @@ public partial class PbrPipelinePage : UserControl
                 scene.Background = cubemap;
             }
 
-            // 加载狮子头和凳子模型，Z 轴与球阵对齐
+            // Load the lion head and stool models, aligned with the sphere grid on the Z axis
             var gridZ = scene.MainCamera.Position.Z + scene.MainCamera.Forward.Z * 2;
             await Task.WhenAll(
                 LoadModel("avares://Example/Assets/Models/lion_head_1k.glb",

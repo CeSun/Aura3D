@@ -213,7 +213,7 @@ public partial class DebugTestViewModel : ViewModelBase
     //  Build Command
     // ═══════════════════════════════════════════════
 
-    /// <summary>代码隐藏通过此事件订阅构建逻辑。</summary>
+    /// <summary>The code-behind subscribes to the build logic through this event.</summary>
     public event Action BuildRequested;
 
     [RelayCommand]

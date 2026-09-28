@@ -13,7 +13,7 @@
             <ColumnDefinition Width="220" />
         </Grid.ColumnDefinitions>
 
-        <!-- 渲染区域：启用 CSM（3 级联） -->
+        <!-- Render area: CSM enabled (3 cascades) -->
         <a:Aura3DView Grid.Column="0"
                       x:Name="aura3Dview"
                       x:TypeArguments="pbr:PBRDeferredPipeline"
@@ -27,7 +27,7 @@
             </a:Aura3DView.PipelineSettings>
         </a:Aura3DView>
 
-        <!-- 控制面板 -->
+        <!-- Control panel -->
         <StackPanel Grid.Column="1" Margin="10" Spacing="8">
             <TextBlock FontWeight="Bold" FontSize="14" Text="CSM Settings" />
 

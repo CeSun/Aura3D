@@ -23,7 +23,7 @@ public partial class DebugTestPage : UserControl
     private CameraController _cameraController = null!;
     private DebugTestViewModel? _vm;
 
-    // 场景节点引用
+    // Scene node references
     private readonly List<Node> _sceneNodes = [];
     private DirectionalLight? _dirLight;
     private PointLight? _pointLight;
@@ -35,13 +35,13 @@ public partial class DebugTestPage : UserControl
     private ParticleSystem? _dustParticles;
     private Mesh? _stonesMesh;
 
-    // 模型源
+    // Model sources
     private readonly List<Model> _staticSourceModels = [];
     private Model? _soldierSource;
     private Animation? _soldierAnimation;
     private BoundingBox? _soldierBounds;
 
-    // FPS 统计
+    // FPS statistics
     private readonly List<double> _deltaTimes = [];
     private int _fpsMin = int.MaxValue;
     private int _fpsMax;
@@ -64,22 +64,22 @@ public partial class DebugTestPage : UserControl
         _vm = DataContext as DebugTestViewModel;
         if (_vm == null) return;
 
-        // 订阅 Build 命令
+        // Subscribe to the Build command
         _vm.BuildRequested += OnBuildRequested;
 
-        // 订阅 ViewModel 属性变更
+        // Subscribe to ViewModel property changes
         _vm.PropertyChanged += OnViewModelPropertyChanged;
 
-        // 挂接拾取事件
+        // Hook up picking events
         view.ObjectPicked += OnObjectPicked;
 
-        // ── 加载模型资源 ──
+        // ── Load model assets ──
         await LoadAssetsAsync();
 
-        // ── 首次构建 ──
+        // ── First build ──
         BuildScene();
 
-        // 应用初始状态
+        // Apply the initial state
         ApplyAllSettings();
 
         view.RequestNextFrameRendering();
@@ -89,7 +89,7 @@ public partial class DebugTestPage : UserControl
 
     private async System.Threading.Tasks.Task LoadAssetsAsync()
     {
-        // 静态模型
+        // Static model
         var staticUris = new[]
         {
             "avares://Example/Assets/Models/lion_head_1k.glb",
@@ -116,7 +116,7 @@ public partial class DebugTestPage : UserControl
             }
         }
 
-        // Soldier 骨骼模型
+        // Soldier skinned model
         try
         {
             var (model, animations) = await System.Threading.Tasks.Task.Run(() =>
@@ -164,7 +164,7 @@ public partial class DebugTestPage : UserControl
         var view = aura3DView;
         var scene = view.Scene!;
 
-        // 清除旧节点
+        // Remove old nodes
         foreach (var node in _sceneNodes)
             view.Remove(node);
         _sceneNodes.Clear();
@@ -176,7 +176,7 @@ public partial class DebugTestPage : UserControl
         _fireGroup = null;
         _dustParticles = null;
 
-        // ── 光照 ──
+        // ── Lighting ──
         _dirLight = new DirectionalLight
         {
             RotationDegrees = new Vector3(_vm.DirLightRotX, _vm.DirLightRotY, 0),
@@ -215,7 +215,7 @@ public partial class DebugTestPage : UserControl
         view.AddNode(_spotLight);
         _sceneNodes.Add(_spotLight);
 
-        // ── 地面 ──
+        // ── Ground ──
         float groundSize = _soldierBounds != null
             ? MathF.Max(_soldierBounds.Size.X, _soldierBounds.Size.Z) * 15f
             : 120f;
@@ -362,7 +362,7 @@ public partial class DebugTestPage : UserControl
                 _dustParticles.Play();
         }
 
-        // ── 静态模型网格 ──
+        // ── Static model meshes ──
         int staticCount = _vm.StaticMeshCount;
         if (_staticSourceModels.Count > 0 && staticCount > 0)
         {
@@ -382,7 +382,7 @@ public partial class DebugTestPage : UserControl
                     0,
                     row * staticSpacing - staticHalf - 5f);
                 clone.RotationDegrees = new Vector3(0, (i * 37f) % 360f, 0);
-                // 凳子(index 2)放大5倍，灯泡(index 3)放大10倍
+                // Scale the stool (index 2) by 5x and the lightbulb (index 3) by 10x
                 int modelIndex = i % _staticSourceModels.Count;
                 float scale = modelIndex switch
                 {
@@ -397,7 +397,7 @@ public partial class DebugTestPage : UserControl
             }
         }
 
-        // ── 骨骼模型网格 ──
+        // ── Skinned model meshes ──
         int skinnedCount = _vm.SkinnedMeshCount;
         if (_soldierSource != null && skinnedCount > 0)
         {
@@ -438,7 +438,7 @@ public partial class DebugTestPage : UserControl
             }
         }
 
-        // ── 相机 ──
+        // ── Camera ──
         if (_soldierBounds != null)
         {
             view.MainCamera.FarPlane = 500;
@@ -446,10 +446,10 @@ public partial class DebugTestPage : UserControl
             view.MainCamera.LookAt(new Vector3(0, 0, -5f));
         }
 
-        // 应用当前设置状态
+        // Apply the current settings state
         ApplyAllSettings();
 
-        // 重置 FPS
+        // Reset FPS
         _deltaTimes.Clear();
         _fpsFrameCount = 0;
         _fpsMin = int.MaxValue;
@@ -470,7 +470,7 @@ public partial class DebugTestPage : UserControl
         var scene = aura3DView.Scene;
         if (scene == null) return;
 
-        // 坐标轴 / 网格
+        // Axes / grid
         scene.ShowAxisGizmo = _vm.ShowAxes;
         scene.ShowGrid = _vm.ShowGrid;
 
@@ -531,7 +531,7 @@ public partial class DebugTestPage : UserControl
 
         switch (e.PropertyName)
         {
-            // 坐标轴 / 网格
+            // Axes / grid
             case nameof(DebugTestViewModel.ShowAxes):
                 scene.ShowAxisGizmo = _vm.ShowAxes;
                 aura3DView.RequestNextFrameRendering();
@@ -774,7 +774,7 @@ public partial class DebugTestPage : UserControl
             _ => "#6BCB77"
         };
 
-        // 可见性统计（统计 Model 维度，与 SkinnedMeshCullingPage 一致）
+        // Visibility statistics (counted per Model, consistent with SkinnedMeshCullingPage)
         var visible = aura3DView.Scene?.RenderPipeline.VisibleMeshesInCamera;
         if (visible != null)
         {

@@ -28,14 +28,14 @@ public partial class CascadedShadowMapsPage : UserControl
         _cameraController = new CameraController(aura3Dview) { MoveSpeed = 20f };
         var scene = e.Scene;
 
-        // 天空盒
+        // Skybox
         using (var stream = AssetLoader.Open(new Uri("avares://Example/Assets/Textures/buikslotermeerplein_1k.hdr")))
         {
             var hdri = TextureLoader.LoadHdrTexture(stream);
             scene.Background = HDRIToCubeTextureConverter.ConvertFromTexture(hdri, 1024);
         }
 
-        // 大面积地面 — 用来接收阴影
+        // Large ground plane - used to receive shadows
         var ground = new Mesh
         {
             Geometry = new PlaneGeometry(),
@@ -48,14 +48,14 @@ public partial class CascadedShadowMapsPage : UserControl
         };
         scene.AddNode(ground);
 
-        // 在远近不同距离放置柱子，展示 CSM 级联效果
+        // Place pillars at near and far distances to show the CSM cascade effect
         var sphereGeo = new SphereGeometry();
         float[] distances = { 3, 8, 18, 35, 60, 100 };
         for (int d = 0; d < distances.Length; d++)
         {
             float z = distances[d];
 
-            // 每个距离放一排骨
+            // One row of spheres per distance
             for (int x = -3; x <= 3; x++)
             {
                 var mesh = new Mesh
@@ -66,12 +66,12 @@ public partial class CascadedShadowMapsPage : UserControl
                         BaseColor = Texture.CreateFromColor(
                             d switch
                             {
-                                0 => Color.FromArgb(255, 60, 60),    // 近 — 红
-                                1 => Color.FromArgb(255, 160, 60),   // 橙
-                                2 => Color.FromArgb(255, 220, 60),   // 黄
-                                3 => Color.FromArgb(60, 200, 60),    // 绿
-                                4 => Color.FromArgb(60, 120, 220),   // 蓝
-                                _ => Color.FromArgb(180, 100, 220),  // 紫
+                                0 => Color.FromArgb(255, 60, 60),    // near - red
+                                1 => Color.FromArgb(255, 160, 60),   // orange
+                                2 => Color.FromArgb(255, 220, 60),   // yellow
+                                3 => Color.FromArgb(60, 200, 60),    // green
+                                4 => Color.FromArgb(60, 120, 220),   // blue
+                                _ => Color.FromArgb(180, 100, 220),  // purple
                             })
                     },
                     Position = new Vector3(x * 4, 2, z),
@@ -80,7 +80,7 @@ public partial class CascadedShadowMapsPage : UserControl
                 scene.AddNode(mesh);
             }
 
-            // 每个距离放一个高柱子用于投影
+            // One tall pillar per distance to cast shadows
             var tallPillar = new Mesh
             {
                 Geometry = new CylinderGeometry(),
@@ -94,7 +94,7 @@ public partial class CascadedShadowMapsPage : UserControl
             scene.AddNode(tallPillar);
         }
 
-        // 方向光（投射阴影）
+        // Directional light (casts shadows)
         _dl = new DirectionalLight
         {
             RotationDegrees = new Vector3(-35, 22, 0),
@@ -111,7 +111,7 @@ public partial class CascadedShadowMapsPage : UserControl
         scene.AddNode(_dl);
         scene.MainDirectionalLight = _dl;
 
-        // 摄像机位置
+        // Camera position
         scene.MainCamera.Position = new Vector3(8, 12, -8);
         scene.MainCamera.RotationDegrees = new Vector3(-30, -25, 0);
 
@@ -120,7 +120,7 @@ public partial class CascadedShadowMapsPage : UserControl
 
     private void Aura3DView_SceneUpdated(object? sender, UpdateRoutedEventArgs e)
     {
-        // 缓慢旋转光源以观察阴影变化
+        // Slowly rotate the light source to observe shadow changes
         _dl.RotationDegrees += new Vector3(0, 4, 0) * (float)e.DeltaTime;
     }
 
