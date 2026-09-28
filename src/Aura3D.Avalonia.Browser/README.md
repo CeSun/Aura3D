@@ -1,33 +1,40 @@
 # Aura3D.Avalonia.Browser
 
-[Aura3D](https://github.com/CeSun/Aura3d) 的浏览器渲染后端借 Avalonia.Browser 合成器的 WebGL2 上下文出图：
-引擎按 OpenGL ES 3.0 发调用，经 emscripten 的 GLES shim 落到 WebGL2。这条链路要求**应用**自己的
-wasm 模块带着那份 shim 一起链接，而链接开关只有应用工程说得上话，所以由本包在装包时注入。
+English | [中文](./README_CN.md)
 
-## 用法
+[Aura3D](https://github.com/CeSun/Aura3d) renders in the browser through the WebGL2 context of the
+Avalonia.Browser compositor: the engine issues OpenGL ES 3.0 calls that land on WebGL2 via emscripten's
+GLES shim. That chain requires the **application's** own wasm module to link that shim in, and only the
+application project can decide the linker switches — so this package injects them when it is installed.
 
-不需要单独装。`Aura3D.Avalonia` 的 browser 目标以精确区间依赖本包，包内 `buildTransitive` props
-会穿透到应用工程，自动注入原生链接和 WebGL2 开关：
+## Usage
+
+There is nothing to install separately. The browser target of `Aura3D.Avalonia` depends on this package
+with an exact version range, and the `buildTransitive` props inside the package flow through to the
+application project, injecting the native linking and the WebGL2 switches automatically:
 
 ```shell
 dotnet add package Aura3D.Avalonia
 ```
 
-注入的内容（仅对 `$(TargetFramework)` 含 `-browser` 的工程生效）：
+What gets injected (applies only to projects whose `$(TargetFramework)` contains `-browser`):
 
-- `WasmBuildNative=true` —— 原生库随应用 wasm 模块链接，GLES 入口点与 Avalonia 的 WebGL 渲染目标都取它；
-- `-s FULL_ES3=1` —— 把 GLES2/GLES3 实现链进模块（默认只有 WebGL1 通道）；
-- `-s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2` —— GLES3 的入口点（VAO、UBO、3D 纹理、blit）
-  只在 WebGL2 上下文上存在，上下文版本必须是 2。
+- `WasmBuildNative=true` — native libraries are linked into the application wasm module; both the GLES
+  entry points and Avalonia's WebGL render target take them from there;
+- `-s FULL_ES3=1` — links the GLES2/GLES3 implementation into the module (by default only the WebGL1
+  path is present);
+- `-s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2` — the GLES3 entry points (VAO, UBO, 3D textures, blit)
+  only exist on a WebGL2 context, so the context version must be 2.
 
-应用本身仍按 .NET WASM 的常规方式跑：`dotnet run --project <App>.Browser`。
+The application itself still runs the regular .NET WASM way: `dotnet run --project <App>.Browser`.
 
-## .NET 10 发布/静态站点：应用工程必填
+## .NET 10 publish / static site: required in the app project
 
 > [!IMPORTANT]
-> 当前 .NET 10 WebAssembly 工具链下，`dotnet run` 能运行不代表 Release 静态发布可以直接运行。
-> 每个使用 Aura3D 的 `net10.0-browser` 应用都**必须**在应用 `.csproj` 中显式写入以下三项；
-> 只写其中一项或两项仍会在启动或首帧渲染时崩溃。
+> With the current .NET 10 WebAssembly toolchain, "it runs with `dotnet run`" does **not** mean a Release
+> static publish will run. Every `net10.0-browser` application that uses Aura3D **must** explicitly write
+> the following three properties in the application `.csproj`; setting only one or two of them still
+> crashes at startup or on the first rendered frame.
 
 ```xml
 <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -37,19 +44,21 @@ dotnet add package Aura3D.Avalonia
 </PropertyGroup>
 ```
 
-三项必须作为一个整体使用：
+The three must be used as a single set:
 
-- 默认 Release full trimming 会漏掉 Silk.NET 函数指针调用需要的 WASM interpreter-to-native trampoline。
-  首次执行 `gl.ClearColor(float, float, float, float)` 等调用时，常见日志是
-  `aot-runtime-wasm.c:188 <disabled>`，随后 `Program terminated with exit(1)`。
-- 只设置 `PublishTrimmed=false` 虽然会恢复这些 trampoline，但 .NET 10 的精简 icall 表仍可能与实际加载的
-  `System.Private.CoreLib` metadata token 不一致，启动阶段会报
-  `Your mono runtime and class libraries are out of sync` / `function signature mismatch`。
-- `WasmLinkIcalls=false` 用于避开第二个问题；当前已验证的发布路径使用解释器，因此
-  `RunAOTCompilation` 必须保持 `false`。单独开启 AOT、改成 `TrimMode=partial` 或只 root
-  `Silk.NET.OpenGLES` 都不能替代这组配置。
+- The default Release full trimming drops the WASM interpreter-to-native trampolines that Silk.NET
+  function-pointer calls need. On the first execution of calls such as
+  `gl.ClearColor(float, float, float, float)` the typical log is `aot-runtime-wasm.c:188 <disabled>`,
+  followed by `Program terminated with exit(1)`.
+- Setting only `PublishTrimmed=false` restores those trampolines, but .NET 10's reduced icall table can
+  still be out of sync with the metadata tokens of the actually loaded `System.Private.CoreLib`, which
+  reports `Your mono runtime and class libraries are out of sync` / `function signature mismatch` during
+  startup.
+- `WasmLinkIcalls=false` avoids that second problem; the currently verified publish path uses the
+  interpreter, so `RunAOTCompilation` must stay `false`. Enabling AOT alone, switching to
+  `TrimMode=partial`, or rooting only `Silk.NET.OpenGLES` is not a substitute for this set.
 
-切换配置后还必须使用全新的中间目录和发布目录。例如：
+After switching configuration you must also use a clean intermediate and publish directory. For example:
 
 ```powershell
 dotnet publish .\example\Example.Browser\Example.Browser.csproj `
@@ -59,28 +68,34 @@ dotnet publish .\example\Example.Browser\Example.Browser.csproj `
   -p:ArtifactsPath="$PWD\artifacts\browser-release-clean"
 ```
 
-产物位于 `artifacts/browser-release-clean/publish/Example.Browser/release/wwwroot`。部署时应把这份
-`wwwroot` **整体替换**到一个空的站点目录，不要覆盖追加到旧目录；否则多代
-`dotnet.native.*.wasm`、`System.Private.CoreLib.*.wasm` 与新的 `dotnet.js` 混在一起，仍可能触发
-CoreLib/icall 不同步。部署后还应刷新浏览器、Service Worker 和 CDN 中的 `dotnet.js` 缓存。
+The output lands in `artifacts/browser-release-clean/publish/Example.Browser/release/wwwroot`. When
+deploying, **replace** that `wwwroot` as a whole into an empty site directory — do not copy it on top of
+an existing one. Otherwise several generations of `dotnet.native.*.wasm`,
+`System.Private.CoreLib.*.wasm` and the new `dotnet.js` end up mixed together, which can still trigger
+the CoreLib/icall mismatch. After deploying, also refresh the `dotnet.js` cache in the browser,
+in Service Workers and in the CDN.
 
-控制台里的 `WEBGL_debug_renderer_info not enabled` / `INVALID_ENUM` 是无害的 renderer 信息查询警告，
-不是上述崩溃的根因。
+`WEBGL_debug_renderer_info not enabled` / `INVALID_ENUM` in the console are harmless renderer-info
+warnings, not the cause of the crashes above.
 
-## 前置条件：wasm-tools workload
+## Prerequisite: the wasm-tools workload
 
-`WasmBuildNative=true` 只是必要条件——本机 SDK 还得装 `wasm-tools`（含 emscripten），否则原生链接不会发生：
-构建 0 错误、`dotnet.native.wasm` 只有 3 MB 出头（链上后约 25 MB），应用启动即
-`System.DllNotFoundException: libSkiaSharp`。这种情况由包内 `buildTransitive` targets 在构建期直接报 Error
-并给出命令：
+`WasmBuildNative=true` is only a necessary condition — the local SDK must also have `wasm-tools`
+(which ships emscripten) installed, otherwise native linking never happens: the build reports 0 errors,
+`dotnet.native.wasm` stays just over 3 MB (about 25 MB once linked), and the app dies at startup with
+`System.DllNotFoundException: libSkiaSharp`. In that case the `buildTransitive` targets in this package
+raise a build-time Error with the command to run:
 
 ```shell
 dotnet workload install wasm-tools
 ```
 
-确实不需要本后端的工程（比如只在桌面上跑）可设 `Aura3DSkipWasmWorkloadCheck=true` 关掉这条检查。
+Projects that genuinely do not need this backend (for example desktop-only) can set
+`Aura3DSkipWasmWorkloadCheck=true` to turn the check off.
 
-## 版本策略
+## Versioning policy
 
-包里没有二进制，只有构建属性，但 `Aura3D.Avalonia` 仍以精确区间 `[0.1.0]` 依赖它：这些开关与
-库的 GLES 调用面是配对的（比如 `FULL_ES3` 少了就整块不出图），升级要和库一起过一遍浏览器验证。
+The package carries no binaries, only build properties, yet `Aura3D.Avalonia` still depends on it with
+the exact range `[0.1.0]`: these switches are paired with the GLES call surface of the library (drop
+`FULL_ES3`, for instance, and nothing renders at all), so any upgrade has to go through browser
+verification together with the library.
