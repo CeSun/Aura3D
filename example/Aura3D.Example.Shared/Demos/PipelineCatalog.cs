@@ -16,9 +16,6 @@ public enum PipelineKind
     /// <summary>无光照管线，只做纹理/顶点色直出，用于图元与调试可视化。</summary>
     NoLight,
 
-    /// <summary>点云管线。</summary>
-    PointCloud,
-
     /// <summary>延迟 PBR 管线（GBuffer + IBL + 逐灯 pass）。</summary>
     PBRDeferred,
 
@@ -42,7 +39,6 @@ public static class PipelineCatalog
     {
         PipelineKind.BlinnPhong => Core.Renderers.BlinnPhongPipeline.CreateInstance,
         PipelineKind.NoLight => Core.Renderers.NoLightPipeline.CreateInstance,
-        PipelineKind.PointCloud => Aura3D.Core.PointCloudPipeline.CreateInstance,
         PipelineKind.PBRDeferred => Aura3D.Pipeline.PBR.PBRDeferredPipeline.CreateInstance,
         PipelineKind.PBRForward => Aura3D.Pipeline.PBRForward.PBRForwardPipeline.CreateInstance,
         PipelineKind.CelShading => Aura3D.Pipeline.CelShading.CelShadingPipeline.CreateInstance,
@@ -62,7 +58,6 @@ public static class PipelineCatalog
     {
         PipelineKind.BlinnPhong => Strings.Keys.Pipeline_BlinnPhong.T(),
         PipelineKind.NoLight => Strings.Keys.Pipeline_NoLight.T(),
-        PipelineKind.PointCloud => Strings.Keys.Pipeline_PointCloud.T(),
         PipelineKind.PBRDeferred => Strings.Keys.Pipeline_PBRDeferred.T(),
         PipelineKind.PBRForward => Strings.Keys.Pipeline_PBRForward.T(),
         PipelineKind.CelShading => Strings.Keys.Pipeline_CelShading.T(),
@@ -76,7 +71,6 @@ public static class PipelineCatalog
     [
         PipelineKind.BlinnPhong,
         PipelineKind.NoLight,
-        PipelineKind.PointCloud,
         PipelineKind.PBRDeferred,
         PipelineKind.PBRForward,
         PipelineKind.CelShading,

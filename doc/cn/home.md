@@ -25,7 +25,7 @@ dotnet restore
 dotnet run --project example/Example.Desktop
 ```
 
-操作方式：WASD 移动、鼠标右键旋转视角、滚轮缩放、中键平移。左侧导航在 22 个功能页之间切换。
+操作方式：WASD 移动、鼠标右键旋转视角、滚轮缩放、中键平移。左侧导航在 21 个功能页之间切换。
 
 示例项目的四条结构约定：
 

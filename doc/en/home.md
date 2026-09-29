@@ -25,7 +25,7 @@ dotnet restore
 dotnet run --project example/Example.Desktop
 ```
 
-Controls: WASD to move, right-click drag to rotate, scroll to zoom, middle-click to pan. The left sidebar switches between the 22 feature pages.
+Controls: WASD to move, right-click drag to rotate, scroll to zoom, middle-click to pan. The left sidebar switches between the 21 feature pages.
 
 Four structural rules the example project follows:
 

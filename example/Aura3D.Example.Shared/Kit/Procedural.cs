@@ -239,7 +239,7 @@ public static class Procedural
 
         // 边长与字节数对不上时，上传的是越界读出来的垃圾，画面只会表现为「说不清为什么不对」。
         if (rgba.Length != width * h * 4)
-            throw new ArgumentException($"纹理声明 {width}x{h}，却给了 {rgba.Length} 字节（需要 {width * h * 4}）。");
+            throw new ArgumentException($"texture declares {width}x{h} but got {rgba.Length} bytes (needs {width * h * 4}).");
 
         var texture = new Texture();
 

@@ -12,15 +12,14 @@ using System.Threading.Tasks;
 namespace Aura3D.Examples.Demos;
 
 /// <summary>
-/// 同一幕场景在六条管线下的差别。页里的每个对象都刻意只喂某一种信息
-/// （平涂、法线贴图、金属度粗糙度、遮罩、半透明、点云），
+/// 同一幕场景在五条管线下的差别。页里的每个对象都刻意只喂某一种信息
+/// （平涂、法线贴图、金属度粗糙度、遮罩、半透明），
 /// 于是在宿主状态栏里换管线就能看出「谁读了哪张贴图、谁压根不读」。
 /// 参数行的排版全在 <c>PipelinesDemo.axaml</c> 里，这里只剩场景组装与回调。
 /// </summary>
 public sealed partial class PipelinesDemo : Demo
 {
     private Node? row;
-    private Mesh? points;
     private DirectionalLight? sun;
     private PointLight? point;
 
@@ -98,50 +97,6 @@ public sealed partial class PipelinesDemo : Demo
             m.SetTexture("BaseColor", Procedural.FromRgba(Solid(255, 90, 90, 90), 1));
             m.BlendMode = BlendMode.Translucent;
         });
-
-        // 点云：只有 PointCloud 管线为它注册了点精灵 pass，别的管线拿到的只是一堆 1 像素的点。
-        var cloud = new Geometry { PrimitiveType = PrimitiveType.Points };
-
-        const int Count = 1200;
-
-        var positions = new System.Collections.Generic.List<float>(Count * 3);
-        var colors = new System.Collections.Generic.List<float>(Count * 4);
-        var indices = new System.Collections.Generic.List<uint>(Count);
-
-        var rng = new Random(7);
-
-        for (int i = 0; i < Count; i++)
-        {
-            positions.Add((float)(rng.NextDouble() - 0.5) * 1.7f + 5.4f);
-            positions.Add((float)(rng.NextDouble() - 0.5) * 1.7f + 1.2f);
-            positions.Add((float)(rng.NextDouble() - 0.5) * 1.7f);
-
-            var c = rng.NextDouble();
-
-            colors.Add((float)(0.3 + c * 0.7));
-            colors.Add(0.35f);
-            colors.Add((float)(1.0 - c * 0.7));
-            colors.Add(1f);
-
-            indices.Add((uint)i);
-        }
-
-        cloud.SetVertexAttribute(BuildInVertexAttribute.Position, 3, positions);
-        cloud.SetVertexAttribute(BuildInVertexAttribute.Color_0, 4, colors);
-        cloud.SetIndices(indices);
-
-        var cloudMaterial = new Material { BlendMode = BlendMode.Translucent };
-
-        cloudMaterial.SetParameterValue("uPointSize", 6f);
-
-        points = new Mesh
-        {
-            Name = Strings.Keys.Pipelines_NodePointCloud.T(),
-            Geometry = cloud,
-            Material = cloudMaterial,
-        };
-
-        scene.AddNode(points);
 
         Report();
     }
@@ -231,7 +186,7 @@ public sealed partial class PipelinesDemo : Demo
         // 只有立方图那一路才喂给 IrradianceMap / PrefilteredEnvironment 两个 pass。
         var hasEnv = Context.Scene!.Background.IsT0;
 
-        var litMark = kind is PipelineKind.NoLight or PipelineKind.PointCloud ? "×" : "✓";
+        var litMark = kind == PipelineKind.NoLight ? "×" : "✓";
         var pbrMark = pbr ? "✓" : "×";
         var celMark = kind == PipelineKind.CelShading ? "✓" : "×";
         var envMark = pbr

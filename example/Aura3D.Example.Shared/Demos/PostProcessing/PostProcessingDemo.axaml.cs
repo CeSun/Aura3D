@@ -228,7 +228,7 @@ public sealed partial class PostProcessingDemo : Demo
 
         var pbr = kind is PipelineKind.PBRDeferred or PipelineKind.PBRForward;
         var ambient = kind is PipelineKind.BlinnPhong or PipelineKind.CelShading;
-        var shadow = kind is not (PipelineKind.NoLight or PipelineKind.PointCloud);
+        var shadow = kind is not PipelineKind.NoLight;
 
         var settings = Context.Settings;
 

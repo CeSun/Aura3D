@@ -176,14 +176,6 @@ public static class DemoRegistry
             DefaultPipeline: PipelineKind.BlinnPhong,
             LockPipeline: true),
         new(
-            Id: "point-cloud",
-            Title: Strings.Keys.Demo_PointCloud_Title,
-            Group: Strings.Keys.Group_Batching,
-            Summary: Strings.Keys.Demo_PointCloud_Summary,
-            Assets: Assets.AssetSet.Empty,
-            Create: context => new PointCloudDemo(context),
-            DefaultPipeline: PipelineKind.PointCloud),
-        new(
             Id: "hism",
             Title: Strings.Keys.Demo_Hism_Title,
             Group: Strings.Keys.Group_Batching,

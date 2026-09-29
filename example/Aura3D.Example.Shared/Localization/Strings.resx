@@ -29,7 +29,6 @@
   <data name="Group_Batching" xml:space="preserve"><value>Batching &amp; effects</value></data>
   <data name="Pipeline_BlinnPhong" xml:space="preserve"><value>Blinn-Phong (forward)</value></data>
   <data name="Pipeline_NoLight" xml:space="preserve"><value>NoLight (unlit)</value></data>
-  <data name="Pipeline_PointCloud" xml:space="preserve"><value>PointCloud (points)</value></data>
   <data name="Pipeline_PBRDeferred" xml:space="preserve"><value>PBR deferred</value></data>
   <data name="Pipeline_PBRForward" xml:space="preserve"><value>PBR forward</value></data>
   <data name="Pipeline_CelShading" xml:space="preserve"><value>Cel shading</value></data>
@@ -78,11 +77,6 @@
   <data name="PbrChannels_PbrSettings" xml:space="preserve"><value>PBR-only settings</value></data>
   <data name="Pipelines_Lights" xml:space="preserve"><value>Lights</value></data>
   <data name="Pipelines_Readout" xml:space="preserve"><value>Comparison readout</value></data>
-  <data name="PointCloud_SizeSources" xml:space="preserve"><value>The two sources of point size</value></data>
-  <data name="PointCloud_PointSet" xml:space="preserve"><value>The point set</value></data>
-  <data name="PointCloud_BlendBranches" xml:space="preserve"><value>Blend branches</value></data>
-  <data name="PointCloud_Instanced" xml:space="preserve"><value>Instanced point cloud</value></data>
-  <data name="PointCloud_PipelineDiff" xml:space="preserve"><value>Switch pipelines to compare</value></data>
   <data name="PostProcessing_ToneMapping" xml:space="preserve"><value>Per frame · tone mapping (only the two PBR pipelines register ToneMappingPass)</value></data>
   <data name="PostProcessing_Ambient" xml:space="preserve"><value>Per frame · ambient</value></data>
   <data name="PostProcessing_Post" xml:space="preserve"><value>Per frame · post-processing and culling</value></data>
@@ -103,8 +97,8 @@
   <data name="Shell_WindowTitle" xml:space="preserve"><value>Aura3D feature examples</value></data>
   <data name="Demo_Geometries_Title" xml:space="preserve"><value>Geometries &amp; transforms</value></data>
   <data name="Demo_Geometries_Summary" xml:space="preserve"><value>BoxGeometry/SphereGeometry/CylinderGeometry/PlaneGeometry constructor parameters and node transforms</value></data>
-  <data name="Demo_Pipelines_Title" xml:space="preserve"><value>Six pipelines side by side</value></data>
-  <data name="Demo_Pipelines_Summary" xml:space="preserve"><value>One scene through six pipelines: which map each reads, which ignores lights, why point sprites live in only one</value></data>
+  <data name="Demo_Pipelines_Title" xml:space="preserve"><value>Five pipelines side by side</value></data>
+  <data name="Demo_Pipelines_Summary" xml:space="preserve"><value>One scene through five pipelines: which map each reads, and which one ignores lights entirely</value></data>
   <data name="Demo_Primitives_Title" xml:space="preserve"><value>Primitives &amp; custom vertices</value></data>
   <data name="Demo_Primitives_Summary" xml:space="preserve"><value>Hand-written Geometry vertex buffers, and how the seven PrimitiveType values connect the same vertices differently</value></data>
   <data name="Demo_Camera_Title" xml:space="preserve"><value>Camera &amp; projection</value></data>
@@ -139,8 +133,6 @@
   <data name="Demo_AssimpFbx_Summary" xml:space="preserve"><value>Fetching model and animation files separately, attaching external clips to the same Skeleton instance, and the raw Animation.Sample interface</value></data>
   <data name="Demo_Instancing_Title" xml:space="preserve"><value>Instancing</value></data>
   <data name="Demo_Instancing_Summary" xml:space="preserve"><value>InstancedMesh batch versus per-instance updates, per-instance vertex colour attributes, and how an instance-aware shader is written</value></data>
-  <data name="Demo_PointCloud_Title" xml:space="preserve"><value>Point cloud pipeline</value></data>
-  <data name="Demo_PointCloud_Summary" xml:space="preserve"><value>PointCloudPass round point sprites, the two sources of point size, only Opaque/Translucent branches, and the instanced branch</value></data>
   <data name="Demo_Hism_Title" xml:space="preserve"><value>Hierarchical instancing (HISM)</value></data>
   <data name="Demo_Hism_Summary" xml:space="preserve"><value>InstancedMeshGroup's octree grouping and background tree building, and the cost of in-place updates versus rebuilding the tree</value></data>
   <data name="Demo_Particles_Title" xml:space="preserve"><value>Particle system</value></data>
@@ -341,33 +333,16 @@
   <data name="Picking_GridSize" xml:space="preserve"><value>Instance grid side</value></data>
   <data name="Picking_ClearClicks" xml:space="preserve"><value>Reset the click counter</value></data>
   <data name="Picking_Result" xml:space="preserve"><value>Pick result</value></data>
-  <data name="Pipelines_Intro" xml:space="preserve"><value>Each of the six objects feeds exactly one kind of information, so whether a pipeline reads it is easy to see. A few patterns recur:
+  <data name="Pipelines_Intro" xml:space="preserve"><value>Each of the five objects feeds exactly one kind of information, so whether a pipeline reads it is easy to see. A few patterns recur:
 - NoLight looks at no lights at all, and ignores Normal and MetallicRoughness.
 - Blinn-Phong reads only BaseColor and Normal; the other three PBR maps go unrecognised.
 - Cel adds its own ILM/ShadowRamp and an outline pass on top of the Blinn-Phong channels.
-- Both PBR pipelines read all five maps and need Scene.Background to supply an environment map before any IBL ambient light exists.
-- Point clouds: only the PointCloud pipeline registers PointCloudPass, so on any other line the points degrade to 1 pixel each.</value></data>
+- Both PBR pipelines read all five maps and need Scene.Background to supply an environment map before any IBL ambient light exists.</value></data>
   <data name="Pipelines_LightPitch" xml:space="preserve"><value>Directional light pitch (deg)</value></data>
   <data name="Pipelines_LightShadow" xml:space="preserve"><value>Directional light casts shadows</value></data>
   <data name="Pipelines_PointLightVisible" xml:space="preserve"><value>Point light visible</value></data>
   <data name="Pipelines_Channels" xml:space="preserve"><value>Channels the current pipeline reads</value></data>
   <data name="Pipelines_Passes" xml:space="preserve"><value>This pipeline's passes (Once / EveryCamera)</value></data>
-  <data name="PointCloud_Intro" xml:space="preserve"><value>Point size has two sources: PointCloudPass.DefaultPointSize on the pass (5 in the engine) is the fallback, and a float parameter named uPointSize written on the material overrides it. Group 1 deliberately carries no material parameter, so it follows the slider above.</value></data>
-  <data name="PointCloud_DefaultSize" xml:space="preserve"><value>Pass DefaultPointSize (group 1)</value></data>
-  <data name="PointCloud_UseMaterialSize" xml:space="preserve"><value>Group 2 uses a material uPointSize (off falls back to the pass default)</value></data>
-  <data name="PointCloud_MaterialSize" xml:space="preserve"><value>Group 2 uPointSize</value></data>
-  <data name="PointCloud_GlPointSizeNote" xml:space="preserve"><value>gl_PointSize is clamped by the driver to the device's ALIASED_POINT_SIZE_RANGE ceiling, so under a browser the practical maximum is only visible by comparison. The fragment stage discards once gl_PointCoord measures past 0.5, which is why points read as circles rather than squares.</value></data>
-  <data name="PointCloud_Shape" xml:space="preserve"><value>Shape</value></data>
-  <data name="PointCloud_PointsPerGroup" xml:space="preserve"><value>Points per group</value></data>
-  <data name="PointCloud_DropColorAttribute" xml:space="preserve"><value>Strip group 1's slot-2 vertex colour</value></data>
-  <data name="PointCloud_ColorSourceNote" xml:space="preserve"><value>Once the vertex colour is stripped the shader reads an empty slot, and what actually comes back depends on the driver's default vertex attributes. The point of this group is the reminder that a point cloud's colour has exactly one source, slot 2 (vec4); material textures do nothing here.</value></data>
-  <data name="PointCloud_BlendNote" xml:space="preserve"><value>PointCloudPass.Render issues only two batches: Opaque first (blending off, depth written), then Translucent (SrcAlpha blending on, depth writes off). There is no Masked batch, so group 4's AlphaCutoff and mask mean nothing here — it simply is not drawn.</value></data>
-  <data name="PointCloud_Group3Visible" xml:space="preserve"><value>Group 3 Translucent visible</value></data>
-  <data name="PointCloud_Group4Visible" xml:space="preserve"><value>Group 4 Masked visible</value></data>
-  <data name="PointCloud_InstancedRow" xml:space="preserve"><value>Attach an InstancedMesh point cloud (takes the INSTANCED_MESH branch)</value></data>
-  <data name="PointCloud_InstancedNote" xml:space="preserve"><value>The instanced vertex shader already provides the mat4 modelMatrix in slots 8-11, so no custom shader is needed. Per-instance colour also lands in slot 2, which is why this geometry deliberately omits a per-vertex Color_0 — otherwise the two would fight.</value></data>
-  <data name="PointCloud_PipelineNote" xml:space="preserve"><value>Switch to another pipeline and the same points are drawn by that pipeline's generic pass: nobody sets gl_PointSize there, so points are 1 pixel and the vertex colour goes unread. That is precisely why this page does not lock the pipeline.</value></data>
-  <data name="PointCloud_Effective" xml:space="preserve"><value>What is in effect</value></data>
   <data name="PostProcessing_Intro" xml:space="preserve"><value>Everything in the upper half applies per frame: the shader re-reads those uniforms every frame. The lower half changes shader variants or texture sizes and only a full page rebuild honours them — press the button, do not expect the sliders.</value></data>
   <data name="PostProcessing_AmbientIntensity" xml:space="preserve"><value>AmbientIntensity (read by BlinnPhong / Cel)</value></data>
   <data name="PostProcessing_IblAmbient" xml:space="preserve"><value>IblAmbientIntensity (read by PBR)</value></data>
@@ -510,18 +485,7 @@
   <data name="SkinnedAnimation_Yes" xml:space="preserve"><value>yes</value></data>
   <data name="SkinnedAnimation_No" xml:space="preserve"><value>no</value></data>
   <data name="SkinnedAnimation_Readout" xml:space="preserve"><value>Clip {0} ({1}s) · TimeScale={2:0.##} LoopMode={3} · driver={4} · manual total {5:0.##}s · skinned mesh {6}</value></data>
-  <data name="SceneGizmos_DebugReadout" xml:space="preserve"><value>Enable={0} BBox={1} Directional={2} Point={3} Spot={4} Frustum={5} Grid={6} Size={7:0} Divisions={8} Axis={9:0.0} Arrowhead={10:0.00}</value></data>  <data name="PointCloud_OptionShell" xml:space="preserve"><value>Spherical shell</value></data>
-  <data name="PointCloud_OptionHelix" xml:space="preserve"><value>Helical column</value></data>
-  <data name="PointCloud_OptionCube" xml:space="preserve"><value>Cube volume</value></data>
-  <data name="PointCloud_NodeFollowsPass" xml:space="preserve"><value>1 follows the pass default</value></data>
-  <data name="PointCloud_NodeMaterialSize" xml:space="preserve"><value>2 material uPointSize</value></data>
-  <data name="PointCloud_NodeBoxNotDrawn" xml:space="preserve"><value>Box (this pipeline does not draw it)</value></data>
-  <data name="PointCloud_PassMissing" xml:space="preserve"><value>No PointCloudPass in the current pipeline (points are drawn 1 px by the generic pass)</value></data>
-  <data name="PointCloud_SizeDroppedToPass" xml:space="preserve"><value>parameter removed → uses the pass value</value></data>
-  <data name="PointCloud_InstancedCounts" xml:space="preserve"><value>{0} instances × {1} vertices</value></data>
-  <data name="PointCloud_InstancedOff" xml:space="preserve"><value>off</value></data>
-  <data name="PointCloud_Readout" xml:space="preserve"><value>{0} · group 1 has no material parameter → uses the pass value · group 2={1} · groups 3/4 set uPointSize=9, BlendMode Translucent / Masked respectively (the Masked branch is never issued) · instanced cloud {2} · the box and group 4 should be invisible</value></data>
-  <data name="GpuLifecycle_ActionInitial" xml:space="preserve"><value>Entered the page, waiting for the first frame</value></data>
+  <data name="SceneGizmos_DebugReadout" xml:space="preserve"><value>Enable={0} BBox={1} Directional={2} Point={3} Spot={4} Frustum={5} Grid={6} Size={7:0} Divisions={8} Axis={9:0.0} Arrowhead={10:0.00}</value></data>  <data name="GpuLifecycle_ActionInitial" xml:space="preserve"><value>Entered the page, waiting for the first frame</value></data>
   <data name="GpuLifecycle_LogBuildScene" xml:space="preserve"><value>Scene built · scene #{0}, {1} root nodes</value></data>
   <data name="GpuLifecycle_ActionContinuous" xml:space="preserve"><value>Continuous rendering</value></data>
   <data name="GpuLifecycle_ActionOnDemand" xml:space="preserve"><value>On-demand rendering (no further frames)</value></data>
@@ -560,7 +524,6 @@
   <data name="Pipelines_NodeNormal" xml:space="preserve"><value>② Normal</value></data>
   <data name="Pipelines_NodeMask" xml:space="preserve"><value>④ Mask</value></data>
   <data name="Pipelines_NodeTranslucent" xml:space="preserve"><value>⑤ Translucent</value></data>
-  <data name="Pipelines_NodePointCloud" xml:space="preserve"><value>⑥ Point cloud</value></data>
   <data name="Pipelines_ChannelsReadout" xml:space="preserve"><value>{0} · BaseColor✓ Normal{1} MetallicRoughness{2} Occlusion{3} Emissive{4} Lights{5} Outline{6} IBL env map {7}</value></data>
   <data name="Pipelines_EnvSet" xml:space="preserve"><value>set</value></data>
   <data name="Pipelines_EnvUnsetDefault" xml:space="preserve"><value>unset → engine default cubemap</value></data>
