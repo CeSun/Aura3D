@@ -14,7 +14,8 @@ void main()
 {
 	vec4 baseColor = texture(BaseColorTexture, vTexCoord);
 
-	#if defined(BLENDMODE_MASKED) || defined(BLENDMODE_TRANSLUCENT)
+	// Cutoff discard belongs to Masked only; Translucent blends by alpha (see base.frag).
+	#ifdef BLENDMODE_MASKED
 		if (baseColor.a <= alphaCutoff)
 			discard;
 	#endif

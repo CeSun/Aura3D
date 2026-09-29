@@ -94,7 +94,7 @@ uniform mat4 faceModelMatrix;
 #endif
 
 
-#if defined(BLENDMODE_MASKED) || defined(BLENDMODE_TRANSLUCENT)
+#ifdef BLENDMODE_MASKED
 
 uniform float alphaCutoff;
 
@@ -236,7 +236,8 @@ void main()
 	{
 		baseColor = texture(BaseColorTexture, vTexCoord);
 	}
-	#if defined(BLENDMODE_MASKED) || defined(BLENDMODE_TRANSLUCENT)
+	// Cutoff discard belongs to Masked only; Translucent blends by alpha (see base.frag).
+	#ifdef BLENDMODE_MASKED
 		if (baseColor.a <= alphaCutoff)
 			discard;
 	#endif

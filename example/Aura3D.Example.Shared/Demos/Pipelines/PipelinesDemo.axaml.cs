@@ -95,9 +95,7 @@ public sealed partial class PipelinesDemo : Demo
         });
         Add(Strings.Keys.Pipelines_NodeTranslucent.T(), new SphereGeometry(0.9f, 36, 20), 3f, m =>
         {
-            m.SetTexture("BaseColor", Procedural.FromRgba(
-                Solid(255, 90, 90, 90),
-                2));
+            m.SetTexture("BaseColor", Procedural.FromRgba(Solid(255, 90, 90, 90), 1));
             m.BlendMode = BlendMode.Translucent;
         });
 

@@ -121,7 +121,7 @@ uniform float ambientIntensity;
 uniform vec3 cameraPosition;
 uniform mat4 viewMatrix;
 
-#if defined(BLENDMODE_MASKED) || defined(BLENDMODE_TRANSLUCENT)
+#ifdef BLENDMODE_MASKED
 
 uniform float alphaCutoff;
 
@@ -180,7 +180,9 @@ void main()
 		normal = -normal;
 	}
 
-	#if defined(BLENDMODE_MASKED) || defined(BLENDMODE_TRANSLUCENT)
+	// Cutoff discard belongs to Masked only. Translucent shows up by alpha blending, so
+	// comparing it against alphaCutoff here deletes whole meshes: the default cutoff is 0.5.
+	#ifdef BLENDMODE_MASKED
 		if (baseColor.a <= alphaCutoff)
 			discard;
 	#endif
