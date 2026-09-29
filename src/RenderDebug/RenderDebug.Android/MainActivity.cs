@@ -38,7 +38,7 @@ public class MainActivity : SilkActivity
             });
 
             var inputContext = view.CreateInput();
-            testView = new TestView(scene, inputContext, name => Assets.Open($"Example/Assets/{name}"));
+            testView = new TestView(scene, inputContext, name => Assets.Open($"assets/{name}"));
 
             testView.OnInit();
 

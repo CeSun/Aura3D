@@ -29,7 +29,7 @@ window.Load += () =>
 
     var inputContext = window.CreateInput();
 
-    testView = new TestView(scene, inputContext, name => File.OpenRead($"../../../../../../example/Example/Assets/{name}"));
+    testView = new TestView(scene, inputContext, name => File.OpenRead($"../../../../../../example/assets/{name}"));
 
     testView.OnInit();
 

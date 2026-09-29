@@ -103,7 +103,7 @@ public class ShadowMapPass : RenderPass
 
 
                 gl.Clear(ClearBufferMask.DepthBufferBit);
-                gl.ClearDepth(1.0f);
+                ClearDepthSafe();
 
                 RenderMesh(views[i], projection);
 
@@ -134,7 +134,7 @@ public class ShadowMapPass : RenderPass
             gl.BindFramebuffer(GLEnum.Framebuffer, rt.FrameBufferId);
 
             gl.Clear(ClearBufferMask.DepthBufferBit);
-            gl.ClearDepth(1.0f);
+            ClearDepthSafe();
 
             var position = spotLight.WorldTransform.Translation;
             var view = Matrix4x4.CreateLookAt(position, position + spotLight.WorldTransform.ForwardVector(), spotLight.WorldTransform.UpVector());
@@ -167,7 +167,13 @@ public class ShadowMapPass : RenderPass
                 break;
 
             bool isMainLight = directionalLight == mainLight;
-            bool useCsm = isMainLight && csmCascadeCount > 1 && renderPipeline.SupportsCSM;
+            // 级联阴影用纹理数组，其分配要走 glTexImage3D（void + 10 参）——不在浏览器 wasm 的
+            // interop 签名表里，命中即 abort。浏览器宿主强制退回单张 shadow map；点光 cube 与
+            // 聚光单图路径不受影响。
+            bool useCsm = isMainLight
+                          && csmCascadeCount > 1
+                          && renderPipeline.SupportsCSM
+                          && !RenderPipeline.HostIsWebGlWasm;
 
             if (useCsm)
             {
@@ -261,7 +267,7 @@ public class ShadowMapPass : RenderPass
                         csmData.TextureArrayId, 0, cascade);
 
                     gl.Clear(ClearBufferMask.DepthBufferBit);
-                    gl.ClearDepth(1.0f);
+                    ClearDepthSafe();
 
                     RenderMesh(lightView, lightProjection);
                 }
@@ -298,7 +304,7 @@ public class ShadowMapPass : RenderPass
 
                 gl.BindFramebuffer(GLEnum.Framebuffer, rt.FrameBufferId);
                 gl.Clear(ClearBufferMask.DepthBufferBit);
-                gl.ClearDepth(1.0f);
+                ClearDepthSafe();
 
                 var view = Matrix4x4.CreateLookAt(directionalLight.WorldTransform.Translation,
                     directionalLight.WorldTransform.Translation + directionalLight.WorldTransform.ForwardVector(),

@@ -58,6 +58,32 @@ public partial class RenderPass
     protected GL gl => renderPipeline.gl!;
 
     /// <summary>
+    /// 设置清屏色。浏览器 wasm 宿主上跳过：<c>glClearColor</c>（<c>void+float×4</c>）不在运行时的
+    /// interop 签名表里，命中即 abort，此时依赖 GL 默认清屏色 (0,0,0,0)。
+    /// 因此只在调用点本来就传 (0,0,0,0) 时才等价；唯一的例外是辐照度图那处 alpha=1，
+    /// 差异记在 IrradianceMapPass 的调用点。
+    /// </summary>
+    protected void ClearColorSafe(float r, float g, float b, float a)
+    {
+        if (RenderPipeline.HostIsWebGlWasm)
+            return;
+
+        gl.ClearColor(r, g, b, a);
+    }
+
+    /// <summary>
+    /// 重置深度清除值。浏览器 wasm 宿主上跳过：<c>glClearDepth</c>（<c>void+float</c>）同样不在表里。
+    /// 等价性来自 GL 默认 <c>CLEAR_DEPTH</c> 恒为 1.0，而引擎所有调用点传的也都是 1.0。
+    /// </summary>
+    protected void ClearDepthSafe()
+    {
+        if (RenderPipeline.HostIsWebGlWasm)
+            return;
+
+        gl.ClearDepth(1.0f);
+    }
+
+    /// <summary>
     /// Sets the up.
     /// </summary>
     public virtual void Setup()

@@ -22,8 +22,8 @@
   </ItemGroup>
 	
   <ItemGroup>
-	  <AndroidAsset Include="..\..\..\example\Example\Assets\**\*">
-		  <Link>Example\Assets\%(RecursiveDir)%(Filename)%(Extension)</Link>
+	  <AndroidAsset Include="..\..\..\example\assets\**\*">
+		  <Link>assets\%(RecursiveDir)%(Filename)%(Extension)</Link>
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </AndroidAsset>
   </ItemGroup>

@@ -37,7 +37,7 @@ public class TestView
     public void OnInit()
     {
         /*
-        using var hdriFileStream = loadFileFun("Textures/buikslotermeerplein_1k.hdr");
+        using var hdriFileStream = loadFileFun("environments/buikslotermeerplein_1k.hdr");
 
         var hdriTexture = TextureLoader.LoadHdrTexture(hdriFileStream);
 

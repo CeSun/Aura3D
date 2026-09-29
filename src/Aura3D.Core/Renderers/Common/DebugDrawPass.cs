@@ -35,32 +35,43 @@ public class DebugDrawPass : RenderPass
         int w = (int)camera.Width;
         int h = (int)camera.Height;
 
-        var debugRT = GetRenderTarget(_debugOutput, new Size(w, h));
-        gl.BindFramebuffer(GLEnum.Framebuffer, debugRT.FrameBufferId);
-
-        // 1. 拷贝当前输出颜色到调试 RenderTarget（保留场景画面）
-        gl.BindFramebuffer(GLEnum.ReadFramebuffer, GetOutputFramebufferId(camera));
-        gl.BindFramebuffer(GLEnum.DrawFramebuffer, debugRT.FrameBufferId);
-        gl.BlitFramebuffer(0, 0, w, h, 0, 0, w, h,
-            ClearBufferMask.ColorBufferBit, GLEnum.Nearest);
-
-        // 2. 拷贝场景深度到调试 RenderTarget
-        if (_depthRenderTarget != null)
+        if (RenderPipeline.HostIsWebGlWasm)
         {
-            var sourceRT = GetRenderTarget(_depthRenderTarget, camera);
-            gl.BindFramebuffer(GLEnum.ReadFramebuffer, sourceRT.FrameBufferId);
-            gl.BindFramebuffer(GLEnum.DrawFramebuffer, debugRT.FrameBufferId);
-            gl.BlitFramebuffer(0, 0, w, h, 0, 0, w, h,
-                ClearBufferMask.DepthBufferBit, GLEnum.Nearest);
+            // glBlitFramebuffer（10 参整型）不在浏览器 wasm 的 interop 签名表里，命中即 abort。
+            // 改为直接在输出 FBO 上清深度后叠加线框：快照—叠加—拷回的往返没有发生，但画面等价，
+            // 且深度测试读的就是场景自己的深度缓冲。
+            gl.BindFramebuffer(GLEnum.Framebuffer, GetOutputFramebufferId(camera));
+            gl.Clear(ClearBufferMask.DepthBufferBit);
         }
         else
         {
+            var debugRT = GetRenderTarget(_debugOutput, new Size(w, h));
             gl.BindFramebuffer(GLEnum.Framebuffer, debugRT.FrameBufferId);
-            gl.Clear(ClearBufferMask.DepthBufferBit);
-        }
 
-        // 3. 重新绑定调试 RenderTarget（blit 可能改变了绑定）
-        gl.BindFramebuffer(GLEnum.Framebuffer, debugRT.FrameBufferId);
+            // 1. 拷贝当前输出颜色到调试 RenderTarget（保留场景画面）
+            gl.BindFramebuffer(GLEnum.ReadFramebuffer, GetOutputFramebufferId(camera));
+            gl.BindFramebuffer(GLEnum.DrawFramebuffer, debugRT.FrameBufferId);
+            gl.BlitFramebuffer(0, 0, w, h, 0, 0, w, h,
+                ClearBufferMask.ColorBufferBit, GLEnum.Nearest);
+
+            // 2. 拷贝场景深度到调试 RenderTarget
+            if (_depthRenderTarget != null)
+            {
+                var sourceRT = GetRenderTarget(_depthRenderTarget, camera);
+                gl.BindFramebuffer(GLEnum.ReadFramebuffer, sourceRT.FrameBufferId);
+                gl.BindFramebuffer(GLEnum.DrawFramebuffer, debugRT.FrameBufferId);
+                gl.BlitFramebuffer(0, 0, w, h, 0, 0, w, h,
+                    ClearBufferMask.DepthBufferBit, GLEnum.Nearest);
+            }
+            else
+            {
+                gl.BindFramebuffer(GLEnum.Framebuffer, debugRT.FrameBufferId);
+                gl.Clear(ClearBufferMask.DepthBufferBit);
+            }
+
+            // 3. 重新绑定调试 RenderTarget（blit 可能改变了绑定）
+            gl.BindFramebuffer(GLEnum.Framebuffer, debugRT.FrameBufferId);
+        }
 
         gl.Enable(EnableCap.DepthTest);
         gl.DepthMask(true);
@@ -476,16 +487,19 @@ public class DebugDrawPass : RenderPass
     /// <inheritdoc />
     public override void AfterRender(Camera camera)
     {
-        int w = (int)camera.Width;
-        int h = (int)camera.Height;
+        if (!RenderPipeline.HostIsWebGlWasm)
+        {
+            int w = (int)camera.Width;
+            int h = (int)camera.Height;
 
-        var debugRT = GetRenderTarget(_debugOutput, new Size(w, h));
+            var debugRT = GetRenderTarget(_debugOutput, new Size(w, h));
 
-        // 将调试 RenderTarget 颜色拷贝回当前输出
-        gl.BindFramebuffer(GLEnum.ReadFramebuffer, debugRT.FrameBufferId);
-        gl.BindFramebuffer(GLEnum.DrawFramebuffer, GetOutputFramebufferId(camera));
-        gl.BlitFramebuffer(0, 0, w, h, 0, 0, w, h,
-            ClearBufferMask.ColorBufferBit, GLEnum.Nearest);
+            // 将调试 RenderTarget 颜色拷贝回当前输出
+            gl.BindFramebuffer(GLEnum.ReadFramebuffer, debugRT.FrameBufferId);
+            gl.BindFramebuffer(GLEnum.DrawFramebuffer, GetOutputFramebufferId(camera));
+            gl.BlitFramebuffer(0, 0, w, h, 0, 0, w, h,
+                ClearBufferMask.ColorBufferBit, GLEnum.Nearest);
+        }
 
         // 恢复状态
         gl.Enable(EnableCap.DepthTest);

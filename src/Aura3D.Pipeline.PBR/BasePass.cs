@@ -46,8 +46,8 @@ internal class BasePass : RenderPass <PBRDeferredPipeline>
         BindOutputRenderTarget(camera);
         gl.DepthMask(true);
 
-        gl.ClearDepth(1.0f);
-        gl.ClearColor(0, 0, 0, 0);
+        ClearDepthSafe();
+        ClearColorSafe(0f, 0f, 0f, 0f);
 
         gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 

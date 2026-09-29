@@ -121,9 +121,10 @@ void main()
             Matrix4x4.CreateLookAt(Vector3.Zero, -Vector3.UnitZ, -Vector3.UnitY)
         ];
 
-        gl.ClearColor(0, 0, 0, 1);
-        
-        gl.ClearDepth(1);
+        // wasm 宿主上这一支会被跳过，于是 alpha 从 1 变成默认的 0；辐照度只取 RGB，着色器不读这张图的 alpha。
+        ClearColorSafe(0f, 0f, 0f, 1f);
+
+        ClearDepthSafe();
 
         UseShader();
         for (int i = 0; i < 6; i ++)

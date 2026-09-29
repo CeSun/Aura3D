@@ -28,6 +28,16 @@ public abstract partial class RenderPipeline
     private bool _isDestroyed;
 
     /// <summary>
+    /// 运行在浏览器 wasm 宿主上。<br/>
+    /// browser-wasm 的原生调用按运行时内置的固定 interop 签名表分发，表里没有的签名会让运行时直接
+    /// abort（<c>aot-runtime-wasm.c:188</c>），AOT 与解释器同表、换构建配置也绕不开。.NET 10.0.11 实测
+    /// 缺失：<c>void+float×4</c>（glClearColor）、<c>void+float</c>（glClearDepth）、
+    /// <c>glGetActiveUniform</c>（7 参指针）、<c>glBlitFramebuffer</c>（10 参整型）、
+    /// <c>glTexImage3D</c>。置位后各 pass 改走语义等价的绕开路径，由 WebGL 宿主创建会话时置位。
+    /// </summary>
+    public static bool HostIsWebGlWasm { get; set; }
+
+    /// <summary>
     /// Initializes a new instance of the render pipeline type.
     /// </summary>
     public RenderPipeline(Scene scene)

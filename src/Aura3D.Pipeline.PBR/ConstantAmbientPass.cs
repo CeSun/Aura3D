@@ -35,7 +35,7 @@ internal class ConstantAmbientPass : RenderPass
     public override void Render(Camera camera)
     {
         BindOutputRenderTarget(camera);
-        gl.ClearColor(0, 0, 0, 0);
+        ClearColorSafe(0f, 0f, 0f, 0f);
         gl.Clear(ClearBufferMask.ColorBufferBit);
 
         var rt = GetRenderTarget(gbufferRenderTarget, camera);

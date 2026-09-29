@@ -181,7 +181,10 @@ public partial class RenderPass
                 gl.UniformBlockBinding(programId, i, i);
 
             shader.ProgramId = programId;
-            GetAllUniformLocations(gl, shader);
+            // 浏览器 wasm 宿主跳过整程序 uniform 枚举：glGetActiveUniform（7 参含指针）不在 interop
+            // 签名表里。位置本来就由 Shader.GetUniformLocation(name, gl) 按名懒查回填，行为等价。
+            if (!RenderPipeline.HostIsWebGlWasm)
+                GetAllUniformLocations(gl, shader);
             succeeded = true;
             return shader;
         }

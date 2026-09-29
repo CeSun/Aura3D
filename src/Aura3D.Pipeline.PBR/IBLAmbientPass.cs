@@ -45,7 +45,7 @@ void main() {
         gl.BlendEquation(BlendEquationModeEXT.FuncAdd);
 
         BindOutputRenderTarget(camera);
-        gl.ClearColor(0, 0, 0, 0);
+        ClearColorSafe(0f, 0f, 0f, 0f);
         gl.Clear(ClearBufferMask.ColorBufferBit);
     }
 

@@ -262,6 +262,10 @@ public abstract partial class Aura3DViewBase
         }
         _zeroBoundsTraced = false;
 
+        // browser-wasm 的原生调用受运行时固定 interop 签名表限制，若干 GLES 入口在表里没有，
+        // 命中即整进程 abort；引擎据此改走语义等价的绕开路径（见 RenderPipeline.HostIsWebGlWasm）。
+        Aura3D.Core.Renderers.RenderPipeline.HostIsWebGlWasm = true;
+
         _webGlSession ??= new WebGlGlesSession();
         var session = _webGlSession;
 
