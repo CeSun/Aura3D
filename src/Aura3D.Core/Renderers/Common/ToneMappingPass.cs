@@ -43,28 +43,23 @@ uniform float u_brightnessClamp;
 
 out vec4 outColor;
 
-vec3 acesToneMappingMobile(vec3 color) {
-    const float a = 1.8;    
-    const float b = 0.02;   
-    const float c = 2.0;    
-    const float d = 0.6;    
-    const float e = 0.12;   
-    color = clamp((color * (a * color + b)) / (color * (c * color + d) + e), 0.0, 1.0);
-    return color;
-}
-
-vec3 applyExposureMobile(vec3 hdrColor, float exposure) {
-    hdrColor = clamp(hdrColor, 0.0, u_brightnessClamp); 
-    return 1.0 - exp(-hdrColor * exposure);
+vec3 acesToneMapping(vec3 color) {
+    const float a = 2.51;   
+    const float b = 0.03;   
+    const float c = 2.43;   
+    const float d = 0.59;   
+    const float e = 0.14;   
+    return (color * (a * color + b)) / (color * (c * color + d) + e);
 }
 
 void main()
 {
     vec4 hdrColor = texture(u_texture, v_texCoord);
     
-    vec3 ldrColor = applyExposureMobile(hdrColor.rgb, u_exposure); 
-    ldrColor = acesToneMappingMobile(ldrColor);                   
-    ldrColor = clamp(ldrColor, 0.0, 1.0);
+    // The curve must consume exposure-scaled HDR directly: a 1.0-exp() pre-stage pushes radiance
+    // above 1 back into [0,1], and the ACES shoulder on top of it caps the whole frame at sRGB 213.
+    vec3 color = clamp(hdrColor.rgb, 0.0, u_brightnessClamp) * u_exposure;
+    vec3 ldrColor = clamp(acesToneMapping(color), 0.0, 1.0);
     
     float finalAlpha = min(hdrColor.a, 1.0);
     
