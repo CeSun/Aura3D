@@ -1,0 +1,76 @@
+<ex:Demo x:Class="Aura3D.Examples.Demos.PointCloudDemo"
+         xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:ex="clr-namespace:Aura3D.Examples"
+         xmlns:loc="clr-namespace:Aura3D.Examples.Localization"
+         xmlns:demos="clr-namespace:Aura3D.Examples.Demos"
+         xmlns:kit="clr-namespace:Aura3D.Examples.Kit"
+         x:DataType="demos:PointCloudDemo">
+
+  <!--
+    点云页。视口 + 右侧检视面板，参数行全在这里声明。
+    本页不锁管线：换到别的管线时同一批点会被通用 pass 画，这正是这页想演的对照。
+  -->
+  <Panel>
+
+    <kit:DemoView x:Name="View" Pipeline="PointCloud" />
+
+    <kit:InspectorPanel>
+      <StackPanel Spacing="6">
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.PointCloud_Intro}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.PointCloud_SizeSources}}" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.PointCloud_DefaultSize}}" Minimum="1" Maximum="48" Value="5" Format="0.0"
+                       ValueChanged="OnPassPointSizeChanged" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.PointCloud_UseMaterialSize}}" IsChecked="True"
+                       Toggled="OnMaterialOverrideToggled" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.PointCloud_MaterialSize}}" Minimum="1" Maximum="64" Value="16" Format="0.0"
+                       ValueChanged="OnMaterialSizeChanged" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.PointCloud_GlPointSizeNote}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.PointCloud_PointSet}}" />
+
+        <kit:ComboRow x:Name="ShapeRow" Label="{Translate {x:Static loc:Strings+Keys.PointCloud_Shape}}" Options="{Binding ShapeOptions}"
+                      SelectionChanged="OnShapeChanged" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.PointCloud_PointsPerGroup}}" Minimum="500" Maximum="60000" Value="12000" Format="0"
+                       ValueChanged="OnCountChanged" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.PointCloud_DropColorAttribute}}" IsChecked="False"
+                       Toggled="OnGroup1ColorToggled" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.PointCloud_ColorSourceNote}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.PointCloud_BlendBranches}}" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.PointCloud_BlendNote}}" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.PointCloud_Group3Visible}}" IsChecked="True"
+                       Toggled="OnTranslucentToggled" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.PointCloud_Group4Visible}}" IsChecked="True"
+                       Toggled="OnMaskedToggled" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.PointCloud_Instanced}}" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.PointCloud_InstancedRow}}" IsChecked="True"
+                       Toggled="OnShowInstancedToggled" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.PointCloud_InstancedNote}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.PointCloud_PipelineDiff}}" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.PointCloud_PipelineNote}}" />
+
+        <kit:ReadoutRow x:Name="Readout" Label="{Translate {x:Static loc:Strings+Keys.PointCloud_Effective}}" />
+
+      </StackPanel>
+    </kit:InspectorPanel>
+
+  </Panel>
+</ex:Demo>

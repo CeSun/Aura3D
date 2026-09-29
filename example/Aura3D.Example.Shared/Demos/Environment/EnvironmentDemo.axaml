@@ -1,0 +1,60 @@
+<ex:Demo x:Class="Aura3D.Examples.Demos.EnvironmentDemo"
+         xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:ex="clr-namespace:Aura3D.Examples"
+         xmlns:loc="clr-namespace:Aura3D.Examples.Localization"
+         xmlns:demos="clr-namespace:Aura3D.Examples.Demos"
+         xmlns:kit="clr-namespace:Aura3D.Examples.Kit"
+         x:DataType="demos:EnvironmentDemo">
+
+  <!--
+    环境图与 IBL 页。整页两层：视口 + 浮在右侧的检视面板。
+    参数行的排版全在这里，代码只剩场景组装与回调。
+  -->
+  <Panel>
+
+    <kit:DemoView x:Name="View" Pipeline="PBRForward" />
+
+    <kit:InspectorPanel>
+      <StackPanel Spacing="6">
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Environment_Intro}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.Environment_Map}}" />
+
+        <kit:ComboRow x:Name="PanoramaCombo" Label="{Translate {x:Static loc:Strings+Keys.Environment_Panorama}}" Options="{Binding PanoramaOptions}"
+                      SelectionChanged="OnPanoramaChanged" />
+
+        <kit:SliderRow x:Name="FaceSizeRow" Label="{Translate {x:Static loc:Strings+Keys.Environment_CubeSize}}" Minimum="32" Maximum="256" Format="0"
+                       ValueChanged="OnFaceSizeChanged" />
+
+        <Button Content="{Translate {x:Static loc:Strings+Keys.Environment_Rebake}}" Click="OnRebake" HorizontalAlignment="Stretch" />
+
+        <Button Content="{Translate {x:Static loc:Strings+Keys.Environment_Reload}}" Click="OnReload" HorizontalAlignment="Stretch" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Environment_BackgroundNote}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.Environment_IblSplit}}" />
+
+        <kit:SliderRow x:Name="AmbientRow" Label="{Translate {x:Static loc:Strings+Keys.Environment_IblAmbient}}" Minimum="0" Maximum="4"
+                       ValueChanged="OnIblAmbientChanged" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Environment_KeyLightVisible}}" IsChecked="True"
+                       Toggled="OnSunVisibleToggled" />
+
+        <kit:SliderRow x:Name="ExposureRow" Label="ToneMappingExposure" Minimum="0.05" Maximum="4"
+                       ValueChanged="OnExposureChanged" />
+
+        <kit:SliderRow x:Name="ClampRow" Label="BrightnessClamp" Minimum="0.5" Maximum="16"
+                       ValueChanged="OnBrightnessClampChanged" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Environment_RenderBackground}}" IsChecked="True"
+                       Toggled="OnRenderBackgroundToggled" />
+
+        <kit:ReadoutRow x:Name="Readout" Label="{Translate {x:Static loc:Strings+Keys.Environment_CacheState}}" />
+
+      </StackPanel>
+    </kit:InspectorPanel>
+
+  </Panel>
+</ex:Demo>

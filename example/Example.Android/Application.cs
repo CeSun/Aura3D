@@ -1,4 +1,6 @@
-﻿using Android.Runtime;
+using Android.Runtime;
+using Aura3D.Examples;
+using Aura3D.Examples.Fonts;
 using Avalonia;
 using Avalonia.Android;
 
@@ -14,7 +16,8 @@ namespace Example.Android
         protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
         {
             return base.CustomizeAppBuilder(builder)
-            .WithInterFont();
+            .WithInterFont()
+            .WithAura3DExampleFonts();
         }
     }
 }

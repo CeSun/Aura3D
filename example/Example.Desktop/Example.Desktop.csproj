@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <!--If you are willing to use Windows/MacOS native APIs you will need to create 3 projects.
@@ -12,12 +12,14 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
-  <ItemGroup>
+    <Import Project="..\DemoAssets.props" />
+
+<ItemGroup>
     <PackageReference Include="Avalonia.Desktop" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Example\Example.csproj" />
+    <ProjectReference Include="..\Aura3D.Example.Shared\Aura3D.Example.Shared.csproj" />
   </ItemGroup>
 </Project>

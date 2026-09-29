@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <!-- invariant/English. Keep keys in sync with Strings.zh-Hans.resx. -->
+  <data name="Nav_Catalog" xml:space="preserve"><value>Catalog</value></data>
+  <data name="Nav_Search" xml:space="preserve"><value>Search feature pages</value></data>
+  <data name="Lang_Switch" xml:space="preserve"><value>中文</value></data>
+  <data name="Panel_Parameters" xml:space="preserve"><value>Parameters</value></data>
+  <data name="Size_None" xml:space="preserve"><value>No external assets</value></data>
+  <data name="Size_Items" xml:space="preserve"><value>{0} items / {1:0.##} MB</value></data>
+  <data name="Size_ItemsOne" xml:space="preserve"><value>1 item / {0:0.##} MB</value></data>
+  <data name="Status_Prepare" xml:space="preserve"><value>Preparing {0}</value></data>
+  <data name="Status_Fetch" xml:space="preserve"><value>Fetching {0}  {1} KB</value></data>
+  <data name="Status_FetchProgress" xml:space="preserve"><value>Fetching {0}  {1} / {2} KB ({3}/{4} items)</value></data>
+  <data name="Error_InitFailed" xml:space="preserve"><value>{0} failed to initialise: {1}</value></data>
+  <data name="Error_NoDemoView" xml:space="preserve"><value>{0} has no kit:DemoView in its AXAML.</value></data>
+  <data name="Error_SceneBuildFailed" xml:space="preserve"><value>Scene build failed: {0}</value></data>
+  <data name="Error_AssetKeyUnregistered" xml:space="preserve"><value>Asset key '{0}' is not registered in AssetManifest; update the table in generate.mjs as well.</value></data>
+  <data name="Error_AssetFileMissing" xml:space="preserve"><value>Demo asset {0} ({1}) was not found. Asset root: {2}. Run the generator in example/assets before launching, or point AURA3D_ASSET_ROOT at the directory.</value></data>
+  <data name="Error_AssetNotOnWeb" xml:space="preserve"><value>Asset {0} ({1} MB) is not available in the browser; this feature page is desktop/mobile only.</value></data>
+  <data name="Group_Basics" xml:space="preserve"><value>Basics</value></data>
+  <data name="Group_Pipelines" xml:space="preserve"><value>Pipelines &amp; image</value></data>
+  <data name="Group_Materials" xml:space="preserve"><value>Materials &amp; shaders</value></data>
+  <data name="Group_Scene" xml:space="preserve"><value>Scene</value></data>
+  <data name="Group_Assets" xml:space="preserve"><value>Models &amp; assets</value></data>
+  <data name="Group_Batching" xml:space="preserve"><value>Batching &amp; effects</value></data>
+  <data name="Pipeline_BlinnPhong" xml:space="preserve"><value>Blinn-Phong (forward)</value></data>
+  <data name="Pipeline_NoLight" xml:space="preserve"><value>NoLight (unlit)</value></data>
+  <data name="Pipeline_PointCloud" xml:space="preserve"><value>PointCloud (points)</value></data>
+  <data name="Pipeline_PBRDeferred" xml:space="preserve"><value>PBR deferred</value></data>
+  <data name="Pipeline_PBRForward" xml:space="preserve"><value>PBR forward</value></data>
+  <data name="Pipeline_CelShading" xml:space="preserve"><value>Cel shading</value></data>
+  <data name="AnimationMix_Graph" xml:space="preserve"><value>AnimationGraph (left)</value></data>
+  <data name="AnimationMix_BlendSpace" xml:space="preserve"><value>AnimationBlendSpace (right)</value></data>
+  <data name="AssimpFbx_Clips" xml:space="preserve"><value>Clips</value></data>
+  <data name="AssimpFbx_SampleInterface" xml:space="preserve"><value>The raw Animation.Sample interface</value></data>
+  <data name="AssimpFbx_SkeletonLoader" xml:space="preserve"><value>Skeleton and loader</value></data>
+  <data name="Background_Source" xml:space="preserve"><value>Background source</value></data>
+  <data name="Background_ShaderVariants" xml:space="preserve"><value>The skybox's two shader variants</value></data>
+  <data name="Background_CubemapFeedsIbl" xml:space="preserve"><value>Only the cubemap branch feeds IBL</value></data>
+  <data name="Camera_Frustum" xml:space="preserve"><value>Frustum parameters</value></data>
+  <data name="Camera_Framing" xml:space="preserve"><value>Framing</value></data>
+  <data name="CelShading_Channels" xml:space="preserve"><value>Six texture channels</value></data>
+  <data name="CelShading_HalfLambert" xml:space="preserve"><value>Half-Lambert and banding</value></data>
+  <data name="CelShading_RampRows" xml:space="preserve"><value>Ramp rows for the five material zones (ILM alpha picks the row)</value></data>
+  <data name="CelShading_TintSlots" xml:space="preserve"><value>Three tint slots (Vector4, default zero → black)</value></data>
+  <data name="CelShading_FaceOnly" xml:space="preserve"><value>Face only</value></data>
+  <data name="CelShading_OutlinePass" xml:space="preserve"><value>Outline pass</value></data>
+  <data name="Environment_Map" xml:space="preserve"><value>Environment map (Scene.Background)</value></data>
+  <data name="Environment_IblSplit" xml:space="preserve"><value>What I and L each do</value></data>
+  <data name="Geometries_Box" xml:space="preserve"><value>Box</value></data>
+  <data name="Geometries_Sphere" xml:space="preserve"><value>Sphere</value></data>
+  <data name="Geometries_Cylinder" xml:space="preserve"><value>Cylinder / cone</value></data>
+  <data name="Geometries_Plane" xml:space="preserve"><value>Plane</value></data>
+  <data name="Geometries_Scene" xml:space="preserve"><value>Scene</value></data>
+  <data name="GpuLifecycle_Events" xml:space="preserve"><value>Scene events</value></data>
+  <data name="GpuLifecycle_OnDemand" xml:space="preserve"><value>On-demand rendering</value></data>
+  <data name="MaterialShaders_Channels" xml:space="preserve"><value>Channels · top left (engine shader)</value></data>
+  <data name="MaterialShaders_BothStages" xml:space="preserve"><value>Vertex + fragment override · top middle</value></data>
+  <data name="MaterialShaders_Tinted" xml:space="preserve"><value>Texture × tint · top right</value></data>
+  <data name="MaterialShaders_Parameters" xml:space="preserve"><value>Material parameters · bottom left (fragment only)</value></data>
+  <data name="MaterialShaders_AlphaModes" xml:space="preserve"><value>One alpha map · middle Masked / right Translucent</value></data>
+  <data name="MaterialShaders_Scene" xml:space="preserve"><value>Scene</value></data>
+  <data name="ModelViewer_Model" xml:space="preserve"><value>Model</value></data>
+  <data name="ModelViewer_BoundingBox" xml:space="preserve"><value>The two model-level bounding box properties</value></data>
+  <data name="ModelViewer_CloneModes" xml:space="preserve"><value>Three clone modes</value></data>
+  <data name="ModelViewer_LoadOnDemand" xml:space="preserve"><value>Load on demand</value></data>
+  <data name="ModelViewer_LoaderOutput" xml:space="preserve"><value>What the loader brings in</value></data>
+  <data name="Particles_Fountain" xml:space="preserve"><value>Fountain · cone + billboard</value></data>
+  <data name="Particles_Burst" xml:space="preserve"><value>Burst · spherical one-shot</value></data>
+  <data name="Particles_Debris" xml:space="preserve"><value>Debris · mesh mode (InstancedMesh inside)</value></data>
+  <data name="Particles_Shared" xml:space="preserve"><value>Shared by all three</value></data>
+  <data name="PbrChannels_Channels" xml:space="preserve"><value>Five texture channels (all bound, only some sampled)</value></data>
+  <data name="PbrChannels_Switches" xml:space="preserve"><value>Material switches</value></data>
+  <data name="PbrChannels_PbrSettings" xml:space="preserve"><value>PBR-only settings</value></data>
+  <data name="Pipelines_Lights" xml:space="preserve"><value>Lights</value></data>
+  <data name="Pipelines_Readout" xml:space="preserve"><value>Comparison readout</value></data>
+  <data name="PointCloud_SizeSources" xml:space="preserve"><value>The two sources of point size</value></data>
+  <data name="PointCloud_PointSet" xml:space="preserve"><value>The point set</value></data>
+  <data name="PointCloud_BlendBranches" xml:space="preserve"><value>Blend branches</value></data>
+  <data name="PointCloud_Instanced" xml:space="preserve"><value>Instanced point cloud</value></data>
+  <data name="PointCloud_PipelineDiff" xml:space="preserve"><value>Switch pipelines to compare</value></data>
+  <data name="PostProcessing_ToneMapping" xml:space="preserve"><value>Per frame · tone mapping (only the two PBR pipelines register ToneMappingPass)</value></data>
+  <data name="PostProcessing_Ambient" xml:space="preserve"><value>Per frame · ambient</value></data>
+  <data name="PostProcessing_Post" xml:space="preserve"><value>Per frame · post-processing and culling</value></data>
+  <data name="PostProcessing_Rebuild" xml:space="preserve"><value>Rebuild required · shader variants and sizes</value></data>
+  <data name="Primitives_VertexData" xml:space="preserve"><value>Vertex data</value></data>
+  <data name="Primitives_PointPrimitives" xml:space="preserve"><value>Point primitives</value></data>
+  <data name="SceneGizmos_Grid" xml:space="preserve"><value>Ground grid</value></data>
+  <data name="SceneGizmos_DebugToggles" xml:space="preserve"><value>DebugDrawPass toggles</value></data>
+  <data name="SceneGizmos_Animation" xml:space="preserve"><value>Animation</value></data>
+  <data name="Shadows_KeyLight" xml:space="preserve"><value>Key light</value></data>
+  <data name="Shadows_SingleMap" xml:space="preserve"><value>Single orthographic map parameters (ShadowConfig)</value></data>
+  <data name="Shadows_Cascades" xml:space="preserve"><value>Cascades (read from PipelineSettings)</value></data>
+  <data name="Shadows_LightLimit" xml:space="preserve"><value>Directional light limit</value></data>
+  <data name="Shadows_Debug" xml:space="preserve"><value>Debug visualisation</value></data>
+  <data name="SkinnedAnimation_Playback" xml:space="preserve"><value>Playback</value></data>
+  <data name="SkinnedAnimation_Driver" xml:space="preserve"><value>Who advances the sampler</value></data>
+  <data name="SkinnedAnimation_Bones" xml:space="preserve"><value>Bones</value></data>
+  <data name="Shell_WindowTitle" xml:space="preserve"><value>Aura3D feature examples</value></data>
+  <data name="Demo_Geometries_Title" xml:space="preserve"><value>Geometries &amp; transforms</value></data>
+  <data name="Demo_Geometries_Summary" xml:space="preserve"><value>BoxGeometry/SphereGeometry/CylinderGeometry/PlaneGeometry constructor parameters and node transforms</value></data>
+  <data name="Demo_Pipelines_Title" xml:space="preserve"><value>Six pipelines side by side</value></data>
+  <data name="Demo_Pipelines_Summary" xml:space="preserve"><value>One scene through six pipelines: which map each reads, which ignores lights, why point sprites live in only one</value></data>
+  <data name="Demo_Primitives_Title" xml:space="preserve"><value>Primitives &amp; custom vertices</value></data>
+  <data name="Demo_Primitives_Summary" xml:space="preserve"><value>Hand-written Geometry vertex buffers, and how the seven PrimitiveType values connect the same vertices differently</value></data>
+  <data name="Demo_Camera_Title" xml:space="preserve"><value>Camera &amp; projection</value></data>
+  <data name="Demo_Camera_Summary" xml:space="preserve"><value>Perspective/orthographic switching, the four frustum parameters, LookAt, FitToBoundingBox and WorldToScreen projection</value></data>
+  <data name="Demo_MaterialShaders_Title" xml:space="preserve"><value>Material channels &amp; custom shaders</value></data>
+  <data name="Demo_MaterialShaders_Summary" xml:space="preserve"><value>BaseColor/Normal channels, GLSL overridden per pass class, material parameters bound by name and the three BlendModes</value></data>
+  <data name="Demo_PbrChannels_Title" xml:space="preserve"><value>PBR texture channels</value></data>
+  <data name="Demo_PbrChannels_Summary" xml:space="preserve"><value>Binding and sampling the five channel maps, MetallicRoughness packing conventions, AlphaCutoff and DoubleSided</value></data>
+  <data name="Demo_CelShading_Title" xml:space="preserve"><value>Cel shading &amp; outlines</value></data>
+  <data name="Demo_CelShading_Summary" xml:space="preserve"><value>The six ILM/ShadowRamp/SDF channels, underscore-prefixed material parameters, and the outline pass's only public knob</value></data>
+  <data name="Demo_IblEnvironment_Title" xml:space="preserve"><value>Environment maps &amp; IBL</value></data>
+  <data name="Demo_IblEnvironment_Summary" xml:space="preserve"><value>Baking a procedural panorama into a cubemap, how irradiance/prefilter caches are reused, re-bake versus Reload</value></data>
+  <data name="Demo_SkyboxBackground_Title" xml:space="preserve"><value>Background sources &amp; skybox</value></data>
+  <data name="Demo_SkyboxBackground_Summary" xml:space="preserve"><value>How the cubemap and flat-image branches each draw the background, the framing constants hard-coded in both shader variants, and why only the cubemap feeds IBL</value></data>
+  <data name="Demo_Shadows_Title" xml:space="preserve"><value>Shadows &amp; cascaded CSM</value></data>
+  <data name="Demo_Shadows_Summary" xml:space="preserve"><value>The key light runs CSM while the rest use a single orthographic map, and which half ShadowConfig versus PipelineSettings controls</value></data>
+  <data name="Demo_SceneGizmos_Title" xml:space="preserve"><value>Grid, axes &amp; debug wireframes</value></data>
+  <data name="Demo_SceneGizmos_Summary" xml:space="preserve"><value>Scene.Grid / Scene.AxisGizmo parameters, and what each of the eight DebugDrawPass switches draws</value></data>
+  <data name="Demo_Picking_Title" xml:space="preserve"><value>Picking</value></data>
+  <data name="Demo_Picking_Summary" xml:space="preserve"><value>The ObjectPicked event, PickAt for all hits versus PickClosestAt, DIP coordinate conventions and InstanceIndex for instanced picks</value></data>
+  <data name="Demo_PostProcessing_Title" xml:space="preserve"><value>Pipeline settings &amp; image effects</value></data>
+  <data name="Demo_PostProcessing_Summary" xml:space="preserve"><value>Which pipeline reads each PipelineSettings entry, and the parameters that apply per frame versus those needing a rebuild</value></data>
+  <data name="Demo_GpuLifecycle_Title" xml:space="preserve"><value>Lifecycle &amp; GPU resources</value></data>
+  <data name="Demo_GpuLifecycle_Summary" xml:space="preserve"><value>The real order of the five scene events, on-demand rendering, and the three reclamation paths: free VRAM, simulate context loss, destroy scene</value></data>
+  <data name="Demo_ModelViewer_Title" xml:space="preserve"><value>glTF models &amp; clones</value></data>
+  <data name="Demo_ModelViewer_Summary" xml:space="preserve"><value>Load-on-entry versus load-on-demand, the node tree/channels/alpha modes the loader brings in, model-level bounding boxes, and the three sharing boundaries of Clone</value></data>
+  <data name="Demo_SkinnedAnimation_Title" xml:space="preserve"><value>Skinned animation &amp; bone attachment</value></data>
+  <data name="Demo_SkinnedAnimation_Summary" xml:space="preserve"><value>AnimationSampler's four knobs, who drives Model.Update, and the bone matrices BoneAttachment takes</value></data>
+  <data name="Demo_AnimationMix_Title" xml:space="preserve"><value>Animation state machine &amp; blend space</value></data>
+  <data name="Demo_AnimationMix_Summary" xml:space="preserve"><value>AnimationGraph predicate transitions and BlendTime crossfades, AnimationBlendSpace axis values and inverse-distance weights</value></data>
+  <data name="Demo_AssimpFbx_Title" xml:space="preserve"><value>FBX animation library (Assimp)</value></data>
+  <data name="Demo_AssimpFbx_Summary" xml:space="preserve"><value>Fetching model and animation files separately, attaching external clips to the same Skeleton instance, and the raw Animation.Sample interface</value></data>
+  <data name="Demo_Instancing_Title" xml:space="preserve"><value>Instancing</value></data>
+  <data name="Demo_Instancing_Summary" xml:space="preserve"><value>InstancedMesh batch versus per-instance updates, per-instance vertex colour attributes, and how an instance-aware shader is written</value></data>
+  <data name="Demo_PointCloud_Title" xml:space="preserve"><value>Point cloud pipeline</value></data>
+  <data name="Demo_PointCloud_Summary" xml:space="preserve"><value>PointCloudPass round point sprites, the two sources of point size, only Opaque/Translucent branches, and the instanced branch</value></data>
+  <data name="Demo_Hism_Title" xml:space="preserve"><value>Hierarchical instancing (HISM)</value></data>
+  <data name="Demo_Hism_Summary" xml:space="preserve"><value>InstancedMeshGroup's octree grouping and background tree building, and the cost of in-place updates versus rebuilding the tree</value></data>
+  <data name="Demo_Particles_Title" xml:space="preserve"><value>Particle system</value></data>
+  <data name="Demo_Particles_Summary" xml:space="preserve"><value>The three emission paths (billboard / one-shot burst / mesh mode), the flame sheet that pages by lifetime, and what the lifecycle buttons actually do</value></data>
+  <data name="AnimationMix_Intro" xml:space="preserve"><value>Left is the state machine (AnimationGraph), right is the blend space (AnimationBlendSpace); both models share one skeleton. Switching clips and tuning weights are per-frame and need no shader rebuild.</value></data>
+  <data name="AnimationMix_AutoToggle" xml:space="preserve"><value>Alternate between the two clips automatically</value></data>
+  <data name="AnimationMix_ToggleInterval" xml:space="preserve"><value>Toggle interval (s)</value></data>
+  <data name="AnimationMix_BlendTime" xml:space="preserve"><value>BlendTime (crossfade, s)</value></data>
+  <data name="AnimationMix_ManualSwitch" xml:space="preserve"><value>Switch once</value></data>
+  <data name="AnimationMix_TransitionNote" xml:space="preserve"><value>Transition predicates are queried every frame but only checked once CurrentWeight reaches 1 (the previous fade-in has finished), so lengthening BlendTime makes switches noticeably sluggish. AddNextNode also forbids a node pointing at itself: to loop you need two nodes pointing at each other.</value></data>
+  <data name="AnimationMix_StateMachine" xml:space="preserve"><value>State machine</value></data>
+  <data name="AnimationMix_AxisX" xml:space="preserve"><value>Axis X (right = run)</value></data>
+  <data name="AnimationMix_AxisY" xml:space="preserve"><value>Axis Y</value></data>
+  <data name="AnimationMix_IdwPower" xml:space="preserve"><value>IdwPower (higher hugs the nearest sample)</value></data>
+  <data name="AnimationMix_ResetAxes" xml:space="preserve"><value>Reset (axes back to 0,0)</value></data>
+  <data name="AnimationMix_BlendSpaceNote" xml:space="preserve"><value>The three samples sit at up = Run, down = Walk, origin = Idle, so pushing axis Y to the maximum gives pure running; weights are the inverse distance raised to IdwPower, computed by the engine, so the panel shows the axis values and the power.</value></data>
+  <data name="AnimationMix_BlendSpaceRow" xml:space="preserve"><value>Blend space</value></data>
+  <data name="AssimpFbx_Intro" xml:space="preserve"><value>SK_Mannequin.FBX carries no animation; the motion lives in two separate FBX files. A single file may contain several clips, and both the count and the names are read from the file itself.</value></data>
+  <data name="AssimpFbx_Sampler" xml:space="preserve"><value>Clip to attach</value></data>
+  <data name="AssimpFbx_NoSamplerNote" xml:space="preserve"><value>Choosing "no sampler" leaves Model.AnimationSampler null, so drawing falls back to Skeleton.BoneMatrixBuffer (the bind pose) and the character returns to T-pose — this is the line `mesh.AnimationSampler?.BoneMatrixBuffer ?? mesh.Skeleton!.BoneMatrixBuffer` inside the render pass.</value></data>
+  <data name="AssimpFbx_Bone" xml:space="preserve"><value>Pick a bone</value></data>
+  <data name="AssimpFbx_AtSecond" xml:space="preserve"><value>Sample at which second of the clip</value></data>
+  <data name="AssimpFbx_SampleNote" xml:space="preserve"><value>Animation.Sample(channel name, seconds) returns that bone's matrix at that moment. The engine has no player with a Play method — the player is hand-written: AnimationSampler advances time frame by frame and calls Sample. The slider pins that time for it.</value></data>
+  <data name="AssimpFbx_Result" xml:space="preserve"><value>Sample result</value></data>
+  <data name="AssimpFbx_Skeleton" xml:space="preserve"><value>Skeleton</value></data>
+  <data name="AssimpFbx_ClipTable" xml:space="preserve"><value>Clip table</value></data>
+  <data name="Background_Intro" xml:space="preserve"><value>There is a single entry point for backgrounds: Scene.Background, typed OneOf&lt;CubeTexture, Texture&gt;. The cubemap branch samples by view direction, so the sky follows camera rotation only, not translation (the view the pass computes is a LookAt centred on the origin) — orbit with the right mouse button, then walk with WASD to separate the two. The plain-texture branch draws a window-filling quad, stretched rather than equirectangularly mapped, and does not move at all when you orbit.</value></data>
+  <data name="Background_CubeSize" xml:space="preserve"><value>Cubemap edge length when baking the HDRI</value></data>
+  <data name="Background_RenderBackground" xml:space="preserve"><value>Draw background (Camera.IsRenderBackground)</value></data>
+  <data name="Background_ClearNote" xml:space="preserve"><value>Turning this off gives a solid black frame, not a checkerboard: BackgroundPass.BeforeRender clears to (0,0,0,0) unconditionally and the early-out happens inside Render, so this switch governs whether the background is drawn, not whether the clear happens.</value></data>
+  <data name="Background_Orthographic" xml:space="preserve"><value>Orthographic projection (takes the SKYBOX + ORTHOGRAPHIC branch)</value></data>
+  <data name="Background_OrthoSize" xml:space="preserve"><value>OrthographicSize (foreground only)</value></data>
+  <data name="Background_FieldOfView" xml:space="preserve"><value>FieldOfView (read by the perspective branch)</value></data>
+  <data name="Background_FarPlane" xml:space="preserve"><value>FarPlane (read by the orthographic branch)</value></data>
+  <data name="Background_ProjectionNote" xml:space="preserve"><value>The two variants source their framing differently, so the three sliders behave asymmetrically. The perspective branch recomputes its own projection from FOV with near/far hardcoded to 10..100, so FOV changes the sky framing while FarPlane does nothing. The orthographic branch uses the camera's own projection matrix, but the fragment's framing extent is hardcoded to 100 times the aspect ratio and never reads OrthographicSize, so changing OrthographicSize only scales the foreground while changing FarPlane scales the sky. Scrolling does nothing under orthographic either: zoom works by moving the eye, and a parallel frustum is independent of eye position. Both hardcodings are engine inconsistencies, not misuse. The projection parameters themselves, FitToBoundingBox and WorldToScreen included, have their own demo on the camera page.</value></data>
+  <data name="Background_KeyLightVisible" xml:space="preserve"><value>Directional light visible (turn off to light with IBL only)</value></data>
+  <data name="Background_RebakeIbl" xml:space="preserve"><value>Rebake IBL (use when the sphere is stuck on the old environment)</value></data>
+  <data name="Background_IblNote" xml:space="preserve"><value>Irradiance and prefiltered reflections only recognise the cubemap branch: when Background is not a CubeTexture they fall back to the engine's default cube (IrradianceMapPass reads RenderPipeline.DefaultIblAmbientCubeTexture). Both results are cached on the camera node and reused whenever FrameBufferId is non-zero, so flipping between the four sources on this page leaves the sphere's reflections unchanged — press the button above to Invalidate, or Reload. The full caching demo lives on the ibl-environment page.</value></data>
+  <data name="Background_IblCache" xml:space="preserve"><value>Background branch and IBL cache</value></data>
+  <data name="Camera_Intro" xml:space="preserve"><value>Orthographic projection has no near-large-far-small, which makes it the right tool for measuring; changing FieldOfView under perspective alters both the vertical field and the effective aspect. Pulling near and far apart so they straddle an object reveals a cross-section — a second kind of invisibility on top of frustum culling.</value></data>
+  <data name="Camera_Projection" xml:space="preserve"><value>Projection mode</value></data>
+  <data name="Camera_NearPlane" xml:space="preserve"><value>Near plane</value></data>
+  <data name="Camera_FarPlane" xml:space="preserve"><value>Far plane</value></data>
+  <data name="Camera_FitFifthBox" xml:space="preserve"><value>FitToBoundingBox (the 5th box)</value></data>
+  <data name="Camera_ResetCamera" xml:space="preserve"><value>Back to the default camera</value></data>
+  <data name="Camera_RenderBackground" xml:space="preserve"><value>Render background</value></data>
+  <data name="Camera_Box0Projection" xml:space="preserve"><value>Box0 screen projection</value></data>
+  <data name="CelShading_Intro" xml:space="preserve"><value>Cel shading is the only pipeline in the engine that consumes material parameters by name: six channel names plus a list of underscore-prefixed float/Vector4. A typo never raises an error, the value simply has no effect, because every one of those uniforms defaults to zero.</value></data>
+  <data name="CelShading_BaseColor" xml:space="preserve"><value>BaseColor</value></data>
+  <data name="CelShading_Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="CelShading_Ilm" xml:space="preserve"><value>ILM light mask</value></data>
+  <data name="CelShading_ShadowRamp" xml:space="preserve"><value>Shadow ramp</value></data>
+  <data name="CelShading_Sdf" xml:space="preserve"><value>Face SDF</value></data>
+  <data name="CelShading_SpecularRamp" xml:space="preserve"><value>SpecularRamp (bound but never sampled)</value></data>
+  <data name="CelShading_GreyFac" xml:space="preserve"><value>_GreyFac: smoothstep upper bound (transition width)</value></data>
+  <data name="CelShading_DarkFac" xml:space="preserve"><value>_DarkFac: NDotL offset (pushes the shadow side up)</value></data>
+  <data name="CelShading_BrightFac" xml:space="preserve"><value>_BrightFac: lit threshold (above it the raw halfLambert is used)</value></data>
+  <data name="CelShading_BrightAreaShadowFac" xml:space="preserve"><value>_BrightAreaShadowFac: lit-face weight, dark to light</value></data>
+  <data name="CelShading_RampRowsNote" xml:space="preserve"><value>The row coordinate is computed as 1.05 - 0.1*index - 0.5, and that trailing 0.5 comes from _UseCoolShadowColorOrTex, which is hardcoded to 1 (night) on the C# side — so the five values below are the only way to move the sampled row. The built-in ramp has two rows; a ramp of your own needs five before it is useful (this page generates one).</value></data>
+  <data name="CelShading_LightAreaTint" xml:space="preserve"><value>_LightAreaColorTint brightness</value></data>
+  <data name="CelShading_DarkShadow" xml:space="preserve"><value>_DarkShadowColor brightness</value></data>
+  <data name="CelShading_CoolShadow" xml:space="preserve"><value>_CoolShadowColorOrTex slot (cool)</value></data>
+  <data name="CelShading_CoolShadowNote" xml:space="preserve"><value>The cool slot is the dark colour the body and face actually use: _UseCoolShadowColorOrTex is always 1, so mix(_DarkShadowColor, _CoolDarkShadowColor, 1) discards the warm slot outright. Dragging the middle slider to 0 will not go black — the one that matters is below it.</value></data>
+  <data name="CelShading_FaceShadowOffset" xml:space="preserve"><value>_FaceShadowOffset: SDF lit offset</value></data>
+  <data name="CelShading_FaceShadowSoftness" xml:space="preserve"><value>_FaceShadowTransitionSoftness: SDF transition softness</value></data>
+  <data name="CelShading_FaceRenderType" xml:space="preserve"><value>RenderType=1 with the face tag (takes the FACE_RENDER branch)</value></data>
+  <data name="CelShading_OutlineNote" xml:space="preserve"><value>This is OutlinePass's only public knob. Outline width and colour are private fields (2f / 1.5f / black), and the pass instance can only be found by type in RenderPipeline.EveryCameraRenderPasses, which is exactly how this page gets it.</value></data>
+  <data name="CelShading_Bindings" xml:space="preserve"><value>Binding result</value></data>
+  <data name="Environment_Intro" xml:space="preserve"><value>Irradiance and prefiltered reflections are each baked once and parked in two GPU-state slots on the camera node, then reused every frame. Swapping the environment map therefore requires rebaking both caches: this page ships a rebake button that calls Invalidate() to zero the frame buffers, and the pipeline recomputes on the next frame. Skip it and skip Reload, and the picture stays on the old environment forever.</value></data>
+  <data name="Environment_Panorama" xml:space="preserve"><value>Panorama</value></data>
+  <data name="Environment_CubeSize" xml:space="preserve"><value>Cubemap edge length</value></data>
+  <data name="Environment_Rebake" xml:space="preserve"><value>Rebake IBL (Invalidate both cached CubeRenderTargets)</value></data>
+  <data name="Environment_Reload" xml:space="preserve"><value>Reload the page (also needed when switching pipelines)</value></data>
+  <data name="Environment_BackgroundNote" xml:space="preserve"><value>Background is OneOf&lt;CubeTexture, Texture&gt;: only the cubemap branch drives IBL, a plain texture (equirectangular) is just drawn as the backdrop. With no cubemap set, both PBR pipelines fall back to the engine's default cube, so the sphere keeps reflecting in every state outside the three options above — do not read that as "IBL is not working".</value></data>
+  <data name="Environment_IblAmbient" xml:space="preserve"><value>IblAmbientIntensity (read by PBR)</value></data>
+  <data name="Environment_KeyLightVisible" xml:space="preserve"><value>Directional light visible (turn off to light with IBL only)</value></data>
+  <data name="Environment_RenderBackground" xml:space="preserve"><value>Draw background (Camera.IsRenderBackground)</value></data>
+  <data name="Environment_CacheState" xml:space="preserve"><value>IBL cache state</value></data>
+  <data name="Geometries_Intro" xml:space="preserve"><value>Changing a parameter regenerates the geometry's vertex data; the readout below tracks the vertex and index counts live. The rotation speed spins the whole row about Y, which is how you inspect back-face culling and light direction.</value></data>
+  <data name="Geometries_Active" xml:space="preserve"><value>Active geometry</value></data>
+  <data name="Geometries_BoxWidth" xml:space="preserve"><value>Width</value></data>
+  <data name="Geometries_BoxHeight" xml:space="preserve"><value>Height</value></data>
+  <data name="Geometries_BoxDepth" xml:space="preserve"><value>Depth</value></data>
+  <data name="Geometries_SphereRadius" xml:space="preserve"><value>Radius</value></data>
+  <data name="Geometries_SphereStacks" xml:space="preserve"><value>Horizontal slices</value></data>
+  <data name="Geometries_SphereSlices" xml:space="preserve"><value>Vertical slices</value></data>
+  <data name="Geometries_SphereLongitude" xml:space="preserve"><value>Longitude range</value></data>
+  <data name="Geometries_CylinderTopRadius" xml:space="preserve"><value>Top radius</value></data>
+  <data name="Geometries_CylinderBottomRadius" xml:space="preserve"><value>Bottom radius</value></data>
+  <data name="Geometries_CylinderHeight" xml:space="preserve"><value>Height</value></data>
+  <data name="Geometries_CylinderSegments" xml:space="preserve"><value>Radial segments</value></data>
+  <data name="Geometries_CylinderOpen" xml:space="preserve"><value>Open ends (no caps)</value></data>
+  <data name="Geometries_PlaneWidth" xml:space="preserve"><value>Width</value></data>
+  <data name="Geometries_PlaneHeight" xml:space="preserve"><value>Height</value></data>
+  <data name="Geometries_PlaneSectionsX" xml:space="preserve"><value>Horizontal sections</value></data>
+  <data name="Geometries_PlaneSectionsZ" xml:space="preserve"><value>Vertical sections</value></data>
+  <data name="Geometries_RotationSpeed" xml:space="preserve"><value>Row rotation speed (deg/s)</value></data>
+  <data name="Geometries_Grid" xml:space="preserve"><value>Ground grid</value></data>
+  <data name="Geometries_Axes" xml:space="preserve"><value>Axes gizmo</value></data>
+  <data name="Geometries_VertexData" xml:space="preserve"><value>Vertex data</value></data>
+  <data name="GpuLifecycle_Intro" xml:space="preserve"><value>Every button in the upper half touches real GPU resources. GL calls may only run inside a render callback, so these APIs merely queue requests and the actual work happens at the start of the next frame — you can see that in the event ordering.</value></data>
+  <data name="GpuLifecycle_ReleaseGpu" xml:space="preserve"><value>ReleaseGpuResources(): drop the GL objects, keep the scene</value></data>
+  <data name="GpuLifecycle_SimulateLost" xml:space="preserve"><value>SimulateContextLost(): mark the handle dead, rebuild on the next frame</value></data>
+  <data name="GpuLifecycle_DestroyScene" xml:space="preserve"><value>DestroyScene(): destroy scene and pipeline</value></data>
+  <data name="GpuLifecycle_ClearLog" xml:space="preserve"><value>Clear the log</value></data>
+  <data name="GpuLifecycle_Continuous" xml:space="preserve"><value>Continuous rendering (AutoRequestNextFrameRendering)</value></data>
+  <data name="GpuLifecycle_RequestFrame" xml:space="preserve"><value>RequestNextFrameRendering(): draw one frame</value></data>
+  <data name="GpuLifecycle_OnDemandNote" xml:space="preserve"><value>With continuous rendering off, the picture freezes on the current frame: orbiting the camera or dragging a slider triggers no repaint, because the camera controller only moves the camera. That is why on-demand rendering has to own every input path — the convention in this shell is to call Context.InvalidateRender() after changing scene parameters.</value></data>
+  <data name="GpuLifecycle_Runtime" xml:space="preserve"><value>Runtime state</value></data>
+  <data name="GpuLifecycle_EventLog" xml:space="preserve"><value>Event log (last 8)</value></data>
+  <data name="Hism_Intro" xml:space="preserve"><value>The octree is built on a background thread and the groups are attached as children only once it finishes, so dragging the instance count first shows IsBuilding=true. Teleporting across the field moves an instance to a different leaf and rebuilds the whole tree; stepping it a short way only rewrites the buffer of its own group — an order of magnitude apart in cost.</value></data>
+  <data name="Hism_InstanceCount" xml:space="preserve"><value>Instances</value></data>
+  <data name="Hism_PerGroup" xml:space="preserve"><value>MaxInstancesPerGroup (per group)</value></data>
+  <data name="Hism_MaxDepth" xml:space="preserve"><value>MaxDepth (octree)</value></data>
+  <data name="Hism_MoveMode" xml:space="preserve"><value>Move mode</value></data>
+  <data name="Hism_MoveEveryFrame" xml:space="preserve"><value>Move instances every frame</value></data>
+  <data name="Hism_MovesPerSecond" xml:space="preserve"><value>Moves per second</value></data>
+  <data name="Hism_GroupCulling" xml:space="preserve"><value>Per-group frustum culling</value></data>
+  <data name="Hism_Refill" xml:space="preserve"><value>Refill</value></data>
+  <data name="Hism_OctreeState" xml:space="preserve"><value>Octree state</value></data>
+  <data name="Instancing_Intro" xml:space="preserve"><value>Both fields hold the same instance count; the right one uses per-instance vertex colours. Its vertex shader carries an INSTANCED_MESH branch, so one material serves both a plain Mesh (uniform branch) and an InstancedMesh (attribute branch). Per-instance attribute arrays must be exactly the instance count long, so this page always creates the instances before attaching the attributes.</value></data>
+  <data name="Instancing_PerField" xml:space="preserve"><value>Instances per field</value></data>
+  <data name="Instancing_UpdateMode" xml:space="preserve"><value>Update mode</value></data>
+  <data name="Instancing_Wave" xml:space="preserve"><value>Wave animation</value></data>
+  <data name="Instancing_WaveSpeed" xml:space="preserve"><value>Wave speed</value></data>
+  <data name="Instancing_WaveHeight" xml:space="preserve"><value>Wave height</value></data>
+  <data name="Instancing_Culling" xml:space="preserve"><value>Frustum culling (EnableFrustumCulling)</value></data>
+  <data name="Instancing_RemoveInstances" xml:space="preserve"><value>RemoveInstance: drop the first 200 in the left field</value></data>
+  <data name="Instancing_Restore" xml:space="preserve"><value>Restore the full count</value></data>
+  <data name="Instancing_Cost" xml:space="preserve"><value>Cost</value></data>
+  <data name="MaterialShaders_Intro" xml:space="preserve"><value>Custom shaders attach to a material keyed by pass class name (this page overrides LightPass throughout), and you can replace the fragment stage alone while keeping the engine's vertex stage. Material parameters bind to same-named uniforms. Note: writing a parameter raises the material's Version and forces materials carrying custom shaders to recompile, which is why per-frame uniform writes are off by default.</value></data>
+  <data name="MaterialShaders_BaseColorMap" xml:space="preserve"><value>BaseColor map</value></data>
+  <data name="MaterialShaders_NormalMap" xml:space="preserve"><value>Normal channel (tangent-space normal)</value></data>
+  <data name="MaterialShaders_UseConstantShader" xml:space="preserve"><value>Use the custom constant-colour shader</value></data>
+  <data name="MaterialShaders_Hue" xml:space="preserve"><value>Hue (deg)</value></data>
+  <data name="MaterialShaders_TintStrength" xml:space="preserve"><value>Tint strength</value></data>
+  <data name="MaterialShaders_StripeSpeed" xml:space="preserve"><value>Stripe speed</value></data>
+  <data name="MaterialShaders_FrequencyU" xml:space="preserve"><value>Frequency U</value></data>
+  <data name="MaterialShaders_FrequencyV" xml:space="preserve"><value>Frequency V</value></data>
+  <data name="MaterialShaders_WriteTime" xml:space="preserve"><value>Write uTime every frame (triggers recompiles, watch the readout)</value></data>
+  <data name="MaterialShaders_DoubleSided" xml:space="preserve"><value>Translucent double-sided (DoubleSided)</value></data>
+  <data name="MaterialShaders_RotationSpeed" xml:space="preserve"><value>Row rotation (deg/s)</value></data>
+  <data name="MaterialShaders_Grid" xml:space="preserve"><value>Ground grid</value></data>
+  <data name="MaterialShaders_Runtime" xml:space="preserve"><value>Runtime state</value></data>
+  <data name="ModelViewer_Intro" xml:space="preserve"><value>The three dropdown entries marked fetch-on-entry are downloaded in one go by LoadAssetsAsync (this page's budget is about 3 MB), so switching between them triggers no download — it only changes which Model node is enabled. The four marked in-page on demand are fetched from the page itself: they download and decode only when selected, so they sit outside the page budget. Keeping the heavy models in that tier means the first screen pays only for the first screen's bytes.</value></data>
+  <data name="ModelViewer_CurrentModel" xml:space="preserve"><value>Current model</value></data>
+  <data name="ModelViewer_Fit" xml:space="preserve"><value>FitToBoundingBox (padding slider below)</value></data>
+  <data name="ModelViewer_FitPadding" xml:space="preserve"><value>FitToBoundingBox padding</value></data>
+  <data name="ModelViewer_BoxPadding" xml:space="preserve"><value>BoundingBoxPadding (model-space units)</value></data>
+  <data name="ModelViewer_CustomBox" xml:space="preserve"><value>CustomBoundingBox (a box larger than the model)</value></data>
+  <data name="ModelViewer_ShowBox" xml:space="preserve"><value>Debug box (ShowBoundingBox)</value></data>
+  <data name="ModelViewer_BoxNote" xml:space="preserve"><value>These two properties are not decoration: a mesh's bounding box asks Model.CustomBoundingBox first and falls back to the geometry's, and both grow outward whenever BoundingBoxPadding is above zero. Frustum culling and the debug wireframe both use that box.</value></data>
+  <data name="ModelViewer_Reframe" xml:space="preserve"><value>Reframe from the current box</value></data>
+  <data name="ModelViewer_BoundingBoxRow" xml:space="preserve"><value>Bounding box</value></data>
+  <data name="ModelViewer_CloneType" xml:space="preserve"><value>Clone CopyType</value></data>
+  <data name="ModelViewer_CloneNote" xml:space="preserve"><value>The two clones move to either side and each can be positioned independently; the second swaps its BaseColor for a conspicuous checker texture. If the original model changes texture too, the material is still the same instance — the bluntest way to locate the sharing boundary.</value></data>
+  <data name="ModelViewer_ClearClones" xml:space="preserve"><value>Clear the clones</value></data>
+  <data name="ModelViewer_Sharing" xml:space="preserve"><value>Sharing</value></data>
+  <data name="ModelViewer_LoadLog" xml:space="preserve"><value>Load record</value></data>
+  <data name="ModelViewer_LoadHint" xml:space="preserve"><value>None of the four on-demand models has been fetched yet: pick one in the dropdown above to download it</value></data>
+  <data name="ModelViewer_Structure" xml:space="preserve"><value>Model structure</value></data>
+  <data name="Particles_Intro" xml:space="preserve"><value>Rate, lifetime and gravity take effect immediately; MaxParticles and Looping/Duration are only read on a fresh Play, because Play allocates the particle array by MaxParticles and picks between the billboard buffer and an InstancedMesh depending on whether Mesh is set.</value></data>
+  <data name="Particles_FountainRate" xml:space="preserve"><value>Emission rate (per s)</value></data>
+  <data name="Particles_ConeAngle" xml:space="preserve"><value>Cone angle (deg)</value></data>
+  <data name="Particles_GravityY" xml:space="preserve"><value>Gravity Y</value></data>
+  <data name="Particles_Damping" xml:space="preserve"><value>Damping</value></data>
+  <data name="Particles_StartSize" xml:space="preserve"><value>Start size</value></data>
+  <data name="Particles_Map" xml:space="preserve"><value>Texture</value></data>
+  <data name="Particles_FlipbookTiles" xml:space="preserve"><value>FlipbookTiles (tiles per side)</value></data>
+  <data name="Particles_FlipbookNote" xml:space="preserve"><value>Which frame the flipbook shows is computed per particle from its own age ratio (vAgeRatio times tiles squared), not from global time, so a single instant can display different frames out of 64 at once and the flame reads as a gradient from fresh to old. The tile count must match the sheet's real layout: setting 4 treats the top-left quarter of an 8x8 sheet as the whole image and cuts a four-frame collage. PARTICLE_FLIPBOOK is a shader macro, but the pass selects the variant per emitter every frame, so toggling it here needs no Reload.</value></data>
+  <data name="Particles_BurstRate" xml:space="preserve"><value>Emission rate (per s)</value></data>
+  <data name="Particles_Duration" xml:space="preserve"><value>Duration (s)</value></data>
+  <data name="Particles_MaxLife" xml:space="preserve"><value>Lifetime cap</value></data>
+  <data name="Particles_MaxSpeed" xml:space="preserve"><value>Initial speed cap</value></data>
+  <data name="Particles_Replay" xml:space="preserve"><value>Play again (Stop then Play)</value></data>
+  <data name="Particles_DebrisRate" xml:space="preserve"><value>Emission rate (per s)</value></data>
+  <data name="Particles_SpinSpeed" xml:space="preserve"><value>Spin speed</value></data>
+  <data name="Particles_MaxParticles" xml:space="preserve"><value>MaxParticles per emitter</value></data>
+  <data name="Particles_ApplyMaxParticles" xml:space="preserve"><value>Apply MaxParticles (restart the debris)</value></data>
+  <data name="Particles_BlendMode" xml:space="preserve"><value>Billboard BlendMode</value></data>
+  <data name="Particles_RestartAll" xml:space="preserve"><value>Restart all</value></data>
+  <data name="Particles_PauseAll" xml:space="preserve"><value>Pause all</value></data>
+  <data name="Particles_VisibilityCulling" xml:space="preserve"><value>Cull by bounds (EnableVisibilityCulling)</value></data>
+  <data name="Particles_ShowBounds" xml:space="preserve"><value>Draw particle bounds (Debug.ShowParticleBounds)</value></data>
+  <data name="Particles_State" xml:space="preserve"><value>Particle state</value></data>
+  <data name="PbrChannels_Intro" xml:space="preserve"><value>The sphere on the left has every channel wired, the middle one only BaseColor as a control, and the plane on the right uses Masked with AlphaCutoff. The matrix below is computed live against the current pipeline: attach a texture nobody samples and the picture will not change, while the readout tells you why.</value></data>
+  <data name="PbrChannels_SwapMr" xml:space="preserve"><value>Swap the MetallicRoughness map (exchange G and B)</value></data>
+  <data name="PbrChannels_SwapNote" xml:space="preserve"><value>The swap demonstrates the channel convention: the forward pipeline and the opaque branch of the deferred one follow glTF with G=roughness and B=metallic, while the part of the deferred pipeline that reads the material map directly (translucent IBL) uses B=roughness and G=metallic. The same image yields swapped metallic and roughness under the two branches — a real inconsistency in the engine.</value></data>
+  <data name="PbrChannels_BlendMode" xml:space="preserve"><value>BlendMode (decides which pass)</value></data>
+  <data name="PbrChannels_AlphaCutoff" xml:space="preserve"><value>AlphaCutoff (only Masked uses it)</value></data>
+  <data name="PbrChannels_DoubleSided" xml:space="preserve"><value>DoubleSided (off means GL back-face culling)</value></data>
+  <data name="PbrChannels_FactorsNote" xml:space="preserve"><value>Metallic and roughness have no numeric factors to set: the engine takes them only from the MetallicRoughness map, and glTF's metallicFactor/roughnessFactor are already multiplied into the pixels at import. Emissive has no intensity parameter either — it is added straight to the colour.</value></data>
+  <data name="PbrChannels_Sampling" xml:space="preserve"><value>Sampling under the current pipeline</value></data>
+  <data name="Picking_Intro" xml:space="preserve"><value>Clicking the view fires its ObjectPicked event, which returns only the nearest hit. Turning on the centre ray picks from the middle of the viewport every frame and lists every hit at that point — the occluder is translucent but still sits in front, which is exactly the difference between the full hit list and the nearest hit.</value></data>
+  <data name="Picking_EnablePicking" xml:space="preserve"><value>View EnablePicking</value></data>
+  <data name="Picking_CenterRay" xml:space="preserve"><value>Centre ray, pick every frame</value></data>
+  <data name="Picking_OccluderVisible" xml:space="preserve"><value>Occluder visible</value></data>
+  <data name="Picking_GridSize" xml:space="preserve"><value>Instance grid side</value></data>
+  <data name="Picking_ClearClicks" xml:space="preserve"><value>Reset the click counter</value></data>
+  <data name="Picking_Result" xml:space="preserve"><value>Pick result</value></data>
+  <data name="Pipelines_Intro" xml:space="preserve"><value>Each of the six objects feeds exactly one kind of information, so whether a pipeline reads it is easy to see. A few patterns recur:
+- NoLight looks at no lights at all, and ignores Normal and MetallicRoughness.
+- Blinn-Phong reads only BaseColor and Normal; the other three PBR maps go unrecognised.
+- Cel adds its own ILM/ShadowRamp and an outline pass on top of the Blinn-Phong channels.
+- Both PBR pipelines read all five maps and need Scene.Background to supply an environment map before any IBL ambient light exists.
+- Point clouds: only the PointCloud pipeline registers PointCloudPass, so on any other line the points degrade to 1 pixel each.</value></data>
+  <data name="Pipelines_LightPitch" xml:space="preserve"><value>Directional light pitch (deg)</value></data>
+  <data name="Pipelines_LightShadow" xml:space="preserve"><value>Directional light casts shadows</value></data>
+  <data name="Pipelines_PointLightVisible" xml:space="preserve"><value>Point light visible</value></data>
+  <data name="Pipelines_Channels" xml:space="preserve"><value>Channels the current pipeline reads</value></data>
+  <data name="Pipelines_Passes" xml:space="preserve"><value>This pipeline's passes (Once / EveryCamera)</value></data>
+  <data name="PointCloud_Intro" xml:space="preserve"><value>Point size has two sources: PointCloudPass.DefaultPointSize on the pass (5 in the engine) is the fallback, and a float parameter named uPointSize written on the material overrides it. Group 1 deliberately carries no material parameter, so it follows the slider above.</value></data>
+  <data name="PointCloud_DefaultSize" xml:space="preserve"><value>Pass DefaultPointSize (group 1)</value></data>
+  <data name="PointCloud_UseMaterialSize" xml:space="preserve"><value>Group 2 uses a material uPointSize (off falls back to the pass default)</value></data>
+  <data name="PointCloud_MaterialSize" xml:space="preserve"><value>Group 2 uPointSize</value></data>
+  <data name="PointCloud_GlPointSizeNote" xml:space="preserve"><value>gl_PointSize is clamped by the driver to the device's ALIASED_POINT_SIZE_RANGE ceiling, so under a browser the practical maximum is only visible by comparison. The fragment stage discards once gl_PointCoord measures past 0.5, which is why points read as circles rather than squares.</value></data>
+  <data name="PointCloud_Shape" xml:space="preserve"><value>Shape</value></data>
+  <data name="PointCloud_PointsPerGroup" xml:space="preserve"><value>Points per group</value></data>
+  <data name="PointCloud_DropColorAttribute" xml:space="preserve"><value>Strip group 1's slot-2 vertex colour</value></data>
+  <data name="PointCloud_ColorSourceNote" xml:space="preserve"><value>Once the vertex colour is stripped the shader reads an empty slot, and what actually comes back depends on the driver's default vertex attributes. The point of this group is the reminder that a point cloud's colour has exactly one source, slot 2 (vec4); material textures do nothing here.</value></data>
+  <data name="PointCloud_BlendNote" xml:space="preserve"><value>PointCloudPass.Render issues only two batches: Opaque first (blending off, depth written), then Translucent (SrcAlpha blending on, depth writes off). There is no Masked batch, so group 4's AlphaCutoff and mask mean nothing here — it simply is not drawn.</value></data>
+  <data name="PointCloud_Group3Visible" xml:space="preserve"><value>Group 3 Translucent visible</value></data>
+  <data name="PointCloud_Group4Visible" xml:space="preserve"><value>Group 4 Masked visible</value></data>
+  <data name="PointCloud_InstancedRow" xml:space="preserve"><value>Attach an InstancedMesh point cloud (takes the INSTANCED_MESH branch)</value></data>
+  <data name="PointCloud_InstancedNote" xml:space="preserve"><value>The instanced vertex shader already provides the mat4 modelMatrix in slots 8-11, so no custom shader is needed. Per-instance colour also lands in slot 2, which is why this geometry deliberately omits a per-vertex Color_0 — otherwise the two would fight.</value></data>
+  <data name="PointCloud_PipelineNote" xml:space="preserve"><value>Switch to another pipeline and the same points are drawn by that pipeline's generic pass: nobody sets gl_PointSize there, so points are 1 pixel and the vertex colour goes unread. That is precisely why this page does not lock the pipeline.</value></data>
+  <data name="PointCloud_Effective" xml:space="preserve"><value>What is in effect</value></data>
+  <data name="PostProcessing_Intro" xml:space="preserve"><value>Everything in the upper half applies per frame: the shader re-reads those uniforms every frame. The lower half changes shader variants or texture sizes and only a full page rebuild honours them — press the button, do not expect the sliders.</value></data>
+  <data name="PostProcessing_AmbientIntensity" xml:space="preserve"><value>AmbientIntensity (read by BlinnPhong / Cel)</value></data>
+  <data name="PostProcessing_IblAmbient" xml:space="preserve"><value>IblAmbientIntensity (read by PBR)</value></data>
+  <data name="PostProcessing_Fxaa" xml:space="preserve"><value>EnableFxaa (every pipeline has an FxaaPass)</value></data>
+  <data name="PostProcessing_PointLightLimit" xml:space="preserve"><value>PointLightLimit (the scene has 2)</value></data>
+  <data name="PostProcessing_CsmCascadeCount" xml:space="preserve"><value>CsmCascadeCount (max 4; whether the pipeline uses CSM is another matter)</value></data>
+  <data name="PostProcessing_Reload" xml:space="preserve"><value>Reload: apply the group above</value></data>
+  <data name="PostProcessing_CastShadow" xml:space="preserve"><value>Directional light CastShadow</value></data>
+  <data name="PostProcessing_Matrix" xml:space="preserve"><value>What the current pipeline honours</value></data>
+  <data name="Primitives_Intro" xml:space="preserve"><value>All seven primitives share one vertex set and differ only in how the GPU connects it. Changing columns, rows or amplitude genuinely rebuilds the vertex buffer; focusing one primitive moves the rest off-screen so you can read its connection rule on its own.</value></data>
+  <data name="Primitives_Focus" xml:space="preserve"><value>Focused primitive</value></data>
+  <data name="Primitives_Columns" xml:space="preserve"><value>Columns (vertices per row)</value></data>
+  <data name="Primitives_Rows" xml:space="preserve"><value>Rows</value></data>
+  <data name="Primitives_Amplitude" xml:space="preserve"><value>Amplitude along Z</value></data>
+  <data name="Primitives_PointSize" xml:space="preserve"><value>Point size (px)</value></data>
+  <data name="Primitives_Current" xml:space="preserve"><value>Current primitive</value></data>
+  <data name="SceneGizmos_Intro" xml:space="preserve"><value>The wireframe reuses the main view's depth buffer, so earlier solids can occlude it; the axes are the only exception (depth testing is temporarily disabled while they draw). The hidden box with Enable=false neither renders nor draws a bounding box, which makes it the control case for how visibility is judged.</value></data>
+  <data name="SceneGizmos_ShowGrid" xml:space="preserve"><value>Show grid</value></data>
+  <data name="SceneGizmos_ShowAxes" xml:space="preserve"><value>Show axes</value></data>
+  <data name="SceneGizmos_GridSize" xml:space="preserve"><value>Grid size</value></data>
+  <data name="SceneGizmos_GridDivisions" xml:space="preserve"><value>Grid divisions</value></data>
+  <data name="SceneGizmos_AxisLength" xml:space="preserve"><value>Axis length</value></data>
+  <data name="SceneGizmos_ArrowSize" xml:space="preserve"><value>Arrow size</value></data>
+  <data name="SceneGizmos_BoundingBox" xml:space="preserve"><value>Bounding box</value></data>
+  <data name="SceneGizmos_DirectionalVolume" xml:space="preserve"><value>Light volume: directional</value></data>
+  <data name="SceneGizmos_PointVolume" xml:space="preserve"><value>Light volume: point</value></data>
+  <data name="SceneGizmos_SpotVolume" xml:space="preserve"><value>Light volume: spot</value></data>
+  <data name="SceneGizmos_CameraFrustum" xml:space="preserve"><value>Camera frustum</value></data>
+  <data name="SceneGizmos_ParticleBounds" xml:space="preserve"><value>Particle bounds</value></data>
+  <data name="SceneGizmos_Bones" xml:space="preserve"><value>Bones</value></data>
+  <data name="SceneGizmos_Enable" xml:space="preserve"><value>Master switch Enable</value></data>
+  <data name="SceneGizmos_LightOrbit" xml:space="preserve"><value>Orbit speed of the two lights (deg/s)</value></data>
+  <data name="SceneGizmos_SpotOuterAngle" xml:space="preserve"><value>Spot outer cone (deg)</value></data>
+  <data name="SceneGizmos_State" xml:space="preserve"><value>Debug state</value></data>
+  <data name="Shadows_Intro" xml:space="preserve"><value>Cascades apply to the key directional light only. The key light is whichever light is explicitly set as Scene.MainDirectionalLight, or else the first enabled light that casts shadows. The four ShadowConfig values are used only on the single orthographic map path: a non-key light, a pipeline without CSM, or a cascade count of 1.</value></data>
+  <data name="Shadows_Pitch" xml:space="preserve"><value>Pitch (deg)</value></data>
+  <data name="Shadows_Yaw" xml:space="preserve"><value>Yaw (deg)</value></data>
+  <data name="Shadows_KeyCastShadow" xml:space="preserve"><value>Key light casts shadows (CastShadow)</value></data>
+  <data name="Shadows_ExplicitKey" xml:space="preserve"><value>Explicitly set as MainDirectionalLight</value></data>
+  <data name="Shadows_KeyNote" xml:space="preserve"><value>Unchecking this hands the key light role to whichever light is auto-picked, and the two lights on this page swap positions — cascades follow the key light only, so shadow quality changes visibly.</value></data>
+  <data name="Shadows_ConfigWidth" xml:space="preserve"><value>Width (orthographic frame)</value></data>
+  <data name="Shadows_ConfigHeight" xml:space="preserve"><value>Height (orthographic frame)</value></data>
+  <data name="Shadows_ConfigNote" xml:space="preserve"><value>ShadowConfig belongs to each light individually; both lights here are given the same values, so the effect stays visible when the key light falls onto the single-map path. The orthographic frame is centred on the light's origin: too small and it clips the columns, too large and every pixel covers more ground at the same resolution, so the edges soften.</value></data>
+  <data name="Shadows_SplitLambda" xml:space="preserve"><value>CsmSplitLambda (0 = uniform, 1 = logarithmic)</value></data>
+  <data name="Shadows_FarPlane" xml:space="preserve"><value>Camera FarPlane (sets the cascade split range)</value></data>
+  <data name="Shadows_CsmLiveNote" xml:space="preserve"><value>Cascade count, split and resolution all apply per frame: ShadowMapPass compares CsmShadowData's resolution and cascade count every frame and rebuilds the texture array on the spot when they differ. The one exception is crossing between 1 and 2 — ENABLE_CSM is a shader define, so that step needs the Reload button below.</value></data>
+  <data name="Shadows_WasmNote" xml:space="preserve"><value>On the browser (wasm) host the cascade count always reads 0: the cascade shadow map is a depth texture array, allocating it calls glTexImage3D, and that signature is absent from the .NET browser runtime's native table — hitting it aborts the whole runtime — so the engine forces the single orthographic map on that host. What this page shows in a browser is the single-map path, not cascades.</value></data>
+  <data name="Shadows_LimitNote" xml:space="preserve"><value>ShadowMapPass enumerates the shadow-casting lights in DirectionalLights order and breaks as soon as the limit is passed, so dropping it to 1 leaves only the first light in the list with a shadow map, regardless of whether it is the key light.</value></data>
+  <data name="Shadows_DirectionalVolume" xml:space="preserve"><value>Light volume: directional</value></data>
+  <data name="Shadows_BoundingBox" xml:space="preserve"><value>Bounding box</value></data>
+  <data name="Shadows_Resources" xml:space="preserve"><value>Shadow resources in effect</value></data>
+  <data name="SkinnedAnimation_Intro" xml:space="preserve"><value>Clip names and durations come from the glb's actual animations array, not from constants: this model carries four, and the TPose one is exactly what you need to check the bind pose against.</value></data>
+  <data name="SkinnedAnimation_Clip" xml:space="preserve"><value>Clip</value></data>
+  <data name="SkinnedAnimation_Reset" xml:space="preserve"><value>Reset (back to 0 s)</value></data>
+  <data name="SkinnedAnimation_ExternalUpdate" xml:space="preserve"><value>ExternalUpdate (Model.Update stops advancing the sampler)</value></data>
+  <data name="SkinnedAnimation_DriveNote" xml:space="preserve"><value>Model.Update contains a single statement: the sampler is advanced only when it is non-null and ExternalUpdate is false. Checking it hands control back to this page, and the button below feeds a fixed step — the skeleton holds still, which is the evidence for that early-out branch.</value></data>
+  <data name="SkinnedAnimation_AdvanceStep" xml:space="preserve"><value>Advance 1/30 s</value></data>
+  <data name="SkinnedAnimation_ShowBone" xml:space="preserve"><value>Debug.ShowBone (cyan bone lines)</value></data>
+  <data name="SkinnedAnimation_Attachment" xml:space="preserve"><value>Attach a BoneAttachment (a torch bound to the hand)</value></data>
+  <data name="SkinnedAnimation_AttachmentYaw" xml:space="preserve"><value>LocalOffset yaw (deg)</value></data>
+  <data name="SkinnedAnimation_AttachNote" xml:space="preserve"><value>A BoneAttachment's WorldTransform is LocalOffset times that bone's BonesTransform times the mesh's world matrix — the same data DebugDrawPass uses to draw the bone lines — and it must sit under the scene root to be updated every frame.</value></data>
+  <data name="SkinnedAnimation_BonePicker" xml:space="preserve"><value>Bone picker</value></data>
+  <data name="SkinnedAnimation_PlaybackState" xml:space="preserve"><value>Playback state</value></data>  <data name="Geometries_VertexReadout" xml:space="preserve"><value>{0} vertices / {1} indices / ~{2:0.#} KB</value></data>
+  <data name="Camera_BehindCamera" xml:space="preserve"><value>Behind the camera (WorldToScreen returns null)</value></data>
+  <data name="Camera_ScreenReadout" xml:space="preserve"><value>({0:0}, {1:0}) logical px / output {2}×{3}</value></data>
+  <data name="AnimationMix_NoGraph" xml:space="preserve"><value>no state machine</value></data>
+  <data name="AnimationMix_GraphReadout" xml:space="preserve"><value>Target={0} · BlendTime={1:0.##}s</value></data>
+  <data name="AnimationMix_BlendReadout" xml:space="preserve"><value>Axes=({0:0.##}, {1:0.##}) · IdwPower={2:0.##} · {3} samples · {4} bone matrices</value></data>  <data name="Instancing_UpdateBatch" xml:space="preserve"><value>Batch SetInstances</value></data>
+  <data name="Instancing_UpdatePerInstance" xml:space="preserve"><value>Per-instance UpdateInstance</value></data>
+  <data name="Instancing_CostReadout" xml:space="preserve"><value>{0} on the left · {1} on the right, one {2}-vertex geometry per field → two draw calls · update mode {3}</value></data>
+  <data name="Hism_MoveNudge" xml:space="preserve"><value>Small step (in-place update)</value></data>
+  <data name="Hism_MoveTeleport" xml:space="preserve"><value>Teleport across the field (triggers a rebuild)</value></data>
+  <data name="Hism_OctreeReadout" xml:space="preserve"><value>{0} instances / {1} groups · building={2} · cap {3} per group · depth {4} · {5} in-place updates · {6} rebuilds · cursor {7}</value></data>  <data name="Environment_EnvStudio" xml:space="preserve"><value>Studio gradient</value></data>
+  <data name="Environment_EnvSunset" xml:space="preserve"><value>Sunset HDR</value></data>
+  <data name="Environment_EnvTestChart" xml:space="preserve"><value>Lat-long test chart</value></data>
+  <data name="Environment_BackgroundCube" xml:space="preserve"><value>Cubemap {0}×{1}</value></data>
+  <data name="Environment_BackgroundPlain" xml:space="preserve"><value>Plain texture (does not drive IBL)</value></data>
+  <data name="Environment_BackgroundNone" xml:space="preserve"><value>Not set</value></data>
+  <data name="Environment_Readout" xml:space="preserve"><value>Background {0} · panorama {1} · requested face size {2} · IrradianceMap fbo={3} PrefilteredMap fbo={4} · IBL intensity {5:0.00} exposure {6:0.00} · {7}</value></data>
+  <data name="Environment_Rebaked" xml:space="preserve"><value>Rebaked, the environment follows</value></data>
+  <data name="Environment_NotRebaked" xml:space="preserve"><value>Not rebaked: use the button above or Reload to pick up the new map</value></data>
+  <data name="MaterialShaders_MapChecker" xml:space="preserve"><value>Checker</value></data>
+  <data name="MaterialShaders_MapSoftDot" xml:space="preserve"><value>Soft dot</value></data>
+  <data name="MaterialShaders_MapGradient" xml:space="preserve"><value>Vertical gradient</value></data>
+  <data name="MaterialShaders_Readout" xml:space="preserve"><value>Frame time {0:0.0} ms · uTime {1:0.00} · override key {2} · translucent cutoff {3:0.00}</value></data>  <data name="AssimpFbx_NoSampler" xml:space="preserve"><value>(no sampler: bind pose)</value></data>
+  <data name="AssimpFbx_NoClip" xml:space="preserve"><value>No clip available to sample</value></data>
+  <data name="AssimpFbx_SampleReadout" xml:space="preserve"><value>{2} of {0} at {1:0.##}s — translation ({3:0.###}, {4:0.###}, {5:0.###}) · {6} channels</value></data>
+  <data name="AssimpFbx_SkeletonReadout" xml:space="preserve"><value>{0} bones · root {1} · {2} index-map entries · clip Skeleton {3}</value></data>
+  <data name="AssimpFbx_SkeletonSame" xml:space="preserve"><value>is the same instance</value></data>
+  <data name="AssimpFbx_SkeletonDiff" xml:space="preserve"><value>is not the same instance</value></data>
+  <data name="AssimpFbx_ListSeparator" xml:space="preserve"><value>, </value></data>
+  <data name="AssimpFbx_ClipTableReadout" xml:space="preserve"><value>Current={0} · {1} clips fetched: {2} · {3} BonesTransform entries</value></data>
+  <data name="AssimpFbx_None" xml:space="preserve"><value>none</value></data>  <data name="CelShading_MeshReference" xml:space="preserve"><value>Reference: BaseColor only</value></data>
+  <data name="CelShading_MeshFace" xml:space="preserve"><value>Face (FACE_RENDER)</value></data>
+  <data name="CelShading_MeshBody" xml:space="preserve"><value>Body</value></data>
+  <data name="CelShading_FaceBodyBranch" xml:space="preserve"><value>takes the body branch</value></data>
+  <data name="CelShading_OutlineNotFound" xml:space="preserve"><value>not found (the current pipeline is not cel shading)</value></data>
+  <data name="CelShading_OutlineBound" xml:space="preserve"><value>bound</value></data>
+  <data name="CelShading_Readout" xml:space="preserve"><value>Channels {0} · {1} parameters (3 Vector4 + RenderType depending on the switch) · tint {2:0.00} dark {3:0.00} cool {4:0.00} · face {5} (Tags={6}) · OutlinePass {7} AmbientIntensity={8:0.00} · The reference sphere (BaseColor only) should be flat and shadowless: with no ILM AO=1, so GetShadow returns 1.0 outright</value></data>  <data name="ModelViewer_OptionStool" xml:space="preserve"><value>Stool (preloaded)</value></data>
+  <data name="ModelViewer_OptionCoffeeTable" xml:space="preserve"><value>Coffee table (preloaded)</value></data>
+  <data name="ModelViewer_OptionLionHead" xml:space="preserve"><value>Lion head (preloaded)</value></data>
+  <data name="ModelViewer_OptionLightbulb" xml:space="preserve"><value>Light bulb (on demand)</value></data>
+  <data name="ModelViewer_OptionStones" xml:space="preserve"><value>Stones (on demand)</value></data>
+  <data name="ModelViewer_OptionPresent" xml:space="preserve"><value>Gift box (on demand)</value></data>
+  <data name="ModelViewer_OptionCelCharacter" xml:space="preserve"><value>Cartoon character (on demand, multi-material)</value></data>
+  <data name="ModelViewer_CopyOptionSharedResource" xml:space="preserve"><value>SharedResource (geometry and materials shared)</value></data>
+  <data name="ModelViewer_CopyOptionSharedResourceData" xml:space="preserve"><value>SharedResourceData (own geometry shell, attribute tables still shared)</value></data>
+  <data name="ModelViewer_CopyOptionFullCopy" xml:space="preserve"><value>FullCopy (its own geometry data and textures)</value></data>
+  <data name="ModelViewer_LoadProgress" xml:space="preserve"><value>Loading {0}: {1} KB, downloading + decoding…</value></data>
+  <data name="ModelViewer_LoadDone" xml:space="preserve"><value>Loaded {0}: {1} KB / {2} ms (manifest path {3}, not counted in this page's budget)</value></data>
+  <data name="ModelViewer_StructureReadout" xml:space="preserve"><value>{0} · {1} children · {2} meshes · {3:N0} vertices total · channels [{4}] · BlendMode={5} DoubleSided={6} AlphaCutoff={7:0.##}</value></data>
+  <data name="ModelViewer_BoxReadout" xml:space="preserve"><value>min ({0:0.##}, {1:0.##}, {2:0.##}) max ({3:0.##}, {4:0.##}, {5:0.##}) · BoundingBoxPadding={6:0.##} · CustomBoundingBox={7}</value></data>
+  <data name="ModelViewer_BoxNone" xml:space="preserve"><value>none</value></data>
+  <data name="ModelViewer_BoxSet" xml:space="preserve"><value>present</value></data>
+  <data name="ModelViewer_NoClones" xml:space="preserve"><value>No clones</value></data>
+  <data name="ModelViewer_SameInstance" xml:space="preserve"><value>same instance</value></data>
+  <data name="ModelViewer_OwnCopies" xml:space="preserve"><value>own copies</value></data>
+  <data name="ModelViewer_TintFollowed" xml:space="preserve"><value>changed too → the material really is shared</value></data>
+  <data name="ModelViewer_TintIndependent" xml:space="preserve"><value>unchanged → the material has its own copy now</value></data>
+  <data name="ModelViewer_CloneReadout" xml:space="preserve"><value>{0}: geometry {1} / materials {2} · after giving the clones a new BaseColor, the original model {3}</value></data>  <data name="Particles_TextureSoftDot" xml:space="preserve"><value>Soft dot (procedural)</value></data>
+  <data name="Particles_TextureSpark" xml:space="preserve"><value>Spark (procedural)</value></data>
+  <data name="Particles_TextureFlame" xml:space="preserve"><value>Flame 8x8 flipbook (from file)</value></data>
+  <data name="Particles_RendererBillboard" xml:space="preserve"><value>billboard</value></data>
+  <data name="Particles_NoTextureHint" xml:space="preserve"><value>(no texture: procedural dots)</value></data>
+  <data name="Particles_Readout" xml:space="preserve"><value>alive {0} · fountain {1} · burst {2} (finished={3}) · debris {4} (via {5}) · playing={6} · fountain texture {7}, flipbook {8:0}x{9:0}</value></data>  <data name="PostProcessing_MatrixReadout" xml:space="preserve"><value>Pipeline {0} · Exposure {1} Ambient {2} IBL intensity {3} FXAA✓ Culling✓ CSM {4} · Point light limit {5} (2 in scene) · Cascades {6} × {7} · {8}</value></data>
+  <data name="PostProcessing_ExposureNoTone" xml:space="preserve"><value>× no ToneMappingPass</value></data>
+  <data name="PostProcessing_CsmNoShadowMap" xml:space="preserve"><value>× no ShadowMapPass</value></data>
+  <data name="PostProcessing_HintRebuilt" xml:space="preserve"><value>Previous change took effect after the rebuild</value></data>
+  <data name="PostProcessing_HintNeedsReload" xml:space="preserve"><value>Lower-half changes need Reload</value></data>
+  <data name="Shadows_Readout" xml:space="preserve"><value>{0} SupportsCSM={1} · Key light={2} · Cascades {3} resolution {4} (settings require {5} × {6}) · Single map {7} · {8} splits · ShadowConfig only feeds the single-map path</value></data>
+  <data name="Shadows_AutoPicked" xml:space="preserve"><value>(auto-picked)</value></data>
+  <data name="Shadows_SingleNone" xml:space="preserve"><value>none</value></data>  <data name="SkinnedAnimation_LoopModeLoop" xml:space="preserve"><value>Loop</value></data>
+  <data name="SkinnedAnimation_LoopModeOnce" xml:space="preserve"><value>Once (stop at end)</value></data>
+  <data name="SkinnedAnimation_LoopModePingPong" xml:space="preserve"><value>PingPong</value></data>
+  <data name="SkinnedAnimation_ClipOption" xml:space="preserve"><value>{0} · {1} ({2:0.##}s)</value></data>
+  <data name="SkinnedAnimation_BoneNotPicked" xml:space="preserve"><value>none</value></data>
+  <data name="SkinnedAnimation_BoneReadout" xml:space="preserve"><value>Bones {0} · attachment {1} (index {2}) · BonesTransform {3} entries · yaw {4:0}°</value></data>
+  <data name="SkinnedAnimation_DriverManual" xml:space="preserve"><value>manual on this page (scene should be frozen)</value></data>
+  <data name="SkinnedAnimation_DriverAuto" xml:space="preserve"><value>automatic via Model.Update</value></data>
+  <data name="SkinnedAnimation_Yes" xml:space="preserve"><value>yes</value></data>
+  <data name="SkinnedAnimation_No" xml:space="preserve"><value>no</value></data>
+  <data name="SkinnedAnimation_Readout" xml:space="preserve"><value>Clip {0} ({1}s) · TimeScale={2:0.##} LoopMode={3} · driver={4} · manual total {5:0.##}s · skinned mesh {6}</value></data>
+  <data name="SceneGizmos_DebugReadout" xml:space="preserve"><value>Enable={0} BBox={1} Directional={2} Point={3} Spot={4} Frustum={5} Grid={6} Size={7:0} Divisions={8} Axis={9:0.0} Arrowhead={10:0.00}</value></data>  <data name="PointCloud_OptionShell" xml:space="preserve"><value>Spherical shell</value></data>
+  <data name="PointCloud_OptionHelix" xml:space="preserve"><value>Helical column</value></data>
+  <data name="PointCloud_OptionCube" xml:space="preserve"><value>Cube volume</value></data>
+  <data name="PointCloud_NodeFollowsPass" xml:space="preserve"><value>1 follows the pass default</value></data>
+  <data name="PointCloud_NodeMaterialSize" xml:space="preserve"><value>2 material uPointSize</value></data>
+  <data name="PointCloud_NodeBoxNotDrawn" xml:space="preserve"><value>Box (this pipeline does not draw it)</value></data>
+  <data name="PointCloud_PassMissing" xml:space="preserve"><value>No PointCloudPass in the current pipeline (points are drawn 1 px by the generic pass)</value></data>
+  <data name="PointCloud_SizeDroppedToPass" xml:space="preserve"><value>parameter removed → uses the pass value</value></data>
+  <data name="PointCloud_InstancedCounts" xml:space="preserve"><value>{0} instances × {1} vertices</value></data>
+  <data name="PointCloud_InstancedOff" xml:space="preserve"><value>off</value></data>
+  <data name="PointCloud_Readout" xml:space="preserve"><value>{0} · group 1 has no material parameter → uses the pass value · group 2={1} · groups 3/4 set uPointSize=9, BlendMode Translucent / Masked respectively (the Masked branch is never issued) · instanced cloud {2} · the box and group 4 should be invisible</value></data>
+  <data name="GpuLifecycle_ActionInitial" xml:space="preserve"><value>Entered the page, waiting for the first frame</value></data>
+  <data name="GpuLifecycle_LogBuildScene" xml:space="preserve"><value>Scene built · scene #{0}, {1} root nodes</value></data>
+  <data name="GpuLifecycle_ActionContinuous" xml:space="preserve"><value>Continuous rendering</value></data>
+  <data name="GpuLifecycle_ActionOnDemand" xml:space="preserve"><value>On-demand rendering (no further frames)</value></data>
+  <data name="GpuLifecycle_ActionManualFrame" xml:space="preserve"><value>Manually queued one frame</value></data>
+  <data name="GpuLifecycle_LogInitialized" xml:space="preserve"><value>SceneInitialized · #{0}, IsContextLost={1}</value></data>
+  <data name="GpuLifecycle_LogContextLost" xml:space="preserve"><value>ContextLost · #{0}, Scene instance unchanged (nodes still there, GL handles invalid)</value></data>
+  <data name="GpuLifecycle_LogContextRestored" xml:space="preserve"><value>ContextRestored · #{0}, the same Scene got the new context; Initialized will not fire again</value></data>
+  <data name="GpuLifecycle_LogSceneDestroyed" xml:space="preserve"><value>SceneDestroyed · #{0}, pipeline IsDestroyed, View.Scene set to null</value></data>
+  <data name="GpuLifecycle_StateReadout" xml:space="preserve"><value>Frame {0} · events init {1}/upd {2}/lost {3}/restore {4}/destroy {5} · IsContextLost={6} IsInitialized={7} IsDestroyed={8} · slowest frame {9:0} ms · {10}</value></data>  <data name="Primitives_KindPoints" xml:space="preserve"><value>Points</value></data>
+  <data name="Primitives_KindLines" xml:space="preserve"><value>Lines</value></data>
+  <data name="Primitives_KindLineStrip" xml:space="preserve"><value>Line strip</value></data>
+  <data name="Primitives_KindLineLoop" xml:space="preserve"><value>Line loop</value></data>
+  <data name="Primitives_KindTriangles" xml:space="preserve"><value>Triangles</value></data>
+  <data name="Primitives_KindTriangleStrip" xml:space="preserve"><value>Triangle strip</value></data>
+  <data name="Primitives_KindTriangleFan" xml:space="preserve"><value>Triangle fan</value></data>
+  <data name="Primitives_CurrentReadout" xml:space="preserve"><value>{0} vertices / {1} indices / {2:0} primitives</value></data>
+  <data name="Picking_NoCenterHit" xml:space="preserve"><value>Center ray hit no object</value></data>
+  <data name="Picking_SourceClick" xml:space="preserve"><value>Click</value></data>
+  <data name="Picking_HitReadout" xml:space="preserve"><value>{0} → {1} · distance {2:0.00} · world position ({3:0.##}, {4:0.##}, {5:0.##}) · instance {6} · {7} hit(s) at this point · {8} click(s)</value></data>
+  <data name="PbrChannels_BoundNotSampled" xml:space="preserve"><value>Bound, not sampled</value></data>
+  <data name="PbrChannels_MrStandard" xml:space="preserve"><value>G=roughness B=metallic</value></data>
+  <data name="PbrChannels_MrSwapped" xml:space="preserve"><value>B=roughness G=metallic (swapped)</value></data>
+  <data name="PbrChannels_Readout" xml:space="preserve"><value>{0} · BaseColor{1} Normal{2} MetallicRoughness{3} Occlusion{4} Emissive{5} · MR convention {6} · AlphaCutoff {7:0.00} · hero material Version={8} (bumped by 1 on every SetTexture/toggle, triggering a GPU state rebuild)</value></data>  <data name="Background_SourceEngineDefault" xml:space="preserve"><value>Engine default: Texture.CreateFromColor(AliceBlue)</value></data>
+  <data name="Background_SourceCubeMap" xml:space="preserve"><value>Six-face cubemap: textures/skybox/px…nz.jpg</value></data>
+  <data name="Background_SourceHdr" xml:space="preserve"><value>HDRI→cubemap: buikslotermeerplein_1k.hdr</value></data>
+  <data name="Background_SourceFlat" xml:space="preserve"><value>Single flat image: textures/background-1024.jpg</value></data>
+  <data name="Background_BranchCube" xml:space="preserve"><value>T0 cubemap {0}×{1} (skybox + feeds IBL)</value></data>
+  <data name="Background_BranchImage" xml:space="preserve"><value>T1 image {0}×{1} (stretched quad, no IBL)</value></data>
+  <data name="Background_BranchNone" xml:space="preserve"><value>Neither branch holds (clear color only)</value></data>
+  <data name="Background_VariantOrtho" xml:space="preserve"><value>Orthographic SKYBOX,ORTHOGRAPHIC (fragment frame hardcoded 100, foreground OrthoSize {0:0})</value></data>
+  <data name="Background_VariantPersp" xml:space="preserve"><value>Perspective SKYBOX (FOV {0:0}°, in-pass projection hardcoded 10..100)</value></data>
+  <data name="Background_Readout" xml:space="preserve"><value>{0} · {1} · {2} · FarPlane {3:0} · Draw background {4} · IBL cache fbo: Irradiance={5} Prefilter={6}</value></data>
+  <data name="Background_RenderOn" xml:space="preserve"><value>on</value></data>
+  <data name="Background_RenderOff" xml:space="preserve"><value>off (black clear)</value></data>
+  <data name="Pipelines_NodeFlat" xml:space="preserve"><value>① Flat</value></data>
+  <data name="Pipelines_NodeNormal" xml:space="preserve"><value>② Normal</value></data>
+  <data name="Pipelines_NodeMask" xml:space="preserve"><value>④ Mask</value></data>
+  <data name="Pipelines_NodeTranslucent" xml:space="preserve"><value>⑤ Translucent</value></data>
+  <data name="Pipelines_NodePointCloud" xml:space="preserve"><value>⑥ Point cloud</value></data>
+  <data name="Pipelines_ChannelsReadout" xml:space="preserve"><value>{0} · BaseColor✓ Normal{1} MetallicRoughness{2} Occlusion{3} Emissive{4} Lights{5} Outline{6} IBL env map {7}</value></data>
+  <data name="Pipelines_EnvSet" xml:space="preserve"><value>set</value></data>
+  <data name="Pipelines_EnvUnsetDefault" xml:space="preserve"><value>unset → engine default cubemap</value></data>
+</root>

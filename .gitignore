@@ -363,3 +363,13 @@ MigrationBackup/
 FodyWeavers.xsd
 /.idea/*
 .vscode/*
+
+# 演示资产的原始大文件（160MB，不入库）与重构期间的旧工程墓碑目录
+example/assets-src/
+.graveyard/
+
+# 浏览器宿主的 wwwroot/assets 是构建时从 example/assets 同步出来的副本，不入库
+example/Example.Browser/wwwroot/assets/
+
+# 中文字体子集的源字体（8MB）由 tools/fonts/generate-cjk-font.py 按固定 URL 下载到这里
+tools/fonts/.cache/

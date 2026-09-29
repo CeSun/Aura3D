@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <RootNamespace>Aura3D.Examples</RootNamespace>
+    <AssemblyName>Aura3D.Example.Shared</AssemblyName>
+    <!--
+      AVLN3001「XAML 资源没有公开无参构造，运行时加载器取不到」对这里的每个控件都是误报：
+      外壳、宿主与 22 个演示页一律由自己的构造函数调 AvaloniaXamlLoader.Load(this) 装载，
+      从不按 avares URI 反查类型（演示页必须带 DemoContext 才能构造，本就不该被无参加载）。
+      浏览器端已实测 21 页深链逐页出图，证明这条路径不依赖运行时加载器。
+    -->
+    <NoWarn>$(NoWarn);AVLN3001</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    这里刻意没有 <AvaloniaResource Include="Assets\**">：演示资产一律不走程序集内嵌。
+    一旦内嵌，Example 程序集在浏览器上就会变成上百 MB 的 .wasm，必须整包下载才能启动。
+    资产由 example/assets 以静态文件形式提供，页面进入时按需 HTTP/磁盘读取，见 Assets/AssetProvider.cs。
+  -->
+  <ItemGroup>
+    <AvaloniaResource Include="Brand\**" />
+  </ItemGroup>
+
+  <!--
+    字体是资产之外唯一的例外，只能内嵌：Avalonia 的字体管理器只从程序集里的字体集合取字形，
+    没有「按 URL 下载字体」这条路，而浏览器宿主又拿不到任何系统字体（中文于是全是豆腐块）。
+    1.7MB 的子集随程序集一次下载，换来四个平台同一套字形来源。
+    产物由 tools/fonts/generate-cjk-font.py 生成，CI 跑它的核对模式确认 UI 里的字符确实被覆盖。
+  -->
+  <ItemGroup>
+    <AvaloniaResource Include="Fonts\*.otf" />
+  </ItemGroup>
+
+  <!--
+    双语文案的唯一来源。Irihi.Lingua 的源生成器读 AdditionalFiles 里的 .resx，把两种语言直接生成进
+    程序集（每个键一个强类型 LinguaKey + IObservable<string>），所以这些 .resx 必须从 SDK 默认的
+    EmbeddedResource 里摘掉：否则同一份文案既内嵌一遍、又为 zh-Hans 产出 satellite 程序集，
+    而浏览器 wasm 上 satellite 的加载正是这类方案最容易翻车的地方。键名写错在编译期就报错。
+  -->
+  <ItemGroup>
+    <EmbeddedResource Remove="Localization\**" />
+    <AdditionalFiles Include="Localization\Strings.resx" />
+    <AdditionalFiles Include="Localization\Strings.zh-Hans.resx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Irihi.Lingua" />
+    <PackageReference Include="Irihi.Ursa" />
+    <PackageReference Include="Irihi.Ursa.Themes.Semi" />
+    <PackageReference Include="Semi.Avalonia" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" />
+    <PackageReference Include="Semi.Avalonia.ColorPicker" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Aura3D.Avalonia\Aura3D.Avalonia.csproj" />
+    <ProjectReference Include="..\..\src\Aura3D.Model.GltfLoader\Aura3D.Model.GltfLoader.csproj" />
+    <!-- Assimp 需要原生库，浏览器上不可用；引用它只为桌面/移动端的加载器对比页。 -->
+    <ProjectReference Include="..\..\src\Aura3D.Model.AssimpLoader\Aura3D.Model.AssimpLoader.csproj" />
+    <ProjectReference Include="..\..\src\Aura3D.Pipeline.CelShading\Aura3D.Pipeline.CelShading.csproj" />
+    <ProjectReference Include="..\..\src\Aura3D.Pipeline.PBR\Aura3D.Pipeline.PBR.csproj" />
+    <ProjectReference Include="..\..\src\Aura3D.Pipeline.PBRForward\Aura3D.Pipeline.PBRForward.csproj" />
+  </ItemGroup>
+
+</Project>

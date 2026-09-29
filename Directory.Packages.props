@@ -2,7 +2,7 @@
   <!-- https://learn.microsoft.com/en-us/nuget/consume-packages/central-package-management -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <AvaloniaVersion>12.0.0</AvaloniaVersion>
+    <AvaloniaVersion>12.0.3</AvaloniaVersion>
     <!-- 两颗切片包的版本单点：切片工程自己的 <Version> 与下面的精确区间都取这两个属性，
          换切片 = 改这一行。切片工程不走 MinVer（版本不来自 git tag），所以必须显式钉。 -->
     <Aura3DAngleIosVersion>0.1.0</Aura3DAngleIosVersion>
@@ -25,6 +25,7 @@
     <PackageVersion Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageVersion Include="Irihi.Lingua" Version="1.0.0" />
     <PackageVersion Include="Irihi.Ursa" Version="2.0.0-rc1" />
     <PackageVersion Include="Irihi.Ursa.Themes.Semi" Version="2.0.0-rc1" />
     <PackageVersion Include="OneOf" Version="3.0.271" />

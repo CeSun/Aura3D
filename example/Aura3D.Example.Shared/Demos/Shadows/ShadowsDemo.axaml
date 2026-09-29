@@ -1,0 +1,85 @@
+<ex:Demo x:Class="Aura3D.Examples.Demos.ShadowsDemo"
+         xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:ex="clr-namespace:Aura3D.Examples"
+         xmlns:loc="clr-namespace:Aura3D.Examples.Localization"
+         xmlns:demos="clr-namespace:Aura3D.Examples.Demos"
+         xmlns:kit="clr-namespace:Aura3D.Examples.Kit"
+         x:DataType="demos:ShadowsDemo">
+
+  <!--
+    阴影页。整页就是这两层：视口 + 浮在右侧的检视面板。
+    视图（kit:DemoView）在这里声明式地选管线与拾取，宿主只负责把它接到上下文上。
+  -->
+  <Panel>
+
+    <kit:DemoView x:Name="View" Pipeline="BlinnPhong" />
+
+    <kit:InspectorPanel>
+      <StackPanel Spacing="6">
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Shadows_Intro}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.Shadows_KeyLight}}" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Shadows_Pitch}}" Minimum="-85" Maximum="-5" Value="-34" Format="0"
+                       ValueChanged="OnMainPitchChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Shadows_Yaw}}" Minimum="-180" Maximum="180" Value="-22" Format="0"
+                       ValueChanged="OnMainYawChanged" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Shadows_KeyCastShadow}}" IsChecked="True"
+                       Toggled="OnMainCastToggled" />
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Shadows_ExplicitKey}}" IsChecked="True"
+                       Toggled="OnMainExplicitToggled" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Shadows_KeyNote}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.Shadows_SingleMap}}" />
+
+        <kit:SliderRow x:Name="ShadowWidthRow" Label="{Translate {x:Static loc:Strings+Keys.Shadows_ConfigWidth}}" Minimum="4" Maximum="200" Format="0"
+                       ValueChanged="OnShadowWidthChanged" />
+        <kit:SliderRow x:Name="ShadowHeightRow" Label="{Translate {x:Static loc:Strings+Keys.Shadows_ConfigHeight}}" Minimum="4" Maximum="200" Format="0"
+                       ValueChanged="OnShadowHeightChanged" />
+        <kit:SliderRow x:Name="ShadowNearRow" Label="NearPlane" Minimum="0.05" Maximum="40"
+                       ValueChanged="OnShadowNearChanged" />
+        <kit:SliderRow x:Name="ShadowFarRow" Label="FarPlane" Minimum="5" Maximum="200"
+                       ValueChanged="OnShadowFarChanged" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Shadows_ConfigNote}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.Shadows_Cascades}}" />
+
+        <kit:SliderRow x:Name="CascadeCountRow" Label="CsmCascadeCount" Minimum="1" Maximum="4" Format="0"
+                       ValueChanged="OnCascadeCountChanged" />
+        <kit:SliderRow x:Name="SplitLambdaRow" Label="{Translate {x:Static loc:Strings+Keys.Shadows_SplitLambda}}" Minimum="0" Maximum="1"
+                       ValueChanged="OnSplitLambdaChanged" />
+        <kit:SliderRow x:Name="MapResolutionRow" Label="CsmShadowMapResolution" Minimum="256" Maximum="4096" Format="0"
+                       ValueChanged="OnMapResolutionChanged" />
+        <kit:SliderRow x:Name="FarPlaneRow" Label="{Translate {x:Static loc:Strings+Keys.Shadows_FarPlane}}" Minimum="20" Maximum="400" Value="120" Format="0"
+                       ValueChanged="OnCameraFarChanged" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Shadows_CsmLiveNote}}" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Shadows_WasmNote}}" />
+
+        <Button Content="Reload" Click="OnReload" HorizontalAlignment="Stretch" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.Shadows_LightLimit}}" />
+
+        <kit:SliderRow x:Name="LightLimitRow" Label="DirectionalLightLimit" Minimum="1" Maximum="4" Format="0"
+                       ValueChanged="OnLightLimitChanged" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Shadows_LimitNote}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.Shadows_Debug}}" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Shadows_DirectionalVolume}}" IsChecked="True" Toggled="OnShowDirectionalLightToggled" />
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Shadows_BoundingBox}}" IsChecked="True" Toggled="OnShowBoundingBoxToggled" />
+
+        <kit:ReadoutRow x:Name="Readout" Label="{Translate {x:Static loc:Strings+Keys.Shadows_Resources}}" />
+
+      </StackPanel>
+    </kit:InspectorPanel>
+
+  </Panel>
+</ex:Demo>

@@ -1,27 +1,29 @@
-using Avalonia;
 using System;
+using Aura3D.Examples;
+using Aura3D.Examples.Fonts;
+using Avalonia;
 
-namespace Example.Desktop
+namespace Example.Desktop;
+
+internal sealed class Program
 {
-    internal sealed class Program
+    [STAThread]
+    public static void Main(string[] args)
     {
-        // Initialization code. Don't use any Avalonia, third-party APIs or any
-        // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
-        // yet and stuff might break.
-        [STAThread]
-        public static void Main(string[] args) => BuildAvaloniaApp()
-            .StartWithClassicDesktopLifetime(args);
+        App.StartupArgs = args;
 
-        // Avalonia configuration, don't remove; also used by visual designer.
-        public static AppBuilder BuildAvaloniaApp()
-            => AppBuilder.Configure<App>()
-                .UsePlatformDetect()
-                .WithInterFont()
-                .LogToTrace()
-                // .With(new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Wgl] })
-                .With(new AvaloniaNativePlatformOptions()
-                {
-                    RenderingMode = [AvaloniaNativeRenderingMode.OpenGl]
-                });
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
+
+    // Avalonia configuration, don't remove; also used by visual designer.
+    public static AppBuilder BuildAvaloniaApp()
+        => AppBuilder.Configure<App>()
+            .UsePlatformDetect()
+            .WithInterFont()
+            .WithAura3DExampleFonts()
+            .LogToTrace()
+            .With(new AvaloniaNativePlatformOptions
+            {
+                RenderingMode = [AvaloniaNativeRenderingMode.OpenGl],
+            });
 }

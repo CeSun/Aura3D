@@ -1,0 +1,176 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:kit="clr-namespace:Aura3D.Examples.Kit"
+        xmlns:loc="clr-namespace:Aura3D.Examples.Localization">
+
+  <!--
+    检视面板这一套行控件的外观。演示页只写 <kit:SliderRow Label="…" Minimum="…" …/>，
+    排版与配色集中在这里，窄屏折叠、字距、命中区改一次就够。
+    面板浮在视口右侧、深色底，所以 Foreground 在这里统一给白，行控件不再各写配色。
+  -->
+  <Styles.Resources>
+    <ResourceDictionary>
+
+      <SolidColorBrush x:Key="Inspector.Background">#D81E1E1E</SolidColorBrush>
+      <SolidColorBrush x:Key="Inspector.Line">#55808080</SolidColorBrush>
+      <FontFamily x:Key="Inspector.Mono">Consolas,Menlo,monospace</FontFamily>
+
+      <ControlTheme x:Key="{x:Type kit:Section}" TargetType="kit:Section">
+        <Setter Property="Template">
+          <ControlTemplate>
+            <StackPanel Spacing="2">
+              <Border x:Name="Separator"
+                      Height="1"
+                      Margin="0,8,0,4"
+                      Background="{StaticResource Inspector.Line}" />
+              <TextBlock Text="{TemplateBinding Title}"
+                         FontSize="13"
+                         FontWeight="SemiBold"
+                         TextWrapping="Wrap" />
+            </StackPanel>
+          </ControlTemplate>
+        </Setter>
+      </ControlTheme>
+
+      <ControlTheme x:Key="{x:Type kit:Hint}" TargetType="kit:Hint">
+        <Setter Property="Template">
+          <ControlTemplate>
+            <TextBlock Text="{TemplateBinding Text}"
+                       FontSize="11"
+                       Opacity="0.62"
+                       TextWrapping="Wrap" />
+          </ControlTemplate>
+        </Setter>
+      </ControlTheme>
+
+      <ControlTheme x:Key="{x:Type kit:SliderRow}" TargetType="kit:SliderRow">
+        <Setter Property="Template">
+          <ControlTemplate>
+            <StackPanel Spacing="2">
+              <!-- 用 Grid 而不是 DockPanel：DockPanel 先量左边的标签，长英文标签会把读数挤出面板。 -->
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{TemplateBinding Label}"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Grid.Column="0" />
+                <TextBlock Text="{TemplateBinding DisplayValue}"
+                           FontSize="12"
+                           Opacity="0.62"
+                           MinWidth="56"
+                           TextAlignment="Right"
+                           Grid.Column="1" />
+              </Grid>
+              <Slider x:Name="PART_Slider"
+                      Minimum="{TemplateBinding Minimum}"
+                      Maximum="{TemplateBinding Maximum}"
+                      Value="{Binding Value, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                      TickFrequency="{TemplateBinding TickStep}"
+                      Margin="0,0,0,4" />
+            </StackPanel>
+          </ControlTemplate>
+        </Setter>
+      </ControlTheme>
+
+      <ControlTheme x:Key="{x:Type kit:ToggleRow}" TargetType="kit:ToggleRow">
+        <Setter Property="Template">
+          <ControlTemplate>
+            <Grid ColumnDefinitions="*,Auto" Margin="0,2">
+              <TextBlock Text="{TemplateBinding Label}"
+                         FontSize="12"
+                         VerticalAlignment="Center"
+                         TextWrapping="Wrap"
+                         Margin="0,0,8,0"
+                         Grid.Column="0" />
+              <ToggleSwitch x:Name="PART_Toggle"
+                            IsChecked="{Binding IsChecked, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                            OnContent=""
+                            OffContent=""
+                            HorizontalAlignment="Left"
+                            MinHeight="0"
+                            Grid.Column="1" />
+            </Grid>
+          </ControlTemplate>
+        </Setter>
+      </ControlTheme>
+
+      <ControlTheme x:Key="{x:Type kit:ComboRow}" TargetType="kit:ComboRow">
+        <Setter Property="Template">
+          <ControlTemplate>
+            <StackPanel Spacing="2">
+              <TextBlock Text="{TemplateBinding Label}" FontSize="12" TextWrapping="Wrap" />
+              <ComboBox x:Name="PART_Combo"
+                        ItemsSource="{TemplateBinding Options}"
+                        SelectedItem="{Binding SelectedItem, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Left" />
+            </StackPanel>
+          </ControlTemplate>
+        </Setter>
+      </ControlTheme>
+
+      <ControlTheme x:Key="{x:Type kit:ReadoutRow}" TargetType="kit:ReadoutRow">
+        <Setter Property="Template">
+          <ControlTemplate>
+            <StackPanel Spacing="2">
+              <TextBlock Text="{TemplateBinding Label}" FontSize="12" TextWrapping="Wrap" />
+              <TextBlock Text="{TemplateBinding Text}"
+                         FontSize="12"
+                         FontFamily="{StaticResource Inspector.Mono}"
+                         TextWrapping="Wrap" />
+            </StackPanel>
+          </ControlTemplate>
+        </Setter>
+      </ControlTheme>
+
+      <ControlTheme x:Key="{x:Type kit:InspectorPanel}" TargetType="kit:InspectorPanel">
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Template">
+          <ControlTemplate>
+            <Grid>
+              <ToggleButton Content="{Translate {x:Static loc:Strings+Keys.Panel_Parameters}}"
+                            IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Margin="0,8,8,0"
+                            Padding="10,4" />
+              <Border Background="{StaticResource Inspector.Background}"
+                      CornerRadius="6"
+                      Width="330"
+                      MaxWidth="330"
+                      Margin="0,44,8,28"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Stretch"
+                      IsVisible="{TemplateBinding IsExpanded}">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                  <StackPanel Margin="12,8,12,14" Spacing="6">
+                    <ContentPresenter Content="{TemplateBinding Content}" />
+                  </StackPanel>
+                </ScrollViewer>
+              </Border>
+            </Grid>
+          </ControlTemplate>
+        </Setter>
+      </ControlTheme>
+
+    </ResourceDictionary>
+  </Styles.Resources>
+
+  <!-- 挂在 Styles 上的补充规则：ResourceDictionary 里只能放资源，样式得做 Styles 的直接子节点 -->
+
+  <!-- 第一组标题上面没有内容，分隔线多余 -->
+  <Style Selector="kit|Section:first-child /template/ Border#Separator">
+    <Setter Property="IsVisible" Value="False" />
+  </Style>
+
+  <!-- 英文按钮文案比中文长，让它折行而不是被面板截断 -->
+  <Style Selector="Button /template/ ContentPresenter TextBlock">
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="TextAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="kit|SliderRow[ShowTicks=True] /template/ Slider#PART_Slider">
+    <Setter Property="TickPlacement" Value="BottomRight" />
+  </Style>
+
+</Styles>

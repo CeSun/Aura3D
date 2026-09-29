@@ -1,0 +1,122 @@
+[
+  {
+    "key": "LionHead",
+    "path": "models/lion_head_1k.glb",
+    "bytes": 1664712,
+    "webFriendly": true
+  },
+  {
+    "key": "CoffeeTable",
+    "path": "models/coffee_table_round_01_1k.glb",
+    "bytes": 443568,
+    "webFriendly": true
+  },
+  {
+    "key": "Stool",
+    "path": "models/wooden_stool_02_1k.glb",
+    "bytes": 913720,
+    "webFriendly": true
+  },
+  {
+    "key": "Lightbulb",
+    "path": "models/lightbulb_01_1k.glb",
+    "bytes": 1263780,
+    "webFriendly": true
+  },
+  {
+    "key": "Stones",
+    "path": "models/stones_01.glb",
+    "bytes": 823932,
+    "webFriendly": true
+  },
+  {
+    "key": "Present",
+    "path": "models/present_11.glb",
+    "bytes": 2812632,
+    "webFriendly": true
+  },
+  {
+    "key": "Soldier",
+    "path": "models/Soldier.glb",
+    "bytes": 1169684,
+    "webFriendly": true
+  },
+  {
+    "key": "CelCharacter",
+    "path": "models/nilou_cel.glb",
+    "bytes": 1046072,
+    "webFriendly": true
+  },
+  {
+    "key": "FbxMannequin",
+    "path": "models/fbx/SK_Mannequin.FBX",
+    "bytes": 941472,
+    "webFriendly": false
+  },
+  {
+    "key": "FbxIdle",
+    "path": "models/fbx/Idle_Rifle_Hip.FBX",
+    "bytes": 1290352,
+    "webFriendly": false
+  },
+  {
+    "key": "FbxJogFwd",
+    "path": "models/fbx/Jog_Fwd_Rifle.FBX",
+    "bytes": 697072,
+    "webFriendly": false
+  },
+  {
+    "key": "BackgroundJpg",
+    "path": "textures/background-1024.jpg",
+    "bytes": 138328,
+    "webFriendly": true
+  },
+  {
+    "key": "ParticleFirePng",
+    "path": "textures/fire-512.png",
+    "bytes": 499431,
+    "webFriendly": true
+  },
+  {
+    "key": "SkyboxPx",
+    "path": "textures/skybox/px.jpg",
+    "bytes": 54148,
+    "webFriendly": true
+  },
+  {
+    "key": "SkyboxNx",
+    "path": "textures/skybox/nx.jpg",
+    "bytes": 52031,
+    "webFriendly": true
+  },
+  {
+    "key": "SkyboxPy",
+    "path": "textures/skybox/py.jpg",
+    "bytes": 23384,
+    "webFriendly": true
+  },
+  {
+    "key": "SkyboxNy",
+    "path": "textures/skybox/ny.jpg",
+    "bytes": 77041,
+    "webFriendly": true
+  },
+  {
+    "key": "SkyboxPz",
+    "path": "textures/skybox/pz.jpg",
+    "bytes": 54143,
+    "webFriendly": true
+  },
+  {
+    "key": "SkyboxNz",
+    "path": "textures/skybox/nz.jpg",
+    "bytes": 46765,
+    "webFriendly": true
+  },
+  {
+    "key": "Hdr1k",
+    "path": "environments/buikslotermeerplein_1k.hdr",
+    "bytes": 1624392,
+    "webFriendly": true
+  }
+]

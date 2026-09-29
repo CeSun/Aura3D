@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
   <PropertyGroup>
     <TargetFramework>net10.0-browser</TargetFramework>
     <OutputType>Exe</OutputType>
@@ -12,11 +12,13 @@
     （经 Aura3D.Avalonia 的 browser 目标依赖带进来）。Example 与外部用户走的是完全同一条消费路径。
   -->
 
-  <ItemGroup>
+    <Import Project="..\DemoAssets.props" />
+
+<ItemGroup>
     <PackageReference Include="Avalonia.Browser" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Example\Example.csproj" />
+    <ProjectReference Include="..\Aura3D.Example.Shared\Aura3D.Example.Shared.csproj" />
   </ItemGroup>
 </Project>

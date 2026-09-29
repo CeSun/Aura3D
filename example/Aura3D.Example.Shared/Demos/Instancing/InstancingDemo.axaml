@@ -1,0 +1,48 @@
+<ex:Demo x:Class="Aura3D.Examples.Demos.InstancingDemo"
+         xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:ex="clr-namespace:Aura3D.Examples"
+         xmlns:demos="clr-namespace:Aura3D.Examples.Demos"
+         xmlns:kit="clr-namespace:Aura3D.Examples.Kit"
+         xmlns:loc="clr-namespace:Aura3D.Examples.Localization"
+         x:DataType="demos:InstancingDemo">
+
+  <!--
+    实例化页。整页就是这两层：视口 + 浮在右侧的检视面板。
+    本页锁死 BlinnPhong：右片的实例感知着色器只覆盖 LightPass 的实例分支。
+  -->
+  <Panel>
+
+    <kit:DemoView x:Name="View" Pipeline="BlinnPhong" />
+
+    <kit:InspectorPanel>
+      <StackPanel Spacing="6">
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Instancing_Intro}}" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Instancing_PerField}}" Minimum="24" Maximum="20000" Value="1200" Format="0"
+                       ValueChanged="OnInstanceCountChanged" />
+
+        <kit:ComboRow x:Name="UpdateModeRow" Label="{Translate {x:Static loc:Strings+Keys.Instancing_UpdateMode}}" Options="{Binding UpdateModes}"
+                      SelectionChanged="OnUpdateModeChanged" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Instancing_Wave}}" IsChecked="True" Toggled="OnAnimateToggled" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Instancing_WaveSpeed}}" Minimum="0" Maximum="6" Value="1.1" Format="0.0"
+                       ValueChanged="OnWaveSpeedChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Instancing_WaveHeight}}" Minimum="0" Maximum="6" Value="1.6" Format="0.0"
+                       ValueChanged="OnWaveAmountChanged" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Instancing_Culling}}" IsChecked="True"
+                       Toggled="OnCullingToggled" />
+
+        <Button Content="{Translate {x:Static loc:Strings+Keys.Instancing_RemoveInstances}}" Click="OnRemoveFrontClick" HorizontalAlignment="Stretch" />
+        <Button Content="{Translate {x:Static loc:Strings+Keys.Instancing_Restore}}" Click="OnRestoreClick" HorizontalAlignment="Stretch" />
+
+        <kit:ReadoutRow x:Name="CostReadout" Label="{Translate {x:Static loc:Strings+Keys.Instancing_Cost}}" />
+
+      </StackPanel>
+    </kit:InspectorPanel>
+
+  </Panel>
+</ex:Demo>

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 	<TargetFramework>net10.0-android</TargetFramework>
 	<SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
@@ -12,7 +12,9 @@
     <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
   </PropertyGroup>
 
-  <ItemGroup>
+    <Import Project="..\DemoAssets.props" />
+
+<ItemGroup>
     <AndroidResource Include="Icon.png">
       <Link>Resources\drawable\Icon.png</Link>
     </AndroidResource>
@@ -24,6 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Example\Example.csproj" />
+    <ProjectReference Include="..\Aura3D.Example.Shared\Aura3D.Example.Shared.csproj" />
   </ItemGroup>
 </Project>
