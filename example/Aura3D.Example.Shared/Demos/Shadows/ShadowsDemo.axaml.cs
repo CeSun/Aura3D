@@ -101,7 +101,6 @@ public sealed partial class ShadowsDemo : Demo
         };
 
         ground.Material.SetTexture("BaseColor", Procedural.Checker(512, 40));
-        ground.RotationDegrees = new Vector3(-90f, 0, 0);
 
         scene.AddNode(ground);
 

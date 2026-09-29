@@ -89,7 +89,6 @@ public sealed partial class AnimationMixDemo : Demo
         };
 
         ground.Material.SetTexture("BaseColor", Procedural.Checker(256, 18));
-        ground.RotationDegrees = new Vector3(-90f, 0, 0);
 
         scene.AddNode(ground);
 

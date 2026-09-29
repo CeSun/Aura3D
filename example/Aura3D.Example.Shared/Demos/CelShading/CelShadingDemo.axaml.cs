@@ -16,7 +16,8 @@ namespace Aura3D.Examples.Demos;
 
 /// <summary>
 /// 卡通管线的全部可调面：<see cref="CelShadingPipeline"/> 只吃六个命名通道与一组下划线开头的 float/Vector4。
-/// 这页把「不给参数会怎样」也演出来——三个 Vector4 染色缺省是全零，所以不设值的卡通材质是一片黑的。
+/// pass 会把每个 uniform 先预载成参考材质（历史示例角色 Nilou 的卡渲参数）再用材质覆盖，
+/// 所以缺参数、缺贴图的卡通材质也能正常渲染——「参考」球就是什么都不设、只挂一张底色图的样子。
 /// 参数行的排版与初值全在 <c>CelShadingDemo.axaml</c> 里，这里只剩场景组装与回调。
 /// </summary>
 public sealed partial class CelShadingDemo : Demo
@@ -110,7 +111,6 @@ public sealed partial class CelShadingDemo : Demo
         };
 
         ground.Material.SetTexture("BaseColor", Procedural.Checker(256, 14));
-        ground.RotationDegrees = new Vector3(-90f, 0, 0);
 
         scene.AddNode(ground);
 
@@ -126,7 +126,8 @@ public sealed partial class CelShadingDemo : Demo
 
         faceMesh = Add(Strings.Keys.CelShading_MeshFace.T(), new PlaneGeometry(1.8f, 1.8f), new Vector3(0, 2.75f, 0.9f), face);
 
-        faceMesh.RotationDegrees = new Vector3(-8f, 0, 0);
+        // PlaneGeometry 本来就在 XZ 平面上（法线 +Y），要立起来朝相机得转 +90°，再往下压 8°。
+        faceMesh.RotationDegrees = new Vector3(82f, 0, 0);
 
         body.SetTexture("BaseColor", Procedural.Checker(64, 2));
 

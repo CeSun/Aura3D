@@ -77,7 +77,6 @@ public sealed partial class PostProcessingDemo : Demo
         };
 
         ground.Material.SetTexture("BaseColor", Procedural.Checker(256, 24));
-        ground.RotationDegrees = new Vector3(-90f, 0, 0);
 
         scene.AddNode(ground);
 

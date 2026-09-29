@@ -79,7 +79,6 @@ public sealed partial class HismDemo : Demo
         };
 
         ground.Material.SetTexture("BaseColor", Procedural.Checker(256, 32));
-        ground.RotationDegrees = new Vector3(-90f, 0, 0);
 
         scene.AddNode(ground);
 

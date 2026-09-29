@@ -11,8 +11,8 @@ using Aura3D.Examples.Localization;
 namespace Aura3D.Examples.Demos;
 
 /// <summary>
-/// 四种内置几何体的构造参数与节点变换。几何体每改一次参数就重建一份（顶点是真的重新生成，
-/// 不是靠缩放糊弄），配合下面的顶点/索引读数能直接看到分段数的代价。
+/// 四种内置几何体的构造参数与节点变换。改哪一段参数就重建那一个几何体（顶点是真的重新生成，
+/// 不是靠缩放糊弄），四段互不干扰；下拉只决定顶点/索引读数读的是哪一个。
 /// 全页零外部资产：棋盘纹理由 <see cref="Procedural"/> 现算。
 /// 参数行的排版全在 <c>GeometriesDemo.axaml</c> 里，这里只剩场景组装与回调。
 /// </summary>
@@ -21,7 +21,7 @@ public sealed partial class GeometriesDemo : Demo
     private readonly Dictionary<string, Mesh> meshes = new(StringComparer.Ordinal);
 
     private Node? row;
-    private string activeKind = "Box";
+    private string readoutKind = "Box";
 
     private double boxWidth = 2, boxHeight = 2, boxDepth = 2;
     private double sphereRadius = 1.4, sphereWidthSegments = 48, sphereHeightSegments = 24, spherePhiLength = 360;
@@ -31,18 +31,18 @@ public sealed partial class GeometriesDemo : Demo
 
     private float spin;
 
-    /// <summary>活动几何体下拉的选项，XAML 里以 <c>Options="{Binding KindOptions}"</c> 取用。</summary>
+    /// <summary>下拉的选项，同时也是 <c>meshes</c> 的键；XAML 里以 <c>Options="{Binding KindOptions}"</c> 取用。</summary>
     public string[] KindOptions { get; } = ["Box", "Sphere", "Cylinder", "Plane"];
 
     /// <summary>
-    /// 建页：装配 XAML，并把下拉的选中项对齐到页面当前活动的那个几何体。
+    /// 建页：装配 XAML，并把下拉的选中项对齐到页面当前读数盯着的那个几何体。
     /// </summary>
     /// <param name="context">宿主环境。</param>
     public GeometriesDemo(DemoContext context) : base(context)
     {
         InitializeComponent();
 
-        KindRow.SelectedItem = activeKind;
+        KindRow.SelectedItem = readoutKind;
     }
 
     /// <inheritdoc />
@@ -71,7 +71,6 @@ public sealed partial class GeometriesDemo : Demo
         };
 
         ground.Material.SetTexture("BaseColor", Procedural.Checker(256, 16));
-        ground.RotationDegrees = new Vector3(-90f, 0, 0);
 
         scene.AddNode(ground);
 
@@ -100,7 +99,7 @@ public sealed partial class GeometriesDemo : Demo
 
     private void OnKindChanged(object? sender, InspectorValueChangedEventArgs e)
     {
-        activeKind = e.ValueAs<string>();
+        readoutKind = e.ValueAs<string>();
 
         Report();
     }
@@ -109,112 +108,112 @@ public sealed partial class GeometriesDemo : Demo
     {
         boxWidth = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Box");
     }
 
     private void OnBoxHeightChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         boxHeight = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Box");
     }
 
     private void OnBoxDepthChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         boxDepth = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Box");
     }
 
     private void OnSphereRadiusChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         sphereRadius = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Sphere");
     }
 
     private void OnSphereWidthSegmentsChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         sphereWidthSegments = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Sphere");
     }
 
     private void OnSphereHeightSegmentsChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         sphereHeightSegments = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Sphere");
     }
 
     private void OnSpherePhiLengthChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         spherePhiLength = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Sphere");
     }
 
     private void OnCylTopChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         cylTop = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Cylinder");
     }
 
     private void OnCylBottomChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         cylBottom = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Cylinder");
     }
 
     private void OnCylHeightChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         cylHeight = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Cylinder");
     }
 
     private void OnCylRadialChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         cylRadial = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Cylinder");
     }
 
     private void OnCylOpenToggled(object? sender, InspectorValueChangedEventArgs e)
     {
         cylOpen = e.ValueAs<bool>();
 
-        Rebuild();
+        Rebuild("Cylinder");
     }
 
     private void OnPlaneWidthChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         planeWidth = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Plane");
     }
 
     private void OnPlaneHeightChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         planeHeight = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Plane");
     }
 
     private void OnPlaneWSegmentsChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         planeWSegments = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Plane");
     }
 
     private void OnPlaneHSegmentsChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         planeHSegments = e.ValueAs<double>();
 
-        Rebuild();
+        Rebuild("Plane");
     }
 
     private void OnSpinChanged(object? sender, InspectorValueChangedEventArgs e) =>
@@ -265,20 +264,25 @@ public sealed partial class GeometriesDemo : Demo
         _ => new PlaneGeometry((float)planeWidth, (float)planeHeight, (int)planeWSegments, (int)planeHSegments),
     };
 
-    private void Rebuild()
+    /// <summary>
+    /// 用当前参数重建指定那一种几何体。下拉只决定读数读哪一个，所以改了参数不一定要重印读数。
+    /// </summary>
+    private void Rebuild(string kind)
     {
-        if (meshes.TryGetValue(activeKind, out var mesh))
+        if (meshes.TryGetValue(kind, out var mesh))
         {
-            mesh.Geometry = Build(activeKind);
+            mesh.Geometry = Build(kind);
         }
 
-        Report();
+        if (kind == readoutKind)
+            Report();
+
         Context.InvalidateRender();
     }
 
     private void Report()
     {
-        if (!meshes.TryGetValue(activeKind, out var mesh) || mesh.Geometry == null)
+        if (!meshes.TryGetValue(readoutKind, out var mesh) || mesh.Geometry == null)
             return;
 
         var geometry = mesh.Geometry;

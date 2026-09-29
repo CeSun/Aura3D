@@ -86,7 +86,6 @@ public sealed partial class GpuLifecycleDemo : Demo
         };
 
         ground.Material.SetTexture("BaseColor", Procedural.Checker(128, 16));
-        ground.RotationDegrees = new Vector3(-90f, 0, 0);
 
         scene.AddNode(ground);
 

@@ -20,7 +20,7 @@
 
         <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Geometries_Intro}}" />
 
-        <kit:ComboRow x:Name="KindRow" Label="{Translate {x:Static loc:Strings+Keys.Geometries_Active}}"
+        <kit:ComboRow x:Name="KindRow" Label="{Translate {x:Static loc:Strings+Keys.Geometries_ReadoutKind}}"
                       Options="{Binding KindOptions}"
                       SelectionChanged="OnKindChanged" />
 

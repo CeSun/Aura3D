@@ -45,7 +45,7 @@
   <data name="CelShading_Channels" xml:space="preserve"><value>六个纹理通道</value></data>
   <data name="CelShading_HalfLambert" xml:space="preserve"><value>半兰伯特与分档</value></data>
   <data name="CelShading_RampRows" xml:space="preserve"><value>五条材质分区的 ramp 行（ILM 的 A 通道选行）</value></data>
-  <data name="CelShading_TintSlots" xml:space="preserve"><value>三档染色（Vector4，缺省为零 → 全黑）</value></data>
+  <data name="CelShading_TintSlots" xml:space="preserve"><value>三档染色（Vector4，不设值回落到内置默认 1）</value></data>
   <data name="CelShading_FaceOnly" xml:space="preserve"><value>脸部专用</value></data>
   <data name="CelShading_OutlinePass" xml:space="preserve"><value>描边 pass</value></data>
   <data name="Environment_Map" xml:space="preserve"><value>环境图（Scene.Background）</value></data>
@@ -180,7 +180,7 @@
   <data name="Camera_ResetCamera" xml:space="preserve"><value>回到默认机位</value></data>
   <data name="Camera_RenderBackground" xml:space="preserve"><value>渲染背景</value></data>
   <data name="Camera_Box0Projection" xml:space="preserve"><value>Box0 的屏幕投影</value></data>
-  <data name="CelShading_Intro" xml:space="preserve"><value>卡通这条路是引擎里唯一按名字吃材质参数的管线：六个通道名加一串下划线开头的 float/Vector4。名字打错不会报错，只会静默不生效——着色器里那些 uniform 的默认值全为零。</value></data>
+  <data name="CelShading_Intro" xml:space="preserve"><value>卡通这条路是引擎里唯一按名字吃材质参数的管线：六个通道名加一串下划线开头的 float/Vector4。名字打错不会报错，只是该项不生效、回落到内置默认值——pass 会先把所有 uniform 预载成参考卡渲材质（取自历史示例角色 Nilou），所以缺参数、缺贴图的材质也能正常渲染。</value></data>
   <data name="CelShading_BaseColor" xml:space="preserve"><value>BaseColor 底色</value></data>
   <data name="CelShading_Normal" xml:space="preserve"><value>Normal 法线</value></data>
   <data name="CelShading_Ilm" xml:space="preserve"><value>ILM 光照遮罩</value></data>
@@ -211,8 +211,8 @@
   <data name="Environment_KeyLightVisible" xml:space="preserve"><value>平行光可见（关掉只剩 IBL 打光）</value></data>
   <data name="Environment_RenderBackground" xml:space="preserve"><value>画背景（Camera.IsRenderBackground）</value></data>
   <data name="Environment_CacheState" xml:space="preserve"><value>IBL 缓存状态</value></data>
-  <data name="Geometries_Intro" xml:space="preserve"><value>改参数会重新生成几何体的顶点数据；下方读数实时显示顶点/索引数量。旋转速度让整排几何体绕 Y 轴转，用于看背面剔除与光照方向。</value></data>
-  <data name="Geometries_Active" xml:space="preserve"><value>活动几何体</value></data>
+  <data name="Geometries_Intro" xml:space="preserve"><value>四个几何体并排站着，每段参数改了就重新生成自己那一个的顶点数据，互不干扰。下拉只决定下方读数统计哪一个的顶点/索引数量。旋转速度让整排几何体绕 Y 轴转，用于看背面剔除与光照方向。</value></data>
+  <data name="Geometries_ReadoutKind" xml:space="preserve"><value>读数对象</value></data>
   <data name="Geometries_BoxWidth" xml:space="preserve"><value>宽</value></data>
   <data name="Geometries_BoxHeight" xml:space="preserve"><value>高</value></data>
   <data name="Geometries_BoxDepth" xml:space="preserve"><value>深</value></data>

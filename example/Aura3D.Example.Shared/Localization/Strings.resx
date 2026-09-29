@@ -45,7 +45,7 @@
   <data name="CelShading_Channels" xml:space="preserve"><value>Six texture channels</value></data>
   <data name="CelShading_HalfLambert" xml:space="preserve"><value>Half-Lambert and banding</value></data>
   <data name="CelShading_RampRows" xml:space="preserve"><value>Ramp rows for the five material zones (ILM alpha picks the row)</value></data>
-  <data name="CelShading_TintSlots" xml:space="preserve"><value>Three tint slots (Vector4, default zero → black)</value></data>
+  <data name="CelShading_TintSlots" xml:space="preserve"><value>Three tint slots (Vector4, unset falls back to the built-in default of 1)</value></data>
   <data name="CelShading_FaceOnly" xml:space="preserve"><value>Face only</value></data>
   <data name="CelShading_OutlinePass" xml:space="preserve"><value>Outline pass</value></data>
   <data name="Environment_Map" xml:space="preserve"><value>Environment map (Scene.Background)</value></data>
@@ -180,7 +180,7 @@
   <data name="Camera_ResetCamera" xml:space="preserve"><value>Back to the default camera</value></data>
   <data name="Camera_RenderBackground" xml:space="preserve"><value>Render background</value></data>
   <data name="Camera_Box0Projection" xml:space="preserve"><value>Box0 screen projection</value></data>
-  <data name="CelShading_Intro" xml:space="preserve"><value>Cel shading is the only pipeline in the engine that consumes material parameters by name: six channel names plus a list of underscore-prefixed float/Vector4. A typo never raises an error, the value simply has no effect, because every one of those uniforms defaults to zero.</value></data>
+  <data name="CelShading_Intro" xml:space="preserve"><value>Cel shading is the only pipeline in the engine that consumes material parameters by name: six channel names plus a list of underscore-prefixed float/Vector4. A typo never raises an error, the value simply has no effect and the built-in default applies — the pass pre-loads every uniform with the reference cel material (from the historical Nilou character), so a material with missing parameters or textures still renders normally.</value></data>
   <data name="CelShading_BaseColor" xml:space="preserve"><value>BaseColor</value></data>
   <data name="CelShading_Normal" xml:space="preserve"><value>Normal</value></data>
   <data name="CelShading_Ilm" xml:space="preserve"><value>ILM light mask</value></data>
@@ -211,8 +211,8 @@
   <data name="Environment_KeyLightVisible" xml:space="preserve"><value>Directional light visible (turn off to light with IBL only)</value></data>
   <data name="Environment_RenderBackground" xml:space="preserve"><value>Draw background (Camera.IsRenderBackground)</value></data>
   <data name="Environment_CacheState" xml:space="preserve"><value>IBL cache state</value></data>
-  <data name="Geometries_Intro" xml:space="preserve"><value>Changing a parameter regenerates the geometry's vertex data; the readout below tracks the vertex and index counts live. The rotation speed spins the whole row about Y, which is how you inspect back-face culling and light direction.</value></data>
-  <data name="Geometries_Active" xml:space="preserve"><value>Active geometry</value></data>
+  <data name="Geometries_Intro" xml:space="preserve"><value>The four shapes stand side by side, and each parameter section rebuilds its own shape's vertex data on every change — they never interfere. The dropdown only picks which shape the readout below counts vertices and indices for. The rotation speed spins the whole row about Y, which is how you inspect back-face culling and light direction.</value></data>
+  <data name="Geometries_ReadoutKind" xml:space="preserve"><value>Readout geometry</value></data>
   <data name="Geometries_BoxWidth" xml:space="preserve"><value>Width</value></data>
   <data name="Geometries_BoxHeight" xml:space="preserve"><value>Height</value></data>
   <data name="Geometries_BoxDepth" xml:space="preserve"><value>Depth</value></data>

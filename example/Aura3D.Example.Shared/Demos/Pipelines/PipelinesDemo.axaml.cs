@@ -67,7 +67,6 @@ public sealed partial class PipelinesDemo : Demo
         };
 
         ground.Material.SetTexture("BaseColor", Procedural.Checker(256, 20));
-        ground.RotationDegrees = new Vector3(-90f, 0, 0);
 
         scene.AddNode(ground);
 

@@ -2,7 +2,6 @@ using Aura3D.Core.Math;
 using Aura3D.Core.Nodes;
 using Aura3D.Core.Resources;
 using Silk.NET.OpenGLES;
-using System.Drawing;
 using System.Numerics;
 using Texture = Aura3D.Core.Resources.Texture;
 using Aura3D.Core;
@@ -163,12 +162,50 @@ public class CelLightPass : RenderPass
     }
 
     /// <summary>
+    /// 写入卡通着色的全部材质参数。默认值取自历史示例角色 NPC_Avatar_Girl_Sword_Nilou
+    /// 内嵌的正确材质：uniform 不设值时 GL 默认全零，会让未配置的卡通材质一片黑，
+    /// 且同一 program 下还会残留上一个 mesh 的值。
+    /// </summary>
+    private void SetupCelParameters(Material? material)
+    {
+        float F(string key, float fallback) =>
+            material != null && material.TryGetParameterValue<float>(key, out var value) ? value : fallback;
+        Vector4 V4(string key, Vector4 fallback) =>
+            material != null && material.TryGetParameterValue<Vector4>(key, out var value) ? value : fallback;
+
+        // 控制昼夜
+        UniformInt("_UseCoolShadowColorOrTex", 1);
+
+        UniformFloat("_RampIndex0", F("_RampIndex0", 1f));
+        UniformFloat("_RampIndex1", F("_RampIndex1", 4f));
+        UniformFloat("_RampIndex2", F("_RampIndex2", 3f));
+        UniformFloat("_RampIndex3", F("_RampIndex3", 5f));
+        UniformFloat("_RampIndex4", F("_RampIndex4", 2f));
+
+        UniformFloat("_BrightFac", F("_BrightFac", 0.99f));
+        UniformFloat("_GreyFac", F("_GreyFac", 1.08f));
+        UniformFloat("_DarkFac", F("_DarkFac", 0.55f));
+        UniformFloat("_BrightAreaShadowFac", F("_BrightAreaShadowFac", 1f));
+
+        UniformFloat("_FaceShadowOffset", F("_FaceShadowOffset", 0f));
+        UniformFloat("_FaceShadowTransitionSoftness", F("_FaceShadowTransitionSoftness", 0.05f));
+
+        var white = new Vector4(1f);
+        UniformVector4("_LightAreaColorTint", V4("_LightAreaColorTint", white));
+        UniformVector4("_DarkShadowColor", V4("_DarkShadowColor", white));
+        UniformVector4("_CoolDarkShadowColor", V4("_CoolDarkShadowColor", white));
+    }
+
+    /// <summary>
     /// 设置材质的通用纹理通道和参数（RenderMesh 和 RenderInstancedMesh 共用）。
     /// 返回纹理标志位掩码。
     /// </summary>
     private int SetupMaterialTextures(Material? material)
     {
         int textureFlags = 0;
+
+        // 缺底色贴图时兜底为不透明白，让 Masked/Translucent 材质也能正常渲染
+        UniformVector4("BaseColor", new Vector4(1f));
 
         if (material == null)
             return textureFlags;
@@ -186,7 +223,6 @@ public class CelLightPass : RenderPass
                     else
                     {
                         UniformTexture("BaseColorTexture", 0);
-                        UniformColor("BaseColor", Color.Red);
                     }
                     break;
                 case "Normal":
@@ -241,6 +277,7 @@ public class CelLightPass : RenderPass
     {
         ClearTextureUnit();
         SetupLightUniforms(view, projection);
+        SetupCelParameters(instancedMesh.Material);
         SetupMaterialTextures(instancedMesh.Material);
         base.RenderInstancedMesh(instancedMesh, view, projection);
     }
@@ -253,8 +290,7 @@ public class CelLightPass : RenderPass
 
         SetupLightUniforms(view, projection);
 
-        // 控制昼夜
-        UniformInt("_UseCoolShadowColorOrTex", 1);
+        SetupCelParameters(mesh.Material);
 
         int textureFlags = SetupMaterialTextures(mesh.Material);
 
@@ -264,40 +300,6 @@ public class CelLightPass : RenderPass
             {
                 UniformMatrix4("faceModelMatrix", mesh.WorldTransform);
             }
-            // 卡通渲染扩展参数
-            float tempValue = 0;
-            if (mesh.Material.TryGetParameterValue<float>("_RampIndex0", out tempValue))
-                UniformFloat("_RampIndex0", tempValue);
-            if (mesh.Material.TryGetParameterValue<float>("_RampIndex1", out tempValue))
-                UniformFloat("_RampIndex1", tempValue);
-            if (mesh.Material.TryGetParameterValue<float>("_RampIndex2", out tempValue))
-                UniformFloat("_RampIndex2", tempValue);
-            if (mesh.Material.TryGetParameterValue<float>("_RampIndex3", out tempValue))
-                UniformFloat("_RampIndex3", tempValue);
-            if (mesh.Material.TryGetParameterValue<float>("_RampIndex4", out tempValue))
-                UniformFloat("_RampIndex4", tempValue);
-
-            if (mesh.Material.TryGetParameterValue<float>("_BrightFac", out tempValue))
-                UniformFloat("_BrightFac", tempValue);
-            if (mesh.Material.TryGetParameterValue<float>("_GreyFac", out tempValue))
-                UniformFloat("_GreyFac", tempValue);
-            if (mesh.Material.TryGetParameterValue<float>("_DarkFac", out tempValue))
-                UniformFloat("_DarkFac", tempValue);
-
-            if (mesh.Material.TryGetParameterValue<float>("_FaceShadowOffset", out tempValue))
-                UniformFloat("_FaceShadowOffset", tempValue);
-            if (mesh.Material.TryGetParameterValue<float>("_BrightAreaShadowFac", out tempValue))
-                UniformFloat("_BrightAreaShadowFac", tempValue);
-            if (mesh.Material.TryGetParameterValue<float>("_FaceShadowTransitionSoftness", out tempValue))
-                UniformFloat("_FaceShadowTransitionSoftness", tempValue);
-
-            Vector4 tempVector4;
-            if (mesh.Material.TryGetParameterValue<Vector4>("_LightAreaColorTint", out tempVector4))
-                UniformVector4("_LightAreaColorTint", tempVector4);
-            if (mesh.Material.TryGetParameterValue<Vector4>("_DarkShadowColor", out tempVector4))
-                UniformVector4("_DarkShadowColor", tempVector4);
-            if (mesh.Material.TryGetParameterValue<Vector4>("_CoolDarkShadowColor", out tempVector4))
-                UniformVector4("_CoolDarkShadowColor", tempVector4);
 
             // SDF 脸部贴图
             foreach (var channel in mesh.Material.Channels)
