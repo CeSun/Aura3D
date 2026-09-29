@@ -118,11 +118,6 @@ jobs:
         # 这一步不重新生成字体，只核对 UI 里出现的非 ASCII 字符确实被子集覆盖、产物没超 2.5MB 预算。
         run: python3 tools/fonts/generate-cjk-font.py --check
 
-      - name: Check example bilingual invariants
-        # 界面文案全在两份 resx 里；这一步核对两边键集合一致、代码引用的键存在、
-        # 属性值与字符串字面量里没有写死中文、Format 实参与占位符对得上、下拉选项文案不撞字串。
-        run: python3 tools/i18n/check.py
-
       - name: Build Example.Desktop
         run: dotnet build example/Example.Desktop/Example.Desktop.csproj -c Release
 

@@ -54,7 +54,7 @@ iOS 上**不需要**任何平台特判：`Aura3DView` 会自行选用该平台�
 
 iOS 工程不需要为 ANGLE 写任何配置：`Aura3D.Avalonia` 的 iOS 目标依赖 `Aura3D.Angle.iOS`，包里的 targets 会在应用工程里把两个 framework 以 `NativeReference` 链进主可执行文件（`DllImport("__Internal")` 要求如此）。切片的来源、版本锁定策略与手工方式见 [平台与渲染后端](./platform-render-backends.md)。
 
-macOS 桌面工程按示例把宿主渲染器显式钉在 OpenGL 上（`Example.Desktop` 就是这么写的）：
+macOS 桌面工程需要把宿主渲染器显式钉在 OpenGL 上：
 
 ```csharp
 // 仅 macOS 桌面工程需要显式指定宿主渲染器；iOS 不要写这段。

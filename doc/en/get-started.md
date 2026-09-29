@@ -54,7 +54,7 @@ On iOS no platform special-casing is needed at all: `Aura3DView` picks the right
 
 An iOS app needs no ANGLE configuration at all: `Aura3D.Avalonia`'s iOS target depends on `Aura3D.Angle.iOS`, and that package's targets link both frameworks into the main executable as `NativeReference` (which is what `DllImport("__Internal")` requires). Where the slices come from, why the dependency is version-pinned, and the manual route are covered in [Platforms and Render Backends](./platform-render-backends.md).
 
-For a macOS desktop app, pin the host renderer to OpenGL as the sample does (`Example.Desktop`):
+For a macOS desktop app, pin the host renderer to OpenGL:
 
 ```csharp
 // macOS desktop projects only; do not write this for iOS.

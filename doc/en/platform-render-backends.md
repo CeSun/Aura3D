@@ -8,7 +8,7 @@
 |---|---|---|---|
 | Windows / Linux | Desktop OpenGL | Avalonia `OpenGlControlBase` | None |
 | Android | OpenGL ES | Avalonia `OpenGlControlBase` | None |
-| macOS | OpenGL | Avalonia `OpenGlControlBase` | No platform special-casing; if the viewport stays blank, copy the explicit `AvaloniaNativeRenderingMode.OpenGl` from `Example.Desktop/Program.cs` |
+| macOS | OpenGL | Avalonia `OpenGlControlBase` | No platform special-casing; if the viewport stays blank, pin `AvaloniaNativeRenderingMode.OpenGl` explicitly in `AppBuilder` |
 | iOS | Metal (Avalonia default) | **Self-hosted ANGLE(Metal) context composed through a Skia lease**; falls back to `OpenGlControlBase` when the host explicitly selects OpenGl | No platform special-casing, but the ANGLE iOS frameworks must be linked |
 | Browser (wasm) | WebGL2 (Avalonia.Browser's Skia compositor) | **Borrows the compositor's WebGL2 context and composes through a Skia lease**; GLES 3.0 calls reach WebGL2 via the emscripten shim | No platform special-casing, the wasm link switches are injected by a package |
 
@@ -31,7 +31,7 @@ The decision is logged as `[aura3d-angle] compositor backend=..., path=...` — 
 
 `Aura3D.Avalonia` resolves ANGLE's EGL/GLES2 symbols through `DllImport("__Internal")` (to avoid clashing with Apple's own OpenGLES symbols), so the two frameworks have to be linked into the **application** executable rather than living inside the class library.
 
-**That part is now automatic.** `Aura3D.Avalonia`'s iOS target depends on `Aura3D.Angle.iOS`, and the package's `buildTransitive` targets pick the slice by `$(RuntimeIdentifier)` and inject the `NativeReference` items into the app project — an app needs zero ANGLE configuration, and `example/Example.iOS` has none. The dependency is pinned to an exact range (`[0.1.0]`): the slice and the P/Invoke signatures are an ABI pair, so a consumer must never be silently upgraded onto a slice that was not tested against them. Replacing the slices therefore means bumping that version and releasing `Aura3D.Avalonia` again.
+**That part is now automatic.** `Aura3D.Avalonia`'s iOS target depends on `Aura3D.Angle.iOS`, and the package's `buildTransitive` targets pick the slice by `$(RuntimeIdentifier)` and inject the `NativeReference` items into the app project — an app needs zero ANGLE configuration. The dependency is pinned to an exact range (`[0.1.0]`): the slice and the P/Invoke signatures are an ABI pair, so a consumer must never be silently upgraded onto a slice that was not tested against them. Replacing the slices therefore means bumping that version and releasing `Aura3D.Avalonia` again.
 
 ```shell
 dotnet add package Aura3D.Avalonia   # pulls Aura3D.Angle.iOS in on iOS
@@ -67,7 +67,7 @@ Ownership is decided once, exactly like iOS, with the `[aura3d-webgl]` log prefi
 
 The GLES entry points have to come out of the **application's own** wasm module. Without native linking the module simply has no `libSkiaSharp` symbols, and the app dies at startup with `System.DllNotFoundException: libSkiaSharp` (thrown from `SKImageInfo`'s static constructor, with no context to go on). Three things must therefore hold in the app project: `WasmBuildNative=true`, `-s FULL_ES3=1`, and `-s MIN/MAX_WEBGL_VERSION=2` (GLES3 entry points — VAO, UBO, 3D textures, blit — only exist on a WebGL2 context).
 
-**That part is automatic.** `Aura3D.Avalonia`'s browser target depends on `Aura3D.Avalonia.Browser`, whose `buildTransitive` props inject those switches for `*-browser` targets only — an app writes zero configuration, and `example/Example.Browser` writes none. It mirrors the iOS slice package, including the exact `[0.1.0]` pin: the switches are paired with the library's GLES call surface, so they bump together with a browser verification run.
+**That part is automatic.** `Aura3D.Avalonia`'s browser target depends on `Aura3D.Avalonia.Browser`, whose `buildTransitive` props inject those switches for `*-browser` targets only — an app writes zero configuration. It mirrors the iOS slice package, including the exact `[0.1.0]` pin: the switches are paired with the library's GLES call surface, so they bump together with a browser verification run.
 
 `WasmBuildNative=true` is however only a **necessary** condition: if the local SDK has no wasm-tools/emsdk workload, linking still does not happen and the build still succeeds. The SDK's own warning reads "neither $(WasmBuildNative), nor $(RunAOTCompilation) are 'true'" — a hardcoded string, misleading here because `WasmBuildNative` is in fact true (measured: `dotnet.native.wasm` is 3.0 MB, versus 25.6 MB once native is linked). The package's `buildTransitive` targets therefore raise an error when `RuntimeIdentifier=browser-wasm` and `WasmNativeWorkloadAvailable!=true`, naming `dotnet workload install wasm-tools`; projects that do not need this backend can set `Aura3DSkipWasmWorkloadCheck=true`. Same stance as on iOS: error out rather than silently render nothing.
 
@@ -86,7 +86,7 @@ Shaders and GL calls are written against a plain OpenGL ES 3.0 subset so that on
 - ANGLE's Metal backend only exposes ES 3.0 — requesting an ES 3.1/3.2 context fails with `EGL_BAD_MATCH` — and it does not provide `GL_EXT_float_blend`. **Drawing with blending enabled into a 32-bit float color attachment is treated as `GL_INVALID_OPERATION` and the entire draw is dropped silently**; the symptom is a black image, not an error. The framework's HDR render targets are therefore all `Rgba16f`; do not allocate an `Rgba32f` color attachment and then enable blending in a custom pass.
 - Depth attachments `DEPTH_COMPONENT16/24/32F` and `DEPTH24_STENCIL8`/`DEPTH32F_STENCIL8` are ES 3.0 core and work fine under ANGLE — the restriction above concerns color attachments only.
 - No compute. 3D textures cannot be imported as external textures.
-- ANGLE translates GLSL to MSL and compiles it at runtime; there is no on-disk binary cache. Measured first-frame cost on iOS (iPhone 17 simulator / iOS 27.0): roughly 5.6–5.9 s for the PBR and cascaded-shadow pages, 0.4–0.7 s for simple scenes.
+- ANGLE translates GLSL to MSL and compiles it at runtime; there is no on-disk binary cache. Measured first-frame cost on iOS (iPhone 17 simulator / iOS 27.0): roughly 5.6–5.9 s for a PBR scene with cascaded shadows, 0.4–0.7 s for simple scenes.
 
 WebGL2 validates more strictly than desktop GL and ANGLE. The following are "fine" elsewhere but are treated as `GL_INVALID_OPERATION` on WebGL2, which **drops the whole draw silently**:
 
@@ -97,9 +97,9 @@ WebGL2 validates more strictly than desktop GL and ANGLE. The following are "fin
 
 ## Browser performance and known gaps
 
-- Debug browser-wasm runs on the Mono interpreter, and first-frame cost for heavy scenes is measured in minutes (the cascaded-shadow page took over 10 minutes to reach frame 1 in headless Chromium while building the scene and running the HDR-to-cubemap passes). This is host-side execution speed, not the render path: demo or profile with AOT (`RunAOTCompilation`), and follow the platform convention of measuring frame time before calling something broken.
+- Debug browser-wasm runs on the Mono interpreter, and first-frame cost for heavy scenes is measured in minutes (a cascaded-shadow scene plus the HDR-to-cubemap passes took over 10 minutes to reach frame 1 in headless Chromium). This is host-side execution speed, not the render path: demo or profile with AOT (`RunAOTCompilation`), and follow the platform convention of measuring frame time before calling something broken.
 - While an automated page stays `hidden`, `requestAnimationFrame` and `ResizeObserver` never fire at all, so neither Avalonia's render loop nor the canvas size moves. Verifying locally in a headless browser needs a temporary rAF/ResizeObserver shim — such shims **must not** go into `wwwroot`.
-- The "Load Model File" page depends on the Assimp native library, and how that links on browser is not verified yet. Model import on the other platforms is unaffected.
+- Model import depends on the Assimp native library, and how that links in the browser is not verified yet. Model import on the other platforms is unaffected.
 
 ## Frame scheduling and thread semantics
 
@@ -111,7 +111,7 @@ WebGL2 validates more strictly than desktop GL and ANGLE. The following are "fin
 
 This path is only used when the host explicitly sets `iOSRenderingMode.OpenGl` (Avalonia `OpenGlControlBase` on Apple EAGL). Default iOS configurations never reach it. Current knowledge comes from simulator runs and has not been verified on a device:
 
-- Pages that use the PBR deferred pipeline take minutes per frame — the simulator's EAGL is a translated/software path and cannot carry several large float render targets plus cascaded shadows. On-device EAGL is hardware-driven and may behave differently.
-- On the cascaded shadow maps example page, the ground plane stops producing fragments from the third frame on, while a minimal program that only consumes `gl_VertexID` still lands in the same frame — which points at a silently dropped draw inside the simulator's GLES-on-Metal layer.
+- Scenes using the PBR deferred pipeline take minutes per frame — the simulator's EAGL is a translated/software path and cannot carry several large float render targets plus cascaded shadows. On-device EAGL is hardware-driven and may behave differently.
+- Under cascaded shadow maps the ground plane stops producing fragments from the third frame on, while a minimal program that only consumes `gl_VertexID` still lands in the same frame — which points at a silently dropped draw inside the simulator's GLES-on-Metal layer.
 
 Bottom line: stay on the default (ANGLE) path on iOS; there is no reason to force OpenGL mode anymore.

@@ -8,7 +8,7 @@
 |---|---|---|---|
 | Windows / Linux | 桌面 OpenGL | Avalonia `OpenGlControlBase` | 无 |
 | Android | OpenGL ES | Avalonia `OpenGlControlBase` | 无 |
-| macOS | OpenGL | Avalonia `OpenGlControlBase` | 无需平台特判；若视口不出图，照抄 `Example.Desktop/Program.cs` 里显式的 `AvaloniaNativeRenderingMode.OpenGl` |
+| macOS | OpenGL | Avalonia `OpenGlControlBase` | 无需平台特判；若视口不出图，在 `AppBuilder` 里显式钉 `AvaloniaNativeRenderingMode.OpenGl` |
 | iOS | Metal（Avalonia 默认） | **自持 ANGLE(Metal) 上下文 + Skia lease 合成**；宿主显式改为 OpenGl 时回退到 `OpenGlControlBase` | 无平台特判，但需链接 ANGLE 的 iOS framework |
 | Browser (wasm) | WebGL2（Avalonia.Browser 的 Skia 合成器） | **借合成器的 WebGL2 上下文 + Skia lease 合成**，GLES 3.0 调用经 emscripten shim 落到 WebGL2 | 无平台特判，wasm 链接开关由包自动注入 |
 
@@ -31,7 +31,7 @@ Avalonia 的 iOS 宿主默认使用 Metal 合成器，而该模式下 Avalonia �
 
 `Aura3D.Avalonia` 用 `DllImport("__Internal")` 解析 ANGLE 的 EGL/GLES2 符号（为的是避开 Apple 自带的 OpenGLES），所以两个 framework 必须由**应用**链接进主可执行文件，不能只留在类库里。
 
-**这件事现在是自动的。** `Aura3D.Avalonia` 的 iOS 目标依赖 `Aura3D.Angle.iOS`，包里的 `buildTransitive` targets 会在应用工程里按 `$(RuntimeIdentifier)` 选择切片并注入 `NativeReference`——应用工程不需要写任何 ANGLE 配置，`example/Example.iOS` 里一行都没有。区间是精确锁定的（`[0.1.0]`）：切片与 P/Invoke 签名是 ABI 配对，不能让用户被动升到一个没配套测过的切片上，所以换切片必须连同版本号一起升，并重新发一次 `Aura3D.Avalonia`。
+**这件事现在是自动的。** `Aura3D.Avalonia` 的 iOS 目标依赖 `Aura3D.Angle.iOS`，包里的 `buildTransitive` targets 会在应用工程里按 `$(RuntimeIdentifier)` 选择切片并注入 `NativeReference`——应用工程不需要写任何 ANGLE 配置。区间是精确锁定的（`[0.1.0]`）：切片与 P/Invoke 签名是 ABI 配对，不能让用户被动升到一个没配套测过的切片上，所以换切片必须连同版本号一起升，并重新发一次 `Aura3D.Avalonia`。
 
 ```shell
 dotnet add package Aura3D.Avalonia   # iOS 目标会自动带进 Aura3D.Angle.iOS
@@ -67,7 +67,7 @@ Avalonia.Browser 的 `WebGlContext` 是单例式的：`CanCreateSharedContext` �
 
 GLES 入口点必须由**应用**自己的 wasm 模块带出来：不链原生库时模块里没有 `libSkiaSharp` 的符号，应用启动即 `System.DllNotFoundException: libSkiaSharp`（在 `SKImageInfo` 的静态构造里，没有任何上下文线索）。所以三件事要在应用工程里成立——`WasmBuildNative=true`、`-s FULL_ES3=1`、`-s MIN/MAX_WEBGL_VERSION=2`（GLES3 的 VAO / UBO / 3D 纹理 / blit 入口点只存在于 WebGL2 上下文）。
 
-**这三件事是自动的。** `Aura3D.Avalonia` 的 browser 目标以精确区间依赖 `Aura3D.Avalonia.Browser`，包里的 `buildTransitive` props 只对 `*-browser` 目标注入上述开关——应用工程一行配置都不用写，`example/Example.Browser` 里一行都没有。与 iOS 的切片包同构，也同样是精确锁 `[0.1.0]`：开关与库的 GLES 调用面配对，升级要和库一起过一遍浏览器验证。
+**这三件事是自动的。** `Aura3D.Avalonia` 的 browser 目标以精确区间依赖 `Aura3D.Avalonia.Browser`，包里的 `buildTransitive` props 只对 `*-browser` 目标注入上述开关——应用工程一行配置都不用写。与 iOS 的切片包同构，也同样是精确锁 `[0.1.0]`：开关与库的 GLES 调用面配对，升级要和库一起过一遍浏览器验证。
 
 但 `WasmBuildNative=true` 只是**必要条件**：本机 SDK 没有 wasm-tools/emsdk workload 时链接同样不会发生，而构建是成功的。SDK 自己那条 warning 的文案是固定的 "neither $(WasmBuildNative), nor $(RunAOTCompilation) are 'true'"，此时 `WasmBuildNative` 明明是 true，会把人支到错的方向（实测：`dotnet.native.wasm` 3.0 MB vs 链上后的 25.6 MB）。所以包内的 `buildTransitive` targets 会在 `RuntimeIdentifier=browser-wasm` 且 `WasmNativeWorkloadAvailable!=true` 时直接报 Error 并给出 `dotnet workload install wasm-tools`；不需要本后端的工程可以设 `Aura3DSkipWasmWorkloadCheck=true` 关掉。与 iOS 侧"缺切片就 Error、不静默不出图"同构。
 
@@ -86,7 +86,7 @@ dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
 - ANGLE 的 Metal 后端只暴露 ES 3.0，申请 ES 3.1/3.2 上下文会以 `EGL_BAD_MATCH` 失败，且不提供 `GL_EXT_float_blend`。**混合开启时绘制到 32 位浮点颜色附件，整次 draw 会被当作 `GL_INVALID_OPERATION` 静默丢弃**——表现是黑屏而不是报错。框架的 HDR 渲染目标因此统一用 `Rgba16f`；自定义 Pass 不要申请 `Rgba32f` 颜色附件后又开混合。
 - 深度附件 `DEPTH_COMPONENT16/24/32F` 与 `DEPTH24_STENCIL8`/`DEPTH32F_STENCIL8` 都是 ES 3.0 core，在 ANGLE 下可正常使用；上面那条只针对颜色附件。
 - 没有 compute；`TexImage3D` 一类的 3D 纹理不能作为外部纹理导入。
-- 着色器由 ANGLE 在运行时把 GLSL 翻成 MSL 并编译，没有磁盘二进制缓存。iOS 首帧开销实测（iPhone 17 模拟器 / iOS 27.0）：PBR 与级联阴影页约 5.6–5.9 s，简单场景页 0.4–0.7 s。
+- 着色器由 ANGLE 在运行时把 GLSL 翻成 MSL 并编译，没有磁盘二进制缓存。iOS 首帧开销实测（iPhone 17 模拟器 / iOS 27.0）：PBR 加级联阴影的场景约 5.6–5.9 s，简单场景 0.4–0.7 s。
 
 浏览器上的 WebGL2 校验比桌面 GL 与 ANGLE 严格，下面几条在别的平台上是"能跑"，在 WebGL2 上会被判 `GL_INVALID_OPERATION` 并**静默丢弃整条 draw**：
 
@@ -97,9 +97,9 @@ dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
 
 ## 浏览器的性能与已知缺口
 
-- Debug 的 browser-wasm 走 Mono 解释器，重场景的**首帧**代价以分钟计（级联阴影页在无头 Chromium 里建场景 + HDR 转立方体贴图超过 10 分钟才出第一帧）。这不是渲染路径的问题，是宿主 CPU 侧执行速度：要演示或压测请开 AOT（`RunAOTCompilation`），并按平台惯例先量帧时再判故障。
+- Debug 的 browser-wasm 走 Mono 解释器，重场景的**首帧**代价以分钟计（级联阴影加 HDR 转立方体贴图的场景，在无头 Chromium 里超过 10 分钟才出第一帧）。这不是渲染路径的问题，是宿主 CPU 侧执行速度：要演示或压测请开 AOT（`RunAOTCompilation`），并按平台惯例先量帧时再判故障。
 - 自动化环境里页面处于 `hidden` 状态时，`requestAnimationFrame` 与 `ResizeObserver` 完全不触发，Avalonia 的渲染循环与画布尺寸都不会动——本地用无头浏览器验证时需要临时注入 rAF/ResizeObserver 垫片，这类垫片**不能**进 `wwwroot`。
-- "Load Model File" 页依赖 Assimp 原生库，浏览器上的链接方式尚未验证；模型导入页在其他平台的行为不受影响。
+- 模型导入依赖 Assimp 原生库，浏览器 wasm 上的链接方式尚未验证；其他平台的模型导入行为不受影响。
 
 ## 帧调度与线程语义
 
@@ -111,7 +111,7 @@ dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
 
 只有宿主显式设置 `iOSRenderingMode.OpenGl` 时才会走到这条路径（Avalonia `OpenGlControlBase` + Apple EAGL）。iOS 默认配置不需要关心本节。目前掌握的情况来自模拟器实测、未在真机验证：
 
-- 走 PBR Deferred 的页面帧时是分钟级——模拟器的 EAGL 是转译/软件路径，扛不住多个高分辨率浮点渲染目标加级联阴影。真机 EAGL 由硬件驱动，表现可能不同。
-- 级联阴影示例页的地面网格自第 3 帧起不再产生片元，而同帧一个只吃 `gl_VertexID` 的最小 program 能稳定落地，疑似模拟器 GLES-on-Metal 层静默丢弃该 draw。
+- 走 PBR Deferred 的场景帧时是分钟级——模拟器的 EAGL 是转译/软件路径，扛不住多个高分辨率浮点渲染目标加级联阴影。真机 EAGL 由硬件驱动，表现可能不同。
+- 级联阴影下的地面网格自第 3 帧起不再产生片元，而同帧一个只吃 `gl_VertexID` 的最小 program 能稳定落地，疑似模拟器 GLES-on-Metal 层静默丢弃该 draw。
 
 结论：iOS 上保持默认（ANGLE）路径即可，没有理由再强制 OpenGL 模式。
