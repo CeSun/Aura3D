@@ -378,7 +378,7 @@ UniformTexture(...)   → 设置输入纹理等 Uniform
 RenderQuad()          → 绘制全屏四边形
 ```
 
-实际例子——伽马校正 Pass（[GammaCorrectionPass.cs](../../src/Aura3D.Core/Renderers/Common/GammaCorrectionPass.cs)）：
+实际例子——伽马校正 Pass（[GammaCorrectionPass.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Renderers/Common/GammaCorrectionPass.cs)）：
 
 ```csharp
 public override void Render(Camera camera)
@@ -397,7 +397,7 @@ public override void Render(Camera camera)
 }
 ```
 
-FXAA Pass 同样如此（[FxaaPass.cs](../../src/Aura3D.Core/Renderers/Common/FxaaPass.cs)）：
+FXAA Pass 同样如此（[FxaaPass.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Renderers/Common/FxaaPass.cs)）：
 
 ```csharp
 UseShader();
@@ -408,7 +408,7 @@ UniformVector2("u_textureSize", new Vector2(texWidth, texHeight));
 RenderQuad();
 ```
 
-带有宏变体的后处理——PBR IBL 环境光 Pass（[IBLAmbientPass.cs](../../src/Aura3D.Pipeline.PBR/IBLAmbientPass.cs)）：
+带有宏变体的后处理——PBR IBL 环境光 Pass（[IBLAmbientPass.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Pipeline.PBR/IBLAmbientPass.cs)）：
 
 ```csharp
 UseShader("ENBALE_DEFERRED_SHADING");  // 声明宏

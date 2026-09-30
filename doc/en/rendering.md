@@ -47,7 +47,7 @@ view.AddNode(dl);
 view.Scene.MainDirectionalLight = dl;
 ```
 
-CSM parameters are configured via `PipelineSettings` (see [Rendering Pipelines → Pipeline Settings](./pipelines.md#pipeline-settings-pipelinesettings)):
+CSM parameters are configured via `PipelineSettings` (see [Rendering Pipelines → Pipeline Settings](./pipelines.md#pipeline-settings)):
 
 | Parameter | Default | Description |
 |---|---|---|

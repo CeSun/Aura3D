@@ -378,7 +378,7 @@ UniformTexture(...)   → Set input textures and other uniforms
 RenderQuad()          → Draw a fullscreen quad
 ```
 
-Real example — Gamma Correction Pass ([GammaCorrectionPass.cs](../../src/Aura3D.Core/Renderers/Common/GammaCorrectionPass.cs)):
+Real example — Gamma Correction Pass ([GammaCorrectionPass.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Renderers/Common/GammaCorrectionPass.cs)):
 
 ```csharp
 public override void Render(Camera camera)
@@ -397,7 +397,7 @@ public override void Render(Camera camera)
 }
 ```
 
-FXAA Pass similarly ([FxaaPass.cs](../../src/Aura3D.Core/Renderers/Common/FxaaPass.cs)):
+FXAA Pass similarly ([FxaaPass.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Renderers/Common/FxaaPass.cs)):
 
 ```csharp
 UseShader();
@@ -408,7 +408,7 @@ UniformVector2("u_textureSize", new Vector2(texWidth, texHeight));
 RenderQuad();
 ```
 
-Post-processing with macro variants — PBR IBL Ambient Pass ([IBLAmbientPass.cs](../../src/Aura3D.Pipeline.PBR/IBLAmbientPass.cs)):
+Post-processing with macro variants — PBR IBL Ambient Pass ([IBLAmbientPass.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Pipeline.PBR/IBLAmbientPass.cs)):
 
 ```csharp
 UseShader("ENBALE_DEFERRED_SHADING");  // Declare macro

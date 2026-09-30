@@ -47,7 +47,7 @@ view.AddNode(dl);
 view.Scene.MainDirectionalLight = dl;
 ```
 
-CSM 参数通过 `PipelineSettings` 配置（详见 [渲染管线 → 管线配置](./pipelines.md#管线配置pipelinesettings)）：
+CSM 参数通过 `PipelineSettings` 配置（详见 [渲染管线 → 管线配置](./pipelines.md#管线配置-pipelinesettings)）：
 
 | 参数 | 默认值 | 说明 |
 |---|---|---|
