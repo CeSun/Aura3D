@@ -28,22 +28,31 @@ public class Animation
     /// </summary>
     public Skeleton? Skeleton { get; set; }
     /// <summary>
-    /// Samples the associated data.
+    /// Samples the associated data. A channel component without keyframes (some assets
+    /// only animate rotation, for example) falls back to the bone's rest pose.
     /// </summary>
     public Matrix4x4 Sample(string channelName, float time)
     {
+        var bone = Skeleton?.Bones.Find(b => b.Name == channelName);
+
         if (!Channels.TryGetValue(channelName, out var channel))
         {
-            var bone = Skeleton!.Bones.Find(b => b.Name == channelName);
-
-            return bone!.LocalMatrix;
+            return bone?.LocalMatrix ?? Matrix4x4.Identity;
         }
 
-        var position = channel.PositionKeyframes.GetValueByTime(time, SamplerHelper.Lerp);
+        Matrix4x4.Decompose(bone?.LocalMatrix ?? Matrix4x4.Identity, out var restScale, out var restRotation, out var restTranslation);
 
-        var rotation = channel.RotationKeyframes.GetValueByTime(time, SamplerHelper.Slerp);
+        var position = channel.PositionKeyframes.Count > 0
+            ? channel.PositionKeyframes.GetValueByTime(time, SamplerHelper.Lerp)
+            : restTranslation;
 
-        var scale = channel.ScaleKeyframes.GetValueByTime(time, SamplerHelper.Lerp);
+        var rotation = channel.RotationKeyframes.Count > 0
+            ? channel.RotationKeyframes.GetValueByTime(time, SamplerHelper.Slerp)
+            : restRotation;
+
+        var scale = channel.ScaleKeyframes.Count > 0
+            ? channel.ScaleKeyframes.GetValueByTime(time, SamplerHelper.Lerp)
+            : restScale;
 
         return MatrixHelper.CreateTransform(position, rotation, scale);
     }

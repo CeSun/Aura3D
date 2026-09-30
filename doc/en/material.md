@@ -152,8 +152,8 @@ Pick `Clone()` when you don't mind the two materials sharing textures; use `Deep
 
 ## See it in action
 
-These two Gallery samples use zero external assets — every texture is computed on the fly, so they're the quickest to copy:
-- **PbrChannels** — which of the five channels actually get sampled under Blinn-Phong vs PBR, plus the `Masked` / `Translucent` / `AlphaCutoff` differences.
+These two Gallery samples are the quickest to copy:
+- **PbrMaterials** — three typical real-world PBR materials (rusty metal / brick wall / galvanized sheet) wired with BaseColor, Normal and an ARM-packed MetallicRoughness, rendered under real IBL.
 - **MaterialShaders** — `SetTexture`, material parameters, and a custom material that overrides only the fragment shader.
 
 Source: [Material.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Resources/Material.cs), [MaterialExtensions.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Resources/MaterialExtensions.cs).

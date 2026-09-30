@@ -42,6 +42,12 @@
     "webFriendly": true
   },
   {
+    "key": "KayKitWarrior",
+    "path": "models/KayKit_Skeleton_Warrior.glb",
+    "bytes": 3735416,
+    "webFriendly": true
+  },
+  {
     "key": "CelCharacter",
     "path": "models/NPC_Avatar_Girl_Sword_Nilou.glb",
     "bytes": 9206952,
@@ -75,6 +81,60 @@
     "key": "ParticleFirePng",
     "path": "textures/fire-512.png",
     "bytes": 499431,
+    "webFriendly": true
+  },
+  {
+    "key": "PbrRustyMetalBase",
+    "path": "textures/pbr/rusty_metal_base.jpg",
+    "bytes": 411541,
+    "webFriendly": true
+  },
+  {
+    "key": "PbrRustyMetalNormal",
+    "path": "textures/pbr/rusty_metal_normal.jpg",
+    "bytes": 337152,
+    "webFriendly": true
+  },
+  {
+    "key": "PbrRustyMetalArm",
+    "path": "textures/pbr/rusty_metal_arm.jpg",
+    "bytes": 258219,
+    "webFriendly": true
+  },
+  {
+    "key": "PbrBrickWallBase",
+    "path": "textures/pbr/brick_wall_base.jpg",
+    "bytes": 405879,
+    "webFriendly": true
+  },
+  {
+    "key": "PbrBrickWallNormal",
+    "path": "textures/pbr/brick_wall_normal.jpg",
+    "bytes": 506436,
+    "webFriendly": true
+  },
+  {
+    "key": "PbrBrickWallArm",
+    "path": "textures/pbr/brick_wall_arm.jpg",
+    "bytes": 295115,
+    "webFriendly": true
+  },
+  {
+    "key": "PbrGalvanizedBase",
+    "path": "textures/pbr/galvanized_base.jpg",
+    "bytes": 200543,
+    "webFriendly": true
+  },
+  {
+    "key": "PbrGalvanizedNormal",
+    "path": "textures/pbr/galvanized_normal.jpg",
+    "bytes": 28503,
+    "webFriendly": true
+  },
+  {
+    "key": "PbrGalvanizedArm",
+    "path": "textures/pbr/galvanized_arm.jpg",
+    "bytes": 199721,
     "webFriendly": true
   },
   {

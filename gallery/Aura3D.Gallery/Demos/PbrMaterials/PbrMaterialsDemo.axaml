@@ -1,0 +1,31 @@
+<ex:Demo x:Class="Aura3D.Gallery.Demos.PbrMaterialsDemo"
+         xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:ex="clr-namespace:Aura3D.Gallery"
+         xmlns:loc="clr-namespace:Aura3D.Gallery.Localization"
+         xmlns:demos="clr-namespace:Aura3D.Gallery.Demos"
+         xmlns:kit="clr-namespace:Aura3D.Gallery.Kit"
+         x:DataType="demos:PbrMaterialsDemo">
+
+  <!--
+    PBR 材质库：四颗球各挂一套 Poly Haven（CC0）实拍 PBR 材质。
+    场景组装在 .axaml.cs，这页没有可调参数，面板只留一段说明。
+  -->
+  <Panel>
+
+    <kit:DemoView x:Name="View" Pipeline="PBRForward" />
+
+    <kit:InspectorPanel>
+      <StackPanel Spacing="6">
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.PbrMaterials_Intro}}" />
+
+        <kit:ReadoutRow x:Name="OrderReadout" Label="{Translate {x:Static loc:Strings+Keys.PbrMaterials_Order}}" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.PbrMaterials_Note}}" />
+
+      </StackPanel>
+    </kit:InspectorPanel>
+
+  </Panel>
+</ex:Demo>

@@ -152,8 +152,8 @@ var independent = material.DeepClone(deepCopyTextures: true); // 连贴图像素
 
 ## 看看实际效果
 
-Gallery 里这两个示例全部零外部资产、贴图现算，直接照抄最快：
-- **PbrChannels** — 五张贴图通道在 Blinn-Phong / PBR 下到底被不被采样，以及 `Masked` / `Translucent` / `AlphaCutoff` 的差别。
+Gallery 里这两个示例直接照抄最快：
+- **PbrMaterials** — 三档典型实拍 PBR 材质（锈蚀金属/砖墙/镀锌钢板）按 BaseColor / Normal / ARM 打包的 MetallicRoughness 接线，在真实 IBL 下渲染。
 - **MaterialShaders** — `SetTexture`、材质参数，以及只覆盖片元着色器的自定义材质。
 
 源码：[Material.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Resources/Material.cs)、[MaterialExtensions.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Resources/MaterialExtensions.cs)。

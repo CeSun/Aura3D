@@ -59,13 +59,16 @@ public static class DemoRegistry
             // 覆盖键写死为 LightPass，换管线就没有覆盖可言了。
             LockPipeline: true),
         new(
-            Id: "pbr-channels",
-            Title: Strings.Keys.Demo_PbrChannels_Title,
+            Id: "pbr-materials",
+            Title: Strings.Keys.Demo_PbrMaterials_Title,
             Group: Strings.Keys.Group_Materials,
-            Summary: Strings.Keys.Demo_PbrChannels_Summary,
-            // 环境立方图：IBL 只认 Scene.Background 的立方图分支，没有它金属度/粗糙度就演示不出来。
-            Assets: Assets.AssetManifest.SkyboxSet,
-            Create: context => new PbrChannelsDemo(context),
+            Summary: Strings.Keys.Demo_PbrMaterials_Summary,
+            // Poly Haven 三档典型材质（锈蚀金属/砖墙/镀锌钢板）+ 环境立方图：金属球没有 IBL 环境就只剩死灰。
+            Assets: Assets.AssetManifest.RequireSet([.. Assets.AssetManifest.SkyboxKeys,
+                "PbrRustyMetalBase", "PbrRustyMetalNormal", "PbrRustyMetalArm",
+                "PbrBrickWallBase", "PbrBrickWallNormal", "PbrBrickWallArm",
+                "PbrGalvanizedBase", "PbrGalvanizedNormal", "PbrGalvanizedArm"]),
+            Create: context => new PbrMaterialsDemo(context),
             DefaultPipeline: PipelineKind.PBRForward),
         new(
             Id: "cel-shading",
@@ -156,7 +159,8 @@ public static class DemoRegistry
             Title: Strings.Keys.Demo_AnimationMix_Title,
             Group: Strings.Keys.Group_Assets,
             Summary: Strings.Keys.Demo_AnimationMix_Summary,
-            Assets: Assets.AssetManifest.RequireSet("Soldier"),
+            // KayKit 武士（CC0，95 条剪辑）：侧移/后退步态让 2D 混合空间的两个轴都有东西可 blend
+            Assets: Assets.AssetManifest.RequireSet("KayKitWarrior"),
             Create: context => new AnimationMixDemo(context)),
 
         new(

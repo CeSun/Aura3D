@@ -27,11 +27,21 @@ public static partial class AssetManifest
         new("Stones", "models/stones_01.glb", 823_932),
         new("Present", "models/present_11.glb", 2_812_632),
         new("Soldier", "models/Soldier.glb", 1_169_684),
+        new("KayKitWarrior", "models/KayKit_Skeleton_Warrior.glb", 3_735_416),
         new("CelCharacter", "models/NPC_Avatar_Girl_Sword_Nilou.glb", 9_206_952),
 
         // —— 贴图 ——
         new("BackgroundJpg", "textures/background-1024.jpg", 138_328),
         new("ParticleFirePng", "textures/fire-512.png", 499_431),
+        new("PbrRustyMetalBase", "textures/pbr/rusty_metal_base.jpg", 411_541),
+        new("PbrRustyMetalNormal", "textures/pbr/rusty_metal_normal.jpg", 337_152),
+        new("PbrRustyMetalArm", "textures/pbr/rusty_metal_arm.jpg", 258_219),
+        new("PbrBrickWallBase", "textures/pbr/brick_wall_base.jpg", 405_879),
+        new("PbrBrickWallNormal", "textures/pbr/brick_wall_normal.jpg", 506_436),
+        new("PbrBrickWallArm", "textures/pbr/brick_wall_arm.jpg", 295_115),
+        new("PbrGalvanizedBase", "textures/pbr/galvanized_base.jpg", 200_543),
+        new("PbrGalvanizedNormal", "textures/pbr/galvanized_normal.jpg", 28_503),
+        new("PbrGalvanizedArm", "textures/pbr/galvanized_arm.jpg", 199_721),
 
         // —— 环境：HDRI 与立方图六面 ——
         new("SkyboxPx", "textures/skybox/px.jpg", 54_148),

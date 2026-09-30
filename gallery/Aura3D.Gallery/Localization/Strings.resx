@@ -72,9 +72,6 @@
   <data name="Particles_Burst" xml:space="preserve"><value>Burst · spherical one-shot</value></data>
   <data name="Particles_Debris" xml:space="preserve"><value>Debris · mesh mode (InstancedMesh inside)</value></data>
   <data name="Particles_Shared" xml:space="preserve"><value>Shared by all three</value></data>
-  <data name="PbrChannels_Channels" xml:space="preserve"><value>Five texture channels (all bound, only some sampled)</value></data>
-  <data name="PbrChannels_Switches" xml:space="preserve"><value>Material switches</value></data>
-  <data name="PbrChannels_PbrSettings" xml:space="preserve"><value>PBR-only settings</value></data>
   <data name="Pipelines_Lights" xml:space="preserve"><value>Lights</value></data>
   <data name="Pipelines_Readout" xml:space="preserve"><value>Comparison readout</value></data>
   <data name="PostProcessing_ToneMapping" xml:space="preserve"><value>Per frame · tone mapping (only the two PBR pipelines register ToneMappingPass)</value></data>
@@ -105,8 +102,11 @@
   <data name="Demo_Camera_Summary" xml:space="preserve"><value>Perspective/orthographic switching, the four frustum parameters, LookAt, FitToBoundingBox and WorldToScreen projection</value></data>
   <data name="Demo_MaterialShaders_Title" xml:space="preserve"><value>Material channels &amp; custom shaders</value></data>
   <data name="Demo_MaterialShaders_Summary" xml:space="preserve"><value>BaseColor/Normal channels, GLSL overridden per pass class, material parameters bound by name and the three BlendModes</value></data>
-  <data name="Demo_PbrChannels_Title" xml:space="preserve"><value>PBR texture channels</value></data>
-  <data name="Demo_PbrChannels_Summary" xml:space="preserve"><value>Binding and sampling the five channel maps, MetallicRoughness packing conventions, AlphaCutoff and DoubleSided</value></data>
+  <data name="Demo_PbrMaterials_Title" xml:space="preserve"><value>PBR materials</value></data>
+  <data name="Demo_PbrMaterials_Summary" xml:space="preserve"><value>Three typical CC0 materials — rusty metal, mixed brick wall, galvanized sheet metal — each wired with BaseColor, Normal and an ARM-packed MetallicRoughness under real IBL</value></data>
+  <data name="PbrMaterials_Intro" xml:space="preserve"><value>Three spheres wearing real-world materials from Poly Haven (CC0): rusted iron sheet (rust is a dielectric, only the exposed metal spots read metallic — the ARM blue channel is mottled), a mixed brick wall (a rough dielectric dominated by its normal map), and a galvanized sheet (metal ≈ 0.9, roughness ≈ 0.13, with a sharp IBL reflection). Each material is three maps: diff → BaseColor, nor_gl → Normal, arm → MetallicRoughness (R = AO, G = roughness, B = metallic — exactly the glTF packing, no channel shuffling needed).</value></data>
+  <data name="PbrMaterials_Order" xml:space="preserve"><value>Left to right</value></data>
+  <data name="PbrMaterials_Note" xml:space="preserve"><value>The skybox behind them is not just backdrop: metals have no diffuse term, so without the IBL built from this cube map a metal sphere is a dull grey blob. The ambient term is dialed down to 0.45 here so the sun highlights and shadows keep the three regimes apart. Textures are 1024 px JPEG, ~2.9 MB total, downloaded on page entry.</value></data>
   <data name="Demo_CelShading_Title" xml:space="preserve"><value>Cel shading &amp; outlines</value></data>
   <data name="Demo_CelShading_Summary" xml:space="preserve"><value>The six ILM/ShadowRamp/SDF channels, underscore-prefixed material parameters, and the outline pass's only public knob</value></data>
   <data name="Demo_IblEnvironment_Title" xml:space="preserve"><value>Environment maps &amp; IBL</value></data>
@@ -137,18 +137,18 @@
   <data name="Demo_Hism_Summary" xml:space="preserve"><value>InstancedMeshGroup's octree grouping and background tree building, and the cost of in-place updates versus rebuilding the tree</value></data>
   <data name="Demo_Particles_Title" xml:space="preserve"><value>Particle system</value></data>
   <data name="Demo_Particles_Summary" xml:space="preserve"><value>The three emission paths (billboard / one-shot burst / mesh mode), the flame sheet that pages by lifetime, and what the lifecycle buttons actually do</value></data>
-  <data name="AnimationMix_Intro" xml:space="preserve"><value>Left is the state machine (AnimationGraph), right is the blend space (AnimationBlendSpace); both models share one skeleton. Switching clips and tuning weights are per-frame and need no shader rebuild.</value></data>
-  <data name="AnimationMix_AutoToggle" xml:space="preserve"><value>Alternate between the two clips automatically</value></data>
-  <data name="AnimationMix_ToggleInterval" xml:space="preserve"><value>Toggle interval (s)</value></data>
+  <data name="AnimationMix_Intro" xml:space="preserve"><value>The two characters share one skeleton and each shows a way of combining several clips into a pose: left is the state machine (AnimationGraph) — idle/walk/run are three discrete states, and switching crossfades over BlendTime; right is the blend space (AnimationBlendSpace) — six clips sit at six points on a plane and the pose interpolates continuously by (X, Y) axis values. Left shows switching, right shows blending.</value></data>
+  <data name="AnimationMix_AutoToggle" xml:space="preserve"><value>Cycle Idle → Walking → Running automatically</value></data>
+  <data name="AnimationMix_ToggleInterval" xml:space="preserve"><value>Seconds per state</value></data>
   <data name="AnimationMix_BlendTime" xml:space="preserve"><value>BlendTime (crossfade, s)</value></data>
-  <data name="AnimationMix_ManualSwitch" xml:space="preserve"><value>Switch once</value></data>
+  <data name="AnimationMix_ManualSwitch" xml:space="preserve"><value>Advance to the next state</value></data>
   <data name="AnimationMix_TransitionNote" xml:space="preserve"><value>Transition predicates are queried every frame but only checked once CurrentWeight reaches 1 (the previous fade-in has finished), so lengthening BlendTime makes switches noticeably sluggish. AddNextNode also forbids a node pointing at itself: to loop you need two nodes pointing at each other.</value></data>
   <data name="AnimationMix_StateMachine" xml:space="preserve"><value>State machine</value></data>
-  <data name="AnimationMix_AxisX" xml:space="preserve"><value>Axis X (right = run)</value></data>
-  <data name="AnimationMix_AxisY" xml:space="preserve"><value>Axis Y</value></data>
+  <data name="AnimationMix_AutoSweep" xml:space="preserve"><value>Sweep forward automatically (idle → walk → run → idle)</value></data>
+  <data name="AnimationMix_SweepPeriod" xml:space="preserve"><value>Seconds per sweep cycle</value></data>
   <data name="AnimationMix_IdwPower" xml:space="preserve"><value>IdwPower (higher hugs the nearest sample)</value></data>
   <data name="AnimationMix_ResetAxes" xml:space="preserve"><value>Reset (axes back to 0,0)</value></data>
-  <data name="AnimationMix_BlendSpaceNote" xml:space="preserve"><value>The three samples sit at up = Run, down = Walk, origin = Idle, so pushing axis Y to the maximum gives pure running; weights are the inverse distance raised to IdwPower, computed by the engine, so the panel shows the axis values and the power.</value></data>
+  <data name="AnimationMix_BlendSpaceNote" xml:space="preserve"><value>The rectangle above is a top-down view of the 2D blend space; both axes run from -1 to +1. On the vertical axis: top = run forward, halfway = walk forward, bottom = walk backwards (KayKit has no backward run); on the horizontal axis: left/right ends = strafe runs; the origin = idle. The six grey dots are the sample clips and the blue thumb is the current axis value — drag it and the right character instantly plays the blended pose at those weights. With auto sweep on, the thumb shuttles up and down the vertical axis by itself; dragging manually pauses the sweep until you re-enable the toggle. Higher IdwPower hugs the nearest sample.</value></data>
   <data name="AnimationMix_BlendSpaceRow" xml:space="preserve"><value>Blend space</value></data>
   <data name="AssimpFbx_Intro" xml:space="preserve"><value>SK_Mannequin.FBX carries no animation; the motion lives in two separate FBX files. A single file may contain several clips, and both the count and the names are read from the file itself.</value></data>
   <data name="AssimpFbx_Sampler" xml:space="preserve"><value>Clip to attach</value></data>
@@ -319,16 +319,6 @@
   <data name="Particles_VisibilityCulling" xml:space="preserve"><value>Cull by bounds (EnableVisibilityCulling)</value></data>
   <data name="Particles_ShowBounds" xml:space="preserve"><value>Draw particle bounds (Debug.ShowParticleBounds)</value></data>
   <data name="Particles_State" xml:space="preserve"><value>Particle state</value></data>
-  <data name="PbrChannels_Intro" xml:space="preserve"><value>The sphere on the left has every channel wired, the middle one only BaseColor as a control, and the plane on the right uses Masked with AlphaCutoff. The matrix below is computed live against the current pipeline: attach a texture nobody samples and the picture will not change, while the readout tells you why.</value></data>
-  <data name="PbrChannels_SwapMr" xml:space="preserve"><value>Swap the MetallicRoughness map (exchange G and B)</value></data>
-  <data name="PbrChannels_SwapNote" xml:space="preserve"><value>The swap demonstrates the channel convention: the forward pipeline and the opaque branch of the deferred one follow glTF with G=roughness and B=metallic, while the part of the deferred pipeline that reads the material map directly (translucent IBL) uses B=roughness and G=metallic. The same image yields swapped metallic and roughness under the two branches — a real inconsistency in the engine.</value></data>
-  <data name="PbrChannels_BlendMode" xml:space="preserve"><value>BlendMode (decides which pass)</value></data>
-  <data name="PbrChannels_AlphaCutoff" xml:space="preserve"><value>AlphaCutoff (only Masked uses it)</value></data>
-  <data name="PbrChannels_DoubleSided" xml:space="preserve"><value>DoubleSided (off means GL back-face culling)</value></data>
-  <data name="PbrChannels_FactorsNote" xml:space="preserve"><value>Metallic and roughness have no numeric factors to set: the engine takes them only from the MetallicRoughness map, and glTF's metallicFactor/roughnessFactor are already multiplied into the pixels at import. Emissive has no intensity parameter either — it is added straight to the colour.</value></data>
-  <data name="PbrChannels_Environment" xml:space="preserve"><value>Environment cubemap (Scene.Background feeds IBL)</value></data>
-  <data name="PbrChannels_EnvironmentNote" xml:space="preserve"><value>IblAmbientIntensity only has something to scale when a cubemap is present. Turn this off and Scene.Background drops back to a plain texture, so both PBR passes fall back to PBRPipelineBase.DefaultIblAmbientCubeTexture — a 16px white cube. The hero sphere then loses its environment reflection and goes flat, which is exactly the state every page without a real environment is in. Switching also invalidates the two cached CubeRenderTargets: without that you would keep looking at the previous bake.</value></data>
-  <data name="PbrChannels_Sampling" xml:space="preserve"><value>Sampling under the current pipeline</value></data>
   <data name="Picking_Intro" xml:space="preserve"><value>Clicking the view fires its ObjectPicked event, which returns only the nearest hit. Turning on the centre ray picks from the middle of the viewport every frame and lists every hit at that point — the occluder is translucent but still sits in front, which is exactly the difference between the full hit list and the nearest hit.</value></data>
   <data name="Picking_EnablePicking" xml:space="preserve"><value>View EnablePicking</value></data>
   <data name="Picking_CenterRay" xml:space="preserve"><value>Centre ray, pick every frame</value></data>
@@ -510,12 +500,7 @@
   <data name="Picking_NoCenterHit" xml:space="preserve"><value>Center ray hit no object</value></data>
   <data name="Picking_SourceClick" xml:space="preserve"><value>Click</value></data>
   <data name="Picking_HitReadout" xml:space="preserve"><value>{0} → {1} · distance {2:0.00} · world position ({3:0.##}, {4:0.##}, {5:0.##}) · instance {6} · {7} hit(s) at this point · {8} click(s)</value></data>
-  <data name="PbrChannels_BoundNotSampled" xml:space="preserve"><value>Bound, not sampled</value></data>
-  <data name="PbrChannels_MrStandard" xml:space="preserve"><value>G=roughness B=metallic</value></data>
-  <data name="PbrChannels_MrSwapped" xml:space="preserve"><value>B=roughness G=metallic (swapped)</value></data>
-  <data name="PbrChannels_Readout" xml:space="preserve"><value>{0} · BaseColor{1} Normal{2} MetallicRoughness{3} Occlusion{4} Emissive{5} · IBL env {9} · MR convention {6} · AlphaCutoff {7:0.00} · hero material Version={8} (bumped by 1 on every SetTexture/toggle, triggering a GPU state rebuild)</value></data>
-  <data name="PbrChannels_EnvReal" xml:space="preserve"><value>six-face skybox (has content)</value></data>
-  <data name="PbrChannels_EnvFallback" xml:space="preserve"><value>engine default white cubemap (flat, no shape)</value></data>  <data name="Background_SourceEngineDefault" xml:space="preserve"><value>Engine default: Texture.CreateFromColor(AliceBlue)</value></data>
+<data name="Background_SourceEngineDefault" xml:space="preserve"><value>Engine default: Texture.CreateFromColor(AliceBlue)</value></data>
   <data name="Background_SourceCubeMap" xml:space="preserve"><value>Six-face cubemap: textures/skybox/px…nz.jpg</value></data>
   <data name="Background_SourceHdr" xml:space="preserve"><value>HDRI→cubemap: buikslotermeerplein_1k.hdr</value></data>
   <data name="Background_SourceFlat" xml:space="preserve"><value>Single flat image: textures/background-1024.jpg</value></data>

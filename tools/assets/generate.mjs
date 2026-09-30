@@ -39,6 +39,9 @@ const models = [
   { key: 'Stones', src: 'Models/stones_01.glb', out: 'models/stones_01.glb', largest: 1024 },
   { key: 'Present', src: 'Models/present_11_BACKED.glb', out: 'models/present_11.glb', largest: 512 },
   { key: 'Soldier', src: 'Models/Soldier.glb', out: 'models/Soldier.glb', largest: 1024 },
+  // KayKit Skeletons（CC0）：95 个动画里带 Running_Strafe_Left/Right 与 Walking_Backwards，
+  // 是库内唯一能让 2D 混合空间真的沿两个轴 blend 的资产（Soldier 只有前向三个步态）。
+  { key: 'KayKitWarrior', src: 'Models/KayKit_Skeleton_Warrior.glb', out: 'models/KayKit_Skeleton_Warrior.glb', largest: 1024 },
   // 原样入库，不走 optimize/jpeg 那两趟：这张图的 baseColor 是「白底 + alpha=0」的 RGBA PNG，
   // 转 JPEG 会把透明区压到黑底（角色整片变黑），而它的卡通材质参数与 ILM/SDF/Ramp 全在
   // AURA3D_TEXTURES_CELSHADING 扩展里，glTF Transform 不认这个扩展。
@@ -55,6 +58,20 @@ const fbx = [
 const textures = [
   { key: 'BackgroundJpg', src: 'Textures/background.jpg', out: 'textures/background-1024.jpg', px: 1024 },
   { key: 'ParticleFirePng', src: 'Textures/fire.png', out: 'textures/fire-512.png', px: 512 },
+  // Poly Haven（CC0）材质库页的三档典型材质，每套三张：diff（BaseColor）、
+  // nor_gl（Normal，OpenGL 约定）、arm（R=AO/G=粗糙/B=金属，正好就是 glTF 的 MetallicRoughness 打包）。
+  // 选材看 arm 通道均值说话：镀锌钢板（B≈0.88、G≈0.13，光滑裸金属）、
+  // 锈蚀铁皮（锈是电介质，露铁处才有金属度）、混砌砖墙（粗糙介质）。
+  // Poly Haven 名字带 metal 的多是涂漆/锈蚀（arm 的 B 通道≈0），真裸金属只有少数几套。
+  { key: 'PbrRustyMetalBase', src: 'Textures/pbr/rusty_metal_04/rusty_metal_04_diff_1k.jpg', out: 'textures/pbr/rusty_metal_base.jpg', px: 1024 },
+  { key: 'PbrRustyMetalNormal', src: 'Textures/pbr/rusty_metal_04/rusty_metal_04_nor_gl_1k.jpg', out: 'textures/pbr/rusty_metal_normal.jpg', px: 1024 },
+  { key: 'PbrRustyMetalArm', src: 'Textures/pbr/rusty_metal_04/rusty_metal_04_arm_1k.jpg', out: 'textures/pbr/rusty_metal_arm.jpg', px: 1024 },
+  { key: 'PbrBrickWallBase', src: 'Textures/pbr/mixed_brick_wall/mixed_brick_wall_diff_1k.jpg', out: 'textures/pbr/brick_wall_base.jpg', px: 1024 },
+  { key: 'PbrBrickWallNormal', src: 'Textures/pbr/mixed_brick_wall/mixed_brick_wall_nor_gl_1k.jpg', out: 'textures/pbr/brick_wall_normal.jpg', px: 1024 },
+  { key: 'PbrBrickWallArm', src: 'Textures/pbr/mixed_brick_wall/mixed_brick_wall_arm_1k.jpg', out: 'textures/pbr/brick_wall_arm.jpg', px: 1024 },
+  { key: 'PbrGalvanizedBase', src: 'Textures/pbr/galvanized_sheet_metal/galvanized_sheet_metal_diff_1k.jpg', out: 'textures/pbr/galvanized_base.jpg', px: 1024 },
+  { key: 'PbrGalvanizedNormal', src: 'Textures/pbr/galvanized_sheet_metal/galvanized_sheet_metal_nor_gl_1k.jpg', out: 'textures/pbr/galvanized_normal.jpg', px: 1024 },
+  { key: 'PbrGalvanizedArm', src: 'Textures/pbr/galvanized_sheet_metal/galvanized_sheet_metal_arm_1k.jpg', out: 'textures/pbr/galvanized_arm.jpg', px: 1024 },
 ];
 
 const skyboxFaces = ['px', 'nx', 'py', 'ny', 'pz', 'nz'];

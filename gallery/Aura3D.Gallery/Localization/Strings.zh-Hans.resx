@@ -72,9 +72,6 @@
   <data name="Particles_Burst" xml:space="preserve"><value>爆发 · 球面一次性</value></data>
   <data name="Particles_Debris" xml:space="preserve"><value>碎块 · 网格模式（内部是 InstancedMesh）</value></data>
   <data name="Particles_Shared" xml:space="preserve"><value>三条共用</value></data>
-  <data name="PbrChannels_Channels" xml:space="preserve"><value>五张贴图通道（都绑 uniform，但只有部分真被采样）</value></data>
-  <data name="PbrChannels_Switches" xml:space="preserve"><value>材质开关</value></data>
-  <data name="PbrChannels_PbrSettings" xml:space="preserve"><value>PBR 专属设置</value></data>
   <data name="Pipelines_Lights" xml:space="preserve"><value>灯</value></data>
   <data name="Pipelines_Readout" xml:space="preserve"><value>对照读数</value></data>
   <data name="PostProcessing_ToneMapping" xml:space="preserve"><value>逐帧生效 · 色调映射（只有 PBR 两条管线注册了 ToneMappingPass）</value></data>
@@ -105,8 +102,11 @@
   <data name="Demo_Camera_Summary" xml:space="preserve"><value>透视/正交切换、视锥四参数、LookAt、FitToBoundingBox 与 WorldToScreen 屏幕投影</value></data>
   <data name="Demo_MaterialShaders_Title" xml:space="preserve"><value>材质通道与自定义着色器</value></data>
   <data name="Demo_MaterialShaders_Summary" xml:space="preserve"><value>BaseColor/Normal 通道、按 pass 类名覆盖 GLSL、材质参数按名绑定与三种 BlendMode</value></data>
-  <data name="Demo_PbrChannels_Title" xml:space="preserve"><value>PBR 贴图通道</value></data>
-  <data name="Demo_PbrChannels_Summary" xml:space="preserve"><value>五张通道图的绑与采、MetallicRoughness 的通道约定差异、AlphaCutoff 与 DoubleSided</value></data>
+  <data name="Demo_PbrMaterials_Title" xml:space="preserve"><value>PBR 材质库</value></data>
+  <data name="Demo_PbrMaterials_Summary" xml:space="preserve"><value>三档典型 CC0 材质——锈蚀铁皮、混砌砖墙、镀锌钢板——每套按 BaseColor/Normal/ARM 打包的 MetallicRoughness 接线，在真实 IBL 下渲染</value></data>
+  <data name="PbrMaterials_Intro" xml:space="preserve"><value>三颗球穿着 Poly Haven（CC0）实拍材质：锈蚀铁皮（锈本身是电介质，只有露铁处才有金属度，ARM 蓝通道斑驳）、混砌砖墙（法线主导的粗糙介质）、镀锌钢板（金属度≈0.9、粗糙度≈0.13，IBL 下反射锐利）。每套三张贴图：diff → BaseColor，nor_gl → Normal，arm → MetallicRoughness（R=AO、G=粗糙、B=金属——正好是 glTF 的打包约定，不用拆通道）。</value></data>
+  <data name="PbrMaterials_Order" xml:space="preserve"><value>从左到右</value></data>
+  <data name="PbrMaterials_Note" xml:space="preserve"><value>背景天空盒不只是布景：金属没有漫反射项，没有这张立方图烘出来的 IBL，金属球就是一坨死灰。本页把 IBL 环境项压到 0.45，让定向光的高光与阴影把三档材质拉开。贴图为 1024px 的 JPEG，合计约 2.9MB，进页时加载。</value></data>
   <data name="Demo_CelShading_Title" xml:space="preserve"><value>卡通着色与描边</value></data>
   <data name="Demo_CelShading_Summary" xml:space="preserve"><value>ILM/ShadowRamp/SDF 六个通道、下划线开头的材质参数，以及描边 pass 唯一的公开旋钮</value></data>
   <data name="Demo_IblEnvironment_Title" xml:space="preserve"><value>环境图与 IBL</value></data>
@@ -137,18 +137,18 @@
   <data name="Demo_Hism_Summary" xml:space="preserve"><value>InstancedMeshGroup 的八叉树分组、后台建树，以及原地更新与整树重建的代价差</value></data>
   <data name="Demo_Particles_Title" xml:space="preserve"><value>粒子系统</value></data>
   <data name="Demo_Particles_Summary" xml:space="preserve"><value>公告板 / 一次性爆发 / 网格模式三条发射路径、按寿命翻页的火焰图，以及生命周期按钮的真实语义</value></data>
-  <data name="AnimationMix_Intro" xml:space="preserve"><value>左边是状态机（AnimationGraph），右边是混合空间（AnimationBlendSpace），两份模型同骨骼。换剪辑、调权重都是逐帧的，不需要重建着色器。</value></data>
-  <data name="AnimationMix_AutoToggle" xml:space="preserve"><value>自动在两条剪辑间来回切</value></data>
-  <data name="AnimationMix_ToggleInterval" xml:space="preserve"><value>来回间隔 秒</value></data>
+  <data name="AnimationMix_Intro" xml:space="preserve"><value>左右两个角色共用同一副骨骼，各演示一种「多条剪辑合成一个姿势」的办法：左边是状态机（AnimationGraph）——待机/走路/跑步是三个离散状态，切换瞬间靠 BlendTime 交叉淡化；右边是混合空间（AnimationBlendSpace）——六条剪辑摆在平面上的六个点，姿势按 (X, Y) 轴值连续插值。左边看「切换」，右边看「渐变」。</value></data>
+  <data name="AnimationMix_AutoToggle" xml:space="preserve"><value>沿 待机 → 走路 → 跑步 自动转圈</value></data>
+  <data name="AnimationMix_ToggleInterval" xml:space="preserve"><value>每个状态停留 秒</value></data>
   <data name="AnimationMix_BlendTime" xml:space="preserve"><value>BlendTime 交叉时长 秒</value></data>
-  <data name="AnimationMix_ManualSwitch" xml:space="preserve"><value>手动切一次</value></data>
+  <data name="AnimationMix_ManualSwitch" xml:space="preserve"><value>切到下一个状态</value></data>
   <data name="AnimationMix_TransitionNote" xml:space="preserve"><value>转移谓词每帧都问，但只在 CurrentWeight 到 1（上一段淡入结束）之后才检查，所以 BlendTime 调长会让切换明显变钝。AddNextNode 还禁止自己指向自己：想循环就得两个节点互连。</value></data>
   <data name="AnimationMix_StateMachine" xml:space="preserve"><value>状态机</value></data>
-  <data name="AnimationMix_AxisX" xml:space="preserve"><value>轴 X（右=跑）</value></data>
-  <data name="AnimationMix_AxisY" xml:space="preserve"><value>轴 Y</value></data>
+  <data name="AnimationMix_AutoSweep" xml:space="preserve"><value>自动扫掠前进（静止 → 走路 → 跑步 → 静止）</value></data>
+  <data name="AnimationMix_SweepPeriod" xml:space="preserve"><value>扫掠一个来回 秒</value></data>
   <data name="AnimationMix_IdwPower" xml:space="preserve"><value>IdwPower（越大越贴最近的点）</value></data>
   <data name="AnimationMix_ResetAxes" xml:space="preserve"><value>Reset（轴回到 0,0）</value></data>
-  <data name="AnimationMix_BlendSpaceNote" xml:space="preserve"><value>三个采样点摆成 上=Run、下=Walk、原点=Idle，所以把轴 Y 拉满就是纯粹的跑；权重是按距离的 IdwPower 次方反比，引擎自己算，面板上看的是轴值与幂次。</value></data>
+  <data name="AnimationMix_BlendSpaceNote" xml:space="preserve"><value>上面的矩形是二维混合空间的俯视图，两轴都是 -1～+1：竖中轴上端=前进跑、半程=前进走、下端=后退走（KayKit 没有后退跑），横中轴两端=左/右侧移跑，原点=静止。六个灰点是采样剪辑的摆位，蓝色滑块是当前轴值，按住拖动，右侧角色实时播放对应权重下的混合姿势；扫掠开着时滑块自己沿竖轴往返，手动拖动会自动暂停扫掠，勾回开关恢复。IdwPower 越大越贴最近的采样点。</value></data>
   <data name="AnimationMix_BlendSpaceRow" xml:space="preserve"><value>混合空间</value></data>
   <data name="AssimpFbx_Intro" xml:space="preserve"><value>SK_Mannequin.FBX 里没有动画，动作分别放在两个 FBX 里。一个文件可能带多条剪辑，条数与命名都读的是文件实际内容。</value></data>
   <data name="AssimpFbx_Sampler" xml:space="preserve"><value>挂上的动作</value></data>
@@ -319,16 +319,6 @@
   <data name="Particles_VisibilityCulling" xml:space="preserve"><value>按体积剔除 EnableVisibilityCulling</value></data>
   <data name="Particles_ShowBounds" xml:space="preserve"><value>画粒子体积（Debug.ShowParticleBounds）</value></data>
   <data name="Particles_State" xml:space="preserve"><value>粒子状态</value></data>
-  <data name="PbrChannels_Intro" xml:space="preserve"><value>左边是接了通道的球，中间只接 BaseColor 当对照，右边那块平面用 Masked+AlphaCutoff。下面的生效矩阵是按当前管线实时算的：接上一张没人采样的图，画面不会变，读数会告诉你为什么。</value></data>
-  <data name="PbrChannels_SwapMr" xml:space="preserve"><value>换一张 MetallicRoughness（把 G/B 对调）</value></data>
-  <data name="PbrChannels_SwapNote" xml:space="preserve"><value>对调演示的是通道约定：前向与延迟的不透明分支按 glTF 走 G=粗糙、B=金属，而延迟管线里直接读材质图的那段（半透明 IBL）写的是 B=粗糙、G=金属。同一张图在两条分支下金属度和粗糙度互换，是引擎里的真实不一致。</value></data>
-  <data name="PbrChannels_BlendMode" xml:space="preserve"><value>BlendMode（决定进哪个 pass）</value></data>
-  <data name="PbrChannels_AlphaCutoff" xml:space="preserve"><value>AlphaCutoff（Masked 才用到）</value></data>
-  <data name="PbrChannels_DoubleSided" xml:space="preserve"><value>DoubleSided（关掉即 GL 背面剔除）</value></data>
-  <data name="PbrChannels_FactorsNote" xml:space="preserve"><value>金属度与粗糙度没有数值因子可设：引擎只从 MetallicRoughness 那张贴取，glTF 的 metallicFactor/roughnessFactor 在导入时就已经乘进像素里了。自发光也没有强度参数，直接加到颜色上。</value></data>
-  <data name="PbrChannels_Environment" xml:space="preserve"><value>环境立方图（Scene.Background 喂 IBL）</value></data>
-  <data name="PbrChannels_EnvironmentNote" xml:space="preserve"><value>IblAmbientIntensity 要有东西可缩放，前提是场景里真有一张立方图。把这个开关关掉，Scene.Background 退回普通贴图，两条 PBR 管线就都退到 PBRPipelineBase.DefaultIblAmbientCubeTexture——一张 16px 的白立方图。主球随即失去环境反射、变成平的一坨，这正是所有没挂真实环境的页面的状态。切换时同时把两个缓存的 CubeRenderTarget 失效：不失效你看到的还是上一次的烘培结果。</value></data>
-  <data name="PbrChannels_Sampling" xml:space="preserve"><value>当前管线的采样情况</value></data>
   <data name="Picking_Intro" xml:space="preserve"><value>点画面会走视图的 ObjectPicked（只回最近一个）。开「中心射线」后每帧改从视口正中拾取，并列出该点的全部命中——挡板是半透明的，但它照样挡在前面，这就是全命中列表和最近命中的区别。</value></data>
   <data name="Picking_EnablePicking" xml:space="preserve"><value>视图 EnablePicking</value></data>
   <data name="Picking_CenterRay" xml:space="preserve"><value>中心射线逐帧拾取</value></data>
@@ -510,12 +500,7 @@
   <data name="Picking_NoCenterHit" xml:space="preserve"><value>中心射线未命中任何对象</value></data>
   <data name="Picking_SourceClick" xml:space="preserve"><value>点击</value></data>
   <data name="Picking_HitReadout" xml:space="preserve"><value>{0} → {1} · 距离 {2:0.00} · 世界坐标 ({3:0.##}, {4:0.##}, {5:0.##}) · 实例 {6} · 该点命中 {7} 个 · 点击 {8} 次</value></data>
-  <data name="PbrChannels_BoundNotSampled" xml:space="preserve"><value>绑了不采</value></data>
-  <data name="PbrChannels_MrStandard" xml:space="preserve"><value>G=粗糙 B=金属</value></data>
-  <data name="PbrChannels_MrSwapped" xml:space="preserve"><value>B=粗糙 G=金属（对调过）</value></data>
-  <data name="PbrChannels_Readout" xml:space="preserve"><value>{0} · BaseColor{1} Normal{2} MetallicRoughness{3} Occlusion{4} Emissive{5} · IBL 环境 {9} · MR 约定 {6} · AlphaCutoff {7:0.00} · hero 材质 Version={8}（每次 SetTexture/开关都会 +1，触发 GPU 状态重建）</value></data>
-  <data name="PbrChannels_EnvReal" xml:space="preserve"><value>六面天空盒（有内容）</value></data>
-  <data name="PbrChannels_EnvFallback" xml:space="preserve"><value>引擎默认白立方图（平，无形状）</value></data>  <data name="Background_SourceEngineDefault" xml:space="preserve"><value>引擎默认：Texture.CreateFromColor(AliceBlue)</value></data>
+<data name="Background_SourceEngineDefault" xml:space="preserve"><value>引擎默认：Texture.CreateFromColor(AliceBlue)</value></data>
   <data name="Background_SourceCubeMap" xml:space="preserve"><value>六面立方图：textures/skybox/px…nz.jpg</value></data>
   <data name="Background_SourceHdr" xml:space="preserve"><value>HDRI 转立方图：buikslotermeerplein_1k.hdr</value></data>
   <data name="Background_SourceFlat" xml:space="preserve"><value>单张平面图：textures/background-1024.jpg</value></data>

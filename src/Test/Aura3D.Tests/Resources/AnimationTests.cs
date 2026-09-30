@@ -87,6 +87,40 @@ public class AnimationTests
     }
 
     [Fact]
+    public void Sample_ShouldFallbackToRestPose_WhenChannelComponentHasNoKeyframes()
+    {
+        var rest = Matrix4x4.CreateScale(2f)
+            * Matrix4x4.CreateRotationZ(MathF.PI)
+            * Matrix4x4.CreateTranslation(1f, 2f, 3f);
+        var skeleton = new Skeleton();
+        skeleton.Bones.Add(new Bone
+        {
+            Name = "Arm",
+            LocalMatrix = rest
+        });
+        var animation = new Animation { Skeleton = skeleton };
+
+        // 仅动画 rotation：position/scale 关键帧列表为空（glTF 资产常见情况）
+        var channel = new AnimationChannel();
+        channel.RotationKeyframes.AddRange(
+        [
+            new Keyframe<Quaternion> { Time = 0f, Value = Quaternion.Identity },
+            new Keyframe<Quaternion> { Time = 2f, Value = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathF.PI) }
+        ]);
+        animation.Channels["Arm"] = channel;
+
+        var sample = animation.Sample("Arm", 0.5f);
+
+        Matrix4x4.Decompose(sample, out var scale, out _, out var translation);
+        Assert.Equal(2f, scale.X, 5);
+        Assert.Equal(2f, scale.Y, 5);
+        Assert.Equal(2f, scale.Z, 5);
+        Assert.Equal(1f, translation.X, 5);
+        Assert.Equal(2f, translation.Y, 5);
+        Assert.Equal(3f, translation.Z, 5);
+    }
+
+    [Fact]
     public void AddNextNode_ShouldExposeStableErrorCode_WhenNodeReferencesItself()
     {
         var node = new AnimationGraphNode(new TestAnimationSampler());

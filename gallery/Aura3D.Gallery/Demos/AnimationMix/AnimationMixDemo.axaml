@@ -38,10 +38,14 @@
 
         <kit:Section Title="{Translate {x:Static loc:Strings+Keys.AnimationMix_BlendSpace}}" />
 
-        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_AxisX}}" Minimum="-1" Maximum="1" Value="0" Format="0.00"
-                       ValueChanged="OnAxisXChanged" />
-        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_AxisY}}" Minimum="-1" Maximum="1" Value="0" Format="0.00"
-                       ValueChanged="OnAxisYChanged" />
+        <kit:ToggleRow x:Name="AutoSweepToggle" Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_AutoSweep}}" IsChecked="True"
+                       Toggled="OnAutoSweepToggled" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_SweepPeriod}}" Minimum="2" Maximum="20" Value="8" Format="0.0"
+                       ValueChanged="OnSweepPeriodChanged" />
+
+        <kit:BlendSpacePad x:Name="BlendPad" Height="230"
+                           AxisChanged="OnPadAxisChanged" />
         <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_IdwPower}}" Minimum="0.5" Maximum="6" Value="2" Format="0.00"
                        ValueChanged="OnIdwPowerChanged" />
 

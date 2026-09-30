@@ -162,5 +162,5 @@ var texture = TextureLoader.LoadTexture(stream)
 
 - **Environment**：五个环境来源，前两档是文件资产（1k HDRI 全景、六面天空盒），后三档是程序化全景图；同时演示 PBR 的辐照度/预滤波反射与重建缓存：[EnvironmentDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/Environment/EnvironmentDemo.axaml.cs)
 - **Background**：四种背景来源（引擎默认纯色、六面立方图、HDR 转换、平面拉伸图）逐一对比，并可在透视/正交之间切换观察天空盒：[SkyboxBackgroundDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/Background/SkyboxBackgroundDemo.axaml.cs)
-- **PBR texture channels**：五张通道图的绑定与采样，环境立方图有一个开关，可以直接对比「挂真实环境」与「退到白立方图」在金属球上的差别：[PbrChannelsDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/PbrChannels/PbrChannelsDemo.axaml.cs)
+- **PBR 材质库**：三档典型实拍材质（锈蚀金属/砖墙/镀锌钢板）挂在 IBL 环境下渲染，金属球能直接看出环境反射的形状：[PbrMaterialsDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/PbrMaterials/PbrMaterialsDemo.axaml.cs)
 - 贴图与材质通道的采样设置，见[材质与贴图](./material.md)。
