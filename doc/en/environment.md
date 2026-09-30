@@ -136,8 +136,13 @@ var texture = TextureLoader.LoadTexture(stream)
 - **Default BlinnPhong pipeline**: no. The background is pixels only. Shadow-area brightness comes from `PipelineSettings.AmbientIntensity` (default 0.1; 0 makes shadows fully black).
 - **PBR pipelines**: yes. `Scene.Background` is the single entry point for environment lighting — the engine bakes it into an irradiance map and a prefiltered reflection map (IBL), which is where metal balls get their reflections.
 
+> [!IMPORTANT]
+> **No cubemap does not mean no IBL.** With no cubemap set, both PBR pipelines fall back to `PBRPipelineBase.DefaultIblAmbientCubeTexture` — a 16px cube converted from `Texture.CreateFromColor(White)`.
+> Flat white means the ambient term has no direction and the prefiltered reflection has no shape: metal turns into an evenly lit ball, which reads as "IBL is broken" when it is actually working fine with nothing to reflect.
+> So whenever metallic/roughness or normal channels are supposed to **show their effect**, the scene needs a cubemap with actual content (HDR, six-face skybox) — exactly what the PBR pages in the Gallery do.
+
 > [!TIP]
-> Swapping the background at runtime under a PBR pipeline can leave IBL baked from the old image, because the two maps are cached as GPU state on the camera node. To force a rebake, invalidate the camera's cached states keyed `IrradianceMap` and `PrefilteredEnvironmentMap` — copy `InvalidateIblCaches()` from the Environment demo linked below. Pipeline and IBL configuration: [Choosing and Configuring Pipelines](./pipelines.md).
+> Swapping the background at runtime under a PBR pipeline can leave IBL baked from the old image, because the two maps are cached as GPU state on the camera node. To force a rebake, invalidate the camera's cached states keyed `IrradianceMap` and `PrefilteredEnvironmentMap` — copy `InvalidateIblCaches()` from the Environment demo linked below. The same applies when `Scene.Background` switches from a solid color / plain image to a cubemap, otherwise the picture stays on the old environment forever. Pipeline and IBL configuration: [Choosing and Configuring Pipelines](./pipelines.md).
 
 ## Common pitfalls
 
@@ -149,11 +154,13 @@ var texture = TextureLoader.LoadTexture(stream)
 | Loading a cube map throws | Not exactly 6 faces, mismatched dimensions, or mixed channel layouts |
 | Image memory never released | `LoadCubeTexture(List<Stream>)` does not close your streams — `Dispose` them (or use the file-name overload) |
 | HDR sky washed out, metal reflections glaring | Panoramas must be linear: `SetIsGammaSpace(false)` |
+| Under PBR a metal ball is one evenly lit blob with no visible environment | The scene has no cubemap, so IBL can only bake the flat white fallback cube. Assign one with content — see "Can the background light the scene?" above |
 | Ground texture smeared at the edges | Default wrap is `ClampToEdge`; tiling materials want `Repeat` |
 | The second view draws the sky again | Set that camera's `IsRenderBackground = false` |
 
 ## See it running
 
-- **Environment**: procedurally generated equirectangular panoramas baked into cube skyboxes, plus PBR irradiance/prefiltered reflections and a manual cache rebake: [EnvironmentDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/Environment/EnvironmentDemo.axaml.cs)
+- **Environment**: five environment sources — two backed by files (a 1k HDRI panorama and a six-face skybox) and three procedural panoramas — plus PBR irradiance/prefiltered reflections and a manual cache rebake: [EnvironmentDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/Environment/EnvironmentDemo.axaml.cs)
 - **Background**: four background sources side by side (engine default solid color, cube map, HDR conversion, flat stretched image), switchable between perspective and orthographic cameras: [SkyboxBackgroundDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/Background/SkyboxBackgroundDemo.axaml.cs)
+- **PBR texture channels**: binding and sampling the five channel maps, with a switch for the environment cubemap so you can compare "real environment" against "white fallback cube" on the metal ball: [PbrChannelsDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/PbrChannels/PbrChannelsDemo.axaml.cs)
 - Sampling settings for material channels: [Materials and Textures](./material.md).

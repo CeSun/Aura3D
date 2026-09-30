@@ -28,6 +28,8 @@
         <kit:SliderRow x:Name="FaceSizeRow" Label="{Translate {x:Static loc:Strings+Keys.Environment_CubeSize}}" Minimum="32" Maximum="256" Format="0"
                        ValueChanged="OnFaceSizeChanged" />
 
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Environment_FaceSizeNote}}" />
+
         <Button Content="{Translate {x:Static loc:Strings+Keys.Environment_Rebake}}" Click="OnRebake" HorizontalAlignment="Stretch" />
 
         <Button Content="{Translate {x:Static loc:Strings+Keys.Environment_Reload}}" Click="OnReload" HorizontalAlignment="Stretch" />

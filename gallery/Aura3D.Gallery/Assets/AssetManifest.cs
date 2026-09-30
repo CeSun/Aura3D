@@ -67,6 +67,18 @@ public static partial class AssetManifest
         ["SkyboxPx", "SkyboxNx", "SkyboxPy", "SkyboxNy", "SkyboxPz", "SkyboxNz"];
 
     /// <summary>
+    /// 六面天空盒的资产集合，约 0.3 MB，浏览器端也扛得住。
+    /// 需要环境的页面（PBR 材质页）用这个，而不是自建一套：IBL 只认
+    /// <c>Scene.Background</c> 的立方图分支，退回普通图时会落到引擎那张纯白立方图上，
+    /// 金属只剩一层没有方向的白光，等于没环境。
+    /// 延迟求值不是省事：<see cref="All"/> 在生成出来的那半个类里，两个 partial 的静态字段
+    /// 初始化顺序不确定，写成静态字段初始化器会偶发地在 <see cref="All"/> 就绪前跑，直接 NRE。
+    /// </summary>
+    public static AssetSet SkyboxSet => skyboxSet ??= RequireSet([.. SkyboxKeys]);
+
+    private static AssetSet? skyboxSet;
+
+    /// <summary>
     /// 在浏览器端可用的全部资产字节数合计。
     /// </summary>
     public static long WebTotalBytes => All.Where(asset => asset.WebFriendly).Sum(asset => asset.Bytes);

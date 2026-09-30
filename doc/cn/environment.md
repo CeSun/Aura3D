@@ -136,8 +136,13 @@ var texture = TextureLoader.LoadTexture(stream)
 - **默认 BlinnPhong 管线**：不能。背景只是画面。暗部亮度由 `PipelineSettings.AmbientIntensity`（默认 0.1，设 0 则暗部全黑）决定。
 - **PBR 管线**：能。`Scene.Background` 是唯一的环境光入口——引擎会把它烘成辐照度图与预滤波反射图（IBL），金属球上的反射就来自它。
 
+> [!IMPORTANT]
+> **没设立方图不等于不烘 IBL。** 这时两条 PBR 管线会退到 `PBRPipelineBase.DefaultIblAmbientCubeTexture`——一张由 `Texture.CreateFromColor(White)` 转出来的 16px 白立方图。
+> 纯白意味着环境项没有方向、预滤波反射没有形状：金属会变成一坨均匀发亮的球，看着像「IBL 没生效」，其实是生效了但没有内容可反射。
+> 所以只要想让金属度/粗糙度、法线一类通道**看得出效果**，场景就得挂一张有内容的立方图（HDR/六面天空盒），示例里的 PBR 页面正是这么做的。
+
 > [!TIP]
-> 在 PBR 管线下运行时换背景，IBL 的两张烘培结果缓存在相机节点上，可能仍是旧图。让它们失效的办法是清掉相机上键为 `IrradianceMap` 与 `PrefilteredEnvironmentMap` 的 GPU 状态——可直接照抄示例里的 `InvalidateIblCaches()`（见下面的 Environment 示例）。管线与 IBL 配置见[选择与配置管线](./pipelines.md)。
+> 在 PBR 管线下运行时换背景，IBL 的两张烘培结果缓存在相机节点上，可能仍是旧图。让它们失效的办法是清掉相机上键为 `IrradianceMap` 与 `PrefilteredEnvironmentMap` 的 GPU 状态——可直接照抄示例里的 `InvalidateIblCaches()`（见下面的 Environment 示例）。`Scene.Background` 从「纯色/普通图」切成立方图同样要清，否则画面会一直停在旧环境上。管线与 IBL 配置见[选择与配置管线](./pipelines.md)。
 
 ## 常见坑
 
@@ -149,11 +154,13 @@ var texture = TextureLoader.LoadTexture(stream)
 | 加载立方体图直接抛异常 | 张数不是 6、六张尺寸不同、或通道格式不统一 |
 | 内存被图片占住不放 | `LoadCubeTexture(List<Stream>)` 不会替你关闭 stream，用完 `Dispose`（或改用文件名重载） |
 | HDR 天空整体发白、金属反射刺眼 | 全景图必须 `SetIsGammaSpace(false)` |
+| PBR 下金属球是一坨均匀发亮、看不出环境 | 场景没挂立方图，IBL 只能烘那张纯白立方图。挂上有内容的立方图，见下面「背景能当光源吗」 |
 | 地面贴图边缘拉丝 | 默认 `ClampToEdge`，平铺材质要 `Repeat` |
 | 第二个视角也画了一遍天空 | 那个相机 `IsRenderBackground = false` |
 
 ## 跑起来看
 
-- **Environment**：程序化生成的等距柱状全景图 → 立方体天空盒，并同时演示 PBR 的辐照度/预滤波反射与重建缓存：[EnvironmentDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/Environment/EnvironmentDemo.axaml.cs)
+- **Environment**：五个环境来源，前两档是文件资产（1k HDRI 全景、六面天空盒），后三档是程序化全景图；同时演示 PBR 的辐照度/预滤波反射与重建缓存：[EnvironmentDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/Environment/EnvironmentDemo.axaml.cs)
 - **Background**：四种背景来源（引擎默认纯色、六面立方图、HDR 转换、平面拉伸图）逐一对比，并可在透视/正交之间切换观察天空盒：[SkyboxBackgroundDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/Background/SkyboxBackgroundDemo.axaml.cs)
+- **PBR texture channels**：五张通道图的绑定与采样，环境立方图有一个开关，可以直接对比「挂真实环境」与「退到白立方图」在金属球上的差别：[PbrChannelsDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/PbrChannels/PbrChannelsDemo.axaml.cs)
 - 贴图与材质通道的采样设置，见[材质与贴图](./material.md)。

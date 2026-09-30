@@ -1,5 +1,6 @@
 using Aura3D.Core.Geometries;
 using Aura3D.Core.Nodes;
+using Aura3D.Core.Renderers;
 using Aura3D.Core.Resources;
 using Aura3D.Gallery.Kit;
 using Aura3D.Gallery.Localization;
@@ -15,10 +16,16 @@ namespace Aura3D.Gallery.Demos;
 /// <summary>
 /// PBR 的两条管线到底读哪几张贴图、打包约定是什么、以及 <see cref="Material"/> 上哪些开关真的有人看。
 /// 这页把「接上了」和「起作用了」分开演示：五张图都会被绑成 uniform，可其中两张在着色器里根本没被采样。
+/// 环境立方图单独一项：IBL 只认 <c>Scene.Background</c> 的立方图分支，没挂的时候管线会退到引擎那张
+/// 纯白立方图（<c>PBRPipelineBase.DefaultIblAmbientCubeTexture</c>），IblAmbientIntensity 于是没有东西可缩放、
+/// 金属球也看不出金属感——所以本页默认挂上六面天空盒，并留一个开关回到那个「没环境」的状态做对照。
 /// 参数行的排版全在 <c>PbrChannelsDemo.axaml</c> 里，这里只剩场景组装与回调。
 /// </summary>
 public sealed partial class PbrChannelsDemo : Demo
 {
+    private const string IrradianceKey = "IrradianceMap";
+    private const string PrefilterKey = "PrefilteredEnvironmentMap";
+
     private readonly bool[] plugged = [true, true, true, false, false];
 
     // ComboRow.Options 是 IList，XAML 只能绑到公开的列表属性上。
@@ -31,6 +38,9 @@ public sealed partial class PbrChannelsDemo : Demo
     private Mesh? heroMesh;
     private Mesh? bareMesh;
     private DirectionalLight? sun;
+
+    private CubeTexture environment = null!;
+    private bool environmentOn = true;
 
     private int metalRoughSwaps;
     private float alphaCutoff = 0.5f;
@@ -52,7 +62,7 @@ public sealed partial class PbrChannelsDemo : Demo
     }
 
     /// <inheritdoc />
-    public override Task LoadAssetsAsync(AssetBatch assets) => Task.CompletedTask;
+    public override async Task LoadAssetsAsync(AssetBatch assets) => environment = await assets.CubeTextureAsync();
 
     /// <inheritdoc />
     public override void BuildScene()
@@ -63,6 +73,8 @@ public sealed partial class PbrChannelsDemo : Demo
         scene.MainCamera.LookAt(new Vector3(0, 1.2f, 0));
         // 40×40 地面 + 拉远余量，抬过默认 far 100。
         scene.MainCamera.FarPlane = 150f;
+
+        ApplyEnvironment(scene);
 
         sun = new DirectionalLight
         {
@@ -173,6 +185,51 @@ public sealed partial class PbrChannelsDemo : Demo
         Context.InvalidateRender();
     }
 
+    private void OnEnvironmentToggled(object? sender, InspectorValueChangedEventArgs e)
+    {
+        environmentOn = e.ValueAs<bool>();
+
+        if (Context.Scene != null)
+            ApplyEnvironment(Context.Scene);
+
+        Report();
+
+        Context.InvalidateRender();
+    }
+
+    /// <summary>
+    /// 把环境图换成（或换掉）立方图。缓存必须一起失效：两条 PBR pass 见到
+    /// <c>FrameBufferId != 0</c> 就直接早退，不 Invalidate 的话画面会一直停在上一次的烘培结果上。
+    /// </summary>
+    private void ApplyEnvironment(Aura3D.Core.Scenes.Scene scene)
+    {
+        if (environmentOn)
+        {
+            scene.Background = environment;
+        }
+        else
+        {
+            // 退回普通贴图分支：两条 PBR 管线随之落到引擎那张纯白立方图上。
+            scene.Background = Texture.CreateFromColor(System.Drawing.Color.AliceBlue);
+        }
+
+        InvalidateIblCaches();
+    }
+
+    private void InvalidateIblCaches()
+    {
+        var camera = Context.Scene?.MainCamera;
+
+        if (camera == null)
+            return;
+
+        foreach (var key in new[] { IrradianceKey, PrefilterKey })
+        {
+            if (camera.GetPipelineGpuState<CubeRenderTarget>(key) is { } target)
+                target.Invalidate();
+        }
+    }
+
     private void OnExposureChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         Context.Settings.ToneMappingExposure = (float)e.ValueAs<double>();
@@ -275,6 +332,10 @@ public sealed partial class PbrChannelsDemo : Demo
 
         var version = hero.Version;
 
+        var envState = environmentOn
+            ? Strings.Keys.PbrChannels_EnvReal.T()
+            : Strings.Keys.PbrChannels_EnvFallback.T();
+
         Readout.Text = Strings.Keys.PbrChannels_Readout.Format(
             kind.DisplayName(),
             At(0),
@@ -284,6 +345,7 @@ public sealed partial class PbrChannelsDemo : Demo
             At(4),
             mrConvention,
             alphaCutoff,
-            version);
+            version,
+            envState);
     }
 }

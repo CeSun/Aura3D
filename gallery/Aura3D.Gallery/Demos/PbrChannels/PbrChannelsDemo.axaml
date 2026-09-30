@@ -44,6 +44,11 @@
 
         <kit:Section Title="{Translate {x:Static loc:Strings+Keys.PbrChannels_PbrSettings}}" />
 
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.PbrChannels_Environment}}" IsChecked="True"
+                       Toggled="OnEnvironmentToggled" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.PbrChannels_EnvironmentNote}}" />
+
         <kit:SliderRow x:Name="IblIntensityRow" Label="IblAmbientIntensity" Minimum="0" Maximum="4"
                        ValueChanged="OnIblIntensityChanged" />
         <kit:SliderRow x:Name="ExposureRow" Label="ToneMappingExposure" Minimum="0.05" Maximum="4"

@@ -110,7 +110,7 @@
   <data name="Demo_CelShading_Title" xml:space="preserve"><value>Cel shading &amp; outlines</value></data>
   <data name="Demo_CelShading_Summary" xml:space="preserve"><value>The six ILM/ShadowRamp/SDF channels, underscore-prefixed material parameters, and the outline pass's only public knob</value></data>
   <data name="Demo_IblEnvironment_Title" xml:space="preserve"><value>Environment maps &amp; IBL</value></data>
-  <data name="Demo_IblEnvironment_Summary" xml:space="preserve"><value>Baking a procedural panorama into a cubemap, how irradiance/prefilter caches are reused, re-bake versus Reload</value></data>
+  <data name="Demo_IblEnvironment_Summary" xml:space="preserve"><value>Real HDRI / six-face skybox / procedural panorama baked into a cubemap, how irradiance/prefilter caches are reused, re-bake versus Reload</value></data>
   <data name="Demo_SkyboxBackground_Title" xml:space="preserve"><value>Background sources &amp; skybox</value></data>
   <data name="Demo_SkyboxBackground_Summary" xml:space="preserve"><value>How the cubemap and flat-image branches each draw the background, the framing constants hard-coded in both shader variants, and why only the cubemap feeds IBL</value></data>
   <data name="Demo_Shadows_Title" xml:space="preserve"><value>Shadows &amp; cascaded CSM</value></data>
@@ -204,9 +204,10 @@
   <data name="Environment_Intro" xml:space="preserve"><value>Irradiance and prefiltered reflections are each baked once and parked in two GPU-state slots on the camera node, then reused every frame. Swapping the environment map therefore requires rebaking both caches: this page ships a rebake button that calls Invalidate() to zero the frame buffers, and the pipeline recomputes on the next frame. Skip it and skip Reload, and the picture stays on the old environment forever.</value></data>
   <data name="Environment_Panorama" xml:space="preserve"><value>Panorama</value></data>
   <data name="Environment_CubeSize" xml:space="preserve"><value>Cubemap edge length</value></data>
+  <data name="Environment_FaceSizeNote" xml:space="preserve"><value>Edge length only applies to the panorama branches (HDRI and procedural): it is the bake target. Picking the six-face skybox feeds that cube straight to IBL, so the edge length comes from those images and this slider is inert.</value></data>
   <data name="Environment_Rebake" xml:space="preserve"><value>Rebake IBL (Invalidate both cached CubeRenderTargets)</value></data>
   <data name="Environment_Reload" xml:space="preserve"><value>Reload the page (also needed when switching pipelines)</value></data>
-  <data name="Environment_BackgroundNote" xml:space="preserve"><value>Background is OneOf&lt;CubeTexture, Texture&gt;: only the cubemap branch drives IBL, a plain texture (equirectangular) is just drawn as the backdrop. With no cubemap set, both PBR pipelines fall back to the engine's default cube, so the sphere keeps reflecting in every state outside the three options above — do not read that as "IBL is not working".</value></data>
+  <data name="Environment_BackgroundNote" xml:space="preserve"><value>Background is OneOf&lt;CubeTexture, Texture&gt;: only the cubemap branch drives IBL, a plain texture is just drawn as the backdrop. With no cubemap set the PBR pipelines do not skip IBL — they fall back to PBRPipelineBase.DefaultIblAmbientCubeTexture, which is a 16px cube converted from Texture.CreateFromColor(White). Flat white means the ambient term has no direction and the prefiltered reflection has no shape: metal turns into an evenly lit blob instead of mirroring its surroundings. Only a cubemap with actual content makes IBL readable, which is why the file-based options at the top of this page exist.</value></data>
   <data name="Environment_IblAmbient" xml:space="preserve"><value>IblAmbientIntensity (read by PBR)</value></data>
   <data name="Environment_KeyLightVisible" xml:space="preserve"><value>Directional light visible (turn off to light with IBL only)</value></data>
   <data name="Environment_RenderBackground" xml:space="preserve"><value>Draw background (Camera.IsRenderBackground)</value></data>
@@ -325,6 +326,8 @@
   <data name="PbrChannels_AlphaCutoff" xml:space="preserve"><value>AlphaCutoff (only Masked uses it)</value></data>
   <data name="PbrChannels_DoubleSided" xml:space="preserve"><value>DoubleSided (off means GL back-face culling)</value></data>
   <data name="PbrChannels_FactorsNote" xml:space="preserve"><value>Metallic and roughness have no numeric factors to set: the engine takes them only from the MetallicRoughness map, and glTF's metallicFactor/roughnessFactor are already multiplied into the pixels at import. Emissive has no intensity parameter either — it is added straight to the colour.</value></data>
+  <data name="PbrChannels_Environment" xml:space="preserve"><value>Environment cubemap (Scene.Background feeds IBL)</value></data>
+  <data name="PbrChannels_EnvironmentNote" xml:space="preserve"><value>IblAmbientIntensity only has something to scale when a cubemap is present. Turn this off and Scene.Background drops back to a plain texture, so both PBR passes fall back to PBRPipelineBase.DefaultIblAmbientCubeTexture — a 16px white cube. The hero sphere then loses its environment reflection and goes flat, which is exactly the state every page without a real environment is in. Switching also invalidates the two cached CubeRenderTargets: without that you would keep looking at the previous bake.</value></data>
   <data name="PbrChannels_Sampling" xml:space="preserve"><value>Sampling under the current pipeline</value></data>
   <data name="Picking_Intro" xml:space="preserve"><value>Clicking the view fires its ObjectPicked event, which returns only the nearest hit. Turning on the centre ray picks from the middle of the viewport every frame and lists every hit at that point — the occluder is translucent but still sits in front, which is exactly the difference between the full hit list and the nearest hit.</value></data>
   <data name="Picking_EnablePicking" xml:space="preserve"><value>View EnablePicking</value></data>
@@ -415,7 +418,9 @@
   <data name="Instancing_CostReadout" xml:space="preserve"><value>{0} on the left · {1} on the right, one {2}-vertex geometry per field → two draw calls · update mode {3}</value></data>
   <data name="Hism_MoveNudge" xml:space="preserve"><value>Small step (in-place update)</value></data>
   <data name="Hism_MoveTeleport" xml:space="preserve"><value>Teleport across the field (triggers a rebuild)</value></data>
-  <data name="Hism_OctreeReadout" xml:space="preserve"><value>{0} instances / {1} groups · building={2} · cap {3} per group · depth {4} · {5} in-place updates · {6} rebuilds · cursor {7}</value></data>  <data name="Environment_EnvStudio" xml:space="preserve"><value>Studio gradient</value></data>
+  <data name="Hism_OctreeReadout" xml:space="preserve"><value>{0} instances / {1} groups · building={2} · cap {3} per group · depth {4} · {5} in-place updates · {6} rebuilds · cursor {7}</value></data>  <data name="Environment_EnvHdri" xml:space="preserve"><value>HDRI 1k panorama (file)</value></data>
+  <data name="Environment_EnvSkyboxCube" xml:space="preserve"><value>Six-face skybox (file)</value></data>
+  <data name="Environment_EnvStudio" xml:space="preserve"><value>Studio gradient</value></data>
   <data name="Environment_EnvSunset" xml:space="preserve"><value>Sunset HDR</value></data>
   <data name="Environment_EnvTestChart" xml:space="preserve"><value>Lat-long test chart</value></data>
   <data name="Environment_BackgroundCube" xml:space="preserve"><value>Cubemap {0}×{1}</value></data>
@@ -508,7 +513,9 @@
   <data name="PbrChannels_BoundNotSampled" xml:space="preserve"><value>Bound, not sampled</value></data>
   <data name="PbrChannels_MrStandard" xml:space="preserve"><value>G=roughness B=metallic</value></data>
   <data name="PbrChannels_MrSwapped" xml:space="preserve"><value>B=roughness G=metallic (swapped)</value></data>
-  <data name="PbrChannels_Readout" xml:space="preserve"><value>{0} · BaseColor{1} Normal{2} MetallicRoughness{3} Occlusion{4} Emissive{5} · MR convention {6} · AlphaCutoff {7:0.00} · hero material Version={8} (bumped by 1 on every SetTexture/toggle, triggering a GPU state rebuild)</value></data>  <data name="Background_SourceEngineDefault" xml:space="preserve"><value>Engine default: Texture.CreateFromColor(AliceBlue)</value></data>
+  <data name="PbrChannels_Readout" xml:space="preserve"><value>{0} · BaseColor{1} Normal{2} MetallicRoughness{3} Occlusion{4} Emissive{5} · IBL env {9} · MR convention {6} · AlphaCutoff {7:0.00} · hero material Version={8} (bumped by 1 on every SetTexture/toggle, triggering a GPU state rebuild)</value></data>
+  <data name="PbrChannels_EnvReal" xml:space="preserve"><value>six-face skybox (has content)</value></data>
+  <data name="PbrChannels_EnvFallback" xml:space="preserve"><value>engine default white cubemap (flat, no shape)</value></data>  <data name="Background_SourceEngineDefault" xml:space="preserve"><value>Engine default: Texture.CreateFromColor(AliceBlue)</value></data>
   <data name="Background_SourceCubeMap" xml:space="preserve"><value>Six-face cubemap: textures/skybox/px…nz.jpg</value></data>
   <data name="Background_SourceHdr" xml:space="preserve"><value>HDRI→cubemap: buikslotermeerplein_1k.hdr</value></data>
   <data name="Background_SourceFlat" xml:space="preserve"><value>Single flat image: textures/background-1024.jpg</value></data>

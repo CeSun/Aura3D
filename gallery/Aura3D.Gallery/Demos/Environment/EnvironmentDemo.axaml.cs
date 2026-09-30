@@ -17,7 +17,10 @@ namespace Aura3D.Gallery.Demos;
 /// <summary>
 /// 环境图与 IBL：<see cref="Aura3D.Core.Scenes.Scene.Background"/> 是唯一的环境光源入口，
 /// 两条 PBR 管线拿它烘成辐照度图与预滤波反射图并缓存在相机节点上。
-/// 页里所有环境图都是程序化生成的等距柱状全景图，不含任何文件资产。
+/// 五个来源分两类：前两个是文件资产（1k HDRI 全景、六面天空盒），后三个是程序化生成的等距柱状全景图。
+/// 文件那一类是这个页面的重点——没挂有内容的立方图时，管线会退到引擎那张纯白立方图
+/// （<c>PBRPipelineBase.DefaultIblAmbientCubeTexture</c>），金属只剩一层没有方向的白光，
+/// 看上去跟「IBL 没工作」一样。
 /// 参数行的排版全在 <c>EnvironmentDemo.axaml</c> 里，这里只剩场景组装与回调。
 /// </summary>
 public sealed partial class EnvironmentDemo : Demo
@@ -25,14 +28,30 @@ public sealed partial class EnvironmentDemo : Demo
     private const string IrradianceKey = "IrradianceMap";
     private const string PrefilterKey = "PrefilteredEnvironmentMap";
 
+    private const string HdrKey = "Hdr1k";
+
     private static readonly LinguaKey[] EnvKeys =
-        [Strings.Keys.Environment_EnvStudio, Strings.Keys.Environment_EnvSunset, Strings.Keys.Environment_EnvTestChart];
+    [
+        Strings.Keys.Environment_EnvHdri,
+        Strings.Keys.Environment_EnvSkyboxCube,
+        Strings.Keys.Environment_EnvStudio,
+        Strings.Keys.Environment_EnvSunset,
+        Strings.Keys.Environment_EnvTestChart,
+    ];
+
+    /// <summary>
+    /// 前两个来源直接来自文件，程序化全景图从这一档开始。索引减去它才是 <see cref="BuildPanorama"/> 的花样号。
+    /// </summary>
+    private const int FirstProceduralIndex = 2;
 
     /// <summary>全景图下拉的选项集合，供 XAML 的 <c>Options="{Binding PanoramaOptions}"</c> 绑定。</summary>
     public IList PanoramaOptions { get; } = EnvKeys.Select(k => k.T()).ToList();
 
     private int envIndex;
     private uint faceSize = 128;
+
+    private Texture hdrPanorama = null!;
+    private CubeTexture fileCube = null!;
 
     private Node? ballRow;
     private DirectionalLight? sun;
@@ -57,7 +76,14 @@ public sealed partial class EnvironmentDemo : Demo
     }
 
     /// <inheritdoc />
-    public override Task LoadAssetsAsync(AssetBatch assets) => Task.CompletedTask;
+    public override async Task LoadAssetsAsync(AssetBatch assets)
+    {
+        // 等距柱状全景：烘之前先整张解出来，一次烘完就是立方图。
+        hdrPanorama = await assets.HdrTextureAsync(HdrKey);
+
+        // 六面天空盒：helper 内部按 AssetManifest.SkyboxKeys 的顺序取六张 jpg。
+        fileCube = await assets.CubeTextureAsync();
+    }
 
     /// <inheritdoc />
     public override void BuildScene()
@@ -216,11 +242,18 @@ public sealed partial class EnvironmentDemo : Demo
 
     private void ApplyEnvironment(Aura3D.Core.Scenes.Scene scene)
     {
-        var panorama = BuildPanorama(envIndex);
+        scene.Background = envIndex switch
+        {
+            // 真实 HDRI：文件里是线性 HDR 值，烘之前不能再走一次 gamma 解码（加载器默认就是 false）。
+            0 => HDRIToCubeTextureConverter.ConvertFromTexture(hdrPanorama, faceSize),
 
-        var cube = HDRIToCubeTextureConverter.ConvertFromTexture(panorama, faceSize);
+            // 六面天空盒已经是立方图，直接用；面边长由那六张图自己决定。
+            1 => fileCube,
 
-        scene.Background = cube;
+            // 程序化全景图：花样的编号从 FirstProceduralIndex 起算。
+            _ => HDRIToCubeTextureConverter.ConvertFromTexture(
+                BuildPanorama(envIndex - FirstProceduralIndex), faceSize),
+        };
     }
 
     private void InvalidateIblCaches()

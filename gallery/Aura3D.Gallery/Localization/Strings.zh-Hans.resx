@@ -110,7 +110,7 @@
   <data name="Demo_CelShading_Title" xml:space="preserve"><value>卡通着色与描边</value></data>
   <data name="Demo_CelShading_Summary" xml:space="preserve"><value>ILM/ShadowRamp/SDF 六个通道、下划线开头的材质参数，以及描边 pass 唯一的公开旋钮</value></data>
   <data name="Demo_IblEnvironment_Title" xml:space="preserve"><value>环境图与 IBL</value></data>
-  <data name="Demo_IblEnvironment_Summary" xml:space="preserve"><value>程序化全景图烘成立方图、辐照度/预滤波缓存的复用口径，以及重烘与 Reload 的分工</value></data>
+  <data name="Demo_IblEnvironment_Summary" xml:space="preserve"><value>真实 HDRI / 六面天空盒 / 程序化全景图烘成立方图、辐照度/预滤波缓存的复用口径，以及重烘与 Reload 的分工</value></data>
   <data name="Demo_SkyboxBackground_Title" xml:space="preserve"><value>背景来源与天空盒</value></data>
   <data name="Demo_SkyboxBackground_Summary" xml:space="preserve"><value>立方图与平面图两条背景分支各自的画法、两个着色器变体写死的取景量，以及只有立方图喂 IBL</value></data>
   <data name="Demo_Shadows_Title" xml:space="preserve"><value>阴影与级联 CSM</value></data>
@@ -204,9 +204,10 @@
   <data name="Environment_Intro" xml:space="preserve"><value>辐照度与预滤波反射各烘一次，结果挂在相机节点的两个 GPU 状态上，之后每帧直接复用。所以换环境图必须让那两个缓存重烘：本页给了「立刻重烘」按钮，它调 Invalidate() 把帧缓冲清零，管线下一帧就会重算。不点它也不 Reload 的话，画面会一直停在旧环境。</value></data>
   <data name="Environment_Panorama" xml:space="preserve"><value>全景图</value></data>
   <data name="Environment_CubeSize" xml:space="preserve"><value>立方图边长</value></data>
+  <data name="Environment_FaceSizeNote" xml:space="preserve"><value>面边长只对全景图那几条分支（HDRI 与程序化）生效，它是烘培的目标边长。六面天空盒分支是把那六张图直接喂给 IBL，面边长由图片本身决定，这个滑杆不参与。</value></data>
   <data name="Environment_Rebake" xml:space="preserve"><value>重烘 IBL（Invalidate 两个缓存的 CubeRenderTarget）</value></data>
   <data name="Environment_Reload" xml:space="preserve"><value>Reload 整页（换管线时也要走这条）</value></data>
-  <data name="Environment_BackgroundNote" xml:space="preserve"><value>Background 的类型是 OneOf&lt;CubeTexture, Texture&gt;：只有立方图那一支会驱动 IBL，普通图（等距柱状）只当背景画。没设立方图时两条 PBR 管线退到引擎自带的默认立方图，所以上面三个选项之外的状态下球也是有反射的，别看错成「IBL 没工作」。</value></data>
+  <data name="Environment_BackgroundNote" xml:space="preserve"><value>Background 的类型是 OneOf&lt;CubeTexture, Texture&gt;：只有立方图那一支会驱动 IBL，普通图只当背景画。没设立方图时 PBR 管线并不会跳过 IBL，而是退到 PBRPipelineBase.DefaultIblAmbientCubeTexture——一张由 Texture.CreateFromColor(White) 转出来的 16px 白立方图。纯白意味着环境项没有方向、预滤波反射没有形状：金属会变成一坨均匀发亮的球，而不是映出周围环境。只有挂了有内容的立方图，IBL 才看得出来，这也是本页顶上那两个基于文件的选项存在的原因。</value></data>
   <data name="Environment_IblAmbient" xml:space="preserve"><value>IblAmbientIntensity（PBR 读）</value></data>
   <data name="Environment_KeyLightVisible" xml:space="preserve"><value>平行光可见（关掉只剩 IBL 打光）</value></data>
   <data name="Environment_RenderBackground" xml:space="preserve"><value>画背景（Camera.IsRenderBackground）</value></data>
@@ -325,6 +326,8 @@
   <data name="PbrChannels_AlphaCutoff" xml:space="preserve"><value>AlphaCutoff（Masked 才用到）</value></data>
   <data name="PbrChannels_DoubleSided" xml:space="preserve"><value>DoubleSided（关掉即 GL 背面剔除）</value></data>
   <data name="PbrChannels_FactorsNote" xml:space="preserve"><value>金属度与粗糙度没有数值因子可设：引擎只从 MetallicRoughness 那张贴取，glTF 的 metallicFactor/roughnessFactor 在导入时就已经乘进像素里了。自发光也没有强度参数，直接加到颜色上。</value></data>
+  <data name="PbrChannels_Environment" xml:space="preserve"><value>环境立方图（Scene.Background 喂 IBL）</value></data>
+  <data name="PbrChannels_EnvironmentNote" xml:space="preserve"><value>IblAmbientIntensity 要有东西可缩放，前提是场景里真有一张立方图。把这个开关关掉，Scene.Background 退回普通贴图，两条 PBR 管线就都退到 PBRPipelineBase.DefaultIblAmbientCubeTexture——一张 16px 的白立方图。主球随即失去环境反射、变成平的一坨，这正是所有没挂真实环境的页面的状态。切换时同时把两个缓存的 CubeRenderTarget 失效：不失效你看到的还是上一次的烘培结果。</value></data>
   <data name="PbrChannels_Sampling" xml:space="preserve"><value>当前管线的采样情况</value></data>
   <data name="Picking_Intro" xml:space="preserve"><value>点画面会走视图的 ObjectPicked（只回最近一个）。开「中心射线」后每帧改从视口正中拾取，并列出该点的全部命中——挡板是半透明的，但它照样挡在前面，这就是全命中列表和最近命中的区别。</value></data>
   <data name="Picking_EnablePicking" xml:space="preserve"><value>视图 EnablePicking</value></data>
@@ -415,7 +418,9 @@
   <data name="Instancing_CostReadout" xml:space="preserve"><value>左 {0} · 右 {1} 实例，每片一份 {2} 顶点的几何 → 两个 draw call · 更新方式 {3}</value></data>
   <data name="Hism_MoveNudge" xml:space="preserve"><value>挪一小步（走增量）</value></data>
   <data name="Hism_MoveTeleport" xml:space="preserve"><value>跨半场瞬移（触发重建）</value></data>
-  <data name="Hism_OctreeReadout" xml:space="preserve"><value>{0} 实例 / {1} 组 · 建树中={2} · 每组上限 {3} · 深度 {4} · 增量 {5} 次 · 重建 {6} 次 · 光标 {7}</value></data>  <data name="Environment_EnvStudio" xml:space="preserve"><value>摄影棚渐变</value></data>
+  <data name="Hism_OctreeReadout" xml:space="preserve"><value>{0} 实例 / {1} 组 · 建树中={2} · 每组上限 {3} · 深度 {4} · 增量 {5} 次 · 重建 {6} 次 · 光标 {7}</value></data>  <data name="Environment_EnvHdri" xml:space="preserve"><value>HDRI 1k 全景（文件）</value></data>
+  <data name="Environment_EnvSkyboxCube" xml:space="preserve"><value>六面天空盒（文件）</value></data>
+  <data name="Environment_EnvStudio" xml:space="preserve"><value>摄影棚渐变</value></data>
   <data name="Environment_EnvSunset" xml:space="preserve"><value>落日 HDR</value></data>
   <data name="Environment_EnvTestChart" xml:space="preserve"><value>经纬测试图</value></data>
   <data name="Environment_BackgroundCube" xml:space="preserve"><value>立方图 {0}×{1}</value></data>
@@ -508,7 +513,9 @@
   <data name="PbrChannels_BoundNotSampled" xml:space="preserve"><value>绑了不采</value></data>
   <data name="PbrChannels_MrStandard" xml:space="preserve"><value>G=粗糙 B=金属</value></data>
   <data name="PbrChannels_MrSwapped" xml:space="preserve"><value>B=粗糙 G=金属（对调过）</value></data>
-  <data name="PbrChannels_Readout" xml:space="preserve"><value>{0} · BaseColor{1} Normal{2} MetallicRoughness{3} Occlusion{4} Emissive{5} · MR 约定 {6} · AlphaCutoff {7:0.00} · hero 材质 Version={8}（每次 SetTexture/开关都会 +1，触发 GPU 状态重建）</value></data>  <data name="Background_SourceEngineDefault" xml:space="preserve"><value>引擎默认：Texture.CreateFromColor(AliceBlue)</value></data>
+  <data name="PbrChannels_Readout" xml:space="preserve"><value>{0} · BaseColor{1} Normal{2} MetallicRoughness{3} Occlusion{4} Emissive{5} · IBL 环境 {9} · MR 约定 {6} · AlphaCutoff {7:0.00} · hero 材质 Version={8}（每次 SetTexture/开关都会 +1，触发 GPU 状态重建）</value></data>
+  <data name="PbrChannels_EnvReal" xml:space="preserve"><value>六面天空盒（有内容）</value></data>
+  <data name="PbrChannels_EnvFallback" xml:space="preserve"><value>引擎默认白立方图（平，无形状）</value></data>  <data name="Background_SourceEngineDefault" xml:space="preserve"><value>引擎默认：Texture.CreateFromColor(AliceBlue)</value></data>
   <data name="Background_SourceCubeMap" xml:space="preserve"><value>六面立方图：textures/skybox/px…nz.jpg</value></data>
   <data name="Background_SourceHdr" xml:space="preserve"><value>HDRI 转立方图：buikslotermeerplein_1k.hdr</value></data>
   <data name="Background_SourceFlat" xml:space="preserve"><value>单张平面图：textures/background-1024.jpg</value></data>
