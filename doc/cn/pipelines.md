@@ -446,7 +446,7 @@ material.SetShaderPassParametersCallback("LightPass", pass =>
 
 这种方式适合局部定制——只想改变某个特定材质的渲染方式，而不需要创建整个管线。
 
-## 管线配置（PipelineSettings）
+## 管线配置 PipelineSettings
 
 通过 `PipelineSettings` 可以调整渲染管线的行为和画面效果。部分设置只能在管线创建前指定，另一部分可以随时调整、即时看到变化。
 
@@ -615,7 +615,7 @@ pipeline.Settings.EnableFrustumCulling = false;
 
 ## 视锥体剔除
 
-视锥体剔除让渲染器只绘制相机视野内的物体，减少不必要的绘制开销。通过 `PipelineSettings.EnableFrustumCulling` 控制（默认开启），详见 [管线配置](#管线配置pipelinesettings)。
+视锥体剔除让渲染器只绘制相机视野内的物体，减少不必要的绘制开销。通过 `PipelineSettings.EnableFrustumCulling` 控制（默认开启），详见 [管线配置](#管线配置-pipelinesettings)。
 
 ## Pipeline 生命周期钩子
 
