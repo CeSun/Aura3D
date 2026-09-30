@@ -1,86 +1,120 @@
 ---
 section: advanced
-order: 2
+order: 5
 ---
 
 # GPU 资源生命周期
 
-Aura3D 将 CPU 资源与 OpenGL 上下文中的 GPU 状态分离。`Texture`、`Geometry`、`Material` 等 CPU 资源可以被多个场景引用；每个 `RenderPipeline` 为自己的 GL 上下文维护对应的 `IGpuState`。
+这是一篇「出问题 / 省显存时读」的机制说明：显存到底归谁、什么时候真的被删掉、上下文丢失之后画面为什么能自己回来。平时写场景不需要读它——用 `Aura3DView` 时该做的事控件都替你做了。需要手动归还显存、或遇到「切后台回来黑屏」「重建后还是旧画面」这类现象时，回到这篇。
 
-## 所有权
+## 一分钟心智模型
 
-| 对象 | 所有者 | 释放方式 |
+- **CPU 侧**是 `Texture`、`Geometry`、`Material`、`Mesh`、`Node` 这些对象。它们想被怎么引用都行，可以被多个场景共用，**不持有 GL 句柄**。
+- **GPU 侧**是这些资源在某个具体 OpenGL 上下文里的投影，实现是 `IGpuState`（[源码](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Renderers/GpuStates/IGpuState.cs)），由**管线**持有。每个 `RenderPipeline` 只服务自己那个上下文。
+- 两者靠**版本号**对齐：`IGpuState` 有 `Version` 与 `SyncedVersion`。你在 CPU 侧改一次数据，`Version` 就 +1；渲染时管线比对两个版本，不一致才调用 `Upload(gl)` 重传一次，然后记下同步版本。同帧改一百次也只传一次。
+
+由此得到两条铁律：**别绕过管线去删状态**（`Destroy(gl)` 只能由拥有它的管线来调），以及**上下文丢了就只能「忘」，不能「删」**（旧句柄已经不属于任何可访问的上下文）。
+
+## 谁拥有哪块显存
+
+| 东西 | 所有者 | 什么时候真正释放 |
 |---|---|---|
-| `IResourceGpuState`（纹理、几何、材质、骨骼缓冲） | 首次同步它的 `RenderPipeline` | CPU 资源被回收后由管线定期收集，或随管线释放/销毁 |
-| `IRuntimeGpuState`（RenderTarget、粒子缓冲、内部几何） | 将它传给 `EnsureSynced` 的 `RenderPipeline` | 从场景移除时由管线释放，或随管线释放/销毁 |
-| RenderPass 着色器和即时绘制缓冲 | 对应 `RenderPass` | `ReleaseGpuResources()` 或随管线销毁 |
-| RenderTarget 附件纹理适配器 | RenderTarget | 适配器不单独删除纹理名 |
+| 纹理 / 几何 / 材质 / 骨骼缓冲的 GPU 状态（资源侧） | **第一个**同步它的 `RenderPipeline` | CPU 资源被回收后由管线定期收集，或随管线 `ReleaseGpuResources()` / `Destroy()` |
+| RenderTarget、粒子缓冲、引擎内部几何（运行时状态，`IRuntimeGpuState`） | 接收它的那次 `EnsureSynced(...)` 所属管线 | 从场景移除时由管线释放，或随管线释放 / 销毁 |
+| RenderPass 的着色器程序与即时绘制缓冲 | 对应的 `RenderPass` | `ReleaseGpuResources()`，或管线销毁 |
+| RenderTarget 的附件纹理适配器 | 那个 RenderTarget | 适配器**不会**去删借来的纹理名 |
 
-CPU 资源本身不拥有 GL 句柄。调用方不应对仍注册在管线中的状态直接调用 `Destroy(GL)`；应通过场景/管线的移除流程释放，避免重复所有权。
+自定义 Pass 里把状态交给管线接管，走的就是 `renderPipeline.EnsureSynced(gpuState)`；交出去之后它的生命周期归这条管线，你不要再自己 `Destroy`。同一个 `IGpuState` 实例也不要同时交给两条管线。
 
-## 三种操作
+## 三种操作：Upload / Destroy / Invalidate
 
-- `Upload(GL)`：仅在参数所代表的 GL 上下文当前有效时调用。它必须能够从 CPU 数据完整创建或更新 GPU 状态。
-- `Destroy(GL)`：上下文仍有效时释放该状态拥有的全部句柄。实现必须可重复调用；第二次调用不得再次删除旧句柄。
-- `Invalidate()`：上下文已经丢失时使用，不执行任何 GL 调用，只清零句柄与同步版本。实现必须可重复调用，后续 `Upload(GL)` 必须可以完整重建资源。
+`IGpuState` 只有这三个动作（加上两个版本号）。它们的契约就是全部规则：
 
-## 释放与重建 GPU 资源
+| 操作 | 前提 | 必须做到 |
+|---|---|---|
+| `Upload(GL gl)` | 传入的上下文**当前有效** | 只凭 CPU 侧数据就能完整创建或更新这份 GPU 状态——包括在全新上下文上从零重建 |
+| `Destroy(GL gl)` | 上下文**仍然有效** | 删掉自己**拥有**的全部非零句柄；可重复调用，第二次不得再删旧句柄 |
+| `Invalidate()` | 上下文**已经丢了**时用 | **不发任何 GL 调用**，只把句柄与 `SyncedVersion` 归零；可重复调用，之后的 `Upload` 必须能完整重建 |
 
-上下文仍然有效、但需要归还显存时（例如控件从视觉树分离、标签页切到后台、低内存降级），调用：
+## 该按哪个按钮：ReleaseGpuResources / HandleContextLost / Destroy
 
-```csharp
-scene.RenderPipeline.ReleaseGpuResources();
-```
-
-它真正删除管线拥有的全部 GL 对象（RenderPass 程序、纹理、几何缓冲、RenderTarget、阴影图与 IBL 贴图），同时保留场景、节点、CPU 资源、节点注册与 GPU 状态跟踪。`gl` 引用不变，因此同一上下文中的下一次渲染会立刻按需重建全部资源，画面自动恢复。与上下文丢失不同，这条路径不要求创建新上下文，也不需要重新 `Initialize`。
-
-`ReleaseGpuResources()` 是"释放并复用"，`HandleContextLost()` 是"上下文没了，只能失效句柄"，`Destroy()` 是终止操作——三者的取舍：
-
-| 场景 | 调用 | GL 对象 | 场景/节点 | 后续 |
+| 你的处境 | 调用 | GL 对象 | 场景与节点 | 之后 |
 |---|---|---|---|---|
-| 上下文仍有效，只想省显存 | `ReleaseGpuResources()` | 真正删除 | 保留 | 同上下文下一帧重建 |
-| 上下文丢失/被替换 | `HandleContextLost()` | 仅清零句柄 | 保留 | `Initialize()` 后按需重建 |
-| 彻底结束渲染 | `Destroy()` | 真正删除（有上下文时） | 清空注册，管线不可再用 | 新建管线 |
+| 上下文还在，只想把显存还回去（切后台、低内存降级、这一页不画了但还会回来） | `scene.RenderPipeline.ReleaseGpuResources()` | **真删** | 全保留 | 同一上下文下一帧按需全部重建，画面自动回来，不需要重新 `Initialize` |
+| 上下文丢了或被换掉了 | `scene.RenderPipeline.HandleContextLost()` | 只归零句柄，不删 | 全保留 | 拿到新上下文后 `Initialize(getProcAddress)`（`Func<string, nint>`），资源按需重建 |
+| 彻底不画了，管线也要退役 | `pipeline.Destroy()` | 真删（有上下文时）；没上下文时自动退化成 `HandleContextLost()` | 清空注册、缓存与状态跟踪 | **不可逆**：这条管线再也初始化不了，要继续渲染就新建一条 |
 
-## 上下文丢失与恢复
+`Destroy()` 可以安全重复调用；`ReleaseGpuResources()` 在管线已销毁后会抛 `ObjectDisposedException`，`HandleContextLost()` 则直接返回什么都不做。
 
-宿主检测到上下文丢失后调用：
+## 用 Aura3DView 时：控件已经替你做了
+
+只要用 `Aura3DView`，上面这些接口你一个都不用手调。控件的行为是这样的：
+
+- **宿主报上下文丢失** → 控件内部执行 `HandleContextLost()`，把 `IsContextLost` 置 `true`，派发 `ContextLost` 事件，并请求一帧来推进恢复。
+- **下一帧取得新上下文** → 控件重新 `Initialize`，把 `IsContextLost` 置回 `false`，派发 `ContextRestored`。**不会**再派发 `SceneInitialized`——场景、节点、材质都是原来那一批实例。所以一个页面只在首次初始化时建一次场景，别指望在 `SceneInitialized` 里「重建」。
+- **控件从视觉树分离**（切页、折叠面板收起）→ Avalonia 在销毁上下文之前通知控件：此时上下文还活着，于是先 `ReleaseGpuResources()` 真正删掉 GL 对象归还显存，再 `HandleContextLost()` 让管线可被重新挂载，并派发 `ContextLost`。
+- **重新挂回视觉树** → 走上面「取得新上下文」那条路径，复用同一个 `Scene` 实例，只重建 GPU 资源，派发 `ContextRestored`。分离期间 `Scene`、节点、`MainCamera` 都还在，可以继续读写。
+
+你能主动做的三件事：
 
 ```csharp
-scene.RenderPipeline.HandleContextLost();
+// 1) 归还显存，但控件不分离、场景不丢：下一帧画面自己长回来
+view.ReleaseGpuResources();
+
+// 2) 彻底结束当前场景：释放 GPU 资源 + 销毁管线 + 清空 Scene，随后派发 SceneDestroyed
+view.DestroyScene();
+
+// 3) 开发期验证恢复逻辑是否写对了：不依赖驱动，主动走一遍丢失路径
+view.SimulateContextLost();
 ```
 
-该方法保留场景、CPU 资源和管线注册，仅使所有上下文相关状态失效。取得新的上下文后重新附加：
+> [!IMPORTANT]
+> 这三件事都**不是当场生效**的。GL 调用只能在渲染线程执行，所以控件只记一个请求，实际动作发生在**下一帧渲染开始时**（它们各自已经替你请求了一帧）。这意味着：按需渲染的页面点了按钮至少要看到一帧跳过去；`DestroyScene` 之后 `view.Scene` 立刻读到的仍是旧场景，正确做法是在 `SceneDestroyed` 回调里清自己的缓存字段——事件参数带着那个已被销毁的场景，别再去读 `view.Scene`。
 
-```csharp
-scene.RenderPipeline.Initialize(getProcAddress);
-```
+事件签名一览（都在 `Aura3D.Avalonia`，参数对象都有 `Scene`）：
 
-资源随后按需重建；阴影图、IBL 卷积贴图和缓存 RenderTarget 也会重新生成。不要在上下文已经丢失后调用 `Destroy(GL)`，因为旧 GL 对象名已不再属于可访问的上下文。
+| 事件 | 参数类型 | 什么时候 |
+|---|---|---|
+| `SceneInitialized` | `InitializedRoutedEventArgs` | 首次创建场景（`Scene` 原来是 `null`） |
+| `ContextLost` | `ContextLostRoutedEventArgs` | 真实丢失、模拟丢失、以及控件分离 |
+| `ContextRestored` | `ContextRestoredRoutedEventArgs` | 已有场景重新拿到上下文（含重新挂载） |
+| `SceneDestroyed` | `DestroyedRoutedEventArgs` | `DestroyScene()` 生效之后 |
+| `SceneUpdated` | `UpdateRoutedEventArgs` | 每帧渲染前，带 `DeltaTime` |
 
-### Avalonia 控件
+配套只读属性 `view.IsContextLost`；想区分「管线还能不能用」可以看 `scene.RenderPipeline.IsInitialized` / `IsDestroyed`。
 
-使用 `Aura3DView` 时无需手动调用上述接口：控件会在 `OnOpenGlLost` 中执行 `HandleContextLost()`，并在新上下文就绪时重新 `Initialize`。可订阅 `ContextLost` / `ContextRestored` 事件，或读取 `IsContextLost` 属性。
+## 自定义 IGpuState 必须守的 5 条
 
-- 上下文丢失与恢复不影响场景、节点与材质：恢复后不会再次触发 `SceneInitialized`，页面只需在首次初始化时构建一次场景。
-- 恢复后第一帧起，全部 GPU 状态按需重建；模拟丢失（复用同一上下文）不会删除旧 GL 名称，真实丢失时由驱动回收。
-- 控件从视觉树分离时，Avalonia 会在销毁上下文之前调用 `OnOpenGlDeinit`：控件在此执行 `ReleaseGpuResources()` 真正删除 GL 对象释放显存，随后执行 `HandleContextLost()` 使管线可被重新挂载。`Scene`、节点与 `MainCamera` 全部保留，分离期间仍可访问；重新挂载复用同一场景实例，只重建 GPU 资源，不会再次触发 `SceneInitialized`。分离与重新挂载同样会触发 `ContextLost` / `ContextRestored`。
-- 需要显式释放显存而不分离控件时，调用 `Aura3DView.ReleaseGpuResources()`；需要彻底结束当前场景时调用 `Aura3DView.DestroyScene()`，它会释放 GPU 资源、清空 `Scene` 并触发 `SceneDestroyed`，控件仍在渲染时下一帧会自动创建新场景并重新触发 `SceneInitialized`。
+写自己的 GPU 状态（自定义 Pass 的中间缓冲、渲染到纹理的私有资源等）时：
 
-## 最终销毁
+1. **留够 CPU 侧数据**，让 `Upload` 能在一个**全新**上下文上把每个句柄重建出来——上下文换了以后没有「旧对象」可查。
+2. **`Destroy` 只删自己拥有的非零句柄**，然后把所有句柄与 `SyncedVersion` 归零。
+3. **`Invalidate` 一个 GL 调用都不发**，同样把所有句柄与 `SyncedVersion` 归零。
+4. **借来的句柄不删**（例如 RenderTarget 的附件纹理）：只清自己那份缓存状态。
+5. **交给 `EnsureSynced` 之后就把生命周期交给这条管线**：不再自己 `Destroy`，也不给第二条管线用。
 
-`RenderPipeline.Destroy()` 是终止操作：它先执行 `ReleaseGpuResources()`，再清空 GPU 状态跟踪、资源缓存与场景注册。它可以安全地重复调用，但调用后该管线不能再次初始化；需要继续渲染时应创建新的管线实例。
+给已有的自定义实现做升级时，主要缺口是新增无 GL 调用的 `Invalidate()`——通常把所有句柄和 `SyncedVersion` 设成零就对了。
 
-如果销毁时已经没有有效上下文，`Destroy()` 自动退化为 `HandleContextLost()` 路径，不执行任何 GL 调用。
+## 常见坑
 
-## 自定义 GPU 状态
+- **在 `SceneInitialized` 里建场景、又在 `ContextRestored` 里再建一遍**：恢复路径不重建场景，节点会被加两遍。恢复后要做的事只有「按需刷新你自己的缓存字段」。
+- **以为 `ReleaseGpuResources()` 之后画面立刻没了**：它删的是 GPU 侧对象，下一帧立刻全量重建，肉眼看到的只是一次卡顿；要的是「分离出去这段时间不占显存」这个效果。
+- **上下文丢了以后调 `Destroy(gl)`**：旧句柄已不属于任何可访问的上下文，这时只能走 `Invalidate()` / `HandleContextLost()`。
+- **模拟丢失不等于真实丢失**：`SimulateContextLost()` 复用同一个上下文，旧 GL 名称不会被驱动回收；真实丢失时才由驱动负责回收。别用模拟来验证「显存到底掉没掉」。
+- **`DestroyScene()` 之后继续用旧的 `Mesh` / `Material` 引用**：管线已经销毁并清空注册，场景字段要重新赋值；继续渲染时控件会创建新场景并再发一次 `SceneInitialized`。
+- **关了自动渲染又改了实例化分组**：`InstancedMeshGroup` 的后台构建要由后续几帧来收尾，一帧都不请求就会一直什么都没有（见[实例化渲染](./instanced-rendering.md)）。
+- **`Destroy()` 之后还想 `Initialize`**：`Destroy` 是终止操作，改这条管线不行，新建一条。
+- **`ReleaseGpuResources()` 抛 `ObjectDisposedException`**：管线已经 `Destroy` 过了，别再调。
+- **同一个 `IGpuState` 交给两条管线**：所有权不再唯一，会重复删除同一个句柄，表现为随机 GL 报错。
 
-自定义 `IGpuState` 必须遵守以下要求：
+## 可运行示例
 
-1. 保存足够的 CPU 数据，使 `Upload` 能在新上下文中重建全部句柄。
-2. `Destroy` 只删除自身拥有的非零句柄，并将所有句柄和 `SyncedVersion` 归零。
-3. `Invalidate` 不调用 GL，同样将所有句柄和 `SyncedVersion` 归零。
-4. 借用的句柄不得删除；借用方只清理自己的缓存状态。
-5. 将状态交给 `EnsureSynced` 后，其生命周期由该管线管理。
+- GpuLifecycle 示例把三条回收路径 + 五个场景事件全做成了可点按的按钮，带帧号与事件计数读数：[GpuLifecycleDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/GpuLifecycle/GpuLifecycleDemo.axaml.cs)
+- 相关源码：[IGpuState.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Renderers/GpuStates/IGpuState.cs)、[RenderPipeline.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Renderers/RenderPipeline.cs)、[Aura3DViewBase.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Avalonia/Aura3DViewBase.cs)
 
-同一个 `IGpuState` 实例不得同时交给多个管线。升级已有自定义实现时，需要新增无 GL 调用的 `Invalidate()`；通常将所有句柄和 `SyncedVersion` 设为零即可。
+## 下一步
+
+- 平台差异（哪个后端真会丢上下文、丢完怎么恢复）：[平台与渲染后端](./platform-render-backends.md)
+- 实例缓冲这类大头资源怎么用得更省：[实例化渲染](./instanced-rendering.md)
+- 自定义 Pass 与 `EnsureSynced`：[自定义渲染管线](./custom-pipeline.md)
+- 按症状查这一类现象：[常见坑与排障](./troubleshooting.md)

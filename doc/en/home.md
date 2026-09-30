@@ -1,16 +1,48 @@
 # Aura3D Documentation
 
-Welcome to Aura3D. This documentation covers everything from installation to custom rendering pipelines.
+Welcome to Aura3D — a cross-platform 3D rendering control built on Avalonia. The docs are organized around "the thing you want to accomplish": get something on screen first, then learn each capability one task at a time, and look up pitfalls and quick-reference tables when something goes wrong.
 
-## Documents
+## Getting Started
 
 | Document | Contents |
 |---|---|
-| **[Get Started](./get-started.md)** | Install NuGet packages → XAML control declaration → Initialize scene → Camera setup → Load models → Configure lights → Scene background → Render loop |
-| **[Rendering Pipelines](./pipelines.md)** | Built-in BlinnPhong / NoLight / PBR / CelShading → Custom RenderPipeline + RenderPass → Shader macro system → Lifecycle hooks → Multi-camera |
-| **[Animation System](./animation.md)** | Skeletal animation / Loop modes / External animation import → 2D blend space → Animation graph → Bone manipulation |
-| **[Particle System](./particle-system.md)** | CPU simulation + GPU instanced rendering → core classes and emission shapes → configuration guide / mesh mode → lifecycle and performance → debug visualization → ParticlePass global settings → troubleshooting |
-| **[Instanced Rendering](./instanced-rendering.md)** | GPU instancing (InstancedMesh) → Per-instance attributes / Transform updates → Hierarchical instancing (HISM) → Incremental updates |
-| **[Rendering Topics](./rendering.md)** | Shadows / Point clouds / Primitive rendering → Advanced materials → Node operations (bounding box / clone / batch transform / find children) |
-| **[GPU Resource Lifecycle](./gpu-resource-lifecycle.md)** | GPU-state ownership → Idempotent destruction → Context loss and recovery → Custom-state contract |
-| **[Platforms and Render Backends](./platform-render-backends.md)** | Which path each platform takes → iOS ANGLE(Metal) backend and framework setup → GLES 3.0 subset constraints → Frame scheduling and thread semantics |
+| **[Quick Start](./quickstart.md)** | Install the package → drop in the control → a box + a light → run and see a picture |
+| **[Your First Full App](./first-app.md)** | Load a model → aim the camera → per-frame animation → click picking, wired into one working app |
+
+## Scene Basics
+
+| Document | Contents |
+|---|---|
+| **[Scene Graph and Nodes](./scene-and-nodes.md)** | The node tree and transforms → which node to use → batch edits and lookups |
+| **[Loading and Placing Models](./models.md)** | glTF loading → scale / position / orientation → fitting the camera and bounding boxes |
+| **[Cameras and View Control](./camera.md)** | Projection and LookAt → CameraController mouse orbit → multi-camera and render targets |
+| **[Lighting and Shadows](./lighting.md)** | The four light types → per-type light limits → shadow configuration and CSM |
+| **[Materials and Textures](./material.md)** | Material channels and textures → loading textures → sampling settings → custom material parameters |
+| **[Environment and Background](./environment.md)** | Scene background (solid / texture / cube map) → HDR environments and IBL |
+| **[Animation System](./animation.md)** | Playing and controlling skeletal animation → blend spaces and state machines → manual bone control |
+| **[Particle System](./particle-system.md)** | Emitter configuration → emission shapes → mesh particles and flipbooks → debugging and performance |
+
+## Advanced
+
+| Document | Contents |
+|---|---|
+| **[Instanced Rendering](./instanced-rendering.md)** | InstancedMesh → per-instance attributes → HISM hierarchical instancing → incremental updates |
+| **[Custom Materials and Shaders](./custom-material.md)** | Material-level shader replacement → the shader macro mechanism → per-instance custom attributes |
+| **[Choosing and Configuring Pipelines](./pipelines.md)** | Built-in pipeline catalog and how to pick → PipelineSettings → lighting / shadow / tone-mapping parameters |
+| **[Custom Render Pipelines](./custom-pipeline.md)** | Writing your own RenderPipeline / RenderPass → shader variants and compilation → the GLES 3.0 subset |
+| **[GPU Resource Lifecycle](./gpu-resource-lifecycle.md)** | The IGpuState contract → upload-on-demand and reclamation → context loss and restoration |
+
+## Pitfalls and Reference
+
+| Document | Contents |
+|---|---|
+| **[Platforms and Render Backends](./platform-render-backends.md)** | Which rendering path each platform takes → macOS / iOS / Android / Browser configuration → the three required .NET 10 Release settings |
+| **[Common Pitfalls and Troubleshooting](./troubleshooting.md)** | Indexed by symptom: black screen, platform silent failures, shaders, configuration timing, context and lifecycle |
+| **[Node and Scene Reference](./reference-nodes.md)** | Every node class with members and namespaces — for looking up, not reading |
+| **[Built-in Passes and Shader Macros](./reference-shaders.md)** | Built-in passes and their passKeys → vertex attribute location conventions → macro combinations |
+
+## Where to Start
+
+- First time: [Quick Start](./quickstart.md) alone is enough.
+- Something looks wrong: open [Common Pitfalls and Troubleshooting](./troubleshooting.md) first.
+- Shipping to a platform: [Platforms and Render Backends](./platform-render-backends.md).

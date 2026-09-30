@@ -1,27 +1,53 @@
 ---
-section: basics
-order: 1
+section: advanced
+order: 3
 ---
 
-# Rendering Pipelines
+# Choosing and Configuring Pipelines
 
-The rendering pipeline determines the visual style of the scene. Aura3D provides multiple built-in pipelines and supports full customization.
+The render pipeline determines the scene's visual style: the lighting model, shadows, tone mapping, anti-aliasing, and how each texture in the scene is read. This page is for **using pipelines** — picking one of the built-in pipelines and tuning its output with `PipelineSettings`. If you want to write your own pipeline or `RenderPass`, see [Custom Render Pipelines](./custom-pipeline.md).
 
-## Built-in Pipelines
+## What You Can Do
 
-### BlinnPhong Pipeline (Default)
+Aura3D ships a set of built-in pipelines covering common needs from realistic to stylized. Choosing a pipeline comes down to two things:
 
-A realistic forward rendering pipeline using the Blinn-Phong lighting model. No extra configuration needed — just use `Aura3DView`.
+1. **Pick one** — specify it with `x:TypeArguments` in XAML, or assign a factory delegate to `CreateRenderPipeline` in code.
+2. **Configure it** — use `PipelineSettings` to adjust depth precision, light counts, exposure, cascaded shadows, anti-aliasing, and debug visualization.
 
-Features:
-- Directional, point, and spot lights (max 4 per type)
-- Shadows
-- Skeletal animation
-- Transparent / translucent materials
+## Built-in Pipelines and How to Choose
 
-### NoLight Pipeline
+| Pipeline | Style / purpose | Package | In Core? |
+|---|---|---|---|
+| `BlinnPhongPipeline` | Realistic forward rendering, Blinn-Phong model (**default**) | `Aura3D.Avalonia` | Yes, no extra install |
+| `NoLightPipeline` | Unlit, outputs raw material color; debugging or stylized | `Aura3D.Avalonia` | Yes |
+| `PointCloudPipeline` | Point-cloud scenes, built-in point size and color attributes | `Aura3D.Avalonia` | Yes |
+| `PBRDeferredPipeline` | Physically based Metallic-Roughness workflow, deferred architecture | `Aura3D.Pipeline.PBR` | Extra install |
+| `PBRForwardPipeline` | The same PBR workflow, forward architecture | `Aura3D.Pipeline.PBRForward` | Extra install |
+| `CelShadingPipeline` | Cel / Toon non-photorealistic shading | `Aura3D.Pipeline.CelShading` | Extra install |
 
-An unlit pipeline that outputs raw material colors. Useful for debugging or stylized rendering.
+BlinnPhong is the default pipeline. It supports directional, point, and spot lights (max 4 per type), shadows, skeletal animation, and transparent/translucent materials — just use `Aura3DView` and you get it, no configuration.
+
+Install the extension pipelines (as needed):
+
+```shell
+# PBR deferred pipeline
+dotnet add package Aura3D.Pipeline.PBR
+
+# PBR forward pipeline
+dotnet add package Aura3D.Pipeline.PBRForward
+
+# Cel shading pipeline
+dotnet add package Aura3D.Pipeline.CelShading
+```
+
+> [!NOTE]
+> `BlinnPhong`, `NoLight`, and `PointCloud` live in `Aura3D.Core` and come with `Aura3D.Avalonia` — **no** extra install command.
+
+### How to Select a Pipeline
+
+Either of the two ways works; the result is the same.
+
+**Way 1 — XAML `x:TypeArguments`:**
 
 ```xaml
 <Window
@@ -34,430 +60,43 @@ An unlit pipeline that outputs raw material colors. Useful for debugging or styl
 </Window>
 ```
 
-Or specify in code:
+Core built-ins use `acr:` (`Aura3D.Core.Renderers`); swap in each extension pipeline's own namespace:
+
+```xaml
+<!-- PBR: xmlns:pbr="clr-namespace:Aura3D.Pipeline.PBR;assembly=Aura3D.Pipeline.PBR" -->
+<a:Aura3DView x:TypeArguments="pbr:PBRDeferredPipeline" ... />
+
+<!-- PBR forward: xmlns:pbrf="clr-namespace:Aura3D.Pipeline.PBRForward;assembly=Aura3D.Pipeline.PBRForward" -->
+<a:Aura3DView x:TypeArguments="pbrf:PBRForwardPipeline" ... />
+
+<!-- Cel: xmlns:cel="clr-namespace:Aura3D.Pipeline.CelShading;assembly=Aura3D.Pipeline.CelShading" -->
+<a:Aura3DView x:TypeArguments="cel:CelShadingPipeline" ... />
+
+<!-- Point cloud (Core built-in): xmlns:core="clr-namespace:Aura3D.Core.Renderers;assembly=Aura3D.Core" -->
+<a:Aura3DView x:TypeArguments="core:PointCloudPipeline" ... />
+```
+
+**Way 2 — code `CreateRenderPipeline`:**
 
 ```csharp
 view.CreateRenderPipeline = scene => new NoLightPipeline(scene);
-```
-
-## PBR Deferred Pipeline
-
-Physically Based Rendering using the Metallic-Roughness workflow with a deferred rendering architecture.
-
-### Installation
-
-```shell
-dotnet add package Aura3D.Pipeline.PBR
-```
-
-### Usage
-
-```xaml
-<Window
-    xmlns:a="https://github.com/CeSun/Aura3D"
-    xmlns:pbr="clr-namespace:Aura3D.Pipeline.PBR;assembly=Aura3D.Pipeline.PBR"
-    ...>
-    <a:Aura3DView x:TypeArguments="pbr:PBRDeferredPipeline"
-                  x:Name="aura3Dview"
-                  SceneInitialized="OnSceneInitialized"/>
-</Window>
-```
-
-### Material Configuration
-
-The PBR pipeline uses PBR material parameters:
-
-```csharp
-var mesh = new Mesh();
-mesh.Geometry = new SphereGeometry();
-mesh.Material = new Material();
-
-// Base color
-mesh.Material.BaseColor = Texture.CreateFromColor(Color.FromArgb(255, 200, 50, 50));
-
-// Normal map
-mesh.Material.SetTexture("Normal",
-    Texture.CreateFromColor(Color.FromArgb(128, 128, 255)));
-
-// Metallic/Roughness map: R channel = metallic, G channel = roughness
-mesh.Material.SetTexture("MetallicRoughness",
-    Texture.CreateFromColor(Color.FromArgb(200, 100, 0)));
-
-view.AddNode(mesh);
-```
-
-## Cel Shading Pipeline
-
-Non-photorealistic rendering in the Cel Shading / Toon Shading style.
-
-### Installation
-
-```shell
-dotnet add package Aura3D.Pipeline.CelShading
-```
-
-### Usage
-
-```xaml
-<Window
-    xmlns:a="https://github.com/CeSun/Aura3D"
-    xmlns:cel="clr-namespace:Aura3D.Pipeline.CelShading;assembly=Aura3D.Pipeline.CelShading"
-    ...>
-    <a:Aura3DView x:TypeArguments="cel:CelShadingPipeline"
-                  x:Name="aura3Dview"
-                  SceneInitialized="OnSceneInitialized"/>
-</Window>
-```
-
-The cel shading pipeline works the same as the default — load models, set up lights, and the rendering style automatically becomes toon-shaded.
-
-## Point Cloud Pipeline
-
-The built-in `PointCloudPipeline` is designed for point cloud scenes, ready to use without custom shaders:
-
-```xaml
-<Window
-    xmlns:a="https://github.com/CeSun/Aura3D"
-    xmlns:core="clr-namespace:Aura3D.Core.Renderers;assembly=Aura3D.Core"
-    ...>
-    <a:Aura3DView x:TypeArguments="core:PointCloudPipeline"
-                  x:Name="aura3Dview"
-                  SceneInitialized="OnSceneInitialized"/>
-</Window>
-```
-
-Or set in code:
-
-```csharp
+// or
 view.CreateRenderPipeline = scene => new PointCloudPipeline(scene);
 ```
 
-The point cloud pipeline includes built-in point size control and color attribute support. The render pass chain is: BackgroundPass → PointCloudPass → GammaCorrectionPass → FxaaPass → DebugDrawPass.
+> [!WARNING]
+> `CreateRenderPipeline` **must be assigned before GL initialization** (before the control loads). By the time `SceneInitialized` fires, the pipeline is already built — setting it then is too late.
 
-## Custom Rendering Pipelines
+> [!TIP]
+> To switch pipelines at runtime, keep the delegates in a single table. The Gallery pipelines demo does exactly this — see [PipelinesDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/Pipelines/PipelinesDemo.axaml.cs) and [PipelineCatalog.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/PipelineCatalog.cs), which switch live among BlinnPhong / NoLight / PBR Deferred / PBR Forward / Cel Shading so you can see which pipeline reads which texture and which ignores it entirely.
 
-Aura3D's pipeline consists of two components: **RenderPipeline** and **RenderPass**. Custom pipelines require implementing both classes. Developers don't need to deal with VAO/VBO details, but basic rendering knowledge is still required.
+## Configuring a Pipeline: PipelineSettings
 
-### Architecture Overview
-
-```
-RenderPipeline
-  ├── Register RenderTargets (framebuffer + texture attachments)
-  ├── Register RenderPasses (render steps, each with an output target)
-  └── Dispatch by RenderPassGroup
-       ├── Once — Execute once globally (e.g., ShadowMap)
-       └── EveryCamera — Execute per camera (e.g., main rendering)
-```
-
-### RenderPipeline
-
-`RenderPipeline` is responsible for registering RenderPasses and RenderTargets.
-
-```csharp
-public class NoLightPipeline : RenderPipeline
-{
-    public NoLightPipeline(Scene scene) : base(scene)
-    {
-        var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
-            .AddTexture("Color", TextureFormat.Rgba16f)
-            .SetDepthTexture(Settings.DepthFormat);
-
-        var gammaOutput = RegisterRenderTarget("GammaOutput")
-            .AddTexture("Color", TextureFormat.Rgba8)
-            .SetDepthTexture(Settings.DepthFormat);
-
-        var noLightPass = new NoLightPass(this);
-
-        // Register RenderPasses (executed in registration order)
-        RegisterRenderPass(
-            new BackgroundPass(this).SetOutput(baseRenderTarget),
-            RenderPassGroup.EveryCamera);
-
-        RegisterRenderPass(
-            noLightPass.SetOutput(baseRenderTarget),
-            RenderPassGroup.EveryCamera);
-
-        RegisterRenderPass(
-            new GammaCorrectionPass(this, baseRenderTarget.GetTexture("Color"))
-                .SetOutput(gammaOutput),
-            RenderPassGroup.EveryCamera);
-
-        RegisterRenderPass(
-            new FxaaPass(this, gammaOutput.GetTexture("Color"))
-                .SetOutput(CameraOutput),
-            RenderPassGroup.EveryCamera);
-    }
-}
-```
-
-**Key APIs:**
-
-| Method | Description |
-|---|---|
-| `RegisterRenderPass(pass, group)` | Register a render step; `group` determines execution timing |
-| `RegisterRenderTarget(name)` | Register a framebuffer, returns a configurator |
-| `AddTexture(name, format)` | Add a color attachment to the RenderTarget |
-| `SetDepthTexture(format)` | Add a depth attachment to the RenderTarget |
-
-**RenderPassGroup enum:**
-- `EveryCamera` — Executed once per camera (used by most passes)
-- `Once` — Executed once globally (e.g., ShadowMap rendering)
-
-### RenderPass
-
-`RenderPass` is a single shader-driven render step. Generally one Shader (with variants) maps to one RenderPass.
-
-```csharp
-public class NoLightPass : RenderPass
-{
-    public NoLightPass(RenderPipeline renderPipeline) : base(renderPipeline)
-    {
-        // Specify shader source
-        this.FragmentShader = ShaderResource.NoLightFrag;
-        this.VertexShader = ShaderResource.NoLightVert;
-    }
-
-    public override void Render(Camera camera)
-    {
-        // Render opaque non-skinned meshes
-        UseShader();
-        RenderVisibleMeshesInCamera(
-            mesh => !mesh.IsSkinnedMesh
-                 && (mesh.Material == null
-                     || mesh.Material.BlendMode == BlendMode.Opaque),
-            camera.View,
-            camera.Projection);
-
-        // Render opaque skinned meshes (with SKINNED_MESH macro variant)
-        UseShader("SKINNED_MESH");
-        RenderVisibleMeshesInCamera(
-            mesh => mesh.IsSkinnedMesh
-                 && (mesh.Material == null
-                     || mesh.Material.BlendMode == BlendMode.Opaque),
-            camera.View,
-            camera.Projection);
-    }
-}
-```
-
-> This is a simplified example. The actual built-in `NoLightPipeline` iterates all meshes and filters manually. For new pipelines, prefer the culled versions. `mesh.IsSkinnedMesh` / `mesh.IsStaticMesh` are properties on `Mesh`, replacing manual skeleton logic.
-
-**Key APIs:**
-
-| Method | Description |
-|---|---|
-| `UseShader(params string[] defines)` | Set shader macro defines (replace mode), see [Shader Macro System](#shader-macro-system) |
-| `AddDefines(params string[] defines)` | Append macro defines (append mode), call after `UseShader` |
-| `RenderVisibleMeshesInCamera(filter, view, proj)` | Render meshes that pass frustum culling |
-
-**Mesh Key Properties:**
-
-| Property | Description |
-|---|---|
-| `mesh.IsStaticMesh` | Non-skinned mesh (returns `!IsSkinnedMesh`) |
-| `mesh.IsSkinnedMesh` | Mesh bound to a skeleton (returns `Model != null && Skeleton != null`) |
-
-### Per-Mesh Parameter Passing
-
-Override `RenderMesh` to set uniforms before rendering a specific mesh:
-
-```csharp
-public override void RenderMesh(Mesh mesh, Matrix4x4 view, Matrix4x4 projection)
-{
-    if (someCondition)
-    {
-        UniformFloat("someParameter", value);
-        UniformVector4("someColor", new Vector4(1, 0, 0, 1));
-    }
-
-    // These base matrices must be set
-    UniformMatrix4("viewMatrix", view);
-    UniformMatrix4("projectionMatrix", projection);
-
-    base.RenderMesh(mesh, view, projection);
-}
-```
-
-### Shader Macro System
-
-Aura3D's shader variants are implemented through three cooperating methods. Understanding their relationship is key to custom pipelines.
-
-#### Division of Labor
-
-| Method | Role | GPU Operation |
-|---|---|---|
-| `UseShader(params string[] defines)` | **Replace** the defines list | None |
-| `AddDefines(params string[] defines)` | **Append** to the existing defines list | None |
-| `UseShader_Internal` | Read defines, compile/cache/activate shader | `gl.UseProgram` |
-
-`UseShader` and `AddDefines` are **declarative** — they only record intent, never touching the GPU. Actual compilation and binding happens in `UseShader_Internal`, which is called automatically by rendering methods like `RenderVisibleMeshesInCamera` before each mesh.
-
-#### Workflow
-
-Execution order in a typical Pass:
-
-```
-1. UseShader("SKINNED_MESH")       → defines = ["SKINNED_MESH"]
-2. RenderVisibleMeshesInCamera(...)
-   ├─ for each mesh:
-   │   UseShader_Internal(mesh)    → reads defines = ["SKINNED_MESH"]
-   │      cache key = "SKINNED_MESH"
-   │      hit → gl.UseProgram      (miss → compile + cache)
-   │   RenderMesh(mesh, ...)       → set uniforms, gl.DrawElements
-   │
-3. UseShader("SKINNED_MESH", "BLENDMODE_MASKED")
-                                   → defines = ["SKINNED_MESH", "BLENDMODE_MASKED"]
-4. RenderVisibleMeshesInCamera(...)
-   └─ for each mesh:
-       UseShader_Internal(mesh)    → reads defines = [...]
-          cache key = "SKINNED_MESH;BLENDMODE_MASKED"  (different key, different variant)
-```
-
-#### When to Use AddDefines
-
-Use `AddDefines` to append when a group of meshes shares most macros and differs in only a few:
-
-```csharp
-// Base variant
-UseShader("SKINNED_MESH");
-RenderVisibleMeshesInCamera(filter1, camera.View, camera.Projection);
-
-// Append one macro, producing SKINNED_MESH + BLENDMODE_MASKED variant
-AddDefines("BLENDMODE_MASKED");
-RenderVisibleMeshesInCamera(filter2, camera.View, camera.Projection);
-```
-
-#### Two Details of UseShader_Internal
-
-**1. Two-Level Caching**
-
-| Cache Level | Storage Location | When Used |
-|---|---|---|
-| Pass-level | `RenderPass.Shaders["key"]` | When the material has no custom shader |
-| Material-level | `Material.Shaders["key"]` | When the material overrides shader source via `SetShaderSource` |
-
-A given defines combination compiles only once; subsequent frames reuse the cached `glUseProgram`.
-
-**2. Compilation Flow**
-
-1. Join `defines` list with `;` as cache key (e.g., `"SKINNED_MESH;BLENDMODE_MASKED"`)
-2. If Material provides custom source → check Material cache; on miss, compile with Material source
-3. Otherwise check Pass cache; on miss, compile with Pass's `VertexShader`/`FragmentShader`
-4. During compilation, inject `#define SKINNED_MESH\n#define BLENDMODE_MASKED` at `//{{defines}}`
-5. The dialect is chosen per context automatically (`RenderPipeline.ShaderDialect`, which reads `GL_VERSION` on first use): an OpenGL ES context gets the source as authored; a desktop GL context gets `#version 300 es` rewritten to `#version 410 core` with all `precision` declarations stripped (macOS only offers desktop GL, so it takes this branch; desktop hosts need GL 4.1 or newer)
-6. Link shader, enumerate all uniform locations, and cache them
-
-> **Note**: Defines order affects the cache key. `UseShader("A").AddDefines("B")` produces key `"A;B"`, and `UseShader("A", "B")` also produces `"A;B"` — they match. But `UseShader("B")` then `AddDefines("A")` produces `"B;A"`, a different variant. Prefer declaring all needed macros at once with `UseShader`.
-
-#### Macro Marker in Shader Source
-
-GLSL source uses `//{{defines}}` as the macro injection point:
-
-```glsl
-#version 300 es
-precision mediump float;
-
-//{{defines}}   ← Replaced at compile time with #define SKINNED_MESH etc.
-
-layout(location = 0) in vec3 position;
-
-#ifdef INSTANCED_MESH
-layout(location = 7) in mat4 modelMatrix;
-#endif
-
-#ifndef INSTANCED_MESH
-uniform mat4 modelMatrix;
-#endif
-```
-
-#### Manual UseShader_Internal Calls
-
-`UseShader_Internal` is normally called automatically by mesh rendering methods like `RenderVisibleMeshesInCamera` before each mesh. But if your Pass doesn't iterate over meshes — for example, a post-processing Pass that renders a fullscreen quad — you must **call it manually**.
-
-Standard post-processing Pass flow:
-
-```
-UseShader()           → Declare macros (optional)
-UseShader_Internal()  → Compile/activate the variant
-UniformTexture(...)   → Set input textures and other uniforms
-RenderQuad()          → Draw a fullscreen quad
-```
-
-Real example — Gamma Correction Pass ([GammaCorrectionPass.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Renderers/Common/GammaCorrectionPass.cs)):
-
-```csharp
-public override void Render(Camera camera)
-{
-    BindOutputRenderTarget(camera);
-    var source = GetTexture(inputTexture, camera);
-
-    gl.Disable(EnableCap.DepthTest);
-    gl.Disable(EnableCap.Blend);
-
-    UseShader();               // No macros needed, can be omitted
-    ClearTextureUnit();         // Reset texture unit counter
-    UseShader_Internal();       // ← Manual activation! No Material context, passes null
-    UniformTexture("colorTexture", source);
-    RenderQuad();               // Draw fullscreen quad, sampling input texture for gamma correction
-}
-```
-
-FXAA Pass similarly ([FxaaPass.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Renderers/Common/FxaaPass.cs)):
-
-```csharp
-UseShader();
-ClearTextureUnit();
-UseShader_Internal();
-UniformTexture("u_texture", rt.GetTexture(inputTextureName));
-UniformVector2("u_textureSize", new Vector2(texWidth, texHeight));
-RenderQuad();
-```
-
-Post-processing with macro variants — PBR IBL Ambient Pass ([IBLAmbientPass.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Pipeline.PBR/IBLAmbientPass.cs)):
-
-```csharp
-UseShader("ENBALE_DEFERRED_SHADING");  // Declare macro
-UseShader_Internal();                   // Compile variant with macros and activate
-ClearTextureUnit();
-UniformTexture("gBufferBaseColor", gBufferBaseColor);
-UniformTexture("gBufferNormalRoughness", gBufferNormalRoughness);
-// ... more uniforms ...
-UniformMatrix4("u_viewMatrix", camera.View);
-UniformMatrix4("u_projMatrix", camera.Projection);
-RenderQuad();
-```
-
-> **Critical rule**: `UseShader` / `AddDefines` must be called **before** `UseShader_Internal`. `UseShader_Internal` reads the current defines list to decide which variant to activate; modifying defines afterward does not affect the already-active shader.
-
-`RenderQuad()` and `RenderCube()` are built-in methods on `RenderPass` that draw a quad covering NDC space and a unit cube respectively, for post-processing and debugging.
-
-### Custom Material Shaders
-
-Instead of creating an entire RenderPass, you can replace shaders for a specific material's Pass:
-
-```csharp
-var material = new Material();
-
-// Set custom shaders for the "LightPass" render step
-material.SetShaderSource("LightPass", ShaderType.Vertex, vertexShaderSource);
-material.SetShaderSource("LightPass", ShaderType.Fragment, fragmentShaderSource);
-
-// Set shader parameter callback
-material.SetShaderPassParametersCallback("LightPass", pass =>
-{
-    pass.UniformVector4("uColor", new Vector4(1, 0, 0, 1));
-});
-```
-
-This approach is for local customization — changing how a specific material renders without creating an entire pipeline.
-
-## Pipeline Settings
-
-Use `PipelineSettings` to adjust rendering behavior and visual quality. Some settings must be configured before the pipeline is created, while others can be adjusted on the fly and take effect immediately.
+`PipelineSettings` controls pipeline behavior and image quality. The key point is that it **splits into two kinds**: one kind (depth format, light limits, CSM cascade count and resolution) must be set before the pipeline is created and won't take effect if changed afterward; the other kind (exposure, ambient light, FXAA toggle, debug visualization, etc.) can be changed any time and shows up on the next frame.
 
 ### Configuration
 
-**XAML:**
+**XAML** (declared with the control before it loads, satisfying the "before creation" requirement):
 
 ```xml
 <Window xmlns:core="clr-namespace:Aura3D.Core.Renderers;assembly=Aura3D.Core" ...>
@@ -471,10 +110,9 @@ Use `PipelineSettings` to adjust rendering behavior and visual quality. Some set
 </Window>
 ```
 
-**Code:**
+**Code** — set one-time parameters before creation:
 
 ```csharp
-// Set before pipeline creation (for depth format, light limits, etc.)
 var view = new Aura3DView<CelShadingPipeline>
 {
     PipelineSettings = new PipelineSettings
@@ -483,106 +121,106 @@ var view = new Aura3DView<CelShadingPipeline>
         DirectionalLightLimit = 2,
     }
 };
+```
 
-// Adjust at any time (exposure, ambient light, toggles — takes effect next frame)
+**Change at runtime** (takes effect next frame):
+
+```csharp
 view.Scene.RenderPipeline.Settings.ToneMappingExposure = 1.3f;
 view.Scene.RenderPipeline.Settings.EnableFxaa = false;
 ```
 
-### Settings Reference
+### Depth Format (DepthFormat)
 
-#### Depth Format (DepthFormat)
-
-Controls the precision of depth testing — how accurately the GPU determines which object is in front of another. Think of it as "how finely divided the ruler is" when measuring depth.
+Controls front/back occlusion precision — think of it as "how finely divided the ruler is" when measuring depth.
 
 | Value | Precision | When to use |
 |---|---|---|
 | `DepthComponent16` | 16-bit | Normal scenes |
 | `DepthComponent24` | 24-bit | Larger scenes, or when finer depth precision is needed |
-| `DepthComponent32f` | 32-bit floating point (default) | Very large scenes (cities, terrain) where 16-bit isn't enough |
+| `DepthComponent32f` | 32-bit float (default) | Very large scenes (cities, terrain) where 16-bit isn't enough |
 
-> If distant objects flicker or appear to overlap incorrectly (a visual artifact known as Z-Fighting[^1]), switch to `DepthComponent32f`.
+> [!TIP]
+> If distant objects flicker or two surfaces appear to overlap without a clear front (the artifact known as Z-Fighting), precision is too low — switch to `DepthComponent32f`.
 
-#### Light Limits
+### Light Limits
 
-Cap the number of lights that take effect simultaneously. Lights beyond the limit won't produce illumination or shadows.
+Cap how many lights take effect at once; lights past the limit produce neither illumination nor shadows. Each defaults to `4`, valid range `1..10`: lower for performance, higher to support more lights.
 
-| Parameter | Description |
+| Parameter | Light type |
 |---|---|
-| `DirectionalLightLimit` | Max directional lights (default 4) — for sun-like, parallel light sources |
-| `PointLightLimit` | Max point lights (default 4) — for bulbs, candles, omnidirectional sources |
-| `SpotLightLimit` | Max spot lights (default 4) — for flashlights, stage spotlights |
+| `DirectionalLightLimit` | Directional lights — sun, global parallel light |
+| `PointLightLimit` | Point lights — bulbs, candles, omnidirectional sources |
+| `SpotLightLimit` | Spot lights — flashlights, stage spots, cone sources |
 
-> Each light limit accepts `1..10`. Lower limits improve performance; raise them to support more lights.
+> How to place and configure lights and their shadows is covered in [Lighting and Shadows](./lighting.md).
 
-#### Tone Mapping & Brightness
+### Tone Mapping & Brightness
 
-Tone mapping[^2] compresses HDR (high dynamic range) colors into the range a display can show. These two parameters control the overall brightness feel of the scene.
+Tone mapping compresses HDR colors into the range a display can show; these two parameters set the overall brightness feel.
 
 | Parameter | Effect | Default |
 |---|---|---|
-| `ToneMappingExposure` | Global brightness, like a camera's exposure compensation. Higher = brighter | `0.7` |
-| `BrightnessClamp` | The brightness ceiling. Values above this are cut off to prevent blown-out highlights | `4.0` |
+| `ToneMappingExposure` | Global brightness, like exposure compensation; higher = brighter | `0.7` |
+| `BrightnessClamp` | Brightness ceiling; values above are cut off to prevent blown-out highlights | `4.0` |
 
-> If the scene looks too dark, increase `ToneMappingExposure`. If bright areas are washed out in white, increase `BrightnessClamp`.
+> [!TIP]
+> Scene too dark → raise `ToneMappingExposure`. Highlights blown to white → raise `BrightnessClamp`.
 
-#### Ambient Light Intensity (AmbientIntensity)
+### Ambient Intensity (AmbientIntensity)
 
-Areas not directly lit by any light source aren't pitch black — ambient light simulates the subtle scattered and reflected light that fills a scene. Higher values brighten shadow areas.
+Areas with no direct light aren't pitch black — ambient light simulates the subtle scattered light in a scene. `0` = fully black shadows, `0.1` (default) = slight lift, `0.5`+ = noticeably bright shadows and a stylized look.
 
-| Range | Visual effect |
-|---|---|
-| `0` | Shadows are completely black |
-| `0.1` (default) | Slightly lifts dark areas |
-| `0.5`+ | Noticeably bright shadows; stylistic look |
+> [!NOTE]
+> The PBR pipeline uses physically based IBL ambient lighting and is **not** affected by `AmbientIntensity` (it has its own IBL ambient strength).
 
-> Note: The PBR pipeline uses physically-based IBL ambient lighting and is not affected by this parameter.
+### Cascaded Shadow Maps (CSM)
 
-#### Cascaded Shadow Maps (CSM)
-
-Directional light shadows can show aliasing at long distances. CSM solves this by splitting the view frustum into multiple cascades, each with its own shadow map. Only pipelines with `SupportsCSM = true` (e.g., BlinnPhong) will use CSM.
-
-Specify which directional light uses CSM via `Scene.MainDirectionalLight`; other directional lights fall back to a single shadow map:
+Directional-light shadows alias at distance; CSM splits the view frustum into cascades, each with its own shadow map. Only pipelines with `SupportsCSM = true` (e.g., BlinnPhong) use it. Designate which directional light uses CSM via `Scene.MainDirectionalLight`; the others fall back to a single shadow map:
 
 ```csharp
-view.Scene.MainDirectionalLight = dl;  // This directional light uses CSM
+view.Scene.MainDirectionalLight = dl;  // this directional light uses CSM
 ```
 
 | Parameter | Effect | Default |
 |---|---|---|
-| `CsmCascadeCount` | Number of cascades. Set to 1 to fall back to a single shadow map | `3` |
-| `CsmSplitLambda` | PSSM split parameter. 0=uniform, 1=logarithmic | `0.5` |
-| `CsmShadowMapResolution` | Shadow map resolution per cascade | `1024` |
+| `CsmCascadeCount` | Number of cascades; set to 1 to fall back to a single shadow map (`1..4`) | `3` |
+| `CsmSplitLambda` | PSSM split parameter, 0=uniform, 1=logarithmic (`0..1`) | `0.5` |
+| `CsmShadowMapResolution` | Shadow map resolution per cascade (must be positive) | `1024` |
 
-> `CsmCascadeCount` accepts `1..4`, `CsmSplitLambda` accepts `0..1`, and resolution must be positive. Set cascade count and resolution before pipeline creation; split lambda may change at runtime. All intensity and tone-mapping floats must be finite and non-negative, and `Debug` cannot be null.
+> Set `CsmCascadeCount` and `CsmShadowMapResolution` before pipeline creation; `CsmSplitLambda` may change at runtime. How CSM works and tuning guidance are in [Lighting and Shadows](./lighting.md#csm).
 
-#### Debug Visualization (DebugSettings)
-
-Control built-in debug drawing via `PipelineSettings.Debug` to visualize scene structure during development:
-
-```csharp
-var debug = settings.Debug;
-debug.Enable = true;                // Master switch
-debug.ShowBoundingBox = true;       // Show bounding boxes for all meshes
-debug.ShowDirectionalLight = true;  // Show directional light direction lines
-debug.ShowPointLight = true;        // Show point light range spheres
-debug.ShowSpotLight = true;         // Show spot light cones
-debug.ShowCamera = true;            // Show camera frustums
-debug.ShowBone = true;              // Show bone hierarchy
-```
-
-> All `DebugSettings` properties can be adjusted at runtime. Debug drawing has additional performance overhead; recommended for development only.
-
-#### Feature Toggles
+### Feature Toggles EnableFxaa / EnableFrustumCulling
 
 | Parameter | Effect | Default |
 |---|---|---|
-| `EnableFxaa` | Enables FXAA anti-aliasing[^3] — smooths jagged edges on objects | `true` |
-| `EnableFrustumCulling` | Only render objects inside the camera's view. Invisible objects are automatically skipped | `true` |
+| `EnableFxaa` | FXAA anti-aliasing — smooths jagged edges | `true` |
+| `EnableFrustumCulling` | Only render objects inside the camera's view; invisible ones are skipped | `true` |
 
-> Disable `EnableFxaa` for a small performance gain. `EnableFrustumCulling` is generally best left on — it significantly speeds up scenes with many objects.
+> [!TIP]
+> Disable `EnableFxaa` to save a little overhead when performance is tight. Leave `EnableFrustumCulling` on — it significantly speeds up scenes with many objects. See [Frustum Culling](#frustum-culling).
 
-### Quick Reference
+### Debug Visualization (Debug)
+
+`PipelineSettings.Debug` (a `DebugSettings`) controls built-in debug drawing to make scene structure visible during development; every property can be changed at runtime:
+
+```csharp
+var debug = view.Scene.RenderPipeline.Settings.Debug;
+debug.Enable = true;                // master switch
+debug.ShowBoundingBox = true;       // bounding boxes for all meshes
+debug.ShowDirectionalLight = true;  // directional light direction lines
+debug.ShowPointLight = true;        // point light range spheres
+debug.ShowSpotLight = true;         // spot light cones
+debug.ShowCamera = true;            // camera frustums
+debug.ShowBone = true;              // bone hierarchy
+```
+
+> [!WARNING]
+> Debug drawing adds performance overhead; enable it only during development. `Debug` cannot be `null`; all intensity/tone-mapping floats must be finite and non-negative, otherwise assignment throws `ArgumentOutOfRangeException`.
+
+### Which Settings Need to Be Set When
+
+This is the easiest place to write wrong code — follow this table and you're good.
 
 | Setting | Must set before creation? | Applies to |
 |---|---|---|
@@ -600,11 +238,12 @@ debug.ShowBone = true;              // Show bone hierarchy
 | `EnableFrustumCulling` | ❌ Anytime | All pipelines |
 | `Debug.*` | ❌ Anytime | All pipelines |
 
-> The NoLight pipeline skips lighting and tone mapping passes, so light limits, exposure, and ambient parameters have no effect on it.
+> [!NOTE]
+> The NoLight pipeline skips lighting and tone mapping, so light limits, exposure, and ambient parameters have no effect on it.
 
 ### Backward Compatibility
 
-Existing properties on `RenderPipeline` (such as `EnableFrustumCulling`) still work and internally forward to `Settings`:
+Existing properties on `RenderPipeline` (such as `EnableFrustumCulling`, `DirectionalLightLimit`) still work and internally forward to `Settings`:
 
 ```csharp
 // These two lines are equivalent
@@ -612,222 +251,88 @@ pipeline.EnableFrustumCulling = false;
 pipeline.Settings.EnableFrustumCulling = false;
 ```
 
-[^1]: Z-Fighting: When two surfaces are nearly coplanar, the GPU can't reliably determine which is in front, causing pixels from both surfaces to flicker. Increasing depth buffer precision helps. Reference: https://en.wikipedia.org/wiki/Z-fighting
-
-[^2]: Tone Mapping: The process of mapping HDR color values to the limited range a display can show. The human eye can perceive detail in both dark and bright areas, but displays have a limited brightness range; tone mapping preserves detail in both highlights and shadows. Reference: https://en.wikipedia.org/wiki/Tone_mapping
-
-[^3]: FXAA (Fast Approximate Anti-Aliasing): A lightweight anti-aliasing technique that analyzes the rendered image, detects edges, and applies smoothing to reduce the jagged "staircase" appearance.
-
 ## Frustum Culling
 
-Frustum culling makes the renderer only draw objects within the camera's view, skipping everything outside. Controlled by `PipelineSettings.EnableFrustumCulling` (enabled by default). See [Pipeline Settings](#pipeline-settings) for details.
-
-## Pipeline Lifecycle Hooks
-
-`RenderPipeline` and `RenderPass` provide multiple virtual methods for inserting logic at different stages of the rendering process:
-
-### RenderPipeline Hooks
-
-```csharp
-public class MyPipeline : RenderPipeline
-{
-    // Called once after GL initialization (after registering RenderTargets/RenderPasses)
-    public override void Setup() { }
-
-    // Before rendering the entire frame (once per frame, before all cameras)
-    public override void BeforeRender() { }
-
-    // After rendering the entire frame (once per frame, after all cameras)
-    public override void AfterRender() { }
-
-    // Before each camera renders
-    public override void BeforeCameraRender(Camera camera) { }
-
-    // After each camera renders
-    public override void AfterCameraRender(Camera camera) { }
-
-    // Custom mesh sorting (e.g., sort transparent objects by distance)
-    public override void SortMeshes(List<Mesh> meshes, Camera camera)
-    {
-        // Default sorts by material; override as needed
-        base.SortMeshes(meshes, camera);
-    }
-}
-```
-
-### RenderPass Hooks
-
-```csharp
-public class MyPass : RenderPass
-{
-    // Called once when the Pass is first initialized
-    public override void Setup() { }
-
-    // Per-frame, before/after rendering (for Once-type Passes)
-    public override void BeforeRender() { }
-    public override void AfterRender() { }
-
-    // Per-camera, before/after rendering (for EveryCamera-type Passes)
-    public override void BeforeRender(Camera camera) { }
-    public override void AfterRender(Camera camera) { }
-}
-```
-
-### Custom Mesh Filtering
-
-Always prefer the frustum-culled rendering methods. Culled versions automatically skip invisible meshes for optimal performance.
-
-**Preferred — Culled rendering:**
-
-```csharp
-// Render meshes that pass frustum culling
-RenderVisibleMeshesInCamera(filter, camera.View, camera.Projection);
-
-// Render instanced meshes that pass frustum culling
-RenderVisibleInstancedMeshesInCamera(filter, camera.View, camera.Projection);
-```
-
-Typical opaque Pass example:
-
-```csharp
-public override void Render(Camera camera)
-{
-    // Render opaque static meshes
-    UseShader();
-    RenderVisibleMeshesInCamera(
-        mesh => mesh.IsStaticMesh
-             && (mesh.Material == null || mesh.Material.BlendMode == BlendMode.Opaque),
-        camera.View, camera.Projection);
-
-    // Render opaque skinned meshes (with skinning macro variant)
-    UseShader("SKINNED_MESH");
-    RenderVisibleMeshesInCamera(
-        mesh => mesh.IsSkinnedMesh
-             && (mesh.Material == null || mesh.Material.BlendMode == BlendMode.Opaque),
-        camera.View, camera.Projection);
-
-    // Render instanced meshes
-    RenderVisibleInstancedMeshesInCamera(
-        im => im.EnableFrustumCulling,
-        camera.View, camera.Projection);
-}
-```
-
-**Fallback — Unculled rendering (use only when):**
-
-- Very few objects — culling overhead exceeds benefit
-- Need to iterate by type rather than visibility (e.g., `RenderStaticMeshes` / `RenderSkinnedMeshes`)
-- Rendering from a pre-filtered external list (`RenderMeshesFromList`)
-- Debugging — temporarily disable culling to narrow down issues
-
-```csharp
-// All meshes (regardless of static/skinned, regardless of visibility)
-RenderMeshes(filter, camera.View, camera.Projection);
-
-// Static meshes only
-RenderStaticMeshes(filter, camera.View, camera.Projection);
-
-// Skinned meshes only
-RenderSkinnedMeshes(filter, camera.View, camera.Projection);
-
-// All instanced meshes
-RenderInstancedMeshes(filter, camera.View, camera.Projection);
-
-// From a specific list
-RenderMeshesFromList(myMeshList, filter, camera.View, camera.Projection);
-```
-
-### Render Method Quick Reference
-
-| Method | Type | Culled | Recommendation |
-|---|---|---|---|
-| `RenderVisibleMeshesInCamera(filter, view, proj)` | Mesh | ✅ | ⭐ Preferred |
-| `RenderVisibleInstancedMeshesInCamera(filter, view, proj)` | InstancedMesh | ✅ | ⭐ Preferred |
-| `RenderMeshesFromList(list, filter, view, proj)` | Mesh | ❌ | External list scenario |
-| `RenderStaticMeshes(filter, view, proj)` | Mesh | ❌ | Iterate by type |
-| `RenderSkinnedMeshes(filter, view, proj)` | Mesh | ❌ | Iterate by type |
-| `RenderMeshes(filter, view, proj)` | Mesh | ❌ | Debugging / few objects |
-| `RenderInstancedMeshes(filter, view, proj)` | InstancedMesh | ❌ | Debugging / few objects |
+Frustum culling makes the renderer only draw objects within the camera's view, skipping everything outside to cut draw cost. It's controlled by `PipelineSettings.EnableFrustumCulling` and is **on by default**. When on, the pipeline computes a per-camera list of visible meshes each frame and culled methods like `RenderVisibleMeshesInCamera` only iterate that list; when off, every mesh in the scene is drawn (turn it off only for very few objects or when you need to force a full traversal). With multiple cameras, culling is computed per camera.
 
 ## Multi-Camera Rendering
 
-Aura3D supports rendering multiple camera views simultaneously, e.g., for split-screen or minimaps.
-
-### Creating Additional Cameras
+A single scene can render multiple camera views at once — for split-screen or minimaps. Every `Camera` node in the scene is automatically discovered and rendered one by one, and each Pass registered as `RenderPassGroup.EveryCamera` runs once per camera (the Pass grouping mechanism is in [Custom Render Pipelines](./custom-pipeline.md)).
 
 ```csharp
 // Create a second camera in SceneInitialized
 var secondCamera = new Camera
 {
     Position = new Vector3(10, 5, 0),
-    IsRenderBackground = false  // Don't re-render skybox from the second view
+    IsRenderBackground = false  // the second view doesn't re-render the skybox
 };
 secondCamera.LookAt(Vector3.Zero);
-
 scene.AddNode(secondCamera);
 ```
 
-All `Camera` nodes in the scene are automatically discovered and rendered by the `RenderPipeline`. Each Pass registered as `RenderPassGroup.EveryCamera` executes once per camera.
-
 ### Render to Texture
 
-Use `ControlRenderTarget` to render a camera's view to a texture for minimaps, surveillance views, etc.:
+Use `ControlRenderTarget` to render a camera's view into a texture for minimaps, surveillance views, and the like:
 
 ```csharp
-// Create an offscreen render target
+// Create an offscreen target and attach it to the camera
 var renderTarget = new ControlRenderTarget(width, height);
 secondCamera.RenderTarget = renderTarget;
 
-// After rendering, the target contains that camera's view
-// Can be read in SceneUpdated and used as material input
+// After rendering, this target holds that camera's view
+// Read its texture in SceneUpdated and feed it as another material's input
 ```
 
-## Resource Management
+More camera usage (projection types, `FitToBoundingBox`, controllers) is in [Cameras and View Control](./camera.md).
 
-### GPU Resource Lifecycle
+## GPU Resource Auto-Management (Overview)
 
-All objects implementing `IGpuResource` (Geometry, Material, Texture, RenderTarget, etc.) have their lifecycle managed by the `RenderPipeline`:
+When you add a mesh, material, texture, or model to the scene with `view.AddNode(...)`, the pipeline takes over the GPU-side state of those resources: uploading them on first use, re-syncing after content changes, and reclaiming them periodically once they're no longer referenced — day-to-day use needs no manual work, and there is no registration API to call by hand.
+
+Context loss and restoration, releasing and rebuilding VRAM, and the `IGpuState` contract are covered in depth in [GPU Resource Lifecycle](./gpu-resource-lifecycle.md) — read that page when something goes wrong or you need precise VRAM control.
+
+## PBR Material Parameters (Usage Example)
+
+Once you pick the PBR pipeline, it reads material channel textures via the Metallic-Roughness workflow. Here's an example of "how to feed the parameters"; material channels themselves and the custom-shader mechanism are left to [Custom Materials and Shaders](./custom-material.md).
 
 ```csharp
-// Manually add a resource to the pipeline (usually automatic via AddNode)
-view.Scene.RenderPipeline.AddGpuResource(myResource);
+var mesh = new Mesh();
+mesh.Geometry = new SphereGeometry();
+mesh.Material = new Material();
 
-// Manually remove
-view.Scene.RenderPipeline.RemoveGpuResource(myResource);
+// Base color (BaseColor is an extension property — new first, then assign; don't put it in an object initializer)
+mesh.Material.BaseColor = Texture.CreateFromColor(Color.FromArgb(255, 200, 50, 50));
+
+// Normal map
+mesh.Material.SetTexture("Normal",
+    Texture.CreateFromColor(Color.FromArgb(128, 128, 255)));
+
+// Metallic/Roughness map: R channel = metallic, G channel = roughness
+mesh.Material.SetTexture("MetallicRoughness",
+    Texture.CreateFromColor(Color.FromArgb(200, 100, 0)));
+
+view.AddNode(mesh);
 ```
 
-**IGpuResource Interface:**
+> [!NOTE]
+> In `MetallicRoughness`, R stores metallic and G stores roughness — the PBR channel-packing convention. The Cel Shading pipeline works like the default one — load models, set lights, and the rendering style automatically becomes toon-shaded.
 
-| Member | Description |
-|---|---|
-| `NeedsUpload` (bool) | Whether the resource needs uploading to the GPU |
-| `Upload(GL gl)` | Upload data to GPU |
-| `Destroy(GL gl)` | Destroy GPU resource |
+## Common Pitfalls
 
-### Enumerate All GPU Resources of a Model
+- **`CreateRenderPipeline` set too late**: it must be assigned before GL initialization (before the control loads); putting it inside the `SceneInitialized` callback is already too late.
+- **Treating before-creation settings as runtime settings**: `DepthFormat`, the three `*LightLimit`s, `CsmCascadeCount`, and `CsmShadowMapResolution` won't take effect if changed after the pipeline is built — you must rebuild it (reload the control). Match your code to [the table above](#which-settings-need-to-be-set-when).
+- **Adjusting `AmbientIntensity` in PBR does nothing**: PBR uses IBL ambient light and ignores this parameter — that's expected.
+- **Configuring lights/exposure for the NoLight pipeline**: NoLight skips lighting and tone mapping, so those settings have no effect.
+- **Non-negative validation**: passing a negative, `NaN`, or `Infinity` for intensity/tone-mapping floats, or `null` for `Debug`, throws on assignment.
+- **Wrong XAML `x:TypeArguments` namespace**: Core built-ins are in `Aura3D.Core.Renderers`; PBR / Cel must `clr-namespace` their own assemblies, and the matching NuGet package must be installed first.
 
-```csharp
-// Get all GPU resources under a model (geometry, material textures, etc.)
-var resources = model.GetGpuResources();
-foreach (var res in resources)
-{
-    // e.g., check if upload is needed
-    if (res.NeedsUpload) { /* ... */ }
-}
-```
+## Runnable Example
 
-### RenderPass Context Methods
+- Gallery pipelines demo (one scene across BlinnPhong / NoLight / PBR Deferred / PBR Forward / Cel Shading, showing which channel each reads): [PipelinesDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/Pipelines/PipelinesDemo.axaml.cs)
+- Pipeline-kind-to-type mapping table: [PipelineCatalog.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/PipelineCatalog.cs)
 
-```csharp
-// Resolve a saved handle at the current camera size
-var rt = GetRenderTarget(baseRenderTarget, camera);
+## Next Steps
 
-// Bind the SetOutput target (defaults to CameraOutput when unset)
-BindOutput(camera);
-
-// Render a fullscreen quad (common for post-processing)
-RenderQuad();
-
-// Render a unit cube (for debugging / environment maps)
-RenderCube();
-```
+- Writing your own pipeline or `RenderPass`: [Custom Render Pipelines](./custom-pipeline.md)
+- Material and texture channel mechanisms: [Custom Materials and Shaders](./custom-material.md)
+- VRAM and context recovery: [GPU Resource Lifecycle](./gpu-resource-lifecycle.md)

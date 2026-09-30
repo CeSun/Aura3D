@@ -1,17 +1,25 @@
 ---
 section: basics
-order: 3
+order: 7
 ---
 
 # 动画系统
 
-Aura3D 支持从简单的骨骼动画播放到复杂的状态机和混合空间。
+这一页解决一个问题：**让带动画的角色模型动起来，并控制它怎么动**。你可以：
 
-## 骨骼动画
+- 加载带骨骼动画的模型并播放、切歌、调速、循环或单次播放；
+- 需要逐帧掌控时，手动推进动画时间（定格、慢放、步进）；
+- 模型和动画不在同一个文件时（常见 FBX 工作流），用 Assimp 外挂动画；
+- 用 2D 混合空间在待机/前后左右移动之间平滑过渡；
+- 用动画状态图管理"待机 → 行走 → 跑步"这类带条件的状态切换；
+- 绕过采样器直接读写骨骼矩阵，做程序化动画、IK 或挂附件。
 
-### 基本骨骼动画
+> [!NOTE]
+> 动画采样器输出的骨骼矩阵最终由蒙皮网格消费。模型节点的加载与部件组织见 [./models.md](./models.md)，场景节点基础见 [./scene-and-nodes.md](./scene-and-nodes.md)。
 
-加载带动画的 glTF 模型并播放：
+## 加载并播放骨骼动画
+
+最短可跑路径：加载 glb 里的模型和动画数组，给第一个剪辑建一个 `AnimationSampler`，挂到 `model.AnimationSampler` 上即可自动播放。
 
 ```csharp
 private Model? model;
@@ -25,12 +33,12 @@ private void OnSceneInitialized(object sender, InitializedRoutedEventArgs e)
     using var stream = File.OpenRead("character.glb");
     var (model, animations) = ModelLoader.LoadGlbModelAndAnimations(stream);
 
-    // 创建动画采样器并绑定
+    // 创建动画采样器并绑定到模型
     animationSampler = new AnimationSampler(animations[0]);
     animationSampler.TimeScale = 1.0f;  // 播放速度
     model.AnimationSampler = animationSampler;
 
-    model.Position = view.MainCamera.Forward * 3;
+    model.Position = new Vector3(0, 0, 3);
     view.AddNode(model);
 
     // 添加光源
@@ -41,7 +49,11 @@ private void OnSceneInitialized(object sender, InitializedRoutedEventArgs e)
 }
 ```
 
+只要 `AnimationSampler`（或后面提到的混合空间、状态图）挂在 `model.AnimationSampler` 上，场景每帧更新时就会自动推进采样并驱动蒙皮，不需要你写每帧代码。
+
 ### 切换动画
+
+换剪辑就是换采样器：为目标 `Animation` 新建一个 `AnimationSampler` 并重新绑定。
 
 ```csharp
 // 当用户选择不同动画时
@@ -54,7 +66,7 @@ private void SwitchAnimation(string animationName)
 }
 ```
 
-### 循环模式
+### 循环模式与重置
 
 `AnimationSampler` 提供三种循环模式：
 
@@ -64,19 +76,21 @@ var sampler = new AnimationSampler(animation);
 // 循环播放（默认）
 sampler.LoopMode = LoopMode.Loop;
 
-// 播放一次后停止
+// 播放一次后停在末尾
 sampler.LoopMode = LoopMode.Once;
 
 // 来回乒乓播放
 sampler.LoopMode = LoopMode.PingPong;
 
-// 重置动画到开头
+// 重置动画回到开头
 sampler.Reset();
 ```
 
+播放速度用 `TimeScale` 控制（`1.0` 为原速，`0.5` 为半速慢放）。
+
 ### 手动控制动画时间
 
-默认情况下，`AnimationSampler` 使用系统时间自动推进。设置 `ExternalUpdate = true` 后，你需要手动调用 `Update` 来控制时间：
+默认情况下 `AnimationSampler` 用系统时间自动推进。设置 `ExternalUpdate = true` 后，时间完全由你调用 `Update` 推进——适合定格播放、逐帧检查或服务器同步：
 
 ```csharp
 sampler.ExternalUpdate = true;
@@ -88,32 +102,12 @@ private void OnSceneUpdated(object sender, UpdateRoutedEventArgs e)
 }
 ```
 
-> 适用于动画混合空间和动画状态图：它们的 `Update` 会自动更新内部所有采样器。如果设置了 `ExternalUpdate = true`，需要手动调用顶层的 `Update`。
-
-### 骨骼网格体包围盒
-
-出于性能考虑，骨骼网格体不会逐帧按骨骼位置重新计算包围盒，而是使用静态顶点数据生成一个 T-Pose 包围盒。如果动画使模型明显超出该包围盒（如行走、跳跃），可能导致视锥体剔除错误地裁剪掉仍在视野内的网格。
-
-可通过 `Model.BoundingBoxPadding` 在各方向扩展包围盒：
-
-```csharp
-// 各方向扩大 2 个单位，确保动画位移不被剔除
-model.BoundingBoxPadding = new Vector3(2f);
-```
-
-或指定自定义包围盒完全覆盖动画范围：
-
-```csharp
-model.CustomBoundingBox = new BoundingBox(
-    new Vector3(-5, 0, -5),
-    new Vector3(5, 10, 5));
-```
-
-> 按需设置即可，静止模型无需调整。
+> [!NOTE]
+> 混合空间（`AnimationBlendSpace`）和状态图（`AnimationGraph`）同样适用：它们的 `Update` 会自动更新内部所有采样器。如果设置了 `ExternalUpdate = true`，只需手动调用**顶层**采样器的 `Update`。
 
 ### 使用 Assimp 加载外部动画
 
-当模型和动画在不同文件中时（常见于 FBX 工作流）：
+当模型和动画在不同文件时（常见于 FBX 工作流），先加载模型，再把动画文件绑定到模型的骨骼上：
 
 ```csharp
 // 先加载模型
@@ -130,9 +124,9 @@ using (var stream = File.OpenRead("walk.fbx"))
 }
 ```
 
-## 动画混合空间
+## 2D 混合空间：按输入方向 blend 多个动画
 
-2D 混合空间可以在多个动画间根据二维参数（如移动方向和速度）平滑过渡。
+混合空间把多条动画摆放在二维平面的各个位置，根据一组 `(x, y)` 参数在它们之间做距离加权混合——典型的 locomotion 设置：待机放原点，前后左右移动放四个方向。
 
 ```csharp
 private AnimationBlendSpace? blendSpace;
@@ -143,7 +137,7 @@ private void OnSceneInitialized(object sender, InitializedRoutedEventArgs e)
 
     // ... 加载模型和动画 ...
 
-    // 创建混合空间
+    // 创建混合空间（基于模型的骨骼）
     blendSpace = new AnimationBlendSpace(model.Skeleton);
 
     // 在二维空间的各方向放置动画
@@ -175,9 +169,11 @@ private void OnSceneUpdated(object sender, UpdateRoutedEventArgs e)
 }
 ```
 
-## 动画状态图
+挂法和单条动画完全一样——模型不关心 `AnimationSampler` 位置放的是采样器还是混合空间。加权方式可通过 `IdwPower` 调整（反距离加权幂次，默认 2，越大越"偏向"最近的动画）。
 
-状态图（AnimationGraph）适合管理复杂的状态机，例如角色的"待机 → 行走 → 跑步"过渡。
+## 动画状态图：按条件切换并交叉淡化
+
+状态图（`AnimationGraph`）适合管理"待机 → 行走 → 跑步"这类带转换条件的状态机。每个状态是一个 `AnimationGraphNode`，节点间的转换用一个条件函数声明，切换时按 `BlendTime` 做交叉淡化。
 
 ```csharp
 private void OnSceneInitialized(object sender, InitializedRoutedEventArgs e)
@@ -205,7 +201,7 @@ private void OnSceneInitialized(object sender, InitializedRoutedEventArgs e)
     walkNode.AddNextNode((sampler, dt) => Speed < 0.01, idleNode);
     runNode.AddNextNode((sampler, dt) => Speed < 0.8, walkNode);
 
-    // 创建状态图并绑定
+    // 创建状态图并绑定，第二个参数是入口节点
     var graph = new AnimationGraph(model.Skeleton, idleNode);
     model.AnimationSampler = graph;
 
@@ -213,11 +209,11 @@ private void OnSceneInitialized(object sender, InitializedRoutedEventArgs e)
 }
 ```
 
-每帧检查条件，当条件满足时自动切换到目标状态，过渡由 `BlendTime` 控制平滑度。
+每帧检查当前节点出边的条件，条件满足时自动切换到目标状态，过渡的平滑程度由 `BlendTime` 控制。
 
 ## 骨骼手动操作
 
-除了依赖动画采样器，你也可以直接读写骨骼变换，用于程序化动画、反向动力学（IK）或布娃娃系统。
+除了依赖动画采样器，你也可以直接读写骨骼变换，用于程序化动画、反向动力学（IK）或布娃娃系统。调试时可用 `view.Scene.RenderPipeline.Settings.Debug.ShowBone = true;` 画出骨骼。
 
 ### 遍历骨骼
 
@@ -239,7 +235,7 @@ void TraverseBone(Bone bone, int depth)
 TraverseBone(skeleton.Root, 0);
 ```
 
-### 读写骨骼矩阵
+### 读取骨骼矩阵
 
 ```csharp
 // 读取骨骼的世界矩阵（当前帧的计算结果）
@@ -253,4 +249,47 @@ Matrix4x4 localMatrix = skeleton.Bones[boneIndex].LocalMatrix;
 Matrix4x4 invWorldMatrix = skeleton.Bones[boneIndex].InverseWorldMatrix;
 ```
 
-> **注意**：直接在 `SceneUpdated` 中修改骨骼矩阵不会生效——骨骼矩阵在动画采样阶段由 `IAnimationSampler.Update()` 计算。要实现程序化骨骼控制，需要自定义 `IAnimationSampler` 或在动画采样之后覆盖矩阵。
+### 把物体挂到骨骼上
+
+想让火把跟着手掌走？不需要手写矩阵同步，用 `BoneAttachment` 节点声明"挂在哪个骨骼上"即可：
+
+```csharp
+var attachment = new BoneAttachment
+{
+    Mesh = targetSkinnedMesh,          // 动画所属的蒙皮网格
+    BoneName = "LeftHand",             // 目标骨骼名
+    LocalOffset = Matrix4x4.CreateTranslation(new Vector3(0, 0.35f, 0)),
+};
+view.AddNode(attachment);
+attachment.AddChild(torchMesh, AttachToParentRule.KeepLocal);
+```
+
+## 常见坑
+
+> [!WARNING]
+> **直接在 `SceneUpdated` 里修改骨骼矩阵不会生效。** 骨骼矩阵在动画采样阶段由 `IAnimationSampler.Update()` 计算，你在事件回调里的写入会被下一次采样覆盖。要实现程序化骨骼控制，需要自定义 `IAnimationSampler`，或在动画采样之后覆盖矩阵。
+
+> [!WARNING]
+> **骨骼网格的包围盒是 T-Pose 静态计算的。** 出于性能考虑，骨骼网格体不会逐帧按骨骼位置重新计算包围盒，而是用静态顶点数据生成 T-Pose 包围盒。如果动画使模型明显超出该包围盒（如行走、跳跃），视锥剔除可能错误地裁掉仍在视野内的网格。解决办法：
+
+```csharp
+// 各方向扩大 2 个单位，确保动画位移不被剔除
+model.BoundingBoxPadding = new Vector3(2f);
+```
+
+或指定自定义包围盒完全覆盖动画范围：
+
+```csharp
+model.CustomBoundingBox = new BoundingBox(
+    new Vector3(-5, 0, -5),
+    new Vector3(5, 10, 5));
+```
+
+按需设置即可，静止模型无需调整。更多剔除相关问题见 [./troubleshooting.md](./troubleshooting.md)。
+
+## 可运行示例
+
+- 骨骼动画播放/循环模式/手动时间/骨骼附件：<https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/SkinnedAnimation/SkinnedAnimationDemo.axaml.cs>
+- 状态图 + 2D 混合空间对照：<https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/AnimationMix/AnimationMixDemo.axaml.cs>
+
+核心实现源码：[AnimationSampler](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Resources/AnimationSampler.cs)、[AnimationBlendSpace](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Resources/AnimationBlendSpace.cs)、[AnimationGraph](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Resources/AnimationGraph.cs)。

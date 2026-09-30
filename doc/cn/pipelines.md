@@ -1,27 +1,53 @@
 ---
-section: basics
-order: 1
+section: advanced
+order: 3
 ---
 
-# 渲染管线
+# 选择与配置管线
 
-渲染管线决定了场景的视觉风格。Aura3D 提供了多套内置管线，也支持完全自定义。
+渲染管线决定了场景的视觉风格：光照模型、阴影、色调映射、抗锯齿，以及画面里每一张贴图怎么被读。这一篇面向**使用管线**的人——怎么在几条内置管线里选一条、怎么通过 `PipelineSettings` 把它的画面调到想要的效果。若你要自己写管线或写 `RenderPass`，去 [自定义渲染管线](./custom-pipeline.md)。
 
-## 内置管线
+## 能做什么
 
-### BlinnPhong 管线（默认）
+Aura3D 附带一组内置管线，覆盖从写实到风格化的常见需求。选管线本质是两件事：
 
-写实风格的前向渲染管线，使用 Blinn-Phong 光照模型。无需额外配置，直接使用 `Aura3DView` 即可。
+1. **选一条**——在 XAML 里用 `x:TypeArguments` 指定，或在代码里给 `CreateRenderPipeline` 赋一个工厂委托。
+2. **配它**——通过 `PipelineSettings` 调整深度精度、光源数量、曝光、阴影级联、抗锯齿、调试可视化。
 
-特性：
-- 支持方向光、点光、聚光灯（每类最多 4 盏）
-- 支持阴影
-- 支持骨骼动画
-- 支持透明 / 半透明材质
+## 内置管线一览与选型
 
-### NoLight 管线
+| 管线 | 风格 / 用途 | 装哪个包 | 在 Core 里？ |
+|---|---|---|---|
+| `BlinnPhongPipeline` | 写实前向渲染，Blinn-Phong 光照模型（**默认**） | `Aura3D.Avalonia` | 是，无需额外装 |
+| `NoLightPipeline` | 无光照，直出材质颜色，调试或风格化 | `Aura3D.Avalonia` | 是 |
+| `PointCloudPipeline` | 点云场景，内置点大小与颜色属性 | `Aura3D.Avalonia` | 是 |
+| `PBRDeferredPipeline` | 基于物理的 Metallic-Roughness 工作流，延迟渲染架构 | `Aura3D.Pipeline.PBR` | 需额外装 |
+| `PBRForwardPipeline` | 同样的 PBR 工作流，前向渲染架构 | `Aura3D.Pipeline.PBRForward` | 需额外装 |
+| `CelShadingPipeline` | 卡通 / Toon 非写实着色 | `Aura3D.Pipeline.CelShading` | 需额外装 |
 
-无光照管线，直接输出材质颜色，适合调试或风格化场景。
+BlinnPhong 是默认管线，支持方向光 / 点光 / 聚光（每类最多 4 盏）、阴影、骨骼动画、透明与半透明材质——直接用 `Aura3DView` 就是它，无需任何配置。
+
+安装扩展管线（按需）：
+
+```shell
+# PBR 延迟渲染管线
+dotnet add package Aura3D.Pipeline.PBR
+
+# PBR 前向渲染管线
+dotnet add package Aura3D.Pipeline.PBRForward
+
+# 卡通渲染管线
+dotnet add package Aura3D.Pipeline.CelShading
+```
+
+> [!NOTE]
+> `BlinnPhong`、`NoLight`、`PointCloud` 都在 `Aura3D.Core` 里，随 `Aura3D.Avalonia` 一起装好，**不需要**额外的安装命令。
+
+### 怎么指定管线
+
+两种方式任选其一，效果相同。
+
+**方式一 — XAML `x:TypeArguments`：**
 
 ```xaml
 <Window
@@ -34,430 +60,43 @@ order: 1
 </Window>
 ```
 
-或通过代码指定：
+Core 内置管线用 `acr:`（`Aura3D.Core.Renderers`）；扩展管线换成各自命名空间：
+
+```xaml
+<!-- PBR：xmlns:pbr="clr-namespace:Aura3D.Pipeline.PBR;assembly=Aura3D.Pipeline.PBR" -->
+<a:Aura3DView x:TypeArguments="pbr:PBRDeferredPipeline" ... />
+
+<!-- PBR 前向：xmlns:pbrf="clr-namespace:Aura3D.Pipeline.PBRForward;assembly=Aura3D.Pipeline.PBRForward" -->
+<a:Aura3DView x:TypeArguments="pbrf:PBRForwardPipeline" ... />
+
+<!-- 卡通：xmlns:cel="clr-namespace:Aura3D.Pipeline.CelShading;assembly=Aura3D.Pipeline.CelShading" -->
+<a:Aura3DView x:TypeArguments="cel:CelShadingPipeline" ... />
+
+<!-- 点云（Core 内置）：xmlns:core="clr-namespace:Aura3D.Core.Renderers;assembly=Aura3D.Core" -->
+<a:Aura3DView x:TypeArguments="core:PointCloudPipeline" ... />
+```
+
+**方式二 — 代码 `CreateRenderPipeline`：**
 
 ```csharp
 view.CreateRenderPipeline = scene => new NoLightPipeline(scene);
-```
-
-## PBR 延迟管线
-
-基于物理的渲染（Physically Based Rendering），使用 Metallic-Roughness 工作流，采用延迟渲染架构。
-
-### 安装
-
-```shell
-dotnet add package Aura3D.Pipeline.PBR
-```
-
-### 使用
-
-```xaml
-<Window
-    xmlns:a="https://github.com/CeSun/Aura3D"
-    xmlns:pbr="clr-namespace:Aura3D.Pipeline.PBR;assembly=Aura3D.Pipeline.PBR"
-    ...>
-    <a:Aura3DView x:TypeArguments="pbr:PBRDeferredPipeline"
-                  x:Name="aura3Dview"
-                  SceneInitialized="OnSceneInitialized"/>
-</Window>
-```
-
-### 材质配置
-
-PBR 管线使用 PBR 材质参数：
-
-```csharp
-var mesh = new Mesh();
-mesh.Geometry = new SphereGeometry();
-mesh.Material = new Material();
-
-// 基础色
-mesh.Material.BaseColor = Texture.CreateFromColor(Color.FromArgb(255, 200, 50, 50));
-
-// 法线贴图
-mesh.Material.SetTexture("Normal",
-    Texture.CreateFromColor(Color.FromArgb(128, 128, 255)));
-
-// 金属度/粗糙度贴图：R 通道 = 金属度，G 通道 = 粗糙度
-mesh.Material.SetTexture("MetallicRoughness",
-    Texture.CreateFromColor(Color.FromArgb(200, 100, 0)));
-
-view.AddNode(mesh);
-```
-
-## 卡通渲染管线
-
-Cel Shading / Toon Shading 风格的非写实渲染。
-
-### 安装
-
-```shell
-dotnet add package Aura3D.Pipeline.CelShading
-```
-
-### 使用
-
-```xaml
-<Window
-    xmlns:a="https://github.com/CeSun/Aura3D"
-    xmlns:cel="clr-namespace:Aura3D.Pipeline.CelShading;assembly=Aura3D.Pipeline.CelShading"
-    ...>
-    <a:Aura3DView x:TypeArguments="cel:CelShadingPipeline"
-                  x:Name="aura3Dview"
-                  SceneInitialized="OnSceneInitialized"/>
-</Window>
-```
-
-卡通管线使用方式与默认管线一致——加载模型、设置光源后即可看到效果，渲染风格会自动变为卡通着色。
-
-## 点云管线
-
-内置的 `PointCloudPipeline` 专为点云场景设计，无需自定义着色器即可快速使用：
-
-```xaml
-<Window
-    xmlns:a="https://github.com/CeSun/Aura3D"
-    xmlns:core="clr-namespace:Aura3D.Core.Renderers;assembly=Aura3D.Core"
-    ...>
-    <a:Aura3DView x:TypeArguments="core:PointCloudPipeline"
-                  x:Name="aura3Dview"
-                  SceneInitialized="OnSceneInitialized"/>
-</Window>
-```
-
-或通过代码指定：
-
-```csharp
+// 或
 view.CreateRenderPipeline = scene => new PointCloudPipeline(scene);
 ```
 
-点云管线内置了点大小控制和颜色属性支持，渲染流程为：BackgroundPass → PointCloudPass → GammaCorrectionPass → FxaaPass → DebugDrawPass。
+> [!WARNING]
+> `CreateRenderPipeline` **必须在 GL 初始化之前赋值**（即控件加载之前）。等 `SceneInitialized` 触发时管线已经建好，此时再设就晚了。
 
-## 自定义渲染管线
+> [!TIP]
+> 想在运行时来回切换管线，把工厂委托集中成一张表最省事。Gallery 的管线对比 demo 就是这么做的——见 [PipelinesDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/Pipelines/PipelinesDemo.axaml.cs) 与 [PipelineCatalog.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/PipelineCatalog.cs)，可在 BlinnPhong / NoLight / PBR 延迟 / PBR 前向 / 卡通五条管线间切换，直观看出「谁读了哪张贴图、谁压根不读」。
 
-Aura3D 的渲染管线由 **RenderPipeline** 和 **RenderPass** 两部分组成。自定义管线时需要实现这两个类。开发者无需处理 VAO、VBO 等底层细节，但仍需具备基本的渲染知识。
+## 配置管线：PipelineSettings
 
-### 架构概览
-
-```
-RenderPipeline
-  ├── 注册 RenderTarget（帧缓冲 + 纹理附件）
-  ├── 注册 RenderPass（渲染步骤，指定输出目标）
-  └── 按 RenderPassGroup 调度执行
-       ├── Once — 全局执行一次（如 ShadowMap）
-       └── EveryCamera — 每个摄像机执行一次（如主渲染）
-```
-
-### RenderPipeline
-
-`RenderPipeline` 主要负责注册 RenderPass 和 RenderTarget。
-
-```csharp
-public class NoLightPipeline : RenderPipeline
-{
-    public NoLightPipeline(Scene scene) : base(scene)
-    {
-        var baseRenderTarget = RegisterRenderTarget("BaseRenderTarget")
-            .AddTexture("Color", TextureFormat.Rgba16f)
-            .SetDepthTexture(Settings.DepthFormat);
-
-        var gammaOutput = RegisterRenderTarget("GammaOutput")
-            .AddTexture("Color", TextureFormat.Rgba8)
-            .SetDepthTexture(Settings.DepthFormat);
-
-        var noLightPass = new NoLightPass(this);
-
-        // 注册 RenderPass（按顺序执行）
-        RegisterRenderPass(
-            new BackgroundPass(this).SetOutput(baseRenderTarget),
-            RenderPassGroup.EveryCamera);
-
-        RegisterRenderPass(
-            noLightPass.SetOutput(baseRenderTarget),
-            RenderPassGroup.EveryCamera);
-
-        RegisterRenderPass(
-            new GammaCorrectionPass(this, baseRenderTarget.GetTexture("Color"))
-                .SetOutput(gammaOutput),
-            RenderPassGroup.EveryCamera);
-
-        RegisterRenderPass(
-            new FxaaPass(this, gammaOutput.GetTexture("Color"))
-                .SetOutput(CameraOutput),
-            RenderPassGroup.EveryCamera);
-    }
-}
-```
-
-**关键 API：**
-
-| 方法 | 说明 |
-|---|---|
-| `RegisterRenderPass(pass, group)` | 注册渲染步骤，`group` 决定执行时机 |
-| `RegisterRenderTarget(name)` | 注册帧缓冲，返回配置器 |
-| `AddTexture(name, format)` | 给 RenderTarget 添加颜色附件 |
-| `SetDepthTexture(format)` | 给 RenderTarget 添加深度附件 |
-
-**RenderPassGroup 枚举：**
-- `EveryCamera` — 每个摄像机执行一次（大多数 Pass 用这个）
-- `Once` — 全局执行一次（如 ShadowMap 渲染）
-
-### RenderPass
-
-`RenderPass` 是一段着色器渲染流程。一般一个 Shader（含变体）对应一个 RenderPass。
-
-```csharp
-public class NoLightPass : RenderPass
-{
-    public NoLightPass(RenderPipeline renderPipeline) : base(renderPipeline)
-    {
-        // 指定着色器源码
-        this.FragmentShader = ShaderResource.NoLightFrag;
-        this.VertexShader = ShaderResource.NoLightVert;
-    }
-
-    public override void Render(Camera camera)
-    {
-        // 渲染不透明非骨骼网格
-        UseShader();
-        RenderVisibleMeshesInCamera(
-            mesh => !mesh.IsSkinnedMesh
-                 && (mesh.Material == null
-                     || mesh.Material.BlendMode == BlendMode.Opaque),
-            camera.View,
-            camera.Projection);
-
-        // 渲染不透明骨骼网格（使用 SKINNED_MESH 宏变体）
-        UseShader("SKINNED_MESH");
-        RenderVisibleMeshesInCamera(
-            mesh => mesh.IsSkinnedMesh
-                 && (mesh.Material == null
-                     || mesh.Material.BlendMode == BlendMode.Opaque),
-            camera.View,
-            camera.Projection);
-    }
-}
-```
-
-> 这是简化后的示例写法。实际内置的 `NoLightPipeline` 先遍历所有网格再自行筛选，新编写的管线建议直接使用剔除版本。`mesh.IsSkinnedMesh` / `mesh.IsStaticMesh` 是 `Mesh` 的属性，替代手动判断骨骼逻辑。
-
-**关键 API：**
-
-| 方法 | 说明 |
-|---|---|
-| `UseShader(params string[] defines)` | 设置着色器宏定义（替换模式），详见 [着色器宏系统](#着色器宏系统) |
-| `AddDefines(params string[] defines)` | 追加宏定义（追加模式），`UseShader` 之后调用 |
-| `RenderVisibleMeshesInCamera(filter, view, proj)` | 渲染通过视锥体剔除的网格 |
-
-**Mesh 关键属性：**
-
-| 属性 | 说明 |
-|---|---|
-| `mesh.IsStaticMesh` | 非骨骼网格（返回值 = `!IsSkinnedMesh`） |
-| `mesh.IsSkinnedMesh` | 绑定了骨骼的网格（返回值 = `Model != null && Skeleton != null`） |
-
-### 为单个 Mesh 传参
-
-重写 `RenderMesh` 方法，在渲染特定网格前设置 Uniform：
-
-```csharp
-public override void RenderMesh(Mesh mesh, Matrix4x4 view, Matrix4x4 projection)
-{
-    if (someCondition)
-    {
-        UniformFloat("someParameter", value);
-        UniformVector4("someColor", new Vector4(1, 0, 0, 1));
-    }
-
-    // 必须设置这些基础矩阵
-    UniformMatrix4("viewMatrix", view);
-    UniformMatrix4("projectionMatrix", projection);
-
-    base.RenderMesh(mesh, view, projection);
-}
-```
-
-### 着色器宏系统
-
-Aura3D 的着色器变体通过三个方法协作实现。理解它们的关系是自定义管线的关键。
-
-#### 三个方法的分工
-
-| 方法 | 作用 | GPU 操作 |
-|---|---|---|
-| `UseShader(params string[] defines)` | **替换** defines 列表 | 无 |
-| `AddDefines(params string[] defines)` | **追加** 到已有 defines 列表 | 无 |
-| `UseShader_Internal` | 读取 defines，编译/缓存/激活着色器 | `gl.UseProgram` |
-
-`UseShader` 和 `AddDefines` 是**声明式**的——只记录意图，不碰 GPU。真正的编译和绑定发生在 `UseShader_Internal`，它由 `RenderVisibleMeshesInCamera` 等渲染方法在每个 Mesh 渲染前自动调用。
-
-#### 工作流程
-
-典型 Pass 中的执行顺序：
-
-```
-1. UseShader("SKINNED_MESH")       → defines = ["SKINNED_MESH"]
-2. RenderVisibleMeshesInCamera(...)
-   ├─ for each mesh:
-   │   UseShader_Internal(mesh)    → 读到 defines = ["SKINNED_MESH"]
-   │      缓存 key = "SKINNED_MESH"
-   │      命中 → gl.UseProgram     （首次 → 编译 + 缓存）
-   │   RenderMesh(mesh, ...)       → 设置 Uniform、gl.DrawElements
-   │
-3. UseShader("SKINNED_MESH", "BLENDMODE_MASKED")
-                                   → defines = ["SKINNED_MESH", "BLENDMODE_MASKED"]
-4. RenderVisibleMeshesInCamera(...)
-   └─ for each mesh:
-       UseShader_Internal(mesh)    → 读到 defines = [...]
-          缓存 key = "SKINNED_MESH;BLENDMODE_MASKED"  （不同的 key，不同的变体）
-```
-
-#### AddDefines 的使用场景
-
-当一组 Mesh 共享大部分宏定义、仅个别不同时，用 `AddDefines` 追加而非重复声明：
-
-```csharp
-// 基础变体
-UseShader("SKINNED_MESH");
-RenderVisibleMeshesInCamera(filter1, camera.View, camera.Projection);
-
-// 追加一个宏，编译出 SKINNED_MESH + BLENDMODE_MASKED 变体
-AddDefines("BLENDMODE_MASKED");
-RenderVisibleMeshesInCamera(filter2, camera.View, camera.Projection);
-```
-
-#### UseShader_Internal 的两个细节
-
-**1. 两级缓存**
-
-| 缓存层 | 存储位置 | 使用条件 |
-|---|---|---|
-| Pass 级 | `RenderPass.Shaders["key"]` | 材质无自定义着色器时 |
-| Material 级 | `Material.Shaders["key"]` | 材质通过 `SetShaderSource` 覆盖了着色器源码时 |
-
-同一个 defines 组合只编译一次，后续帧直接复用缓存的 `glUseProgram`。
-
-**2. 编译流程**
-
-1. 将 `defines` 列表用 `;` 拼接为缓存 key（如 `"SKINNED_MESH;BLENDMODE_MASKED"`）
-2. 若 Material 提供了自定义源码 → 查 Material 缓存，未命中则用 Material 源码编译
-3. 否则查 Pass 缓存，未命中则用 Pass 的 `VertexShader`/`FragmentShader` 编译
-4. 编译时把 `#define SKINNED_MESH\n#define BLENDMODE_MASKED` 注入到 `//{{defines}}` 位置
-5. 方言按上下文自动选择（`RenderPipeline.ShaderDialect`，首次取用就读 `GL_VERSION`）：OpenGL ES 上下文直接用原始源码；桌面 GL 上下文把 `#version 300 es` 替换为 `#version 410 core`，并移除全部 `precision` 声明（macOS 只提供桌面 GL，故走此分支；桌面侧需 GL 4.1 及以上）
-6. 链接着色器、枚举所有 Uniform 位置并缓存
-
-> **注意**：defines 的顺序影响缓存 key。`UseShader("A").AddDefines("B")` 产生 key `"A;B"`，而 `UseShader("A", "B")` 也产生 `"A;B"`，二者一致。但若先 `UseShader("B")` 再 `AddDefines("A")` 则 key 为 `"B;A"`，是不同变体。建议始终用 `UseShader` 一次性声明所有需要的宏。
-
-#### 着色器源码中的宏标记
-
-GLSL 源码使用 `//{{defines}}` 作为宏注入点：
-
-```glsl
-#version 300 es
-precision mediump float;
-
-//{{defines}}   ← 编译时自动替换为 #define SKINNED_MESH 等
-
-layout(location = 0) in vec3 position;
-
-#ifdef INSTANCED_MESH
-layout(location = 7) in mat4 modelMatrix;
-#endif
-
-#ifndef INSTANCED_MESH
-uniform mat4 modelMatrix;
-#endif
-```
-
-#### 手动调用 UseShader_Internal
-
-`UseShader_Internal` 通常由 `RenderVisibleMeshesInCamera` 等网格渲染方法在每个 Mesh 前自动调用。但如果你的 Pass 不遍历 Mesh——例如后处理 Pass 渲染全屏四边形——则需要**手动调用**它。
-
-后处理 Pass 的标准流程：
-
-```
-UseShader()           → 声明宏（可选）
-UseShader_Internal()  → 编译/激活对应变体
-UniformTexture(...)   → 设置输入纹理等 Uniform
-RenderQuad()          → 绘制全屏四边形
-```
-
-实际例子——伽马校正 Pass（[GammaCorrectionPass.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Renderers/Common/GammaCorrectionPass.cs)）：
-
-```csharp
-public override void Render(Camera camera)
-{
-    BindOutputRenderTarget(camera);
-    var source = GetTexture(inputTexture, camera);
-
-    gl.Disable(EnableCap.DepthTest);
-    gl.Disable(EnableCap.Blend);
-
-    UseShader();               // 无宏变体，可省略
-    ClearTextureUnit();         // 清空纹理单元计数器
-    UseShader_Internal();       // ← 手动激活！当前无 Material 上下文，传入 null
-    UniformTexture("colorTexture", source);
-    RenderQuad();               // 绘制全屏四边形，采样 inputTexture 做伽马校正
-}
-```
-
-FXAA Pass 同样如此（[FxaaPass.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Core/Renderers/Common/FxaaPass.cs)）：
-
-```csharp
-UseShader();
-ClearTextureUnit();
-UseShader_Internal();
-UniformTexture("u_texture", rt.GetTexture(inputTextureName));
-UniformVector2("u_textureSize", new Vector2(texWidth, texHeight));
-RenderQuad();
-```
-
-带有宏变体的后处理——PBR IBL 环境光 Pass（[IBLAmbientPass.cs](https://github.com/CeSun/Aura3D/blob/main/src/Aura3D.Pipeline.PBR/IBLAmbientPass.cs)）：
-
-```csharp
-UseShader("ENBALE_DEFERRED_SHADING");  // 声明宏
-UseShader_Internal();                   // 编译带宏的变体并激活
-ClearTextureUnit();
-UniformTexture("gBufferBaseColor", gBufferBaseColor);
-UniformTexture("gBufferNormalRoughness", gBufferNormalRoughness);
-// ... 更多 Uniform ...
-UniformMatrix4("u_viewMatrix", camera.View);
-UniformMatrix4("u_projMatrix", camera.Projection);
-RenderQuad();
-```
-
-> **关键规则**：`UseShader` / `AddDefines` 必须在 `UseShader_Internal` **之前**调用。`UseShader_Internal` 读取当前 defines 列表来决定激活哪个变体，之后修改 defines 不会影响已激活的着色器。
-
-`RenderQuad()` 和 `RenderCube()` 是 `RenderPass` 提供的内置方法，分别绘制一个覆盖 NDC 空间的四边形和单位立方体，用于后处理和调试。
-
-### 自定义材质的着色器
-
-除了创建完整的 RenderPass，你也可以为单个材质的特定 Pass 替换着色器：
-
-```csharp
-var material = new Material();
-
-// 为名为 "LightPass" 的渲染步骤设置自定义着色器
-material.SetShaderSource("LightPass", ShaderType.Vertex, vertexShaderSource);
-material.SetShaderSource("LightPass", ShaderType.Fragment, fragmentShaderSource);
-
-// 设置着色器参数回调
-material.SetShaderPassParametersCallback("LightPass", pass =>
-{
-    pass.UniformVector4("uColor", new Vector4(1, 0, 0, 1));
-});
-```
-
-这种方式适合局部定制——只想改变某个特定材质的渲染方式，而不需要创建整个管线。
-
-## 管线配置 PipelineSettings
-
-通过 `PipelineSettings` 可以调整渲染管线的行为和画面效果。部分设置只能在管线创建前指定，另一部分可以随时调整、即时看到变化。
+`PipelineSettings` 控制管线的行为与画面效果。它的关键点在于**分两类**：一类（深度格式、光源上限、CSM 级联数与分辨率）必须在管线创建前设好，之后改了不生效；另一类（曝光、环境光、抗锯齿开关、调试可视化等）随时可改，改完下一帧立刻见效。
 
 ### 配置方式
 
-**XAML：**
+**XAML**（在控件加载前随控件一起声明，满足"创建前"要求）：
 
 ```xml
 <Window xmlns:core="clr-namespace:Aura3D.Core.Renderers;assembly=Aura3D.Core" ...>
@@ -471,10 +110,9 @@ material.SetShaderPassParametersCallback("LightPass", pass =>
 </Window>
 ```
 
-**代码：**
+**代码**——创建前设一次性参数：
 
 ```csharp
-// 管线创建前设置（用于深度格式、光源上限等）
 var view = new Aura3DView<CelShadingPipeline>
 {
     PipelineSettings = new PipelineSettings
@@ -483,66 +121,62 @@ var view = new Aura3DView<CelShadingPipeline>
         DirectionalLightLimit = 2,
     }
 };
+```
 
-// 运行时随时调整（曝光、环境光、开关等，改完下帧立刻看到效果）
+**运行时随时改**（改完下一帧生效）：
+
+```csharp
 view.Scene.RenderPipeline.Settings.ToneMappingExposure = 1.3f;
 view.Scene.RenderPipeline.Settings.EnableFxaa = false;
 ```
 
-### 参数一览
+### 深度格式 DepthFormat
 
-#### 深度格式（DepthFormat）
-
-控制场景中物体前后遮挡判断的精度。可以理解为"判断谁在前面谁在后面的标尺刻度有多密"。
+控制前后遮挡判断的精度——可以理解为"判断谁在前面谁在后面的标尺刻度有多密"。
 
 | 取值 | 精度 | 适用场景 |
 |---|---|---|
 | `DepthComponent16` | 16 位 | 普通场景 |
 | `DepthComponent24` | 24 位 | 较大场景，或需要更精细的深度判断 |
-| `DepthComponent32f` | 32 位浮点（默认） | 超大规模场景（城市、地形），16 位精度不够用时 |
+| `DepthComponent32f` | 32 位浮点（默认） | 超大规模场景（城市、地形），16 位不够用时 |
 
-> 如果场景中出现远处物体闪烁、前后叠在一起分不清谁在前面（俗称 Z-Fighting[^1]），说明精度不够，换用 `DepthComponent32f` 即可。
+> [!TIP]
+> 场景里出现远处物体闪烁、两个面叠在一起分不清谁在前（俗称 Z-Fighting），就是精度不够，换 `DepthComponent32f` 即可。
 
-#### 光源数量上限
+### 光源数量上限
 
-限制同时生效的光源个数。超出上限的光源不会产生光照和阴影。
+限制同时生效的光源个数，超出上限的光不产生光照也不投影。三者默认都是 `4`，有效范围 `1..10`：调小省性能，调大支持更多灯。
 
-| 参数 | 说明 |
+| 参数 | 对应光源 |
 |---|---|
-| `DirectionalLightLimit` | 方向光上限（默认 4）—— 模拟太阳光、全局平行光 |
-| `PointLightLimit` | 点光源上限（默认 4）—— 灯泡、蜡烛等向四周发光的光源 |
-| `SpotLightLimit` | 聚光灯上限（默认 4）—— 手电筒、舞台追光等锥形光源 |
+| `DirectionalLightLimit` | 方向光——太阳、全局平行光 |
+| `PointLightLimit` | 点光——灯泡、蜡烛，向四周发光 |
+| `SpotLightLimit` | 聚光灯——手电筒、舞台追光，锥形光源 |
 
-> 三种上限的有效范围均为 `1..10`。调小可以提升性能，调大可以支持更多光源。
+> 光源本身怎么用、阴影怎么配，见 [光照与阴影](./lighting.md)。
 
-#### 色调映射与亮度（ToneMapping）
+### 色调映射与亮度
 
-色调映射[^2]是把 HDR（高动态范围）颜色压缩到屏幕能显示的范围的过程。这两个参数控制画面的明暗感觉。
+色调映射把 HDR 颜色压缩到屏幕能显示的范围，这两个参数决定画面整体明暗。
 
 | 参数 | 作用 | 默认值 |
 |---|---|---|
-| `ToneMappingExposure` | 整体亮度，类似相机的曝光补偿。值越大画面越亮 | `0.7` |
-| `BrightnessClamp` | 最亮能有多亮。超过就会被截断，防止局部过曝 | `4.0` |
+| `ToneMappingExposure` | 整体亮度，类似相机曝光补偿，越大越亮 | `0.7` |
+| `BrightnessClamp` | 亮度上限，超过就截断，防局部过曝 | `4.0` |
 
-> 画面偏暗时加大 `ToneMappingExposure`；高亮区域白成一片时加大 `BrightnessClamp`。
+> [!TIP]
+> 画面偏暗 → 加大 `ToneMappingExposure`；高亮区白成一片 → 加大 `BrightnessClamp`。
 
-#### 环境光强度（AmbientIntensity）
+### 环境光强度 AmbientIntensity
 
-没有光源直接照射的地方也不是全黑——环境光模拟场景中各处散射反射的微弱光线。值越大暗部越亮。
+没有光直射的地方也不是全黑——环境光模拟场景中散射的微弱光线。`0` 暗部全黑，`0.1`（默认）轻微提亮，`0.5` 以上暗部明显偏亮、呈风格化效果。
 
-| 取值范围 | 效果 |
-|---|---|
-| `0` | 暗部完全黑 |
-| `0.1`（默认） | 轻微提亮暗部 |
-| `0.5` 以上 | 暗部明显偏亮，风格化效果 |
+> [!NOTE]
+> PBR 管线用基于物理的 IBL 环境光，**不吃** `AmbientIntensity`（它有独立的 IBL 环境强度）。
 
-> 注意：PBR 管线使用基于物理的 IBL 环境光，不受此参数影响。
+### 级联阴影贴图 CSM
 
-#### 级联阴影贴图（CSM）
-
-方向光阴影在远距离下容易出现锯齿，CSM 通过将视锥体分割为多个级联、每级使用独立阴影贴图来解决。仅 `SupportsCSM = true` 的管线生效（如 BlinnPhong）。
-
-通过 `Scene.MainDirectionalLight` 指定哪盏方向光使用 CSM，其余方向光退化为单张阴影贴图：
+方向光阴影在远距离容易出现锯齿，CSM 把视锥体分成多个级联、每级独立阴影贴图来解决。仅 `SupportsCSM = true` 的管线（如 BlinnPhong）生效。用 `Scene.MainDirectionalLight` 指定哪盏方向光走 CSM，其余退化为单张阴影贴图：
 
 ```csharp
 view.Scene.MainDirectionalLight = dl;  // 该方向光使用 CSM
@@ -550,39 +184,43 @@ view.Scene.MainDirectionalLight = dl;  // 该方向光使用 CSM
 
 | 参数 | 作用 | 默认值 |
 |---|---|---|
-| `CsmCascadeCount` | 级联数量。设为 1 回退到单阴影贴图 | `3` |
-| `CsmSplitLambda` | PSSM 分割参数。0=均匀分割，1=对数分割 | `0.5` |
-| `CsmShadowMapResolution` | 每级联的阴影贴图分辨率 | `1024` |
+| `CsmCascadeCount` | 级联数量，设为 1 回退单阴影贴图（`1..4`） | `3` |
+| `CsmSplitLambda` | PSSM 分割参数，0=均匀、1=对数（`0..1`） | `0.5` |
+| `CsmShadowMapResolution` | 每级联阴影贴图分辨率（须大于 0） | `1024` |
 
-> `CsmCascadeCount` 有效范围为 `1..4`，`CsmSplitLambda` 为 `0..1`，分辨率必须大于 0。`CsmCascadeCount` 和 `CsmShadowMapResolution` 需在管线创建前设置；`CsmSplitLambda` 可运行时调整。所有强度和色调映射浮点参数必须为有限非负数，`Debug` 不能为 null。
+> `CsmCascadeCount` 与 `CsmShadowMapResolution` 必须在管线创建前设；`CsmSplitLambda` 可运行时调整。CSM 的原理与调参见 [光照与阴影](./lighting.md#csm)。
 
-#### 调试可视化（DebugSettings）
-
-通过 `PipelineSettings.Debug` 控制内置调试绘制，开发阶段帮助可视化场景结构：
-
-```csharp
-var debug = settings.Debug;
-debug.Enable = true;                // 总开关
-debug.ShowBoundingBox = true;       // 显示所有网格的包围盒
-debug.ShowDirectionalLight = true;  // 显示方向光方向线
-debug.ShowPointLight = true;        // 显示点光范围球
-debug.ShowSpotLight = true;         // 显示聚光灯锥体
-debug.ShowCamera = true;            // 显示摄像机视锥体
-debug.ShowBone = true;              // 显示骨骼层次
-```
-
-> 所有 `DebugSettings` 属性均可运行时随时调整。调试绘制有额外性能开销，建议仅开发时开启。
-
-#### 功能开关
+### 功能开关 EnableFxaa / EnableFrustumCulling
 
 | 参数 | 作用 | 默认值 |
 |---|---|---|
-| `EnableFxaa` | 是否开启 FXAA 抗锯齿[^3]——让物体边缘更平滑 | `true` |
-| `EnableFrustumCulling` | 是否只渲染相机视野内的物体。看不见的物体自动跳过 | `true` |
+| `EnableFxaa` | FXAA 抗锯齿，让物体边缘更平滑 | `true` |
+| `EnableFrustumCulling` | 只渲染相机视野内的物体，看不见的自动跳过 | `true` |
 
-> 性能不足时关闭 `EnableFxaa` 可节省一点开销。`EnableFrustumCulling` 一般不需要关，场景物体多时能显著提速。
+> [!TIP]
+> 性能不足时关 `EnableFxaa` 省一点开销。`EnableFrustumCulling` 一般不用关，物体多时能显著提速——详见下文[视锥体剔除](#视锥体剔除)。
+
+### 调试可视化 Debug
+
+`PipelineSettings.Debug`（一个 `DebugSettings`）控制内置调试绘制，开发期帮助看清场景结构，全部属性都可运行时随时改：
+
+```csharp
+var debug = view.Scene.RenderPipeline.Settings.Debug;
+debug.Enable = true;                // 总开关
+debug.ShowBoundingBox = true;       // 所有网格的包围盒
+debug.ShowDirectionalLight = true;  // 方向光方向线
+debug.ShowPointLight = true;        // 点光范围球
+debug.ShowSpotLight = true;         // 聚光灯锥体
+debug.ShowCamera = true;            // 摄像机视锥体
+debug.ShowBone = true;              // 骨骼层次
+```
+
+> [!WARNING]
+> 调试绘制有额外性能开销，建议仅开发时开启。`Debug` 不能为 `null`；所有强度/色调映射浮点参数必须是有限非负数，否则赋值时抛 `ArgumentOutOfRangeException`。
 
 ### 哪些设置需要什么时候设
+
+这是本篇最容易写错的地方——照着这张表放代码就对了。
 
 | 设置 | 必须在管线创建前设？ | 适用管线 |
 |---|---|---|
@@ -600,11 +238,12 @@ debug.ShowBone = true;              // 显示骨骼层次
 | `EnableFrustumCulling` | ❌ 随时可改 | 全部 |
 | `Debug.*` | ❌ 随时可改 | 全部 |
 
+> [!NOTE]
 > NoLight 管线不涉及光照和色调映射，光源、曝光、环境光参数对它无效。
 
 ### 向后兼容
 
-`RenderPipeline` 上原有的属性（`EnableFrustumCulling` 等）仍然正常工作，内部会自动转发到 `Settings`：
+`RenderPipeline` 上原有的属性（如 `EnableFrustumCulling`、`DirectionalLightLimit`）仍可用，内部自动转发到 `Settings`：
 
 ```csharp
 // 以下两种写法等价
@@ -612,223 +251,88 @@ pipeline.EnableFrustumCulling = false;
 pipeline.Settings.EnableFrustumCulling = false;
 ```
 
-[^1]: Z-Fighting：当两个面几乎重叠时，GPU 无法准确判断前后关系，导致两个面的像素交替出现，产生闪烁效果。增大深度缓冲精度可以缓解。参考：https://en.wikipedia.org/wiki/Z-fighting
-
-[^2]: 色调映射（Tone Mapping）：将高动态范围（HDR）的颜色值映射到显示器能显示的低动态范围（LDR）。人眼在暗处和亮处都能看清细节，但显示器亮度范围有限，需要色调映射来保留高亮和阴影区域的细节。参考：https://en.wikipedia.org/wiki/Tone_mapping
-
-[^3]: FXAA（Fast Approximate Anti-Aliasing）：一种轻量的抗锯齿算法，通过分析画面找到物体边缘并模糊处理，消除锯齿感。
-
 ## 视锥体剔除
 
-视锥体剔除让渲染器只绘制相机视野内的物体，减少不必要的绘制开销。通过 `PipelineSettings.EnableFrustumCulling` 控制（默认开启），详见 [管线配置](#管线配置-pipelinesettings)。
-
-## Pipeline 生命周期钩子
-
-`RenderPipeline` 和 `RenderPass` 提供了多个虚方法，可在渲染流程的不同阶段插入逻辑：
-
-### RenderPipeline 钩子
-
-```csharp
-public class MyPipeline : RenderPipeline
-{
-    // GL 初始化完成后调用一次（注册 RenderTarget/RenderPass 之后）
-    public override void Setup() { }
-
-    // 渲染整帧之前（每帧一次，在所有摄像机之前）
-    public override void BeforeRender() { }
-
-    // 渲染整帧之后（每帧一次，在所有摄像机之后）
-    public override void AfterRender() { }
-
-    // 每个摄像机渲染前
-    public override void BeforeCameraRender(Camera camera) { }
-
-    // 每个摄像机渲染后
-    public override void AfterCameraRender(Camera camera) { }
-
-    // 自定义网格排序（如透明度物体按距离排序）
-    public override void SortMeshes(List<Mesh> meshes, Camera camera)
-    {
-        // 默认按材质排序，可覆写
-        base.SortMeshes(meshes, camera);
-    }
-}
-```
-
-### RenderPass 钩子
-
-```csharp
-public class MyPass : RenderPass
-{
-    // Pass 首次初始化时调用一次
-    public override void Setup() { }
-
-    // 每帧渲染前（Once 类型的 Pass 用这个）
-    public override void BeforeRender() { }
-    public override void AfterRender() { }
-
-    // 每个摄像机渲染前/后（EveryCamera 类型的 Pass 用这个）
-    public override void BeforeRender(Camera camera) { }
-    public override void AfterRender(Camera camera) { }
-}
-```
-
-### 自定义网格筛选
-
-默认应使用带视锥体剔除的渲染方法。剔除版本自动跳过不可见网格，是性能最优的选择。
-
-**首选 — 剔除后渲染：**
-
-```csharp
-// 渲染通过视锥体剔除的网格（Mesh）
-RenderVisibleMeshesInCamera(filter, camera.View, camera.Projection);
-
-// 渲染通过视锥体剔除的实例化网格（InstancedMesh）
-RenderVisibleInstancedMeshesInCamera(filter, camera.View, camera.Projection);
-```
-
-典型的不透明 Pass 示例：
-
-```csharp
-public override void Render(Camera camera)
-{
-    // 渲染不透明静态网格
-    UseShader();
-    RenderVisibleMeshesInCamera(
-        mesh => mesh.IsStaticMesh
-             && (mesh.Material == null || mesh.Material.BlendMode == BlendMode.Opaque),
-        camera.View, camera.Projection);
-
-    // 渲染不透明骨骼网格（启用蒙皮宏变体）
-    UseShader("SKINNED_MESH");
-    RenderVisibleMeshesInCamera(
-        mesh => mesh.IsSkinnedMesh
-             && (mesh.Material == null || mesh.Material.BlendMode == BlendMode.Opaque),
-        camera.View, camera.Projection);
-
-    // 渲染实例化网格
-    RenderVisibleInstancedMeshesInCamera(
-        im => im.EnableFrustumCulling,
-        camera.View, camera.Projection);
-}
-```
-
-**备选 — 全量渲染（跳过剔除，仅在以下场景使用）：**
-
-- 渲染的对象数量极少，剔除开销大于收益
-- 需要按类型遍历而非按可见性（如 `RenderStaticMeshes` / `RenderSkinnedMeshes`）
-- 从外部预先筛选好的列表渲染（`RenderMeshesFromList`）
-- 调试时临时关闭剔除排查问题
-
-```csharp
-// 全部 Mesh（不区分静态/骨骼，不限可见性）
-RenderMeshes(filter, camera.View, camera.Projection);
-
-// 仅静态 Mesh
-RenderStaticMeshes(filter, camera.View, camera.Projection);
-
-// 仅骨骼 Mesh
-RenderSkinnedMeshes(filter, camera.View, camera.Projection);
-
-// 全部实例化网格
-RenderInstancedMeshes(filter, camera.View, camera.Projection);
-
-// 从指定列表渲染
-RenderMeshesFromList(myMeshList, filter, camera.View, camera.Projection);
-```
-
-### 渲染方法速查
-
-| 方法 | 类型 | 剔除 | 推荐度 |
-|---|---|---|---|
-| `RenderVisibleMeshesInCamera(filter, view, proj)` | Mesh | ✅ | ⭐ 首选 |
-| `RenderVisibleInstancedMeshesInCamera(filter, view, proj)` | InstancedMesh | ✅ | ⭐ 首选 |
-| `RenderMeshesFromList(list, filter, view, proj)` | Mesh | ❌ | 外部列表场景 |
-| `RenderStaticMeshes(filter, view, proj)` | Mesh | ❌ | 按类型遍历 |
-| `RenderSkinnedMeshes(filter, view, proj)` | Mesh | ❌ | 按类型遍历 |
-| `RenderMeshes(filter, view, proj)` | Mesh | ❌ | 调试/少量物体 |
-| `RenderInstancedMeshes(filter, view, proj)` | InstancedMesh | ❌ | 调试/少量物体 |
+视锥体剔除让渲染器只绘制相机视野内的物体，跳过视野外的一切，减少绘制开销。由 `PipelineSettings.EnableFrustumCulling` 控制，**默认开启**。开启时，管线每帧针对每个相机算出可见网格列表，`RenderVisibleMeshesInCamera` 这类渲染方法只遍历这份列表；关闭时会把场景里所有网格都画一遍（物体极少、或需要强制全遍历的场景才关）。对多相机，剔除按每个相机各自计算。
 
 ## 多摄像机渲染
 
-Aura3D 支持同时渲染多个摄像机视角，例如分屏或小地图。
-
-### 创建额外摄像机
+一个场景可以同时渲染多个相机视角，例如分屏、小地图。场景里所有 `Camera` 节点会被管线自动发现并逐一渲染，每个注册为 `RenderPassGroup.EveryCamera` 的 Pass 会对每个相机各执行一次（Pass 分组机制见 [自定义渲染管线](./custom-pipeline.md)）。
 
 ```csharp
-// 在 SceneInitialized 中创建第二个摄像机
+// 在 SceneInitialized 中创建第二个相机
 var secondCamera = new Camera
 {
     Position = new Vector3(10, 5, 0),
     IsRenderBackground = false  // 第二个视角不重复渲染天空盒
 };
 secondCamera.LookAt(Vector3.Zero);
-
-// 配置独立的 RenderTarget
 scene.AddNode(secondCamera);
 ```
 
-场景中的所有 `Camera` 节点会被 `RenderPipeline` 自动发现并逐一渲染。每个注册为 `RenderPassGroup.EveryCamera` 的 Pass 会对每个摄像机执行一次。
-
 ### 渲染到纹理
 
-通过 `ControlRenderTarget` 可以将某个摄像机的画面渲染到纹理，用于小地图、监控画面等：
+用 `ControlRenderTarget` 把某个相机的画面渲染到纹理，用于小地图、监控画面等：
 
 ```csharp
-// 创建离屏渲染目标
+// 创建离屏渲染目标，挂到相机上
 var renderTarget = new ControlRenderTarget(width, height);
 secondCamera.RenderTarget = renderTarget;
 
-// 渲染后 readTarget 中即为该摄像机的画面
-// 可在 SceneUpdated 中读取 RenderTarget 的纹理用作材质输入
+// 渲染后，该目标里就是这个相机的画面
+// 可在 SceneUpdated 中读取其纹理，作为其他材质的输入
 ```
 
-## 资源管理
+相机的更多用法（投影类型、`FitToBoundingBox`、控制器）见 [相机与视角控制](./camera.md)。
 
-### GPU 资源生命周期
+## GPU 资源自动管理（简述）
 
-所有实现 `IGpuResource` 的对象（Geometry、Material、Texture、RenderTarget 等）由 `RenderPipeline` 统一管理生命周期：
+当你用 `view.AddNode(...)` 把网格、材质、纹理、模型加入场景时，管线会自动接管这些资源的 GPU 侧状态：首次用到时按需上传，内容变化后重新同步，不再被引用时定期回收——日常使用不需要手动干预，也没有需要手动调用的注册接口。
+
+上下文丢失与恢复、显存释放与重建、`IGpuState` 契约等深入内容属于 [GPU 资源生命周期](./gpu-resource-lifecycle.md)，出问题或要精细控显存时再读那篇即可。
+
+## PBR 材质参数（用法示例）
+
+选了 PBR 管线后，它按 Metallic-Roughness 工作流读材质的通道贴图。这里给一个"怎么喂参数"的例子；材质通道本身、以及自定义着色器机制留给 [自定义材质与着色器](./custom-material.md)。
 
 ```csharp
-// 手动添加资源到管线（通常无需手动调用，AddNode 时自动处理）
-view.Scene.RenderPipeline.AddGpuResource(myResource);
+var mesh = new Mesh();
+mesh.Geometry = new SphereGeometry();
+mesh.Material = new Material();
 
-// 手动移除
-view.Scene.RenderPipeline.RemoveGpuResource(myResource);
+// 基础色（BaseColor 是扩展属性，先 new 再赋值，别写进对象初始化器）
+mesh.Material.BaseColor = Texture.CreateFromColor(Color.FromArgb(255, 200, 50, 50));
+
+// 法线贴图
+mesh.Material.SetTexture("Normal",
+    Texture.CreateFromColor(Color.FromArgb(128, 128, 255)));
+
+// 金属度/粗糙度贴图：R 通道 = 金属度，G 通道 = 粗糙度
+mesh.Material.SetTexture("MetallicRoughness",
+    Texture.CreateFromColor(Color.FromArgb(200, 100, 0)));
+
+view.AddNode(mesh);
 ```
 
-**IGpuResource 接口：**
+> [!NOTE]
+> `MetallicRoughness` 里 R 存金属度、G 存粗糙度，是 PBR 约定的通道打包方式。卡通管线（CelShading）的用法与默认管线一致——加载模型、设置光源后渲染风格自动变为卡通着色。
 
-| 成员 | 说明 |
-|---|---|
-| `NeedsUpload` (bool) | 是否需要上传到 GPU |
-| `Upload(GL gl)` | 上传数据到 GPU |
-| `Destroy(GL gl)` | 销毁 GPU 资源 |
+## 常见坑
 
-### 遍历模型的所有 GPU 资源
+- **`CreateRenderPipeline` 设晚了**：必须在 GL 初始化前（控件加载前）赋值；放进 `SceneInitialized` 回调里已经太迟。
+- **创建前的参数当运行时参数改**：`DepthFormat`、三个 `*LightLimit`、`CsmCascadeCount`、`CsmShadowMapResolution` 在管线建好之后再改不会生效，要重建管线（重开控件）才行。对照[上面那张表](#哪些设置需要什么时候设)放代码。
+- **PBR 里调 `AmbientIntensity` 没反应**：PBR 用 IBL 环境光，不受此参数控制，属正常现象。
+- **给 NoLight 管线配光/曝光**：NoLight 不走光照和色调映射，这些设置对它无效。
+- **非负校验**：强度、色调映射类浮点参数传负数或 `NaN`/`Infinity`，`Debug` 传 `null`，都会在赋值时抛异常。
+- **XAML `x:TypeArguments` 命名空间写错**：Core 内置管线在 `Aura3D.Core.Renderers`，PBR / 卡通要各自 `clr-namespace` 指到对应程序集，且先装好对应 NuGet 包。
 
-```csharp
-// 获取某模型下的全部 GPU 资源（几何体、材质纹理等）
-var resources = model.GetGpuResources();
-foreach (var res in resources)
-{
-    // 例如检查是否需要上传
-    if (res.NeedsUpload) { /* ... */ }
-}
-```
+## 可运行示例
 
-### RenderPass 中的上下文方法
+- Gallery 管线对比 demo（同一幕场景在 BlinnPhong / NoLight / PBR 延迟 / PBR 前向 / 卡通间切换，看每条管线读哪张通道）：[PipelinesDemo.axaml.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/Pipelines/PipelinesDemo.axaml.cs)
+- 管线到具体类型的映射表：[PipelineCatalog.cs](https://github.com/CeSun/Aura3D/blob/main/gallery/Aura3D.Gallery/Demos/PipelineCatalog.cs)
 
-```csharp
-// 通过构造 RenderPass 时保存的 handle 获取当前相机尺寸的 RenderTarget
-var rt = GetRenderTarget(baseRenderTarget, camera);
+## 下一步
 
-// 绑定 SetOutput 指定的输出（未指定时默认使用 CameraOutput）
-BindOutput(camera);
-
-// 渲染全屏四边形（后处理常用）
-RenderQuad();
-
-// 渲染单位立方体（调试/环境贴图用）
-RenderCube();
-```
+- 要自己写管线或 `RenderPass`：[自定义渲染管线](./custom-pipeline.md)
+- 材质与贴图通道机制：[自定义材质与着色器](./custom-material.md)
+- 显存与上下文恢复：[GPU 资源生命周期](./gpu-resource-lifecycle.md)
