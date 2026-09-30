@@ -10,7 +10,7 @@
 | Android | OpenGL ES | Avalonia `OpenGlControlBase` | None |
 | macOS | OpenGL | Avalonia `OpenGlControlBase` | No platform special-casing; if the viewport stays blank, pin `AvaloniaNativeRenderingMode.OpenGl` explicitly in `AppBuilder` |
 | iOS | Metal (Avalonia default) | **Self-hosted ANGLE(Metal) context composed through a Skia lease**; falls back to `OpenGlControlBase` when the host explicitly selects OpenGl | No platform special-casing, but the ANGLE iOS frameworks must be linked |
-| Browser (wasm) | WebGL2 (Avalonia.Browser's Skia compositor) | **Borrows the compositor's WebGL2 context and composes through a Skia lease**; GLES 3.0 calls reach WebGL2 via the emscripten shim | No platform special-casing, the wasm link switches are injected by a package |
+| Browser (wasm) | WebGL2 (Avalonia.Browser's Skia compositor) | **Borrows the compositor's WebGL2 context and composes through a Skia lease**; GLES 3.0 calls reach WebGL2 via the emscripten shim | Link switches are injected by the package; .NET 10 Release publishing must explicitly disable trimming, AOT and icall linking as described below |
 
 The three paths live in `src/Aura3D.Avalonia/Aura3DViewBase.OpenGl.cs`, `Aura3DViewBase.Angle.cs` (iOS) and `Aura3DViewBase.WebGl.cs` (browser); the shared flow is in `Aura3DViewBase.cs`. The `Aura3DView` API an application uses is identical on every platform.
 
@@ -67,7 +67,7 @@ Ownership is decided once, exactly like iOS, with the `[aura3d-webgl]` log prefi
 
 The GLES entry points have to come out of the **application's own** wasm module. Without native linking the module simply has no `libSkiaSharp` symbols, and the app dies at startup with `System.DllNotFoundException: libSkiaSharp` (thrown from `SKImageInfo`'s static constructor, with no context to go on). Three things must therefore hold in the app project: `WasmBuildNative=true`, `-s FULL_ES3=1`, and `-s MIN/MAX_WEBGL_VERSION=2` (GLES3 entry points — VAO, UBO, 3D textures, blit — only exist on a WebGL2 context).
 
-**That part is automatic.** `Aura3D.Avalonia`'s browser target depends on `Aura3D.Avalonia.Browser`, whose `buildTransitive` props inject those switches for `*-browser` targets only — an app writes zero configuration. It mirrors the iOS slice package, including the exact `[0.1.0]` pin: the switches are paired with the library's GLES call surface, so they bump together with a browser verification run.
+**Those three link switches are automatic.** `Aura3D.Avalonia`'s browser target depends on `Aura3D.Avalonia.Browser`, whose `buildTransitive` props inject them for `*-browser` targets only, so an application does not hand-write emscripten arguments. This mirrors the iOS slice package, including the exact `[0.1.0]` pin: the switches are paired with the library's GLES call surface, so they bump together with a browser verification run. This does not include the .NET 10 publish-time runtime settings below; the application project must still declare those three properties explicitly.
 
 `WasmBuildNative=true` is however only a **necessary** condition: if the local SDK has no wasm-tools/emsdk workload, linking still does not happen and the build still succeeds. The SDK's own warning reads "neither $(WasmBuildNative), nor $(RunAOTCompilation) are 'true'" — a hardcoded string, misleading here because `WasmBuildNative` is in fact true (measured: `dotnet.native.wasm` is 3.0 MB, versus 25.6 MB once native is linked). The package's `buildTransitive` targets therefore raise an error when `RuntimeIdentifier=browser-wasm` and `WasmNativeWorkloadAvailable!=true`, naming `dotnet workload install wasm-tools`; projects that do not need this backend can set `Aura3DSkipWasmWorkloadCheck=true`. Same stance as on iOS: error out rather than silently render nothing.
 
@@ -78,6 +78,51 @@ dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
 ```
 
 To check the wiring landed: `dotnet msbuild <App>.Browser.csproj -getProperty:EmccExtraLDFlags -getProperty:WasmBuildNative -getProperty:WasmNativeWorkloadAvailable` (the last one is the direct verdict on the workload), and confirm the linked `dotnet.native.wasm` exports GLES3 symbols such as `glGenVertexArrays` — that is the shim being present.
+
+<a id="browser-net10-release-config"></a>
+
+### Required settings for .NET 10 Release/static publishing
+
+With the current .NET 10 WebAssembly toolchain, every Aura3D `net10.0-browser` application must explicitly add
+the following settings to the application `.csproj`. They form one required combination; do not enable only a subset:
+
+```xml
+<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <PublishTrimmed>false</PublishTrimmed>
+  <RunAOTCompilation>false</RunAOTCompilation>
+  <WasmLinkIcalls>false</WasmLinkIcalls>
+</PropertyGroup>
+```
+
+- Release full trimming removes declarations which incidentally supply some WASM interpreter-to-native trampolines.
+  When Silk.NET first calls `gl.ClearColor(float, float, float, float)`, the `VFFFF` signature is missing. The log
+  reaches `[aura3d-webgl] output ...`, then terminates with `aot-runtime-wasm.c:188 <disabled>` and
+  `Program terminated with exit(1)`. The `aot-runtime-wasm.c` filename does not mean that the app enabled AOT.
+- Disabling trimming alone restores the trampolines, but the .NET 10 linked-icall table can still disagree with the
+  metadata tokens in the loaded `System.Private.CoreLib`. Startup then reports
+  `Your mono runtime and class libraries are out of sync` / `function signature mismatch`.
+  `WasmLinkIcalls=false` is therefore required as well.
+- Enabling AOT alone, using `TrimMode=partial`, or rooting only `Silk.NET.OpenGLES` does not fix both failures and
+  is not a substitute for this configuration.
+
+After changing these properties, use fresh `bin`, `obj` and publish directories. An isolated artifacts root is the
+recommended workflow:
+
+```powershell
+dotnet publish .\example\Example.Browser\Example.Browser.csproj `
+  -c Release `
+  --no-incremental `
+  -p:UseArtifactsOutput=true `
+  -p:ArtifactsPath="$PWD\artifacts\browser-release-clean"
+```
+
+The site is written to `artifacts/browser-release-clean/publish/Example.Browser/release/wwwroot`. Deploy it by
+replacing the remote static-site directory as a whole; do not overlay it onto an old `_framework` directory. Also
+invalidate `dotnet.js` in browser, Service Worker and CDN caches. Otherwise an old native wasm/CoreLib can be loaded
+with a new manifest and produce the same CoreLib/icall failure.
+
+`WEBGL_debug_renderer_info not enabled` / `INVALID_ENUM` is a harmless warning emitted while emscripten queries an
+anonymous renderer; it is unrelated to either crash above.
 
 ## The GLES 3.0 subset: constraints for custom passes
 
@@ -97,7 +142,7 @@ WebGL2 validates more strictly than desktop GL and ANGLE. The following are "fin
 
 ## Browser performance and known gaps
 
-- Debug browser-wasm runs on the Mono interpreter, and first-frame cost for heavy scenes is measured in minutes (a cascaded-shadow scene plus the HDR-to-cubemap passes took over 10 minutes to reach frame 1 in headless Chromium). This is host-side execution speed, not the render path: demo or profile with AOT (`RunAOTCompilation`), and follow the platform convention of measuring frame time before calling something broken.
+- Debug and the currently verified Release configuration both run on the Mono interpreter, and first-frame cost for heavy scenes can be measured in minutes (a cascaded-shadow scene plus the HDR-to-cubemap passes took over 10 minutes to reach frame 1 in headless Chromium). This is host-side execution speed, not the render path. Do not enable `RunAOTCompilation` by itself as a performance workaround today: AOT does not restore a missing trampoline and still crashes on the first frame. Release performance work must wait for an upstream fix or for the Browser package to explicitly preserve every call signature required by Silk.NET.
 - While an automated page stays `hidden`, `requestAnimationFrame` and `ResizeObserver` never fire at all, so neither Avalonia's render loop nor the canvas size moves. Verifying locally in a headless browser needs a temporary rAF/ResizeObserver shim — such shims **must not** go into `wwwroot`.
 - Model import depends on the Assimp native library, and how that links in the browser is not verified yet. Model import on the other platforms is unaffected.
 

@@ -5,7 +5,7 @@
    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
    <Nullable>enable</Nullable>
    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-   <!-- iOS 27 SDK 预览版：抑制 Xcode 版本预览告警 -->
+   <!-- iOS 27 SDK preview: suppress the Xcode version preview warning -->
    <NoWarn>$(NoWarn);XCODE_27_0_PREVIEW</NoWarn>
 
   </PropertyGroup>
@@ -20,9 +20,9 @@
   </ItemGroup>
 
   <!--
-    这里不写任何 ANGLE 相关的配置：Aura3D.Angle.iOS 由 Aura3D.Avalonia 的精确区间依赖带进来，
-    包内 buildTransitive targets 按 $(RuntimeIdentifier) 在 simulator / device 切片间选择并注入
-    NativeReference。Example 与外部用户走的是完全同一条消费路径。
+    No ANGLE related configuration is written here: Aura3D.Angle.iOS is pulled in by the exact version-range dependency of Aura3D.Avalonia,
+    and the buildTransitive targets inside the package select between the simulator / device slices based on $(RuntimeIdentifier) and inject the
+    NativeReference. Example consumes it in exactly the same way as external users.
   -->
   <ItemGroup>
     <ProjectReference Include="..\Aura3D.Example.Shared\Aura3D.Example.Shared.csproj" />

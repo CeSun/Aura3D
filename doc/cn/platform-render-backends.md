@@ -10,7 +10,7 @@
 | Android | OpenGL ES | Avalonia `OpenGlControlBase` | 无 |
 | macOS | OpenGL | Avalonia `OpenGlControlBase` | 无需平台特判；若视口不出图，在 `AppBuilder` 里显式钉 `AvaloniaNativeRenderingMode.OpenGl` |
 | iOS | Metal（Avalonia 默认） | **自持 ANGLE(Metal) 上下文 + Skia lease 合成**；宿主显式改为 OpenGl 时回退到 `OpenGlControlBase` | 无平台特判，但需链接 ANGLE 的 iOS framework |
-| Browser (wasm) | WebGL2（Avalonia.Browser 的 Skia 合成器） | **借合成器的 WebGL2 上下文 + Skia lease 合成**，GLES 3.0 调用经 emscripten shim 落到 WebGL2 | 无平台特判，wasm 链接开关由包自动注入 |
+| Browser (wasm) | WebGL2（Avalonia.Browser 的 Skia 合成器） | **借合成器的 WebGL2 上下文 + Skia lease 合成**，GLES 3.0 调用经 emscripten shim 落到 WebGL2 | wasm 链接开关由包自动注入；.NET 10 Release 发布必须显式关闭 trimming、AOT 与 icall linking，见下文 |
 
 代码里三条路径分别位于 `src/Aura3D.Avalonia/Aura3DViewBase.OpenGl.cs`、`Aura3DViewBase.Angle.cs`（iOS）与 `Aura3DViewBase.WebGl.cs`（浏览器），共享的主体流程在 `Aura3DViewBase.cs`。应用侧引用 `Aura3DView` 的签名在所有平台一致。
 
@@ -67,7 +67,7 @@ Avalonia.Browser 的 `WebGlContext` 是单例式的：`CanCreateSharedContext` �
 
 GLES 入口点必须由**应用**自己的 wasm 模块带出来：不链原生库时模块里没有 `libSkiaSharp` 的符号，应用启动即 `System.DllNotFoundException: libSkiaSharp`（在 `SKImageInfo` 的静态构造里，没有任何上下文线索）。所以三件事要在应用工程里成立——`WasmBuildNative=true`、`-s FULL_ES3=1`、`-s MIN/MAX_WEBGL_VERSION=2`（GLES3 的 VAO / UBO / 3D 纹理 / blit 入口点只存在于 WebGL2 上下文）。
 
-**这三件事是自动的。** `Aura3D.Avalonia` 的 browser 目标以精确区间依赖 `Aura3D.Avalonia.Browser`，包里的 `buildTransitive` props 只对 `*-browser` 目标注入上述开关——应用工程一行配置都不用写。与 iOS 的切片包同构，也同样是精确锁 `[0.1.0]`：开关与库的 GLES 调用面配对，升级要和库一起过一遍浏览器验证。
+**这三个链接开关是自动的。** `Aura3D.Avalonia` 的 browser 目标以精确区间依赖 `Aura3D.Avalonia.Browser`，包里的 `buildTransitive` props 只对 `*-browser` 目标注入上述开关，应用不需要手写 emscripten 参数。与 iOS 的切片包同构，也同样是精确锁 `[0.1.0]`：开关与库的 GLES 调用面配对，升级要和库一起过一遍浏览器验证。注意，这不包含下面的 .NET 10 发布期运行时配置；那三项仍必须由应用工程显式声明。
 
 但 `WasmBuildNative=true` 只是**必要条件**：本机 SDK 没有 wasm-tools/emsdk workload 时链接同样不会发生，而构建是成功的。SDK 自己那条 warning 的文案是固定的 "neither $(WasmBuildNative), nor $(RunAOTCompilation) are 'true'"，此时 `WasmBuildNative` 明明是 true，会把人支到错的方向（实测：`dotnet.native.wasm` 3.0 MB vs 链上后的 25.6 MB）。所以包内的 `buildTransitive` targets 会在 `RuntimeIdentifier=browser-wasm` 且 `WasmNativeWorkloadAvailable!=true` 时直接报 Error 并给出 `dotnet workload install wasm-tools`；不需要本后端的工程可以设 `Aura3DSkipWasmWorkloadCheck=true` 关掉。与 iOS 侧"缺切片就 Error、不静默不出图"同构。
 
@@ -78,6 +78,49 @@ dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
 ```
 
 构建产物里可以自查开关是否生效：`dotnet msbuild <App>.Browser.csproj -getProperty:EmccExtraLDFlags -getProperty:WasmBuildNative -getProperty:WasmNativeWorkloadAvailable`（最后一项是 workload 在不在的直接判据）；再确认链接出的 `dotnet.native.wasm` 里有 `glGenVertexArrays` 等 GLES3 符号，就说明 shim 真的链进来了。
+
+<a id="browser-net10-release-config"></a>
+
+### .NET 10 Release / 静态发布的必填配置
+
+当前 .NET 10 WebAssembly 工具链下，使用 Aura3D 的 `net10.0-browser` 应用必须在应用 `.csproj`
+中显式加入以下配置。三项是一个整体，不能只选其中一部分：
+
+```xml
+<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <PublishTrimmed>false</PublishTrimmed>
+  <RunAOTCompilation>false</RunAOTCompilation>
+  <WasmLinkIcalls>false</WasmLinkIcalls>
+</PropertyGroup>
+```
+
+- 默认 Release full trimming 会移除用于生成部分 WASM interpreter-to-native trampoline 的声明。
+  Silk.NET 首次调用 `gl.ClearColor(float, float, float, float)` 时缺少 `VFFFF` 签名，表现为已经打印
+  `[aura3d-webgl] output ...`，随后出现 `aot-runtime-wasm.c:188 <disabled>` 和
+  `Program terminated with exit(1)`。文件名里的 `aot-runtime-wasm.c` 不代表应用已经启用了 AOT。
+- 只关闭 trimming 会恢复 trampoline，但 .NET 10 的 linked-icall 表仍可能与实际加载的
+  `System.Private.CoreLib` metadata token 不一致，启动阶段报
+  `Your mono runtime and class libraries are out of sync` / `function signature mismatch`。
+  因此必须同时设置 `WasmLinkIcalls=false`。
+- 单独开启 AOT、设置 `TrimMode=partial` 或只添加
+  `TrimmerRootAssembly Include="Silk.NET.OpenGLES"` 都不能修复这两个故障，不能作为替代方案。
+
+切换这些属性后必须使用全新的 `bin`、`obj` 和发布目录。推荐让本次发布使用独立 artifacts 根目录：
+
+```powershell
+dotnet publish .\example\Example.Browser\Example.Browser.csproj `
+  -c Release `
+  --no-incremental `
+  -p:UseArtifactsOutput=true `
+  -p:ArtifactsPath="$PWD\artifacts\browser-release-clean"
+```
+
+产物在 `artifacts/browser-release-clean/publish/Example.Browser/release/wwwroot`。部署时必须整体替换
+远端静态站目录，不要把新文件覆盖追加到旧 `_framework`；同时刷新浏览器、Service Worker 和 CDN
+中的 `dotnet.js` 缓存。否则旧的 native wasm/CoreLib 与新清单混用，也会得到相同的 CoreLib/icall 错误。
+
+`WEBGL_debug_renderer_info not enabled` / `INVALID_ENUM` 只是 emscripten 查询匿名 renderer 时产生的
+无害警告，与上述崩溃无关。
 
 ## GLES 3.0 子集：写自定义 Pass 要知道的限制
 
@@ -97,7 +140,7 @@ dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
 
 ## 浏览器的性能与已知缺口
 
-- Debug 的 browser-wasm 走 Mono 解释器，重场景的**首帧**代价以分钟计（级联阴影加 HDR 转立方体贴图的场景，在无头 Chromium 里超过 10 分钟才出第一帧）。这不是渲染路径的问题，是宿主 CPU 侧执行速度：要演示或压测请开 AOT（`RunAOTCompilation`），并按平台惯例先量帧时再判故障。
+- Debug 和当前已验证的 Release 发布配置都走 Mono 解释器，重场景的**首帧**代价可能以分钟计（级联阴影加 HDR 转立方体贴图的场景，在无头 Chromium 里建场景后超过 10 分钟才出第一帧）。这不是渲染路径的问题，是宿主 CPU 侧执行速度。当前不要为了性能单独打开 `RunAOTCompilation`：AOT 不能补回被漏掉的 trampoline，仍会在首帧崩溃。发布性能优化需等上游修复或由 Browser 包显式保留 Silk.NET 所需的全部调用签名。
 - 自动化环境里页面处于 `hidden` 状态时，`requestAnimationFrame` 与 `ResizeObserver` 完全不触发，Avalonia 的渲染循环与画布尺寸都不会动——本地用无头浏览器验证时需要临时注入 rAF/ResizeObserver 垫片，这类垫片**不能**进 `wwwroot`。
 - 模型导入依赖 Assimp 原生库，浏览器 wasm 上的链接方式尚未验证；其他平台的模型导入行为不受影响。
 

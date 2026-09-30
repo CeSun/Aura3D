@@ -12,6 +12,23 @@ dotnet add package Aura3D.Avalonia
 
 This automatically pulls in `Aura3D.Core`, which includes the default rendering pipeline (BlinnPhong) and base functionality.
 
+> [!IMPORTANT]
+> **Browser (`net10.0-browser`) projects:** with the current .NET 10 toolchain, Release/static
+> publishing requires all three properties below in the application `.csproj`:
+>
+> ```xml
+> <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+>   <PublishTrimmed>false</PublishTrimmed>
+>   <RunAOTCompilation>false</RunAOTCompilation>
+>   <WasmLinkIcalls>false</WasmLinkIcalls>
+> </PropertyGroup>
+> ```
+>
+> Default trimming can omit WASM trampolines required by Silk.NET function-pointer calls, while
+> icall linking can leave the runtime out of sync with `System.Private.CoreLib`; all three settings
+> must be used together. See [Browser Release/static publishing](./platform-render-backends.md#browser-net10-release-config)
+> for the failure signatures, full explanation, and clean-publish requirements.
+
 ### Optional Extension Packages
 
 ```shell

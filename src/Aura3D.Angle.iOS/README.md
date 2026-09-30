@@ -1,80 +1,92 @@
 # Aura3D.Angle.iOS
 
-[Aura3D](https://github.com/CeSun/Aura3d) 的 iOS 渲染路径自带 ANGLE（Metal 后端）上下文，
-但 ANGLE 的原生库必须由**应用**链接进主可执行文件：`Aura3D.Avalonia` 里的桥接代码用
-`DllImport("__Internal")` 解析符号（为了避开 Apple 自带的 OpenGLES 符号混用），
-所以库不能只放在类包里。这个包就是替应用做这件事：装上之后 targets 自动注入
-`NativeReference`，不需要写任何配置。
+English | [中文](./README_CN.md)
 
-## 用法
+[Aura3D](https://github.com/CeSun/Aura3d) ships its own ANGLE (Metal backend) context on iOS,
+but the ANGLE native libraries must be linked into the main executable by the **application**:
+the bridging code in `Aura3D.Avalonia` resolves those symbols through `DllImport("__Internal")`
+(to avoid mixing with the OpenGLES symbols Apple provides), so the libraries cannot live only
+inside a library package. This package does that job on behalf of the application: once installed,
+its targets inject the `NativeReference` automatically and no configuration is needed.
 
-不需要单独装。`Aura3D.Avalonia` 的 iOS 目标以精确区间依赖本包，包里的 `buildTransitive` targets
-会穿透到应用工程生效，所以应用侧一行 ANGLE 配置都不用写：
+## Usage
+
+There is nothing to install separately. The iOS target of `Aura3D.Avalonia` depends on this package
+with an exact version range, and the `buildTransitive` targets inside the package flow through to the
+application project, so the app side does not need a single line of ANGLE configuration:
 
 ```shell
 dotnet add package Aura3D.Avalonia
 ```
 
-想显式控制切片版本时再直接引用本包也可以：
+Referencing this package directly is also fine if you want explicit control over the slice version:
 
 ```shell
 dotnet add package Aura3D.Angle.iOS
 ```
 
-只作用于 iOS 目标框架（`$(TargetFramework)` 含 `-ios`），桌面/Android 工程装了也不会有副作用。
-装完之后 iOS 上仍要确认宿主是默认的 Metal 合成器（不要强制 `iOSRenderingMode.OpenGl`），
-细节见仓库文档《平台与渲染后端》。
+It only takes effect on iOS target frameworks (`$(TargetFramework)` contains `-ios`); installing it in
+desktop or Android projects has no side effects. After installation, still make sure the host keeps the
+default Metal compositor on iOS (do not force `iOSRenderingMode.OpenGl`) — see
+[Platforms and Render Backends](../../doc/en/platform-render-backends.md) in the repository docs.
 
-## 包里有什么
+## Package contents
 
 ```
-native/iossimulator-arm64/libEGL.framework      模拟器切片
+native/iossimulator-arm64/libEGL.framework      simulator slice
 native/iossimulator-arm64/libGLESv2.framework
-native/ios-arm64/libEGL.framework               真机切片
+native/ios-arm64/libEGL.framework               device slice
 native/ios-arm64/libGLESv2.framework
-build/Aura3D.Angle.iOS.targets                  按 $(RuntimeIdentifier) 选切片并注入 NativeReference
-buildTransitive/Aura3D.Angle.iOS.targets        同上（传递消费时命中）
-LICENSE.angle.txt                               ANGLE 的 BSD-3-Clause 原文
+build/Aura3D.Angle.iOS.targets                  picks a slice by $(RuntimeIdentifier) and injects NativeReference
+buildTransitive/Aura3D.Angle.iOS.targets        same as above (hit when consumed transitively)
+LICENSE.angle.txt                               verbatim BSD-3-Clause text from ANGLE
 ```
 
-两份切片都随包入库（约 24 MB），所以发布不需要 depot_tools 也不需要 Xcode。
-切片缺失时构建会直接报错，不会静默出一个"能编译、运行时不出图"的包。
+Both slices are committed with the package (about 24 MB), so publishing needs neither depot_tools nor
+Xcode. A missing slice fails the build outright — it never silently produces a package that
+"compiles but renders nothing at runtime".
 
-## 发布
+## Publishing
 
-本包没有独立的发布通道，跟 `pack.yml` 的发版列车一起发：同一次运行里先 pack 到 `local-feed/`
-（供仓库自身的 restore 使用，`NuGet.config` 把这个目录声明成了包源），再 pack 进 `packages/`
-与其他库一起推到 nuget.org（secret `NUGET_API_KEY`）。因为一切出自同一个 commit，
-`Aura3D.Avalonia` 的 nuspec 里钉的那个版本必定是本次刚发布的那一个。
+This package has no publishing channel of its own; it rides the `pack.yml` release train: within a single
+run it is packed into `local-feed/` first (used by the repository's own restore, `NuGet.config` declares
+that directory as a package source), then packed into `packages/` and pushed to nuget.org together with
+the other libraries (secret `NUGET_API_KEY`). Since everything comes from the same commit, the version
+pinned in the `Aura3D.Avalonia` nuspec is guaranteed to be the one published by that very run.
 
-切片热修 = 改本目录 `Aura3D.Angle.iOS.csproj` 的 `<Version>` + **同一次提交里**改
-`Directory.Packages.props` 的区间 + 跑一次 `pack.yml`。之所以要成对改：`Aura3D.Avalonia`
-钉的是精确区间 `[<版本>]`，切片与 `Aura3D.Avalonia` 里的 `DllImport` 签名是 ABI 配对，
-不能让消费方被动升到一个没配套测过的切片上。也就是说换切片就意味着重发 `Aura3D.Avalonia`。
+A slice hotfix means bumping `<Version>` in `Aura3D.Angle.iOS.csproj` in this directory **and** bumping
+the range in `Directory.Packages.props` **in the same commit**, then running `pack.yml` once. They must be
+changed as a pair because `Aura3D.Avalonia` pins an exact range `[<version>]`, and a slice is ABI-paired
+with the `DllImport` signatures inside `Aura3D.Avalonia` — consumers must not be passively upgraded to a
+slice that was never tested as a matching pair. In other words, changing a slice means re-publishing
+`Aura3D.Avalonia`.
 
-`native/` 下没有任何切片时 `dotnet pack` 会直接失败（`AngleNativeCheck`），不会发出空壳包。
+With no slice at all under `native/`, `dotnet pack` fails immediately (`AngleNativeCheck`) instead of
+emitting an empty shell package.
 
-## 重新构建切片
+## Rebuilding the slices
 
 ```shell
-./build-angle-ios.sh            # 模拟器切片
-./build-angle-ios.sh --device   # 追加真机切片
+./build-angle-ios.sh            # simulator slice
+./build-angle-ios.sh --device   # additionally the device slice
 dotnet pack -c Release -o local-feed
 ```
 
-脚本会把 framework 放进 `native/`。当前版本对应 ANGLE
-`58f8882372e8a4e83da821ac5d16f0323c3fa1af`，gn 参数
-`angle_enable_metal=true`、`is_debug=false`、`enable_rust=false`（standalone checkout 即可，
-不需要 Chromium 全量 checkout），真机切片额外需要 `ios_enable_code_signing=false`。
-切片按 ANGLE 默认的 `ios_deployment_target` 构建，`minos` 为 18.0。
+The script drops the frameworks into `native/`. The current version corresponds to ANGLE
+`58f8882372e8a4e83da821ac5d16f0323c3fa1af` with gn arguments `angle_enable_metal=true`,
+`is_debug=false`, `enable_rust=false` (a standalone checkout is enough, no full Chromium checkout);
+the device slice additionally needs `ios_enable_code_signing=false`. The slices are built with ANGLE's
+default `ios_deployment_target`, with `minos` at 18.0.
 
-## 验证状态
+## Verification status
 
-- 模拟器 arm64：已验证。`Example.iOS` 去掉本地路径引用、只靠这个包出包，
-  `otool -L` 可见 `@rpath/libEGL.framework/libEGL`，Base Geometries 与 PBR RenderPipeline 两页正常出图。
-- 真机 arm64：**未验证运行时**。没有可用设备；切片构建通过、按 `ios-arm64` RID 注入正确，
-  但真机上的实际渲染没有跑过。
+- Simulator arm64: verified. With `Example.iOS` dropping its local path reference and relying solely on
+  this package, `otool -L` shows `@rpath/libEGL.framework/libEGL`, and both the Base Geometries and
+  PBR RenderPipeline pages render correctly.
+- Device arm64: **runtime not verified**. No device was available; the slice builds and is injected
+  correctly for the `ios-arm64` RID, but real rendering on an actual device has never been exercised.
 
-## 许可
+## License
 
-包内二进制来自 ANGLE，按 ANGLE 自己的 BSD-3-Clause 分发（原文见 `LICENSE.angle.txt`）。
+The binaries inside the package come from ANGLE and are distributed under ANGLE's own BSD-3-Clause
+license (see `LICENSE.angle.txt` for the verbatim text).
