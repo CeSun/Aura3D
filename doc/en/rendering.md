@@ -1,3 +1,8 @@
+---
+section: basics
+order: 2
+---
+
 # Rendering Topics
 
 Covers shadows, point clouds, primitive rendering, and node operations — advanced rendering-related topics.

@@ -1,3 +1,8 @@
+---
+section: basics
+order: 4
+---
+
 # Particle System
 
 Aura3D's particle system uses **CPU simulation + GPU instanced rendering**, supporting two rendering modes per emitter: billboard mode and mesh mode.

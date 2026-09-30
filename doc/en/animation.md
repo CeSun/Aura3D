@@ -1,3 +1,8 @@
+---
+section: basics
+order: 3
+---
+
 # Animation System
 
 Aura3D supports everything from simple skeletal animation playback to complex state machines and blend spaces.

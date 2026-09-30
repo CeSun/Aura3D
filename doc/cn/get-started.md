@@ -1,3 +1,8 @@
+---
+section: start
+order: 1
+---
+
 # 开始上手
 
 ## 安装

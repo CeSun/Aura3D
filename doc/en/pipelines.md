@@ -1,3 +1,8 @@
+---
+section: basics
+order: 1
+---
+
 # Rendering Pipelines
 
 The rendering pipeline determines the visual style of the scene. Aura3D provides multiple built-in pipelines and supports full customization.

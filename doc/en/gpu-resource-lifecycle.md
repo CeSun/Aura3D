@@ -1,3 +1,8 @@
+---
+section: advanced
+order: 2
+---
+
 # GPU Resource Lifecycle
 
 Aura3D separates CPU resources from GPU state stored in an OpenGL context. CPU resources such as `Texture`, `Geometry`, and `Material` may be shared; each `RenderPipeline` maintains the corresponding `IGpuState` objects for its own GL context.

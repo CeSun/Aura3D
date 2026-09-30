@@ -1,3 +1,8 @@
+---
+section: advanced
+order: 2
+---
+
 # GPU 资源生命周期
 
 Aura3D 将 CPU 资源与 OpenGL 上下文中的 GPU 状态分离。`Texture`、`Geometry`、`Material` 等 CPU 资源可以被多个场景引用；每个 `RenderPipeline` 为自己的 GL 上下文维护对应的 `IGpuState`。

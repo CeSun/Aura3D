@@ -1,3 +1,8 @@
+---
+section: start
+order: 1
+---
+
 # Get Started
 
 ## Installation

@@ -1,3 +1,8 @@
+---
+section: advanced
+order: 3
+---
+
 # Platforms and Render Backends
 
 `Aura3DView` obtains its GL context differently per platform. This document describes which path each platform takes, what iOS and browser additionally require, and the pitfalls to avoid when writing custom passes against the GLES subset.

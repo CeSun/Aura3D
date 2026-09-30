@@ -1,3 +1,8 @@
+---
+section: advanced
+order: 1
+---
+
 # Instanced Rendering
 
 Aura3D provides two instancing solutions: the lightweight `InstancedMesh` and the hierarchical `InstancedMeshGroup` (similar to UE's HISM).

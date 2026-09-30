@@ -1,3 +1,8 @@
+---
+section: advanced
+order: 3
+---
+
 # 平台与渲染后端
 
 `Aura3DView` 在各平台上拿 GL 上下文的来源不同。本文说明每个平台走哪条路、iOS 与浏览器需要额外准备什么，以及在 GLES 子集上写自定义 Pass 时要避的坑。

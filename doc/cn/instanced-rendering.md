@@ -1,3 +1,8 @@
+---
+section: advanced
+order: 1
+---
+
 # 实例化渲染
 
 Aura3D 提供两种实例化方案：轻量级的 `InstancedMesh` 和层次化的 `InstancedMeshGroup`（类似 UE 的 HISM）。
