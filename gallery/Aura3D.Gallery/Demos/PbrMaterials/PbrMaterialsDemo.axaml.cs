@@ -63,6 +63,11 @@ public sealed partial class PbrMaterialsDemo : Demo
         {
             var (name, baseKey, normalKey, armKey) = Materials[i];
 
+            // TextureLoader 默认按线性上传；BaseColor 是 sRGB 编码的 JPEG，必须标成 gamma 空间，
+            // 驱动才会用 SRGB8 内部格式硬件解码到线性——否则 sRGB 值被当线性参与光照，
+            // 末尾 GammaCorrectionPass 再提亮一次，整页就会发白发灰。Normal/ARM 是数据图，保持线性。
+            textures[baseKey].SetIsGammaSpace(true);
+
             var material = new Material();
 
             material.SetTexture("BaseColor", textures[baseKey]);
