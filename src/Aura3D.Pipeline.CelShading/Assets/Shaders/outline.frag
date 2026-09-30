@@ -8,7 +8,6 @@ in vec2 vTexCoord;
 in vec3 vFragPosition;
 in mat3 vTBN;
 in vec3 vNormal;
-in vec3 debugLineColor;
 
 uniform vec4 BaseColor;
 
