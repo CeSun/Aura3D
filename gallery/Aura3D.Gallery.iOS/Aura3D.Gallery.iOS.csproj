@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+   <OutputType>Exe</OutputType>
+   <TargetFramework>net10.0-ios27.0</TargetFramework>
+   <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+   <Nullable>enable</Nullable>
+   <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+   <!-- iOS 27 SDK preview: suppress the Xcode version preview warning -->
+   <NoWarn>$(NoWarn);XCODE_27_0_PREVIEW</NoWarn>
+
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <CodesignKey>iPhone Developer</CodesignKey>
+  </PropertyGroup>
+
+    <Import Project="..\DemoAssets.props" />
+
+<ItemGroup>
+    <PackageReference Include="Avalonia.iOS" />
+  </ItemGroup>
+
+  <!--
+    No ANGLE related configuration is written here: Aura3D.Angle.iOS is pulled in by the exact version-range dependency of Aura3D.Avalonia,
+    and the buildTransitive targets inside the package select between the simulator / device slices based on $(RuntimeIdentifier) and inject the
+    NativeReference. Aura3D.Gallery consumes it in exactly the same way as external users.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Aura3D.Gallery\Aura3D.Gallery.csproj" />
+  </ItemGroup>
+</Project>

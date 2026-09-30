@@ -1,0 +1,51 @@
+<ex:Demo x:Class="Aura3D.Gallery.Demos.GpuLifecycleDemo"
+         xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:ex="clr-namespace:Aura3D.Gallery"
+         xmlns:loc="clr-namespace:Aura3D.Gallery.Localization"
+         xmlns:demos="clr-namespace:Aura3D.Gallery.Demos"
+         xmlns:kit="clr-namespace:Aura3D.Gallery.Kit"
+         x:DataType="demos:GpuLifecycleDemo">
+
+  <!--
+    生命周期页。按钮调的都是视图上的真 API，所以参数行的排版虽然在 XAML 里，
+    处理函数仍留在代码：GL 资源的释放请求只能在渲染回调之外排，事件计数靠 ViewAttached 的订阅。
+  -->
+  <Panel>
+
+    <kit:DemoView x:Name="View" Pipeline="BlinnPhong" />
+
+    <kit:InspectorPanel>
+      <StackPanel Spacing="6">
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.GpuLifecycle_Intro}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.GpuLifecycle_Events}}" />
+
+        <Button Content="{Translate {x:Static loc:Strings+Keys.GpuLifecycle_ReleaseGpu}}"
+                Click="OnReleaseGpuResources" HorizontalAlignment="Stretch" />
+        <Button Content="{Translate {x:Static loc:Strings+Keys.GpuLifecycle_SimulateLost}}"
+                Click="OnSimulateContextLost" HorizontalAlignment="Stretch" />
+        <Button Content="{Translate {x:Static loc:Strings+Keys.GpuLifecycle_DestroyScene}}"
+                Click="OnDestroyScene" HorizontalAlignment="Stretch" />
+        <Button Content="{Translate {x:Static loc:Strings+Keys.GpuLifecycle_ClearLog}}" Click="OnClearLog" HorizontalAlignment="Stretch" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.GpuLifecycle_OnDemand}}" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.GpuLifecycle_Continuous}}" IsChecked="True"
+                       Toggled="OnContinuousRenderToggled" />
+
+        <Button Content="{Translate {x:Static loc:Strings+Keys.GpuLifecycle_RequestFrame}}"
+                Click="OnRequestOneFrame" HorizontalAlignment="Stretch" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.GpuLifecycle_OnDemandNote}}" />
+
+        <kit:ReadoutRow x:Name="Readout" Label="{Translate {x:Static loc:Strings+Keys.GpuLifecycle_Runtime}}" />
+
+        <kit:ReadoutRow x:Name="LogReadout" Label="{Translate {x:Static loc:Strings+Keys.GpuLifecycle_EventLog}}" />
+
+      </StackPanel>
+    </kit:InspectorPanel>
+
+  </Panel>
+</ex:Demo>

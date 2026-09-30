@@ -1,0 +1,47 @@
+<ex:Demo x:Class="Aura3D.Gallery.Demos.PickingDemo"
+         xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:ex="clr-namespace:Aura3D.Gallery"
+         xmlns:demos="clr-namespace:Aura3D.Gallery.Demos"
+         xmlns:kit="clr-namespace:Aura3D.Gallery.Kit"
+         xmlns:loc="clr-namespace:Aura3D.Gallery.Localization"
+         x:DataType="demos:PickingDemo">
+
+  <!--
+    拾取页。视口之上盖一层不参与命中的 Canvas，用来画命中点标记；
+    视图事件（ObjectPicked）与逐帧中心射线仍在代码里，参数行的排版全在这份 XAML 里。
+  -->
+  <Panel>
+
+    <kit:DemoView x:Name="View" Pipeline="BlinnPhong" EnablePicking="True" />
+
+    <Canvas x:Name="Overlay" IsHitTestVisible="False">
+      <Ellipse x:Name="Marker"
+               Width="22"
+               Height="22"
+               Stroke="Yellow"
+               StrokeThickness="2"
+               Fill="#3CFFFF78" />
+    </Canvas>
+
+    <kit:InspectorPanel>
+      <StackPanel Spacing="6">
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Picking_Intro}}" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Picking_EnablePicking}}" IsChecked="True" Toggled="OnEnablePickingToggled" />
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Picking_CenterRay}}" IsChecked="False" Toggled="OnCenterModeToggled" />
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Picking_OccluderVisible}}" IsChecked="True" Toggled="OnBlockerToggled" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Picking_GridSize}}" Minimum="1" Maximum="12" Value="6" Format="0"
+                       ValueChanged="OnFieldSizeChanged" />
+
+        <Button Content="{Translate {x:Static loc:Strings+Keys.Picking_ClearClicks}}" Click="OnResetClickCount" HorizontalAlignment="Stretch" />
+
+        <kit:ReadoutRow x:Name="Readout" Label="{Translate {x:Static loc:Strings+Keys.Picking_Result}}" />
+
+      </StackPanel>
+    </kit:InspectorPanel>
+
+  </Panel>
+</ex:Demo>

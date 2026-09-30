@@ -94,7 +94,7 @@ default `ios_deployment_target`, with `minos` at 18.0.
 
 ## Verification status
 
-- Simulator arm64: verified. With `Example.iOS` dropping its local path reference and relying solely on
+- Simulator arm64: verified. With `Aura3D.Gallery.iOS` dropping its local path reference and relying solely on
   this package, `otool -L` shows `@rpath/libEGL.framework/libEGL`, and both the Base Geometries and
   PBR RenderPipeline pages render correctly.
 - Device arm64: **runtime not verified**. No device was available; the slice builds and is injected

@@ -1,0 +1,63 @@
+<UserControl x:Class="Aura3D.Gallery.DemoHost"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ex="clr-namespace:Aura3D.Gallery"
+             x:DataType="ex:DemoHost">
+
+  <!--
+    功能页宿主：中间是演示页自己（演示页的 AXAML 里含 kit:DemoView 与检视面板），
+    上面盖资产进度与错误条，底下一条状态栏兼管线切换。
+  -->
+  <Grid RowDefinitions="*,Auto">
+
+    <ContentControl x:Name="PageSlot" Grid.Row="0" />
+
+    <Border x:Name="ProgressOverlay"
+            Grid.Row="0"
+            IsVisible="False"
+            Background="#99000000">
+      <StackPanel HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Spacing="8"
+                  Width="320">
+        <ProgressBar x:Name="Progress" Height="6" Minimum="0" Maximum="1" />
+        <TextBlock x:Name="ProgressText" FontSize="12" Foreground="White" />
+      </StackPanel>
+    </Border>
+
+    <Border x:Name="ErrorOverlay"
+            Grid.Row="0"
+            IsVisible="False"
+            Background="#CC8B1A1A"
+            Padding="16"
+            CornerRadius="6"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            Margin="0,12,0,0">
+      <TextBlock x:Name="ErrorText"
+                 FontSize="13"
+                 Foreground="White"
+                 TextWrapping="Wrap"
+                 MaxWidth="640" />
+    </Border>
+
+    <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="10,2,10,4">
+      <TextBlock x:Name="StatusText"
+                 FontSize="11"
+                 Foreground="Gray"
+                 VerticalAlignment="Center" />
+      <ComboBox x:Name="PipelineBox"
+                Grid.Column="1"
+                IsVisible="False"
+                MinWidth="150"
+                SelectionChanged="OnPipelineChanged">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="ex:PipelineOption">
+            <TextBlock Text="{Binding Label}" FontSize="12" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </Grid>
+
+  </Grid>
+</UserControl>

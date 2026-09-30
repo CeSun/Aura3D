@@ -31,7 +31,7 @@ jobs:
     name: Pack Aura3D.Avalonia.Browser
     # 任何 runner 都能出这个包：工程是纯打包工程（netstandard2.0、无代码、无 ProjectReference），
     # 内容只有 build/ 与 buildTransitive/ 两份 props/targets。
-    # 所以这里不装 wasm-tools 也不跑 emsdk——真正需要 emscripten 的是 Example.Browser，在 ci.yml。
+    # 所以这里不装 wasm-tools 也不跑 emsdk——真正需要 emscripten 的是 Aura3D.Gallery.Browser，在 ci.yml。
     runs-on: ubuntu-latest
     env:
       # 走 env 而不是把 ${{ inputs.version }} 直接插进 shell，触发者手滑打个引号也不会变成脚本注入

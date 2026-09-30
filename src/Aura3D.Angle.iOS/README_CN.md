@@ -82,7 +82,7 @@ props 另一个号）意味着仓库里的这份切片和消费方按区间从 n
 
 ## 验证状态
 
-- 模拟器 arm64：已验证。`Example.iOS` 去掉本地路径引用、只靠这个包出包，
+- 模拟器 arm64：已验证。`Aura3D.Gallery.iOS` 去掉本地路径引用、只靠这个包出包，
   `otool -L` 可见 `@rpath/libEGL.framework/libEGL`，Base Geometries 与 PBR RenderPipeline 两页正常出图。
 - 真机 arm64：**未验证运行时**。没有可用设备；切片构建通过、按 `ios-arm64` RID 注入正确，
   但真机上的实际渲染没有跑过。

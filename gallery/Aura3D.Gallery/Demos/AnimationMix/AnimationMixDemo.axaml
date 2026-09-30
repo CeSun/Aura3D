@@ -1,0 +1,58 @@
+<ex:Demo x:Class="Aura3D.Gallery.Demos.AnimationMixDemo"
+         xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:ex="clr-namespace:Aura3D.Gallery"
+         xmlns:loc="clr-namespace:Aura3D.Gallery.Localization"
+         xmlns:demos="clr-namespace:Aura3D.Gallery.Demos"
+         xmlns:kit="clr-namespace:Aura3D.Gallery.Kit"
+         x:DataType="demos:AnimationMixDemo">
+
+  <!--
+    动画混合页：左右两份模型同骨骼，各挂一个采样器。
+    参数行的排版全在 .axaml 里，初值就是页内字段的默认值，因此不需要构造函数回写。
+  -->
+  <Panel>
+
+    <kit:DemoView x:Name="View" Pipeline="BlinnPhong" />
+
+    <kit:InspectorPanel>
+      <StackPanel Spacing="6">
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.AnimationMix_Intro}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.AnimationMix_Graph}}" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_AutoToggle}}" IsChecked="True"
+                       Toggled="OnAutoToggleToggled" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_ToggleInterval}}" Minimum="0.6" Maximum="6" Value="2.5" Format="0.0"
+                       ValueChanged="OnIntervalChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_BlendTime}}" Minimum="0" Maximum="2" Value="0.6" Format="0.00"
+                       ValueChanged="OnBlendTimeChanged" />
+
+        <Button Content="{Translate {x:Static loc:Strings+Keys.AnimationMix_ManualSwitch}}" Click="OnManualSwitch" HorizontalAlignment="Stretch" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.AnimationMix_TransitionNote}}" />
+
+        <kit:ReadoutRow x:Name="GraphReadout" Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_StateMachine}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.AnimationMix_BlendSpace}}" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_AxisX}}" Minimum="-1" Maximum="1" Value="0" Format="0.00"
+                       ValueChanged="OnAxisXChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_AxisY}}" Minimum="-1" Maximum="1" Value="0" Format="0.00"
+                       ValueChanged="OnAxisYChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_IdwPower}}" Minimum="0.5" Maximum="6" Value="2" Format="0.00"
+                       ValueChanged="OnIdwPowerChanged" />
+
+        <Button Content="{Translate {x:Static loc:Strings+Keys.AnimationMix_ResetAxes}}" Click="OnResetAxis" HorizontalAlignment="Stretch" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.AnimationMix_BlendSpaceNote}}" />
+
+        <kit:ReadoutRow x:Name="BlendReadout" Label="{Translate {x:Static loc:Strings+Keys.AnimationMix_BlendSpaceRow}}" />
+
+      </StackPanel>
+    </kit:InspectorPanel>
+
+  </Panel>
+</ex:Demo>

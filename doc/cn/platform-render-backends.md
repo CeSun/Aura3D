@@ -96,14 +96,14 @@ GLES 入口点必须由**应用**自己的 wasm 模块带出来：不链原生�
 切换这些属性后必须使用全新的 `bin`、`obj` 和发布目录。推荐让本次发布使用独立 artifacts 根目录：
 
 ```powershell
-dotnet publish .\example\Example.Browser\Example.Browser.csproj `
+dotnet publish .\gallery\Aura3D.Gallery.Browser\Aura3D.Gallery.Browser.csproj `
   -c Release `
   --no-incremental `
   -p:UseArtifactsOutput=true `
   -p:ArtifactsPath="$PWD\artifacts\browser-release-clean"
 ```
 
-产物在 `artifacts/browser-release-clean/publish/Example.Browser/release/wwwroot`。部署时必须整体替换
+产物在 `artifacts/browser-release-clean/publish/Aura3D.Gallery.Browser/release/wwwroot`。部署时必须整体替换
 远端静态站目录，不要把新文件覆盖追加到旧 `_framework`；同时刷新浏览器、Service Worker 和 CDN
 中的 `dotnet.js` 缓存。否则旧的 native wasm/CoreLib 与新清单混用，也会得到相同的 CoreLib/icall 错误。
 

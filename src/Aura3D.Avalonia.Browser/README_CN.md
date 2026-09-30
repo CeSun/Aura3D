@@ -54,14 +54,14 @@ dotnet add package Aura3D.Avalonia
 切换配置后还必须使用全新的中间目录和发布目录。例如：
 
 ```powershell
-dotnet publish .\example\Example.Browser\Example.Browser.csproj `
+dotnet publish .\gallery\Aura3D.Gallery.Browser\Aura3D.Gallery.Browser.csproj `
   -c Release `
   --no-incremental `
   -p:UseArtifactsOutput=true `
   -p:ArtifactsPath="$PWD\artifacts\browser-release-clean"
 ```
 
-产物位于 `artifacts/browser-release-clean/publish/Example.Browser/release/wwwroot`。部署时应把这份
+产物位于 `artifacts/browser-release-clean/publish/Aura3D.Gallery.Browser/release/wwwroot`。部署时应把这份
 `wwwroot` **整体替换**到一个空的站点目录，不要覆盖追加到旧目录；否则多代
 `dotnet.native.*.wasm`、`System.Private.CoreLib.*.wasm` 与新的 `dotnet.js` 混在一起，仍可能触发
 CoreLib/icall 不同步。部署后还应刷新浏览器、Service Worker 和 CDN 中的 `dotnet.js` 缓存。

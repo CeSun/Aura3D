@@ -61,14 +61,14 @@ The three must be used as a single set:
 After switching configuration you must also use a clean intermediate and publish directory. For example:
 
 ```powershell
-dotnet publish .\example\Example.Browser\Example.Browser.csproj `
+dotnet publish .\gallery\Aura3D.Gallery.Browser\Aura3D.Gallery.Browser.csproj `
   -c Release `
   --no-incremental `
   -p:UseArtifactsOutput=true `
   -p:ArtifactsPath="$PWD\artifacts\browser-release-clean"
 ```
 
-The output lands in `artifacts/browser-release-clean/publish/Example.Browser/release/wwwroot`. When
+The output lands in `artifacts/browser-release-clean/publish/Aura3D.Gallery.Browser/release/wwwroot`. When
 deploying, **replace** that `wwwroot` as a whole into an empty site directory — do not copy it on top of
 an existing one. Otherwise several generations of `dotnet.native.*.wasm`,
 `System.Private.CoreLib.*.wasm` and the new `dotnet.js` end up mixed together, which can still trigger

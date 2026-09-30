@@ -97,14 +97,14 @@ After changing these properties, use fresh `bin`, `obj` and publish directories.
 recommended workflow:
 
 ```powershell
-dotnet publish .\example\Example.Browser\Example.Browser.csproj `
+dotnet publish .\gallery\Aura3D.Gallery.Browser\Aura3D.Gallery.Browser.csproj `
   -c Release `
   --no-incremental `
   -p:UseArtifactsOutput=true `
   -p:ArtifactsPath="$PWD\artifacts\browser-release-clean"
 ```
 
-The site is written to `artifacts/browser-release-clean/publish/Example.Browser/release/wwwroot`. Deploy it by
+The site is written to `artifacts/browser-release-clean/publish/Aura3D.Gallery.Browser/release/wwwroot`. Deploy it by
 replacing the remote static-site directory as a whole; do not overlay it onto an old `_framework` directory. Also
 invalidate `dotnet.js` in browser, Service Worker and CDN caches. Otherwise an old native wasm/CoreLib can be loaded
 with a new manifest and produce the same CoreLib/icall failure.

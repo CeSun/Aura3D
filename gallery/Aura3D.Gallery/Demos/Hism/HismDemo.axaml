@@ -1,0 +1,48 @@
+<ex:Demo x:Class="Aura3D.Gallery.Demos.HismDemo"
+         xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:ex="clr-namespace:Aura3D.Gallery"
+         xmlns:demos="clr-namespace:Aura3D.Gallery.Demos"
+         xmlns:kit="clr-namespace:Aura3D.Gallery.Kit"
+         xmlns:loc="clr-namespace:Aura3D.Gallery.Localization"
+         x:DataType="demos:HismDemo">
+
+  <!--
+    HISM 页。整页就是这两层：视口 + 浮在右侧的检视面板。
+  -->
+  <Panel>
+
+    <kit:DemoView x:Name="View" Pipeline="BlinnPhong" />
+
+    <kit:InspectorPanel>
+      <StackPanel Spacing="6">
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Hism_Intro}}" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Hism_InstanceCount}}" Minimum="1000" Maximum="120000" Value="12000" Format="0"
+                       ValueChanged="OnInstanceCountChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Hism_PerGroup}}" Minimum="64" Maximum="4096" Value="512" Format="0"
+                       ValueChanged="OnMaxPerGroupChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Hism_MaxDepth}}" Minimum="1" Maximum="9" Value="6" Format="0"
+                       ValueChanged="OnMaxDepthChanged" />
+
+        <kit:ComboRow x:Name="MoveModeRow" Label="{Translate {x:Static loc:Strings+Keys.Hism_MoveMode}}" Options="{Binding MoveModes}"
+                      SelectionChanged="OnMoveModeChanged" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Hism_MoveEveryFrame}}" IsChecked="False" Toggled="OnJitterToggled" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Hism_MovesPerSecond}}" Minimum="1" Maximum="240" Value="30" Format="0"
+                       ValueChanged="OnJitterSpeedChanged" />
+
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Hism_GroupCulling}}" IsChecked="True" Toggled="OnGroupCullingToggled" />
+
+        <Button Content="ClearInstances" Click="OnClearClick" HorizontalAlignment="Stretch" />
+        <Button Content="{Translate {x:Static loc:Strings+Keys.Hism_Refill}}" Click="OnRefillClick" HorizontalAlignment="Stretch" />
+
+        <kit:ReadoutRow x:Name="OctreeReadout" Label="{Translate {x:Static loc:Strings+Keys.Hism_OctreeState}}" />
+
+      </StackPanel>
+    </kit:InspectorPanel>
+
+  </Panel>
+</ex:Demo>

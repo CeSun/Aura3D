@@ -74,9 +74,9 @@ jobs:
         run: dotnet test src/Test/Aura3D.Tests/Aura3D.Tests.csproj -c Release
 
   # 示例与调试工程门禁（Desktop / Android / Web）。iOS 见下方 ios 作业。
-  # 同样要 macOS：Example.Desktop 的引用图里有 Aura3D.Avalonia 的 iOS 目标，restore 需要 ios workload。
-  examples:
-    name: Examples & RenderDebug (Desktop / Android / Browser)
+  # 同样要 macOS：Aura3D.Gallery.Desktop 的引用图里有 Aura3D.Avalonia 的 iOS 目标，restore 需要 ios workload。
+  gallery:
+    name: Gallery & RenderDebug (Desktop / Android / Browser)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -97,24 +97,24 @@ jobs:
         # microsoft-net-sdk-emscripten），`workload install emscripten` 直接报"未识别工作负载 ID"。
         run: dotnet workload install android wasm-tools ios
 
-      - name: Check example asset budgets
-        # example/assets 是入库的压缩产物；这一步核对总下载量 ≤20MB、单页进页即取 ≤6MB、
-        # 清单里没有无人取用的 Key。源资产（example/assets-src）不入库，所以这里只读现有产物。
+      - name: Check gallery asset budgets
+        # gallery/assets 是入库的压缩产物；这一步核对总下载量 ≤20MB、单页进页即取 ≤6MB、
+        # 清单里没有无人取用的 Key。源资产（gallery/assets-src）不入库，所以这里只读现有产物。
         run: node tools/assets/generate.mjs --check
 
-      - name: Check example CJK font coverage
+      - name: Check gallery CJK font coverage
         # 浏览器宿主拿不到系统字体，中文靠内嵌的 Noto Sans SC 子集出字（子集与它的码点清单一并入库）。
         # 这一步不重新生成字体，只核对 UI 里出现的非 ASCII 字符确实被子集覆盖、产物没超 2.5MB 预算。
         run: python3 tools/fonts/generate-cjk-font.py --check
 
-      - name: Build Example.Desktop
-        run: dotnet build example/Example.Desktop/Example.Desktop.csproj -c Release
+      - name: Build Aura3D.Gallery.Desktop
+        run: dotnet build gallery/Aura3D.Gallery.Desktop/Aura3D.Gallery.Desktop.csproj -c Release
 
-      - name: Build Example.Android
-        run: dotnet build example/Example.Android/Example.Android.csproj -c Release
+      - name: Build Aura3D.Gallery.Android
+        run: dotnet build gallery/Aura3D.Gallery.Android/Aura3D.Gallery.Android.csproj -c Release
 
-      - name: Build Example.Browser
-        run: dotnet build example/Example.Browser/Example.Browser.csproj -c Release
+      - name: Build Aura3D.Gallery.Browser
+        run: dotnet build gallery/Aura3D.Gallery.Browser/Aura3D.Gallery.Browser.csproj -c Release
 
       - name: Build RenderDebug.Desktop
         run: dotnet build src/RenderDebug/RenderDebug.Desktop/RenderDebug.Desktop.csproj -c Release
@@ -123,11 +123,11 @@ jobs:
         run: dotnet build src/RenderDebug/RenderDebug.Android/RenderDebug.Android.csproj -c Release
 
   # iOS 只能在 macOS runner 上编译（需要 Xcode 与 ios workload）。
-  # Example.iOS 钉的是 net10.0-ios27.0（与本机 Xcode 27.0/27A266a 一致），而 macos-latest
+  # Aura3D.Gallery.iOS 钉的是 net10.0-ios27.0（与本机 Xcode 27.0/27A266a 一致），而 macos-latest
   # 默认 Xcode 只有 26.6，.NET for iOS 27 的包会硬校验版本；所以这里用官方 xcode-27 预览标签。
   # 只构建不签名：dotnet build 默认面向模拟器，不会触发 codesign。
   ios:
-    name: Examples (iOS)
+    name: Gallery (iOS)
     runs-on: xcode-27
     steps:
       - uses: actions/checkout@v4
@@ -140,11 +140,11 @@ jobs:
       - name: Install workload
         run: dotnet workload install ios
 
-      - name: Build Example.iOS
+      - name: Build Aura3D.Gallery.iOS
         run: |
           set +e
-          out=$(dotnet build example/Example.iOS/Example.iOS.csproj -c Release 2>&1); code=$?
+          out=$(dotnet build gallery/Aura3D.Gallery.iOS/Aura3D.Gallery.iOS.csproj -c Release 2>&1); code=$?
           printf '%s\n' "$out"
           [ "$code" = 0 ] && exit 0
-          printf '::error::Example.iOS exit %s :: %s\n' "$code" "$(printf '%s' "$out" | grep -iE "error|warning XDOC|ValidateXcode" | tail -20 | tr '\n' '|' | tr -d '\r' | cut -c1-1500)"
+          printf '::error::Aura3D.Gallery.iOS exit %s :: %s\n' "$code" "$(printf '%s' "$out" | grep -iE "error|warning XDOC|ValidateXcode" | tail -20 | tr '\n' '|' | tr -d '\r' | cut -c1-1500)"
           exit "$code"

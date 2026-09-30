@@ -1,8 +1,8 @@
 {
-  "name": "aura3d-example-assets",
+  "name": "aura3d-gallery-assets",
   "private": true,
   "type": "module",
-  "description": "把 example/assets-src 的大体积原始资产重压缩成 example/assets 的 Web 友好副本。",
+  "description": "把 gallery/assets-src 的大体积原始资产重压缩成 gallery/assets 的 Web 友好副本。",
   "bin": {},
   "dependencies": {
     "@gltf-transform/cli": "^4"

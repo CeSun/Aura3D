@@ -1,0 +1,86 @@
+<ex:Demo x:Class="Aura3D.Gallery.Demos.GeometriesDemo"
+         xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:ex="clr-namespace:Aura3D.Gallery"
+         xmlns:loc="clr-namespace:Aura3D.Gallery.Localization"
+         xmlns:demos="clr-namespace:Aura3D.Gallery.Demos"
+         xmlns:kit="clr-namespace:Aura3D.Gallery.Kit"
+         x:DataType="demos:GeometriesDemo">
+
+  <!--
+    几何体页：视口 + 右侧检视浮层。
+    各参数行的初值就是页面自己字段里的字面量，直接写死在 XAML；只有下拉的选中项回落到构造函数装配。
+  -->
+  <Panel>
+
+    <kit:DemoView x:Name="View" Pipeline="BlinnPhong" />
+
+    <kit:InspectorPanel>
+      <StackPanel Spacing="6">
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.Geometries_Intro}}" />
+
+        <kit:ComboRow x:Name="KindRow" Label="{Translate {x:Static loc:Strings+Keys.Geometries_ReadoutKind}}"
+                      Options="{Binding KindOptions}"
+                      SelectionChanged="OnKindChanged" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.Geometries_Box}}" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_BoxWidth}}" Minimum="0.2" Maximum="6" Value="2"
+                       ValueChanged="OnBoxWidthChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_BoxHeight}}" Minimum="0.2" Maximum="6" Value="2"
+                       ValueChanged="OnBoxHeightChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_BoxDepth}}" Minimum="0.2" Maximum="6" Value="2"
+                       ValueChanged="OnBoxDepthChanged" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.Geometries_Sphere}}" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_SphereRadius}}" Minimum="0.2" Maximum="4" Value="1.4"
+                       ValueChanged="OnSphereRadiusChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_SphereStacks}}" Minimum="3" Maximum="96" Value="48" Format="0"
+                       ValueChanged="OnSphereWidthSegmentsChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_SphereSlices}}" Minimum="2" Maximum="64" Value="24" Format="0"
+                       ValueChanged="OnSphereHeightSegmentsChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_SphereLongitude}}" Minimum="10" Maximum="360" Value="360" Format="0"
+                       ValueChanged="OnSpherePhiLengthChanged" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.Geometries_Cylinder}}" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_CylinderTopRadius}}" Minimum="0.05" Maximum="3" Value="1"
+                       ValueChanged="OnCylTopChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_CylinderBottomRadius}}" Minimum="0.05" Maximum="3" Value="1"
+                       ValueChanged="OnCylBottomChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_CylinderHeight}}" Minimum="0.2" Maximum="6" Value="2.4"
+                       ValueChanged="OnCylHeightChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_CylinderSegments}}" Minimum="3" Maximum="96" Value="48" Format="0"
+                       ValueChanged="OnCylRadialChanged" />
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_CylinderOpen}}" IsChecked="False"
+                       Toggled="OnCylOpenToggled" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.Geometries_Plane}}" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_PlaneWidth}}" Minimum="0.5" Maximum="8" Value="3"
+                       ValueChanged="OnPlaneWidthChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_PlaneHeight}}" Minimum="0.5" Maximum="8" Value="3"
+                       ValueChanged="OnPlaneHeightChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_PlaneSectionsX}}" Minimum="1" Maximum="64" Value="8" Format="0"
+                       ValueChanged="OnPlaneWSegmentsChanged" />
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_PlaneSectionsZ}}" Minimum="1" Maximum="64" Value="8" Format="0"
+                       ValueChanged="OnPlaneHSegmentsChanged" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.Geometries_Scene}}" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_RotationSpeed}}" Minimum="0" Maximum="180" Value="0" Format="0"
+                       ValueChanged="OnSpinChanged" />
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_Grid}}" IsChecked="True"
+                       Toggled="OnShowGridToggled" />
+        <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.Geometries_Axes}}" IsChecked="False"
+                       Toggled="OnShowAxisToggled" />
+
+        <kit:ReadoutRow x:Name="VertexReadout" Label="{Translate {x:Static loc:Strings+Keys.Geometries_VertexData}}" />
+
+      </StackPanel>
+    </kit:InspectorPanel>
+
+  </Panel>
+</ex:Demo>

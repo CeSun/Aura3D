@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
 VisualStudioVersion = 18.0.11222.15
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Example", "Example", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gallery", "Gallery", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.Desktop", "example\Example.Desktop\Example.Desktop.csproj", "{F4FB8C83-A0F8-4FA8-918B-A7F5D6952C2D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Gallery.Desktop", "gallery\Aura3D.Gallery.Desktop\Aura3D.Gallery.Desktop.csproj", "{F4FB8C83-A0F8-4FA8-918B-A7F5D6952C2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.Android", "example\Example.Android\Example.Android.csproj", "{6F97828F-0E7E-4F51-97F0-6762B4F9E397}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Gallery.Android", "gallery\Aura3D.Gallery.Android\Aura3D.Gallery.Android.csproj", "{6F97828F-0E7E-4F51-97F0-6762B4F9E397}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.iOS", "example\Example.iOS\Example.iOS.csproj", "{4BB439E0-36D6-4810-92F3-06D770A82E64}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Gallery.iOS", "gallery\Aura3D.Gallery.iOS\Aura3D.Gallery.iOS.csproj", "{4BB439E0-36D6-4810-92F3-06D770A82E64}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.Browser", "example\Example.Browser\Example.Browser.csproj", "{60654BC9-0E85-4D94-9C3C-A8A27A5C4724}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Gallery.Browser", "gallery\Aura3D.Gallery.Browser\Aura3D.Gallery.Browser.csproj", "{60654BC9-0E85-4D94-9C3C-A8A27A5C4724}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RenderDebug.Desktop", "src\RenderDebug\RenderDebug.Desktop\RenderDebug.Desktop.csproj", "{3359D9B4-1CE3-F8FB-D88A-B091D568EB05}"
 EndProject
@@ -62,7 +62,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Angle.iOS", "src\Aur
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Avalonia.Browser", "src\Aura3D.Avalonia.Browser\Aura3D.Avalonia.Browser.csproj", "{E8ACDDB2-FB77-48D8-9098-68F4F877F29B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Example.Shared", "example\Aura3D.Example.Shared\Aura3D.Example.Shared.csproj", "{E74BFCCA-B161-4429-B04A-CAE5939AF5E0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura3D.Gallery", "gallery\Aura3D.Gallery\Aura3D.Gallery.csproj", "{E74BFCCA-B161-4429-B04A-CAE5939AF5E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

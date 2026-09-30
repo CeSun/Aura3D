@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-生成示例工程用的中文字体子集：example/Aura3D.Example.Shared/Fonts/NotoSansSC-Subset.otf
+生成示例工程用的中文字体子集：gallery/Aura3D.Gallery/Fonts/NotoSansSC-Subset.otf
 
 为什么必须内置：浏览器宿主没有系统字体可用（Avalonia.Browser 拿不到操作系统的字体表），
 所以没注册中文字体时，界面上的中文一律是豆腐块。桌面/移动端有系统字体，看不出这个问题，
@@ -29,7 +29,7 @@ SRC_URL = ("https://raw.githubusercontent.com/notofonts/noto-cjk/main"
            "/Sans/SubsetOTF/SC/NotoSansSC-Regular.otf")
 SRC_SHA256 = "faa6c9df652116dde789d351359f3d7e5d2285a2b2a1f04a2d7244df706d5ea9"
 CACHE = Path(__file__).resolve().parent / ".cache" / "NotoSansSC-Regular.otf"
-OUT = REPO_ROOT / "example" / "Aura3D.Example.Shared" / "Fonts" / "NotoSansSC-Subset.otf"
+OUT = REPO_ROOT / "gallery" / "Aura3D.Gallery" / "Fonts" / "NotoSansSC-Subset.otf"
 # 子集里真正落进了哪些码点，由生成时反读字体 cmap 写在这里。--check 拿它核对，
 # 于是 CI 不必装 fontTools、也不必自己解析 cmap，同时杜绝「字符集里有但源字体本来没有」的假通过。
 COVERED = Path(__file__).resolve().parent / "charset-covered.txt"
@@ -64,7 +64,7 @@ def charset() -> set[str]:
 def ui_chars() -> dict[str, list[str]]:
     """示例源码与 resx 文案里出现的、渲染时可能落到屏幕上的非 ASCII 字符 → 出处文件。"""
     found: dict[str, list[str]] = {}
-    sources = [p for p in (REPO_ROOT / "example").rglob("*")
+    sources = [p for p in (REPO_ROOT / "gallery").rglob("*")
                if p.suffix in (".cs", ".axaml", ".resx")
                and "bin" not in p.parts and "obj" not in p.parts]
     for path in sources:

@@ -1,0 +1,51 @@
+<ex:Demo x:Class="Aura3D.Gallery.Demos.AssimpFbxDemo"
+         xmlns="https://github.com/avaloniaui"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:ex="clr-namespace:Aura3D.Gallery"
+         xmlns:loc="clr-namespace:Aura3D.Gallery.Localization"
+         xmlns:demos="clr-namespace:Aura3D.Gallery.Demos"
+         xmlns:kit="clr-namespace:Aura3D.Gallery.Kit"
+         x:DataType="demos:AssimpFbxDemo">
+
+  <!--
+    FBX 动作库页（Assimp，仅桌面端）。整页就是这两层：视口 + 浮在右侧的检视面板。
+    剪辑条数与骨骼名单要等资产取回后才定，这两处在代码里回填。
+  -->
+  <Panel>
+
+    <kit:DemoView x:Name="View" Pipeline="BlinnPhong" />
+
+    <kit:InspectorPanel>
+      <StackPanel Spacing="6">
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.AssimpFbx_Intro}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.AssimpFbx_Clips}}" />
+
+        <kit:ComboRow x:Name="ClipRow" Label="{Translate {x:Static loc:Strings+Keys.AssimpFbx_Sampler}}" Options="{Binding ClipOptions}"
+                      SelectionChanged="OnClipChanged" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.AssimpFbx_NoSamplerNote}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.AssimpFbx_SampleInterface}}" />
+
+        <kit:ComboRow x:Name="BoneRow" Label="{Translate {x:Static loc:Strings+Keys.AssimpFbx_Bone}}" Options="{Binding BoneOptions}"
+                      SelectionChanged="OnBoneChanged" />
+
+        <kit:SliderRow Label="{Translate {x:Static loc:Strings+Keys.AssimpFbx_AtSecond}}" Minimum="0" Maximum="2" Value="0" Format="0.00"
+                       ValueChanged="OnSampleTimeChanged" />
+
+        <kit:Hint Text="{Translate {x:Static loc:Strings+Keys.AssimpFbx_SampleNote}}" />
+
+        <kit:ReadoutRow x:Name="SampleReadout" Label="{Translate {x:Static loc:Strings+Keys.AssimpFbx_Result}}" />
+
+        <kit:Section Title="{Translate {x:Static loc:Strings+Keys.AssimpFbx_SkeletonLoader}}" />
+
+        <kit:ReadoutRow x:Name="SkeletonReadout" Label="{Translate {x:Static loc:Strings+Keys.AssimpFbx_Skeleton}}" />
+        <kit:ReadoutRow x:Name="ClipsReadout" Label="{Translate {x:Static loc:Strings+Keys.AssimpFbx_ClipTable}}" />
+
+      </StackPanel>
+    </kit:InspectorPanel>
+
+  </Panel>
+</ex:Demo>
