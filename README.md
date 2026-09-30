@@ -4,12 +4,15 @@
     <div id="link">
         <span>English</span> | 
         <a href="./README_CN.md">中文</a> |
-        <a href="./doc/en/home.md">Documentation</a>
+        <a href="https://cesun.github.io/Aura3D-Docs/">Documentation</a> |
+        <a href="https://cesun.github.io/Aura3D-Gallery/">Online Demo</a>
     </div>
 </div>
 <br/>
 
 ![demo](./doc/images/example_debugtest.png)
+
+**Online gallery:** [Aura3D-Gallery](https://cesun.github.io/Aura3D-Gallery/) — Run every engine feature (pipelines, IBL, animation blend space, materials) directly in your browser.
 
 **Demo project:** [TowerDefense3D](https://github.com/CeSun/TowerDefense3D) — A tower defense game built with Aura3D, showcasing real-world usage of the engine.
 
@@ -31,6 +34,7 @@ Aura3D is a lightweight, high-performance and extensible Avalonia 3D control lib
 - **Directional / Point / Spot lights** — Three light types with color, attenuation radius, and shadow casting
 - **CSM cascaded shadows** — Automatic cascaded shadow maps for the main directional light, configurable cascade count and split scheme
 - **Blinn-Phong lighting model** — Default forward rendering pipeline
+- **IBL image-based lighting** — PBR pipelines build irradiance and prefiltered environment maps from an environment cubemap
 - **HDR environment maps** — Skybox / ambient background
 
 ### Animation System
@@ -41,7 +45,7 @@ Aura3D is a lightweight, high-performance and extensible Avalonia 3D control lib
 ### Rendering Pipelines
 - **Replaceable pipelines** — Built-in BlinnPhong (realistic) and NoLight (unlit)
 - **PBR deferred pipeline** — Physically-based rendering with Metallic-Roughness workflow
-- **Cel shading pipeline** — Toon shading style
+- **Cel shading pipeline** — Toon shading style with screen-proportional outlines
 - **Custom pipelines** — Compose RenderPass freely without dealing with VAO/VBO
 
 ### Advanced Rendering
@@ -128,13 +132,14 @@ public void OnSceneInitialized(object sender, InitializedRoutedEventArgs args)
 | Package | Description |
 |---|---|
 | [Aura3D.Avalonia](https://www.nuget.org/packages/Aura3D.Avalonia) | Avalonia 3D rendering control (depends on Aura3D.Core) |
+| [Aura3D.Avalonia.Browser](https://www.nuget.org/packages/Aura3D.Avalonia.Browser) | Build-time wiring for the browser (WebGL2) render path |
 | [Aura3D.Core](https://www.nuget.org/packages/Aura3D.Core) | Core engine: scene graph, nodes, resources, default pipeline |
 | [Aura3D.Model.GltfLoader](https://www.nuget.org/packages/Aura3D.Model.GltfLoader) | glTF/GLB model loader |
 | [Aura3D.Model.AssimpLoader](https://www.nuget.org/packages/Aura3D.Model.AssimpLoader) | Assimp model loader (50+ formats) |
 | [Aura3D.Pipeline.PBR](https://www.nuget.org/packages/Aura3D.Pipeline.PBR) | PBR deferred rendering pipeline |
-| Aura3D.Pipeline.PBR.Common | Shared resources required by the PBR pipelines |
-| Aura3D.Pipeline.PBRForward | PBR forward rendering pipeline |
+| [Aura3D.Pipeline.PBRForward](https://www.nuget.org/packages/Aura3D.Pipeline.PBRForward) | PBR forward rendering pipeline (publish pending — reference from source for now) |
 | [Aura3D.Pipeline.CelShading](https://www.nuget.org/packages/Aura3D.Pipeline.CelShading) | Cel shading rendering pipeline |
+| [Aura3D.Angle.iOS](https://www.nuget.org/packages/Aura3D.Angle.iOS) | ANGLE (Metal) native frameworks for the iOS render path |
 
 ## License
 

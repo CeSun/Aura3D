@@ -4,12 +4,15 @@
     <div id="link">
         <a href="./README.md">English</a> | 
         <span>中文</span> |
-        <a href="./doc/cn/home.md">文档</a>
+        <a href="https://cesun.github.io/Aura3D-Docs/">文档</a> |
+        <a href="https://cesun.github.io/Aura3D-Gallery/">在线演示</a>
     </div>
 </div>
 <br/>
 
 ![demo](./doc/images/example_debugtest.png)
+
+**在线示例库：** [Aura3D-Gallery](https://cesun.github.io/Aura3D-Gallery/) —— 在浏览器里直接运行引擎各项能力（渲染管线、IBL、动画混合空间、材质系统）。
 
 **Demo 项目：** [TowerDefense3D](https://github.com/CeSun/TowerDefense3D) — 基于 Aura3D 开发的塔防游戏，展示了引擎的实际应用。
 
@@ -31,6 +34,7 @@ Aura3D 是一个轻量级、高性能、可扩展的 Avalonia 3D 控件库。它
 - **方向光 / 点光 / 聚光灯** — 三种光源类型，支持颜色、衰减半径、阴影投射
 - **CSM 级联阴影** — 主方向光自动使用级联阴影贴图，可配置级联数量和分割方案
 - **Blinn-Phong 光照模型** — 默认前向渲染管线
+- **IBL 基于图像的光照** — PBR 管线从环境立方图烘培辐照度图与预滤波环境贴图
 - **HDR 环境贴图** — 天空盒 / 环境光背景
 
 ### 动画系统
@@ -41,7 +45,7 @@ Aura3D 是一个轻量级、高性能、可扩展的 Avalonia 3D 控件库。它
 ### 渲染管线
 - **可替换渲染管线** — 内置 BlinnPhong（写实）、NoLight（无光照）
 - **PBR 延迟管线** — 基于物理的渲染，支持 Metallic-Roughness 工作流
-- **卡通渲染管线** — Cel Shading 风格
+- **卡通渲染管线** — Cel Shading 风格，含屏占比驱动的描边
 - **自定义管线** — 自由组合 RenderPass，无需处理 VAO/VBO
 
 ### 高级渲染
@@ -128,13 +132,14 @@ public void OnSceneInitialized(object sender, InitializedRoutedEventArgs args)
 | 包名 | 说明 |
 |---|---|
 | [Aura3D.Avalonia](https://www.nuget.org/packages/Aura3D.Avalonia) | Avalonia 3D 渲染控件（依赖 Aura3D.Core） |
+| [Aura3D.Avalonia.Browser](https://www.nuget.org/packages/Aura3D.Avalonia.Browser) | 浏览器（WebGL2）渲染路径的构建期接线包 |
 | [Aura3D.Core](https://www.nuget.org/packages/Aura3D.Core) | 核心引擎：场景图、节点、资源、默认管线 |
 | [Aura3D.Model.GltfLoader](https://www.nuget.org/packages/Aura3D.Model.GltfLoader) | glTF/GLB 模型加载器 |
 | [Aura3D.Model.AssimpLoader](https://www.nuget.org/packages/Aura3D.Model.AssimpLoader) | Assimp 模型加载器（支持 50+ 格式） |
 | [Aura3D.Pipeline.PBR](https://www.nuget.org/packages/Aura3D.Pipeline.PBR) | PBR 延迟渲染管线 |
-| Aura3D.Pipeline.PBR.Common | PBR 渲染管线共享资源 |
-| Aura3D.Pipeline.PBRForward | PBR 前向渲染管线 |
+| [Aura3D.Pipeline.PBRForward](https://www.nuget.org/packages/Aura3D.Pipeline.PBRForward) | PBR 前向渲染管线（尚未发布 NuGet，暂从源码引用） |
 | [Aura3D.Pipeline.CelShading](https://www.nuget.org/packages/Aura3D.Pipeline.CelShading) | 卡通渲染管线 |
+| [Aura3D.Angle.iOS](https://www.nuget.org/packages/Aura3D.Angle.iOS) | iOS 渲染路径的 ANGLE (Metal) 原生框架包 |
 
 ## 许可证
 
