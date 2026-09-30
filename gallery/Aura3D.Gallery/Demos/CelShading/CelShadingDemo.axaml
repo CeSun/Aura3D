@@ -76,6 +76,11 @@
         <kit:ToggleRow Label="{Translate {x:Static loc:Strings+Keys.CelShading_FaceRenderType}}" IsChecked="True"
                        Toggled="OnFaceRenderToggled" />
 
+        <kit:Section Title="Directional Light" />
+
+        <kit:SliderRow Label="Yaw Speed (deg/s)" Minimum="0" Maximum="90" Value="20"
+                       ValueChanged="OnSunSpeedChanged" />
+
         <kit:Section Title="{Translate {x:Static loc:Strings+Keys.CelShading_OutlinePass}}" />
 
         <kit:SliderRow Label="OutlinePass.AmbientIntensity" Minimum="0" Maximum="1" Value="0.1"

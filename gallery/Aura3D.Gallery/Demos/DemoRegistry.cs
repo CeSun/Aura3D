@@ -63,7 +63,8 @@ public static class DemoRegistry
             Title: Strings.Keys.Demo_PbrChannels_Title,
             Group: Strings.Keys.Group_Materials,
             Summary: Strings.Keys.Demo_PbrChannels_Summary,
-            Assets: Assets.AssetSet.Empty,
+            // 环境立方图：IBL 只认 Scene.Background 的立方图分支，没有它金属度/粗糙度就演示不出来。
+            Assets: Assets.AssetManifest.SkyboxSet,
             Create: context => new PbrChannelsDemo(context),
             DefaultPipeline: PipelineKind.PBRForward),
         new(
@@ -71,7 +72,8 @@ public static class DemoRegistry
             Title: Strings.Keys.Demo_CelShading_Title,
             Group: Strings.Keys.Group_Materials,
             Summary: Strings.Keys.Demo_CelShading_Summary,
-            Assets: Assets.AssetSet.Empty,
+            // 卡渲角色 glb：定向光转一周时，明暗分档在真实角色上看比程序化球体直观得多
+            Assets: Assets.AssetManifest.RequireSet("CelCharacter"),
             Create: context => new CelShadingDemo(context),
             DefaultPipeline: PipelineKind.CelShading,
             // 材质参数名与通道名只有 CelLightPass 认，切到别的管线就一个都不生效了。
@@ -81,7 +83,8 @@ public static class DemoRegistry
             Title: Strings.Keys.Demo_IblEnvironment_Title,
             Group: Strings.Keys.Group_Pipelines,
             Summary: Strings.Keys.Demo_IblEnvironment_Summary,
-            Assets: Assets.AssetSet.Empty,
+            // 1k HDRI 全景 + 六面天空盒：这一页要能对着真实环境看反射，程序化全景图只作对照档。
+            Assets: Assets.AssetManifest.RequireSet([.. Assets.AssetManifest.SkyboxKeys, "Hdr1k"]),
             Create: context => new EnvironmentDemo(context),
             DefaultPipeline: PipelineKind.PBRForward),
 

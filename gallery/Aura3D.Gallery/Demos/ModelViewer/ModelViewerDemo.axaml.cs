@@ -220,7 +220,14 @@ public sealed partial class ModelViewerDemo : Demo
         if (current == null)
             return;
 
-        Context.Scene?.MainCamera.FitToBoundingBox(current.BoundingBox, padding);
+        var camera = Context.Scene?.MainCamera;
+        if (camera == null)
+            return;
+
+        camera.FitToBoundingBox(current.BoundingBox, padding);
+
+        // fit 收紧后的 far 恰好贴着模型背面，滚轮拉远一点就撞远平面；放大几倍留出拉远余量
+        camera.FarPlane *= 3f;
     }
 
     private CopyType ModeOf() => copyModeIndex switch

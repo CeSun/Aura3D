@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
+using ModelNode = Aura3D.Core.Nodes.Model;
 
 namespace Aura3D.Gallery.Demos;
 
@@ -63,16 +64,19 @@ public sealed partial class CelShadingDemo : Demo
     private Vector4 coolDark = new(0.45f, 0.55f, 0.85f, 1);
 
     private readonly Material body = new();
-    private readonly Material bare = new();
     private readonly Material face = new();
 
     private Mesh? faceMesh;
-    private Node? turntable;
     private DirectionalLight? sun;
     private OutlinePass? outlinePass;
+    private ModelNode? character;
 
     private float outlineAmbient = 0.1f;
     private bool faceRender = true;
+
+    // 定向光绕 Y 轴自转：明暗交界线扫过角色与球体，卡渲的分档与色调映射一眼可见
+    private float sunYaw = -25f;
+    private float sunYawSpeed = 20f;
 
     /// <summary>
     /// 建页：装配 XAML，并把跟随引擎设置的那条滑杆初值对齐到真值。
@@ -87,15 +91,20 @@ public sealed partial class CelShadingDemo : Demo
     }
 
     /// <inheritdoc />
-    public override Task LoadAssetsAsync(AssetBatch assets) => Task.CompletedTask;
+    public override async Task LoadAssetsAsync(AssetBatch assets)
+    {
+        character = await assets.ModelAsync("CelCharacter");
+
+        character.Name = "CelCharacter";
+    }
 
     /// <inheritdoc />
     public override void BuildScene()
     {
         var scene = Context.Scene!;
 
-        scene.MainCamera.Position = new Vector3(0, 2.2f, 8.5f);
-        scene.MainCamera.LookAt(new Vector3(0, 1.4f, 0));
+        scene.MainCamera.Position = new Vector3(0, 2.75f, 5.25f);
+        scene.MainCamera.LookAt(new Vector3(0, 2.4f, 0));
         // 30×30 地面 + 拉远余量，抬过默认 far 100。
         scene.MainCamera.FarPlane = 120f;
 
@@ -116,24 +125,14 @@ public sealed partial class CelShadingDemo : Demo
 
         scene.AddNode(ground);
 
-        turntable = new Node { Name = "Turntable" };
+        // 卡通角色 glb 放中央：它的材质没设卡通参数也照常渲染——
+        // pass 有参考材质兜底，正好当「真实模型」对照
+        if (character != null)
+        {
+            character.Scale = new Vector3(3f);
 
-        scene.AddNode(turntable);
-
-        bare.SetTexture("BaseColor", Procedural.Checker(64, 3));
-
-        Add(Strings.Keys.CelShading_MeshReference.T(), new SphereGeometry(0.95f, 40, 24), new Vector3(2.6f, 1.5f, 0), bare);
-
-        face.SetTexture("BaseColor", Procedural.SoftDot(128, 1.1f));
-
-        faceMesh = Add(Strings.Keys.CelShading_MeshFace.T(), new PlaneGeometry(1.8f, 1.8f), new Vector3(0, 2.75f, 0.9f), face);
-
-        // PlaneGeometry 本来就在 XZ 平面上（法线 +Y），要立起来朝相机得转 +90°，再往下压 8°。
-        faceMesh.RotationDegrees = new Vector3(82f, 0, 0);
-
-        body.SetTexture("BaseColor", Procedural.Checker(64, 2));
-
-        Add(Strings.Keys.CelShading_MeshBody.T(), new SphereGeometry(1.1f, 40, 24), new Vector3(-1.4f, 1.5f, 0), body);
+            scene.AddNode(character);
+        }
 
         ApplyAll();
 
@@ -143,8 +142,12 @@ public sealed partial class CelShadingDemo : Demo
     /// <inheritdoc />
     public override void Update(double deltaTime)
     {
-        if (turntable != null)
-            turntable.RotationDegrees = new Vector3(0, turntable.RotationDegrees.Y + 14f * (float)deltaTime, 0);
+        if (sun != null)
+        {
+            sunYaw += sunYawSpeed * (float)deltaTime;
+
+            sun.RotationDegrees = new Vector3(-30f, sunYaw, 0);
+        }
 
         Report();
 
@@ -206,6 +209,11 @@ public sealed partial class CelShadingDemo : Demo
         ApplyAll();
     }
 
+    private void OnSunSpeedChanged(object? sender, InspectorValueChangedEventArgs e)
+    {
+        sunYawSpeed = (float)e.ValueAs<double>();
+    }
+
     private void OnOutlineAmbientChanged(object? sender, InspectorValueChangedEventArgs e)
     {
         outlineAmbient = (float)e.ValueAs<double>();
@@ -220,22 +228,6 @@ public sealed partial class CelShadingDemo : Demo
         Context.Settings.AmbientIntensity = (float)e.ValueAs<double>();
 
         Context.InvalidateRender();
-    }
-
-    private Mesh Add(string name, Geometry geometry, Vector3 position, Material material)
-    {
-        var mesh = new Mesh
-        {
-            Name = name,
-            Geometry = geometry,
-            Material = material,
-        };
-
-        mesh.Position = position;
-
-        turntable!.AddChild(mesh, AttachToParentRule.KeepLocal);
-
-        return mesh;
     }
 
     private void ApplyAll()
