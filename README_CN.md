@@ -1,6 +1,6 @@
 <div id="header" align="center">
     <img width="200px" src="./logo.svg" ></img> 
-    <h4><i>轻量级、可扩展、高性能的 3D 渲染控件</i></h4>
+    <h4><i>轻量级、可扩展、高性能的 Avalonia 3D 控件库</i></h4>
     <div id="link">
         <a href="./README.md">English</a> | 
         <span>中文</span> |
@@ -18,7 +18,7 @@
 
 ## 简介
 
-Aura3D 是一个基于 Avalonia 的 3D 渲染控件，底层使用 OpenGL ES 3.0。它提供了从模型加载、场景管理、光照阴影到自定义渲染管线的完整能力，适合在 .NET 桌面应用中集成 3D 内容展示。
+Aura3D 是一个轻量级、高性能、可扩展的 Avalonia 3D 控件库。它提供了从模型加载、场景管理、光照阴影到自定义渲染管线的完整能力，默认管线基于 OpenGL ES 3.0，适合在 .NET 桌面应用中集成 3D 内容展示。
 
 ## 特性
 

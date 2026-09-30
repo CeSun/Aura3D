@@ -1,6 +1,6 @@
 <div id="header" align="center">
     <img width="200px" src="./logo.svg" ></img> 
-    <h4><i>A lightweight, extensible, high-performance 3D rendering control</i></h4>
+    <h4><i>A lightweight, extensible, high-performance Avalonia 3D control library</i></h4>
     <div id="link">
         <span>English</span> | 
         <a href="./README_CN.md">中文</a> |
@@ -18,7 +18,7 @@
 
 ## Overview
 
-Aura3D is an Avalonia-based 3D rendering control built on OpenGL ES 3.0. It provides a complete set of capabilities from model loading, scene management, and lighting/shadows to custom rendering pipelines, suitable for integrating 3D content into .NET desktop applications.
+Aura3D is a lightweight, high-performance and extensible Avalonia 3D control library. It provides a complete set of capabilities from model loading, scene management, and lighting/shadows to custom rendering pipelines — the default pipeline runs on OpenGL ES 3.0 — suitable for integrating 3D content into .NET desktop applications.
 
 ## Features
 

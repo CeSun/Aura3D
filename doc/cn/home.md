@@ -1,6 +1,6 @@
 # Aura3D 文档
 
-欢迎使用 Aura3D——一个构建在 OpenGL ES 3.0 之上的 Avalonia 3D 渲染控件。它内置完整的引擎能力：场景图与节点、模型加载（glTF/GLB 原生支持，FBX/OBJ 等 50+ 格式经 Assimp 导入）、三类光源与 CSM 级联阴影、骨骼动画与动画状态机、粒子系统、GPU 实例化与三角形级拾取。渲染管线可整体替换：默认是 Blinn-Phong 前向管线，另有 PBR（前向 / 延迟）与卡通渲染可选，也能自由组合 RenderPass 写自己的管线。支持 Windows、Linux、macOS、Android、iOS 与浏览器（WebAssembly），面向 .NET 8+。文档按「你要做成的那件事」组织：先跑起来，再逐个学会每样能力，出问题查注意事项与速查表。
+欢迎使用 Aura3D——一个轻量级、高性能、可扩展的 Avalonia 3D 控件库。场景与节点、模型加载、光照阴影、骨骼动画、粒子、GPU 实例化等能力开箱即用；渲染管线可整体替换，默认管线基于 OpenGL ES 3.0，另有 PBR（前向 / 延迟）与卡通渲染可选，也能自由组合 RenderPass 写自己的管线。一套代码覆盖 Windows、Linux、macOS、Android、iOS 与浏览器（WebAssembly），面向 .NET 8+。文档按「你要做成的那件事」组织：先跑起来，再逐个学会每样能力，出问题查注意事项与速查表。
 
 ## 上手
 
