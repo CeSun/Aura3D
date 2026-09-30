@@ -1,0 +1,6 @@
+[
+  { "key": "start", "zh": "上手", "en": "Getting Started" },
+  { "key": "basics", "zh": "场景基础", "en": "Scene Basics" },
+  { "key": "advanced", "zh": "进阶", "en": "Advanced" },
+  { "key": "notes", "zh": "注意事项与速查", "en": "Pitfalls and Reference" }
+]
