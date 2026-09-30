@@ -69,6 +69,7 @@ public sealed record DemoDescriptor(
 public abstract class Demo : UserControl
 {
     private bool sceneBuilt;
+    private Aura3DView? view;
 
     /// <summary>宿主环境与视图/场景入口。</summary>
     protected DemoContext Context { get; }
@@ -88,17 +89,30 @@ public abstract class Demo : UserControl
     internal event Action<string>? Faulted;
 
     /// <summary>
-    /// 把页面声明的视图接到宿主环境上：找到 <see cref="Aura3DView"/>、按当前要求的管线
-    /// 装配、挂上首帧回调。XAML 里没放视图就是配置错误，直接抛出来让页面显示错误条。
+    /// 把页面 XAML 里声明的视图接到宿主环境上：找到 <see cref="Aura3DView"/>、按
+    /// <see cref="DemoContext.RequestedPipeline"/> 装配管线与设置。
+    /// 必须在页面进视觉树之前调用：视图的首帧就会按当前工厂建出管线，而进树之后第一帧随时可能来。
+    /// XAML 里没放视图就是配置错误，直接抛出来让页面显示错误条。
     /// </summary>
-    internal void Attach()
+    internal void BindView()
     {
-        var view = this.GetLogicalDescendants().OfType<Aura3DView>().FirstOrDefault();
+        view = this.GetLogicalDescendants().OfType<Aura3DView>().FirstOrDefault();
 
         if (view == null)
             throw new InvalidOperationException(Strings.Keys.Error_NoDemoView.Format(GetType().Name));
 
         Context.AttachView(view);
+    }
+
+    /// <summary>
+    /// 资产取完之后接上场景构建回调。视图与管线已由 <see cref="BindView"/> 绑好，
+    /// 这里只挂首帧回调；<see cref="BuildScene"/> 落在视图的第一次更新回调上，
+    /// 所以订阅必须排在资产之后，否则页面会拿还没取到的模型去建场景。
+    /// </summary>
+    internal void Attach()
+    {
+        if (view == null)
+            throw new InvalidOperationException(Strings.Keys.Error_NoDemoView.Format(GetType().Name));
 
         view.SceneUpdated += OnSceneUpdated;
         view.ContextRestored += (_, _) => ContextRestored();
@@ -122,7 +136,7 @@ public abstract class Demo : UserControl
     /// 视图已接上宿主。用于订阅 <c>ObjectPicked</c> 一类视图事件，
     /// 以及按需调整 <c>AutoRequestNextFrameRendering</c>。
     /// </summary>
-    public virtual void ViewAttached(Aura3DView view)
+    public virtual void ViewAttached(Aura3DView created)
     {
     }
 

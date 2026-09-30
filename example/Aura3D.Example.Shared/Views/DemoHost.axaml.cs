@@ -83,6 +83,10 @@ public sealed partial class DemoHost : UserControl
 
         try
         {
+            // 管线要在页面进视觉树之前绑：视图的首帧就按当时的工厂定死管线，而浏览器上进树后
+            // 第一帧远早于资产下载完成，等到 Attach 再改已经没人读了。
+            demo.BindView();
+
             PageSlot.Content = demo;
 
             var kind = context.RequestedPipeline;
@@ -109,9 +113,9 @@ public sealed partial class DemoHost : UserControl
 
             await demo.LoadAssetsAsync(batch);
 
-            // 视图是演示页的 XAML 声明的，Attach 负责找到它并按 context.RequestedPipeline 装配。
-            // 必须排在资产之后：BuildScene 挂在视图的第一帧回调上，而浏览器端第一帧远早于下载完成，
-            // 先接上就会让页面拿还没取到的模型与贴图去建场景。
+            // Attach 挂的是首帧回调：BuildScene 落在视图的第一次更新回调上，
+            // 资产没就绪就订阅会让页面拿还没取到的模型与贴图去建场景，所以排在下载之后。
+            // 管线的装配不在这里，见上面的 BindView。
             demo.Attach();
 
             HideProgress();
