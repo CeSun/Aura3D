@@ -1,6 +1,6 @@
 # Aura3D Documentation
 
-Welcome to Aura3D — a cross-platform 3D rendering control built on Avalonia. The docs are organized around "the thing you want to accomplish": get something on screen first, then learn each capability one task at a time, and look up pitfalls and quick-reference tables when something goes wrong.
+Welcome to Aura3D — an Avalonia 3D rendering control built on OpenGL ES 3.0. It comes with a full engine feature set: a scene graph with nodes, model loading (native glTF/GLB, plus FBX/OBJ and 50+ more formats via Assimp), three light types with CSM cascaded shadows, skeletal animation with blend spaces and state machines, a particle system, GPU instancing, and triangle-precise picking. The render pipeline is replaceable: Blinn-Phong forward is the default, PBR (forward and deferred) and cel shading are built in, and you can compose your own pipeline from RenderPasses. It runs on Windows, Linux, macOS, Android, iOS, and the browser (WebAssembly), targeting .NET 8+. The docs are organized around "the thing you want to accomplish": get something on screen first, then learn each capability one task at a time, and look up pitfalls and quick-reference tables when something goes wrong.
 
 ## Getting Started
 
@@ -16,7 +16,7 @@ Welcome to Aura3D — a cross-platform 3D rendering control built on Avalonia. T
 | **[Scene Graph and Nodes](./scene-and-nodes.md)** | The node tree and transforms → which node to use → batch edits and lookups |
 | **[Loading and Placing Models](./models.md)** | glTF loading → scale / position / orientation → fitting the camera and bounding boxes |
 | **[Cameras and View Control](./camera.md)** | Projection and LookAt → CameraController mouse orbit → multi-camera and render targets |
-| **[Lighting and Shadows](./lighting.md)** | The four light types → per-type light limits → shadow configuration and CSM |
+| **[Lighting and Shadows](./lighting.md)** | The three light types → per-type light limits → shadow configuration and CSM |
 | **[Materials and Textures](./material.md)** | Material channels and textures → loading textures → sampling settings → custom material parameters |
 | **[Environment and Background](./environment.md)** | Scene background (solid / texture / cube map) → HDR environments and IBL |
 | **[Animation System](./animation.md)** | Playing and controlling skeletal animation → blend spaces and state machines → manual bone control |
