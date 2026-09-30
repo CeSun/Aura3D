@@ -5,7 +5,7 @@ order: 1
 
 # 实例化渲染
 
-一份几何 + 一份材质 + 一组矩阵 = **一次 draw call 画出成千上万个物体**。这就是实例化：它把「同一个网格画很多遍」的开销从 N 次绘制压成 1 次。Aura3D 提供两条路：
+**一次 draw call 画出成千上万个物体**——实例化把「同一个网格画 N 遍」压成一次绘制。Aura3D 提供两条路：
 
 - **`InstancedMesh`** —— 一张平铺的实例表，矩阵由你填、由你改，随时想怎么改就怎么改。
 - **`InstancedMeshGroup`** —— 类似 Unreal 的 HISM（Hierarchical Instanced Static Mesh）：八叉树把实例切成若干叶子分组，每组内部就是一个 `InstancedMesh`，剔除按组来做。

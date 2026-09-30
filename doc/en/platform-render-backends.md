@@ -5,7 +5,7 @@ order: 1
 
 # Platforms and Render Backends
 
-The same `Aura3DView` code runs on five platforms, but "where does the GL context come from" differs on each. This page is the master index of platform differences: when the host OpenGL path is used, why iOS carries its own ANGLE, why the browser borrows the compositor's context, and which constraints apply when writing custom passes against the GLES subset. A blank viewport, a first-frame crash, a draw that only disappears in the browser — the cause is usually catalogued here.
+The same code runs on five platforms, but the GL context comes from somewhere different on each. This page is the master index of platform differences, plus the GLES-subset pitfalls for custom passes — blank viewports and first-frame crashes usually trace back here.
 
 ## Render backend per platform
 

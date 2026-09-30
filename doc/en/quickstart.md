@@ -5,7 +5,7 @@ order: 1
 
 # Quick Start
 
-This page does exactly one thing: put an `Aura3DView` into your Avalonia app, show a box, light it, orbit it with the mouse, and run it to see something on screen. Platform backends and browser publishing are not on this shortest path — reach for [Platforms and Render Backends](./platform-render-backends.md) when you need them.
+Drop an `Aura3DView` into your Avalonia app: one box, one light, mouse orbit, run it and see the picture. Platform and browser setup is not on this page — see [Platforms and Render Backends](./platform-render-backends.md).
 
 ## Install
 

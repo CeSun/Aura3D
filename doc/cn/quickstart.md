@@ -5,7 +5,7 @@ order: 1
 
 # 快速开始
 
-这一页只做一件事：在你的 Avalonia 工程里搭一个 `Aura3DView`，摆出一个盒子，打上光，用鼠标环绕它，然后跑起来看到画面。平台后端、浏览器发布那些配置不在这条最短路径上，需要时再翻 [平台与渲染后端](./platform-render-backends.md)。
+把 `Aura3DView` 放进你的 Avalonia 工程：一个盒子、一盏光、鼠标环绕，跑起来看到画面。平台与浏览器配置不在此页，见 [平台与渲染后端](./platform-render-backends.md)。
 
 ## 安装
 

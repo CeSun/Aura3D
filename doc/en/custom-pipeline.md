@@ -5,7 +5,7 @@ order: 4
 
 # Custom Render Pipelines
 
-This page is for **extending the engine**: not just running a ready-made pipeline, but building your own and writing your own `RenderPass`. You need basic rendering knowledge (shaders, uniforms, framebuffers, draw calls), but you don't touch low-level VAO/VBO buffer details — the engine wraps those. If you only want to pick a built-in pipeline and tweak settings, go back to [Choosing and Configuring Pipelines](./pipelines.md).
+This page is for **extending the engine**: build your own pipeline and write your own `RenderPass`. Basic rendering knowledge is assumed (shaders, uniforms, framebuffers); VAO/VBO details are wrapped by the engine. Just picking a built-in pipeline: [Choosing and Configuring Pipelines](./pipelines.md).
 
 ## Two Roles
 

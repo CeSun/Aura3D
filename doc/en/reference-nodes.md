@@ -5,7 +5,7 @@ order: 3
 
 # Node and Scene Reference
 
-This page is a **pure quick reference**: a node-type overview, the `Node` base members, `Scene` members, `PickResult` members, the debug layers, and the related enums. For "how to use them" read [The Scene Graph and Nodes](./scene-and-nodes.md); this is only a fast lookup of member names.
+**Pure quick reference**: node types, `Node` / `Scene` / `PickResult` members, debug layers, and enums. For usage see [The Scene Graph and Nodes](./scene-and-nodes.md).
 
 > [!NOTE]
 > All renderable node types live in the `Aura3D.Core.Nodes` namespace; `Scene`, `Grid`, `AxisGizmo`, and `PickResult` live in `Aura3D.Core.Scenes`.

@@ -5,7 +5,7 @@ order: 1
 
 # Instanced Rendering
 
-One geometry + one material + a list of matrices = **tens of thousands of objects drawn in a single draw call**. That is instancing: it collapses "draw this mesh N times" into "draw it once, N times over". Aura3D gives you two options:
+**Tens of thousands of objects in a single draw call** — instancing collapses "draw this mesh N times" into one draw. Aura3D gives you two options:
 
 - **`InstancedMesh`** — a flat table of instances. You fill the matrices, you change them, whenever you like.
 - **`InstancedMeshGroup`** — the HISM equivalent (Hierarchical Instanced Static Mesh, as in Unreal): an octree splits the instances into leaf blocks, and each leaf block is internally an `InstancedMesh`, so culling works per block.

@@ -5,7 +5,7 @@ order: 5
 
 # GPU Resource Lifecycle
 
-This is the "read it when something breaks or when you need VRAM back" mechanism page: who actually owns the memory, when GL objects really get deleted, and why the picture comes back on its own after a context loss. Day-to-day scene code does not need it — with `Aura3DView` the control already does the right thing. Come back to this page when you must hand VRAM back manually, or when you hit "black screen after returning from background" / "still the old frame after a rebuild".
+Who owns the VRAM, when it is really freed, and how the picture recovers after a context loss. Skip it day to day — `Aura3DView` handles it; come back when you must free VRAM manually, or hit "black screen after backgrounding" / "old frame after rebuild".
 
 ## The mental model in one minute
 

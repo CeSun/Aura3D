@@ -5,7 +5,7 @@ order: 2
 
 # Custom Materials and Shaders
 
-This page solves one thing: **change how a single material shades, without writing a whole render pipeline.** Two common cases — swapping a material's GLSL for one Pass (constant color, animated stripes, fragment-only, all fine), and writing a shader that reads per-instance attributes for an instanced mesh. Taking over the entire pipeline is a different job, covered in [Custom Render Pipelines](./custom-pipeline.md).
+**Change how a single material shades, without writing a whole render pipeline**: swap a Pass's GLSL, or write a shader that reads per-instance attributes. Taking over the whole pipeline: [Custom Render Pipelines](./custom-pipeline.md).
 
 ## Shortest runnable: turn a material into a constant color
 

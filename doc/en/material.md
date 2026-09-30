@@ -5,7 +5,7 @@ order: 5
 
 # Materials and Textures
 
-A material decides what a mesh *looks like*: its color, textures, whether it's transparent, whether both faces get drawn. Aura3D's `Material` lets you make objects look good without writing a single shader — usually you just drop a few textures into it and pick a blend mode.
+A material decides how a mesh looks: color, textures, transparency, face culling. Usually no shaders needed — drop in a few textures and pick a blend mode.
 
 ## The fastest way to get something on screen
 

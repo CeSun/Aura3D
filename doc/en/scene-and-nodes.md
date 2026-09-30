@@ -5,10 +5,7 @@ order: 1
 
 # The Scene Graph and Nodes
 
-In Aura3D, everything you can put on screen — cameras, lights, models, particles — is a **node** hanging on one tree. That tree is the **scene graph**. This page first explains in one screen how to build, change and search that tree, then walks through each node type: what it does, the smallest snippet that runs, and where to go deeper.
-
-> [!TIP]
-> Suggested order: finish the "Scene graph" and "Scene" sections below so you can "put something on screen", then jump to whichever node's deep-dive tutorial (linked at the end of each section).
+Everything on screen — cameras, lights, models, particles — is a **node** hanging on one tree, and that tree is the **scene graph**. This page covers how to build, change and search that tree, then introduces each node type.
 
 ## The scene graph: a Node tree
 

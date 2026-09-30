@@ -5,9 +5,7 @@ order: 2
 
 # Your First Full App
 
-[Quick Start](./quickstart.md) got a first frame on screen. This page strings the loose blocks into one runnable app: load a glTF model, place it, light it, frame the camera, spin it every frame in `SceneUpdated`, then click to pick a part and highlight it. Type it out once and you'll own the backbone of an Aura3D app.
-
-When you're done you'll have the skeleton of a model viewer: auto-framed, slowly rotating, mouse-orbitable, and any part you click turns red.
+Wire the pieces from [Quick Start](./quickstart.md) into a model viewer: load a glTF model, frame the camera, spin it per frame, orbit with the mouse, and click to pick and highlight a part.
 
 ## Install
 

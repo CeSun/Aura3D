@@ -5,7 +5,7 @@ order: 3
 
 # Choosing and Configuring Pipelines
 
-The render pipeline determines the scene's visual style: the lighting model, shadows, tone mapping, anti-aliasing, and how each texture in the scene is read. This page is for **using pipelines** — picking one of the built-in pipelines and tuning its output with `PipelineSettings`. If you want to write your own pipeline or `RenderPass`, see [Custom Render Pipelines](./custom-pipeline.md).
+The render pipeline determines the scene's visual style. This page is for **using pipelines**: pick a built-in one and tune its output with `PipelineSettings`. Writing your own pipeline: [Custom Render Pipelines](./custom-pipeline.md).
 
 ## What You Can Do
 

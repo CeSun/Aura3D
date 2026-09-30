@@ -5,7 +5,7 @@ order: 6
 
 # Environment and Background
 
-The background is everything in the frame that is not an object, and it is decided by a single property: `Scene.Background`. This page swaps it for a solid color, a flat image, an HDR skybox or a six-face cube skybox, and tells you which sampling knobs to turn when "the texture looks wrong".
+The background is decided by a single property: `Scene.Background`. This page covers solid colors, images, HDR / six-face skyboxes, and the sampling knobs to turn when "the texture looks wrong".
 
 > [!TIP]
 > The background ignores lighting entirely. With no light source your models go black while the background still shows — so "I added a background but still see nothing" is usually a lighting problem, see [Lighting and Shadows](./lighting.md).

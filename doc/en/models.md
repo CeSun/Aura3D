@@ -5,7 +5,7 @@ order: 2
 
 # Loading and Placing Models
 
-This page is about one job: getting "stuff" into your 3D scene. That can be a glTF/GLB file loaded from disk, one of the 50+ formats Assimp handles (FBX, OBJ, 3DS, DAE, ...), or a shape built on the fly from built-in geometries or hand-written vertex data. Once it loads, you place it, find its parts, and copy it.
+Get things into your 3D scene: load glTF/GLB or any of the 50+ Assimp formats (FBX, OBJ, ...), or build shapes from built-in geometries or raw vertex data, then place, inspect and copy them.
 
 ## Shortest runnable path: load a GLB and put it in the scene
 

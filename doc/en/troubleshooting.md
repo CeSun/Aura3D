@@ -5,7 +5,7 @@ order: 2
 
 # Common Pitfalls and Troubleshooting
 
-This page is indexed by **symptom**: find your situation in the table, jump to the section, and each entry gives "likely cause → what to do → where to read more". Full tutorials live elsewhere; only repeatedly-tripped-on pitfalls are collected here.
+Indexed by **symptom**: find your situation in the table, jump to the section; each entry gives the likely cause, the fix, and where to read more.
 
 | Symptom | Jump |
 |---|---|

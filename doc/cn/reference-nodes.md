@@ -5,7 +5,7 @@ order: 3
 
 # 节点与场景速查
 
-本页是**纯查表参考**：节点类型一览、`Node` 基类成员、`Scene` 成员、`PickResult` 成员、调试辅助层与相关枚举。想学「怎么用」请看 [场景图与节点](./scene-and-nodes.md)，这里只做属性名的快速对照。
+**纯查表**：节点类型、`Node` / `Scene` / `PickResult` 成员、调试辅助层与枚举。用法见 [场景图与节点](./scene-and-nodes.md)。
 
 > [!NOTE]
 > 所有可渲染节点类型都在命名空间 `Aura3D.Core.Nodes`；`Scene`、`Grid`、`AxisGizmo`、`PickResult` 在 `Aura3D.Core.Scenes`。

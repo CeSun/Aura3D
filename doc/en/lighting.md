@@ -5,7 +5,7 @@ order: 4
 
 # Lighting and Shadows
 
-The previous page put models into the scene, but under the default pipeline **nothing is visible without a light source**. This page lights the scene up and makes it cast shadows: you will add the three light types, tune their brightness and reach, turn shadows on, and handle the two traps newcomers hit most — lights that silently do nothing, and shadows missing a big chunk.
+Under the default pipeline, **nothing is visible without a light**. This page covers the three light types, brightness and range, shadows, and two common traps: extra lights that silently do nothing, and shadows missing a chunk.
 
 ## Shortest working setup: one sun + one bulb
 

@@ -5,7 +5,7 @@ order: 4
 
 # 内置 Pass 与着色器宏速查
 
-这篇是纯速查参考：内置 Pass 清单、着色器宏系统与常用宏名、顶点属性 location 约定、引擎固定提供的 uniform 与着色器方言规则。写自定义 Pass 或材质级着色器覆盖时把它开着当字典用；排障见 [常见坑与排障](./troubleshooting.md)。
+**纯速查**：内置 Pass 清单、着色器宏、顶点属性 location 约定、引擎固定 uniform 与方言规则。写自定义 Pass 时当字典用。
 
 ## 内置 Pass 清单
 

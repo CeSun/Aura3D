@@ -5,7 +5,7 @@ order: 7
 
 # Animation System
 
-This page answers one question: **how to make a rigged character move, and how to control the way it moves**. You can:
+**Make a rigged character move, and control how it moves**:
 
 - Load a model with skeletal animation and play it, switch clips, change speed, loop or play once;
 - Take frame-by-frame control of animation time when needed (stop-motion, slow motion, stepping);

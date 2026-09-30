@@ -5,7 +5,7 @@ order: 3
 
 # Cameras and View Control
 
-Without a camera, a scene shows nothing. This page covers: seeing your scene through the default camera, switching between perspective and orthographic projection, aiming at targets, letting the mouse and keyboard drive the view with `CameraController`, and multi-camera rendering plus render-to-texture.
+Without a camera, a scene shows nothing. This page covers the default camera, perspective/orthographic, aiming at targets, `CameraController` interaction, and multi-camera plus render-to-texture.
 
 ## Shortest runnable path: place the camera and see the scene
 

@@ -5,7 +5,7 @@ order: 8
 
 # Particle System
 
-This page answers one question: **how to build fire, smoke, rain/snow, debris and other particle effects in your scene**. Aura3D's particle system uses CPU simulation + GPU instanced rendering, and each emitter supports two rendering modes: billboard (default) and mesh mode. The hierarchy has only two levels: `ParticleSystem` is a scene node managing position and play/stop; under it sit `ParticleEmitter`s managing emission shape, particle properties, and rendering appearance.
+**Build fire, smoke, rain/snow, debris and other particle effects**. The hierarchy has only two levels: `ParticleSystem` is a scene node managing position and play/stop; under it sit `ParticleEmitter`s managing emission shape, particle properties, and rendering appearance (billboard or mesh).
 
 > [!IMPORTANT]
 > **Texture, flipbook, mesh, material, and blend mode are all per-emitter, not per-system.** Different emitters in the same `ParticleSystem` can render completely differently — for example, an explosion where opaque debris (mesh + `Opaque`) and translucent smoke (texture + `Translucent`) coexist in one system.

@@ -5,7 +5,7 @@ order: 4
 
 # Built-in Passes and Shader Macros
 
-A pure quick-reference: the built-in pass inventory, the shader-macro system with the macro names actually in use, the vertex/instance attribute location convention, the uniforms the engine always provides, and the shader-dialect rule. Keep it open as a dictionary while writing custom passes or material-level shader overrides; for symptom-driven debugging use [Common Pitfalls and Troubleshooting](./troubleshooting.md).
+**Pure quick reference**: built-in passes, shader macros, attribute locations, engine-provided uniforms, and dialect rules. Keep it open as a dictionary while writing custom passes.
 
 ## Built-in pass inventory
 
