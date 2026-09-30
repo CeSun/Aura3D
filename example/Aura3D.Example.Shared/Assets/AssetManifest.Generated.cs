@@ -27,7 +27,7 @@ public static partial class AssetManifest
         new("Stones", "models/stones_01.glb", 823_932),
         new("Present", "models/present_11.glb", 2_812_632),
         new("Soldier", "models/Soldier.glb", 1_169_684),
-        new("CelCharacter", "models/nilou_cel.glb", 1_046_072),
+        new("CelCharacter", "models/NPC_Avatar_Girl_Sword_Nilou.glb", 9_206_952),
 
         // —— 贴图 ——
         new("BackgroundJpg", "textures/background-1024.jpg", 138_328),

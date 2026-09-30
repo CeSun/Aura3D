@@ -39,7 +39,10 @@ const models = [
   { key: 'Stones', src: 'Models/stones_01.glb', out: 'models/stones_01.glb', largest: 1024 },
   { key: 'Present', src: 'Models/present_11_BACKED.glb', out: 'models/present_11.glb', largest: 512 },
   { key: 'Soldier', src: 'Models/Soldier.glb', out: 'models/Soldier.glb', largest: 1024 },
-  { key: 'CelCharacter', src: 'Models/NPC_Avatar_Girl_Sword_Nilou.glb', out: 'models/nilou_cel.glb', largest: 1024 },
+  // 原样入库，不走 optimize/jpeg 那两趟：这张图的 baseColor 是「白底 + alpha=0」的 RGBA PNG，
+  // 转 JPEG 会把透明区压到黑底（角色整片变黑），而它的卡通材质参数与 ILM/SDF/Ramp 全在
+  // AURA3D_TEXTURES_CELSHADING 扩展里，glTF Transform 不认这个扩展。
+  { key: 'CelCharacter', src: 'Models/NPC_Avatar_Girl_Sword_Nilou.glb', out: 'models/NPC_Avatar_Girl_Sword_Nilou.glb', largest: 0, raw: true },
 ];
 
 /// 仅桌面（Assimp 原生库读 FBX）：不减面不转码，原样复制，清单里标 WebFriendly=false。
@@ -81,7 +84,13 @@ async function main() {
 
     const target = path.join(OUT, model.out);
 
-    await resizeGlb(path.join(SRC, model.src), target, model.largest);
+    if (model.raw) {
+      ensureSrc(path.join(SRC, model.src));
+
+      copyFileSync(path.join(SRC, model.src), target);
+    } else {
+      await resizeGlb(path.join(SRC, model.src), target, model.largest);
+    }
 
     produced.push({ ...model, webFriendly: true });
   }
