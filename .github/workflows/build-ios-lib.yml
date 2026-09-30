@@ -94,17 +94,18 @@ jobs:
             printf '::error::csproj 的 <Version> 还在引用属性 %s——这个包的版本号必须写死在工程里，不引用 Directory.Packages.props 的属性\n' "$declared"
             exit 1
           fi
-          # 版本号现在住在两个地方：工程里那行是仓库内构建的默认值，props 那条是主包钉的精确区间。
-          # 两者对不上时，ci.yml 与 pack.yml 不带 -p -pack 出来的就是前者，主包按后者 restore 直接 NU1102，
-          # 整条链在别处才炸。这里先红，并且不拦「输入比两处都新」那种正常的发版。
+          # 版本号现在住在两个地方：工程里那行是不带 -p 时 pack 出来的版本，props 那条是主包钉的精确区间。
+          # 两者对不上说明仓库里的切片已经不是消费方实际拿到的那一份（消费方按 props 从 nuget.org 解析），
+          # 后面任何一次不带 -p 的 pack 都会产出错的号。这里先红，
+          # 并且不拦「输入比两处都新」那种正常的发版。
           if [ "$declared" != "$pinned" ]; then
             printf '::error::仓库内已经自相矛盾：csproj 写死 %s，而 Directory.Packages.props 钉 %s\n' "$declared" "$pinned"
-            printf '::error::不带 -p 的 pack 只会产出 %s，主包按 [%s] restore 会 NU1102；把两处改成同一个号再发\n' "$declared" "$pinned"
+            printf '::error::不带 -p 的 pack 只会产出 %s，而主包按 [%s] 从 nuget.org 解析；把两处改成同一个号再发\n' "$declared" "$pinned"
             exit 1
           fi
           if [ "$declared" != "$VERSION" ]; then
             printf '::warning::本次发的是 %s，工程里仍写死 %s；发完把 Aura3D.Angle.iOS.csproj 的 <Version> 补成 %s\n' "$VERSION" "$declared" "$VERSION"
-            printf '::warning::否则下一次不带 -p 的构建（ci.yml、pack.yml 的 local-feed 那步）又退回 %s\n' "$declared"
+            printf '::warning::否则下一次不带 -p 的 pack（ci.yml 的打包步）产出的仍是 %s\n' "$declared"
           fi
           if [ "$pinned" != "$VERSION" ]; then
             printf '::warning::本次发的是 %s，而主包区间仍钉 %s：Aura3D.Avalonia 用不到刚发的这个包\n' "$VERSION" "$pinned"
@@ -162,8 +163,6 @@ jobs:
               echo
               echo "发出去的是 $version，而仓库里还写着 \`$declared\` / 钉着 \`$pinned\`。发完把这两处补成 $version（同一次提交）：\`Aura3D.Angle.iOS.csproj\` 的 \`<Version>\`、\`Directory.Packages.props\` 的 \`Aura3DAngleIosVersion\`（它只喂主包的精确区间）；然后跑 \`pack.yml\` 重发主包。"
             fi
-            echo
-            echo "想在应用里本地用这个包：把 artifact 里的 nupkg 放进仓库根的 local-feed/，即可被 NuGet.config 的 aura3d-local-feed 源解析。"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload nupkg

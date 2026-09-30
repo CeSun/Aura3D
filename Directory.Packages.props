@@ -8,8 +8,10 @@
          所以「包里是哪个版本」和「主包钉哪个版本」现在是两处字面值，必须成对改：
          发版走 build-ios-lib.yml / build-browser-lib.yml，触发时输入版本号（-p:Version 覆盖工程里那行）；
          发完把这里改成同一个号，工程里那行也补成同一个号。
-         漏改这里 = 主包继续钉旧切片；漏改工程里那行 = 仓库内 pack 进 local-feed 的号与本区间对不上，
-         restore 直接 NU1102 报错，不会静默用错切片。切片工程不走 MinVer（版本不来自 git tag）。 -->
+         漏改这里 = 主包继续钉旧切片；漏改工程里那行 = 两处字面值对不上，
+         build-ios-lib.yml / build-browser-lib.yml 的核对步直接 ::error:: 退出，不会让仓库里的切片
+         与消费方实际拿到的切片分叉。本仓库自身的 restore 也按这里的精确区间从 nuget.org 取切片包，
+         所以这里必须先是线上已经发布的号。切片工程不走 MinVer（版本不来自 git tag）。 -->
     <Aura3DAngleIosVersion>0.1.0</Aura3DAngleIosVersion>
     <Aura3DAvaloniaBrowserVersion>0.1.0</Aura3DAvaloniaBrowserVersion>
   </PropertyGroup>

@@ -37,15 +37,9 @@ Avalonia 的 iOS 宿主默认使用 Metal 合成器，而该模式下 Avalonia �
 dotnet add package Aura3D.Avalonia   # iOS 目标会自动带进 Aura3D.Angle.iOS
 ```
 
-包内含 `iossimulator-arm64` 与 `ios-arm64` 两份 ANGLE 切片。这个包有独立的发布通道：手动触发 `build-ios-lib.yml`，在表单里输入要发的版本号（作业用 `-p:Version=<输入>` 覆盖工程里写死的 `<Version>`，不改仓库文件也能发），同一次作业里 pack、核对版本与两份切片都在、再用 GitHub OIDC 推到 nuget.org；`pack.yml` 只把它 pack 进 `local-feed/` 供仓库自身 restore，不再随列车推送它（浏览器侧的 `Aura3D.Avalonia.Browser` 同理，走 `build-browser-lib.yml`）。切片缺失时构建直接报错，不会静默不出图；输入的版本号已在 nuget.org 上时推送作业会红。版本号住在两个互不引用的地方：`Aura3D.Angle.iOS.csproj` 的 `<Version>` 是仓库内构建的默认值，`Directory.Packages.props` 的 `Aura3DAngleIosVersion` 只喂主包的精确区间——所以热修顺序是：跑切片作业发新版本 → 把这两处都补成刚发的号（两处不一致时不带 `-p` 的 pack 产出前者、主包按后者 restore 会 NU1102，作业在这一步就会红；只漏 props 那处则主包继续钉旧切片，作业只 warning）→ 再跑 `pack.yml` 重发主包。倒过来先跑 `pack.yml` 也不行：它用 `local-feed/` 构建，钉一个还没发布的版本它也是绿的，而消费方 restore 不到。
+包内含 `iossimulator-arm64` 与 `ios-arm64` 两份 ANGLE 切片。这个包有独立的发布通道：手动触发 `build-ios-lib.yml`，在表单里输入要发的版本号（作业用 `-p:Version=<输入>` 覆盖工程里写死的 `<Version>`，不改仓库文件也能发），同一次作业里 pack、核对版本与两份切片都在、再用 GitHub OIDC 推到 nuget.org；`pack.yml` 不再随列车推送它，产物集合里也没有它（浏览器侧的 `Aura3D.Avalonia.Browser` 同理，走 `build-browser-lib.yml`）。切片缺失时构建直接报错，不会静默不出图；输入的版本号已在 nuget.org 上时推送作业会红。版本号住在两个互不引用的地方：`Aura3D.Angle.iOS.csproj` 的 `<Version>` 是仓库内构建的默认值，`Directory.Packages.props` 的 `Aura3DAngleIosVersion` 只喂主包的精确区间——所以热修顺序是：跑切片作业发新版本 → 把这两处都补成刚发的号（两处不一致时，仓库里的这份切片和消费方按区间从 nuget.org 拿到的不是同一份，之后任何一次不带 `-p` 的 pack 都会产出错的号，作业在这一步就会红；只漏 props 那处则主包继续钉旧切片，作业只 warning）→ 再跑 `pack.yml` 重发主包。倒过来先跑 `pack.yml` 也不行：它按这个区间去 nuget.org restore，钉一个还没发布的版本这一步直接红，不会发出消费方拿不到依赖的包。
 
-在仓库内开发需要先自产一次这个包（`NuGet.config` 把 `local-feed/` 声明成了包源）：
-
-```shell
-dotnet pack src/Aura3D.Angle.iOS -c Release -o local-feed
-```
-
-CI 的各个作业在同一次运行里做同样的事。**手工方式**（需要自己出 ANGLE 产物时）：
+**手工方式**（需要自己出 ANGLE 产物时）：
 
 1. 用 standalone ANGLE checkout（非 Chromium checkout）为 iOS 构建含 Metal 后端的产物，gn 参数只需 `enable_rust=false`，得到 `libEGL.framework` 与 `libGLESv2.framework`，放到 `src/Aura3D.Angle.iOS/native/iossimulator-arm64/` 与 `native/ios-arm64/`（这两份切片随包一起入库）。`src/Aura3D.Angle.iOS/build-angle-ios.sh --device` 把这条流程固化了下来；真机切片必须额外传 `ios_enable_code_signing = false`，否则 gn 阶段会因为找不到 "Apple Development" 身份而失败（CI 等无证书环境同理）。
 2. 在自己的应用工程里直接 `PackageReference` 这个包也行（`dotnet add package Aura3D.Angle.iOS`），效果与经 `Aura3D.Avalonia` 传递一致。
@@ -70,12 +64,6 @@ GLES 入口点必须由**应用**自己的 wasm 模块带出来：不链原生�
 **这三个链接开关是自动的。** `Aura3D.Avalonia` 的 browser 目标以精确区间依赖 `Aura3D.Avalonia.Browser`，包里的 `buildTransitive` props 只对 `*-browser` 目标注入上述开关，应用不需要手写 emscripten 参数。与 iOS 的切片包同构，也同样是精确锁 `[0.1.0]`：开关与库的 GLES 调用面配对，升级要和库一起过一遍浏览器验证。注意，这不包含下面的 .NET 10 发布期运行时配置；那三项仍必须由应用工程显式声明。
 
 但 `WasmBuildNative=true` 只是**必要条件**：本机 SDK 没有 wasm-tools/emsdk workload 时链接同样不会发生，而构建是成功的。SDK 自己那条 warning 的文案是固定的 "neither $(WasmBuildNative), nor $(RunAOTCompilation) are 'true'"，此时 `WasmBuildNative` 明明是 true，会把人支到错的方向（实测：`dotnet.native.wasm` 3.0 MB vs 链上后的 25.6 MB）。所以包内的 `buildTransitive` targets 会在 `RuntimeIdentifier=browser-wasm` 且 `WasmNativeWorkloadAvailable!=true` 时直接报 Error 并给出 `dotnet workload install wasm-tools`；不需要本后端的工程可以设 `Aura3DSkipWasmWorkloadCheck=true` 关掉。与 iOS 侧"缺切片就 Error、不静默不出图"同构。
-
-在仓库内开发需要先自产一次这个包（`NuGet.config` 已把 `local-feed/` 声明成包源）：
-
-```shell
-dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
-```
 
 构建产物里可以自查开关是否生效：`dotnet msbuild <App>.Browser.csproj -getProperty:EmccExtraLDFlags -getProperty:WasmBuildNative -getProperty:WasmNativeWorkloadAvailable`（最后一项是 workload 在不在的直接判据）；再确认链接出的 `dotnet.native.wasm` 里有 `glGenVertexArrays` 等 GLES3 符号，就说明 shim 真的链进来了。
 

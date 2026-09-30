@@ -20,8 +20,9 @@
     <!-- 版本号就写死在这行：不引用 Directory.Packages.props 里的属性，也不走 MinVer（版本不来自 git tag）。
          发布时 build-ios-lib.yml 用 -p:Version=<触发表单输入> 覆盖它，全局属性优先于本文件的赋值，
          所以这里只是「仓库内构建时的默认版本」。
-         它要和 Directory.Packages.props 里主包钉的精确区间成对改：不一致时仓库内 pack 进 local-feed 的
-         是这里这个号，主包 restore 会直接 NU1102 报错，不会静默拿到没配套测过的切片。 -->
+         它要和 Directory.Packages.props 里主包钉的精确区间成对改：主包 restore 一律按那个号从 nuget.org
+         取切片包，这里这个号只是不带 -p 时 pack 出来的版本；两处不一致时 build-ios-lib.yml 判错退出，
+         不会静默让消费方拿到没配套测过的切片。 -->
     <Version>0.1.0</Version>
     <Authors>CeSun</Authors>
     <RepositoryUrl>https://github.com/CeSun/Aura3d</RepositoryUrl>

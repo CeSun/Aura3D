@@ -42,15 +42,9 @@ jobs:
         # wasm-tools：Aura3D.Avalonia 现在含 net10.0-browser 目标，pack 它就要 browser 运行时引用包。
         run: dotnet workload install ios wasm-tools
 
-      # 依赖前置：Aura3D.Avalonia 的 iOS / browser 目标以精确区间 [0.1.0] 分别引用
-      # Aura3D.Angle.iOS 与 Aura3D.Avalonia.Browser，而这两个包在 CI 里还没发到 nuget.org。
-      # 先按 NuGet.config 声明的路径 pack 出 local-feed，后面任何 restore 才有它们可用——
-      # 这一步同时验证了消费方拿到的就是包里的切片与构建属性。
-      - name: Build local Aura3D package feed
-        run: |
-          dotnet pack src/Aura3D.Angle.iOS -c Release -o local-feed
-          dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
-
+      # 两个切片包（Aura3D.Angle.iOS / Aura3D.Avalonia.Browser）由 nuget.org 提供，
+      # 主包按 Directory.Packages.props 里的精确区间解析它们；发布通道见
+      # build-ios-lib.yml / build-browser-lib.yml。
       - name: Pack all libraries
         run: |
           set -euo pipefail
@@ -103,11 +97,6 @@ jobs:
         # microsoft-net-sdk-emscripten），`workload install emscripten` 直接报"未识别工作负载 ID"。
         run: dotnet workload install android wasm-tools ios
 
-      - name: Build local Aura3D package feed
-        run: |
-          dotnet pack src/Aura3D.Angle.iOS -c Release -o local-feed
-          dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
-
       - name: Check example asset budgets
         # example/assets 是入库的压缩产物；这一步核对总下载量 ≤20MB、单页进页即取 ≤6MB、
         # 清单里没有无人取用的 Key。源资产（example/assets-src）不入库，所以这里只读现有产物。
@@ -150,11 +139,6 @@ jobs:
 
       - name: Install workload
         run: dotnet workload install ios
-
-      - name: Build local Aura3D package feed
-        run: |
-          dotnet pack src/Aura3D.Angle.iOS -c Release -o local-feed
-          dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
 
       - name: Build Example.iOS
         run: |

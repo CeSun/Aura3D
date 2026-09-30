@@ -55,9 +55,9 @@ repository file. That single run packs the nupkg, confirms the version inside it
 checks line by line that both slices and the `build/` + `buildTransitive/` targets are inside it, and pushes
 to nuget.org with a temporary API key obtained through GitHub OIDC (secret `NUGET_USER` plus the
 `environment: production` trusted-publishing policy). Clearing the `publish` checkbox stops at the artifact:
-verify the package without releasing it. It no longer rides the `pack.yml` release train:
-`pack.yml` only packs it into `local-feed/` for the repository's own restore (`NuGet.config` declares that
-directory as a package source), and the published artifact set no longer contains it. The browser-side
+verify the package without releasing it. It no longer rides the `pack.yml` release train: the published
+artifact set no longer contains it, and the repository's own restore resolves it from nuget.org through the
+exact range the main package pins. The browser-side
 `Aura3D.Avalonia.Browser` works the same way through `build-browser-lib.yml`.
 
 The version now lives in two places that no longer reference each other: `<Version>` in this csproj is what
@@ -65,11 +65,10 @@ an in-repo pack without `-p` produces, and `Aura3DAngleIosVersion` in `Directory
 the exact range `Aura3D.Avalonia` pins. A slice hotfix means running `build-ios-lib.yml` with a version
 nuget.org does not serve yet → then setting **both literals in the same commit** to the version you just
 published → then running `pack.yml` to re-publish `Aura3D.Avalonia`. Each way of forgetting has its own
-consequence, and the workflow tells them apart: the two literals disagreeing means an in-repo pack yields the
-csproj value while the main package restores against the other — NU1102, which that job treats as an error;
-skipping only the props side leaves the main package pinned to the old slice, a warning; skipping only the
-csproj side means the next `ci.yml` / `pack.yml` local-feed pack falls back to the old number, also a
-warning. They must agree because `Aura3D.Avalonia` pins an exact range `[<version>]`, and a slice is
+consequence, and the workflow tells them apart: the two literals disagreeing means the slice sitting in this
+repository is not the one consumers resolve from nuget.org, and any later pack without `-p` produces the
+wrong number — that job treats it as an error; skipping only the props side leaves the main package pinned to
+the old slice, a warning. They must agree because `Aura3D.Avalonia` pins an exact range `[<version>]`, and a slice is
 ABI-paired with the `DllImport` signatures inside `Aura3D.Avalonia` — consumers must not be passively
 upgraded to a slice that was never tested as a matching pair. In other words, changing a slice means
 re-publishing `Aura3D.Avalonia`.
@@ -85,7 +84,6 @@ slices still packs, which is what the content check in `build-ios-lib.yml` catch
 ```shell
 ./build-angle-ios.sh            # simulator slice
 ./build-angle-ios.sh --device   # additionally the device slice
-dotnet pack -c Release -o local-feed
 ```
 
 The script drops the frameworks into `native/`. The current version corresponds to ANGLE

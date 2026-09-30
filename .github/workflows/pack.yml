@@ -28,16 +28,10 @@ jobs:
       # wasm-tools：Aura3D.Avalonia 含 net10.0-browser 目标，pack 它就要 browser 运行时引用包。
       run: dotnet workload install ios wasm-tools
 
-    # Aura3D.Avalonia 的 iOS / browser 目标以精确区间分别依赖 Aura3D.Angle.iOS 与
-    # Aura3D.Avalonia.Browser，restore 前要先把包喂进 local-feed。
-    # 这两个包不在下面 packages/ 的发版列车里了：它们的发布通道是
-    # build-ios-lib.yml / build-browser-lib.yml（手动触发，pack + 校验 + 推 nuget.org）。
-    # 所以这里只 pack 到 local-feed，供本次运行的 restore 使用，产物不上传、也不推送。
-    - name: Pack prerequisite packages into local-feed
-      run: |
-        dotnet pack src/Aura3D.Angle.iOS -c Release -o local-feed
-        dotnet pack src/Aura3D.Avalonia.Browser -c Release -o local-feed
-
+    # 两个切片包（Aura3D.Angle.iOS / Aura3D.Avalonia.Browser）不在这条列车里：
+    # 它们的发布通道是 build-ios-lib.yml / build-browser-lib.yml（手动触发，pack + 校验 + 推 nuget.org）。
+    # 主包对它们钉的是精确区间，而这里 restore 就从 nuget.org 取，所以区间必须先是线上已经存在的版本——
+    # 先跑本流水线去钉一个还没发布的版本，会在这一步直接红，不会发出消费方 restore 不到的包。
     - name: Test
       run: dotnet test src/Test/Aura3D.Tests/Aura3D.Tests.csproj -c Release
 

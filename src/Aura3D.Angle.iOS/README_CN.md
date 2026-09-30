@@ -49,18 +49,18 @@ LICENSE.angle.txt                               ANGLE 的 BSD-3-Clause 原文
 版本。同一次作业里 pack 出 nupkg、核对包里的版本确实是输入那个号、逐条核对两份切片与
 `build/`、`buildTransitive/` 的 targets 都在包里，再用 GitHub OIDC 换临时 API Key 推到 nuget.org
 （secret `NUGET_USER` + `environment: production` 的可信发布策略）。`publish` 勾掉就停在 artifact，只验包
-不发布。它不再跟 `pack.yml` 的发版列车一起发：`pack.yml` 只把它 pack 进 `local-feed/` 供仓库自身的 restore
-使用（`NuGet.config` 把这个目录声明成了包源），产物里已经没有这个包。浏览器侧的 `Aura3D.Avalonia.Browser`
+不发布。它不再跟 `pack.yml` 的发版列车一起发：`pack.yml` 的产物集合里已经没有这个包，本仓库自身的
+restore 也按主包钉的精确区间从 nuget.org 取它。浏览器侧的 `Aura3D.Avalonia.Browser`
 同理，走 `build-browser-lib.yml`。
 
 版本号住在两个互不引用的地方：本目录 csproj 的 `<Version>` 是仓库内不带 `-p` 构建时的默认值，
 `Directory.Packages.props` 的 `Aura3DAngleIosVersion` 只喂 `Aura3D.Avalonia` 钉的那条精确区间。
 切片热修 = 跑 `build-ios-lib.yml` 并输入一个 nuget.org 上还没有的版本号（重复的号会被拒绝，因为
 `--skip-duplicate` 只会静默跳过旧包，那种绿没有意义）→ **同一次提交里**把上面两处字面值都补成刚发的号
-→ 再跑 `pack.yml` 重发 `Aura3D.Avalonia`。三种漏改各有下场，作业逐一区分：两处互相不一致（csproj 一个号、
-props 另一个号）时不带 `-p` 的 pack 只产出前者，主包按后者 restore 直接 NU1102，作业把这判成 error；
-只漏 props 那处，主包继续钉旧切片，作业 warning；只漏 csproj 那处，下一次 `ci.yml` / `pack.yml` 的
-local-feed 又退回旧号，也是 warning。之所以区间要跟着走：`Aura3D.Avalonia` 钉的是精确区间 `[<版本>]`，
+→ 再跑 `pack.yml` 重发 `Aura3D.Avalonia`。漏改的下场作业逐一区分：两处互相不一致（csproj 一个号、
+props 另一个号）意味着仓库里的这份切片和消费方按区间从 nuget.org 拿到的不是同一份，之后任何一次不带
+`-p` 的 pack 都会产出错的号，作业在核对步判 error；只漏 props 那处，主包继续钉旧切片，作业 warning。
+之所以区间要跟着走：`Aura3D.Avalonia` 钉的是精确区间 `[<版本>]`，
 切片与 `Aura3D.Avalonia` 里的 `DllImport` 签名是 ABI 配对，不能让消费方被动升到一个没配套测过的切片上。
 也就是说换切片就意味着重发 `Aura3D.Avalonia`。
 
@@ -72,7 +72,6 @@ local-feed 又退回旧号，也是 warning。之所以区间要跟着走：`Aur
 ```shell
 ./build-angle-ios.sh            # 模拟器切片
 ./build-angle-ios.sh --device   # 追加真机切片
-dotnet pack -c Release -o local-feed
 ```
 
 脚本会把 framework 放进 `native/`。当前版本对应 ANGLE
