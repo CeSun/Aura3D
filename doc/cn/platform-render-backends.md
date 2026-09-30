@@ -37,7 +37,7 @@ Avalonia 的 iOS 宿主默认使用 Metal 合成器，而该模式下 Avalonia �
 dotnet add package Aura3D.Avalonia   # iOS 目标会自动带进 Aura3D.Angle.iOS
 ```
 
-包内含 `iossimulator-arm64` 与 `ios-arm64` 两份 ANGLE 切片，随 `pack.yml` 的发版列车与其他库一起打包推送（同一 commit 产出，依赖钉的版本必定是本次发布的那一个）；切片热修也走同一条列车，没有独立发布通道。切片缺失时构建直接报错，不会静默不出图。
+包内含 `iossimulator-arm64` 与 `ios-arm64` 两份 ANGLE 切片。这个包有独立的发布通道：手动触发 `build-ios-lib.yml`，在表单里输入要发的版本号（作业用 `-p:Version=<输入>` 覆盖工程里写死的 `<Version>`，不改仓库文件也能发），同一次作业里 pack、核对版本与两份切片都在、再用 GitHub OIDC 推到 nuget.org；`pack.yml` 只把它 pack 进 `local-feed/` 供仓库自身 restore，不再随列车推送它（浏览器侧的 `Aura3D.Avalonia.Browser` 同理，走 `build-browser-lib.yml`）。切片缺失时构建直接报错，不会静默不出图；输入的版本号已在 nuget.org 上时推送作业会红。版本号住在两个互不引用的地方：`Aura3D.Angle.iOS.csproj` 的 `<Version>` 是仓库内构建的默认值，`Directory.Packages.props` 的 `Aura3DAngleIosVersion` 只喂主包的精确区间——所以热修顺序是：跑切片作业发新版本 → 把这两处都补成刚发的号（两处不一致时不带 `-p` 的 pack 产出前者、主包按后者 restore 会 NU1102，作业在这一步就会红；只漏 props 那处则主包继续钉旧切片，作业只 warning）→ 再跑 `pack.yml` 重发主包。倒过来先跑 `pack.yml` 也不行：它用 `local-feed/` 构建，钉一个还没发布的版本它也是绿的，而消费方 restore 不到。
 
 在仓库内开发需要先自产一次这个包（`NuGet.config` 把 `local-feed/` 声明成了包源）：
 
