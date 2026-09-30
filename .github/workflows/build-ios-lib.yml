@@ -1,0 +1,227 @@
+name: Build Library (Aura3D.Angle.iOS)
+
+# 手动构建并发布 iOS 切片包的通道：这个包不再跟 pack.yml 的发版列车一起发，切片热修只跑这里。
+# 版本号在触发时输入，用 -p:Version 覆盖工程里写死的那行，不改仓库文件也能发。
+# publish 输入设 false 时只 pack + 校验、把 nupkg 当 artifact 传回来，不碰 nuget.org。
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 本次发布的包版本，形如 0.1.1 / 0.1.1-alpha.1
+        type: string
+        required: true
+      publish:
+        description: 校验通过后推送到 nuget.org
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-library-angle-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  pack:
+    name: Pack Aura3D.Angle.iOS
+    # 任何 runner 都能出这个包：工程是纯打包工程（netstandard2.0、无代码、无 ProjectReference），
+    # ANGLE 切片直接提交在 native/ 下，所以既不需要 Xcode 与 ios workload，也不需要 depot_tools。
+    # 真正的切片重建是 src/Aura3D.Angle.iOS/build-angle-ios.sh，在本地跑，不在这条流水线里。
+    runs-on: ubuntu-latest
+    env:
+      # 走 env 而不是把 ${{ inputs.version }} 直接插进 shell，触发者手滑打个引号也不会变成脚本注入
+      VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Check version input
+        # 先验形状再 pack：NuGet 会把 1.0 / 01.1.0 / 1.0.0.0 规范化成别的写法，
+        # 传进去和包里出来的对不上就直接红，省掉一次 pack 加一次无意义的推送尝试。
+        run: |
+          set -euo pipefail
+          if [ -z "${VERSION:-}" ]; then
+            printf '::error::version 输入为空\n'
+            exit 1
+          fi
+          if ! printf '%s' "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            printf '::error::version 输入 "%s" 不是三段式版本号；用 0.1.1 或 0.1.1-alpha.1 这种形式\n' "$VERSION"
+            exit 1
+          fi
+          printf '版本号输入通过：%s\n' "$VERSION"
+
+      - name: Pack
+        # 工程里的 <Version> 是写死的字面值（不引用 Directory.Packages.props 的属性，也不走 MinVer）；
+        # 这里用全局属性覆盖它——MSBuild 全局属性优先于工程内的赋值，所以不改仓库文件也能发任意版本号。
+        # 代价是工程里那行和 props 钉的区间都不会自动跟着走，下一步逐处核对并为此报 warning。
+        # 出错时把 error/native 相关行提成 annotation，日志匿名读不到时也能定位。
+        run: |
+          set -euo pipefail
+          if ! out=$(dotnet pack src/Aura3D.Angle.iOS -c Release -o packages "-p:Version=$VERSION" 2>&1); then
+            printf '%s\n' "$out"
+            printf '::error::pack Aura3D.Angle.iOS 失败 :: %s\n' "$(printf '%s' "$out" | grep -iE "error|native|ANGLE" | tail -15 | tr '\n' '|' | tr -d '\r' | cut -c1-1200)"
+            exit 1
+          fi
+          printf '%s\n' "$out"
+
+      - name: Check version took effect
+        run: |
+          set -euo pipefail
+          count=$(find packages -maxdepth 1 -name 'Aura3D.Angle.iOS.*.nupkg' | wc -l | tr -d '[:space:]')
+          if [ "$count" != 1 ]; then
+            printf '::error::packages/ 下有 %s 个 Aura3D.Angle.iOS 包，期望正好 1 个（多了就没法知道推的是哪个）\n' "$count"
+            exit 1
+          fi
+          pkg=$(ls packages/Aura3D.Angle.iOS.*.nupkg)
+          packed=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' <(unzip -p "$pkg" Aura3D.Angle.iOS.nuspec) | head -1)
+          declared=$(grep -m1 -oE '<Version>[^<]+</Version>' src/Aura3D.Angle.iOS/Aura3D.Angle.iOS.csproj | sed -E 's:</?Version>::g')
+          pinned=$(grep -m1 -oE '<Aura3DAngleIosVersion>[^<]+</Aura3DAngleIosVersion>' Directory.Packages.props | sed -E 's:</?Aura3DAngleIosVersion>::g')
+          printf '输入版本 %s\n包里版本 %s\n工程里写死的版本 %s\nprops 钉的区间版本 %s\n' "$VERSION" "$packed" "$declared" "$pinned"
+          if [ "$packed" != "$VERSION" ]; then
+            printf '::error::包里是 %s 而不是输入的 %s——版本号被规范化或 -p:Version 没生效，这种包不能发\n' "$packed" "$VERSION"
+            exit 1
+          fi
+          if printf '%s' "$declared" | grep -q '$('; then
+            printf '::error::csproj 的 <Version> 还在引用属性 %s——这个包的版本号必须写死在工程里，不引用 Directory.Packages.props 的属性\n' "$declared"
+            exit 1
+          fi
+          # 版本号现在住在两个地方：工程里那行是仓库内构建的默认值，props 那条是主包钉的精确区间。
+          # 两者对不上时，ci.yml 与 pack.yml 不带 -p -pack 出来的就是前者，主包按后者 restore 直接 NU1102，
+          # 整条链在别处才炸。这里先红，并且不拦「输入比两处都新」那种正常的发版。
+          if [ "$declared" != "$pinned" ]; then
+            printf '::error::仓库内已经自相矛盾：csproj 写死 %s，而 Directory.Packages.props 钉 %s\n' "$declared" "$pinned"
+            printf '::error::不带 -p 的 pack 只会产出 %s，主包按 [%s] restore 会 NU1102；把两处改成同一个号再发\n' "$declared" "$pinned"
+            exit 1
+          fi
+          if [ "$declared" != "$VERSION" ]; then
+            printf '::warning::本次发的是 %s，工程里仍写死 %s；发完把 Aura3D.Angle.iOS.csproj 的 <Version> 补成 %s\n' "$VERSION" "$declared" "$VERSION"
+            printf '::warning::否则下一次不带 -p 的构建（ci.yml、pack.yml 的 local-feed 那步）又退回 %s\n' "$declared"
+          fi
+          if [ "$pinned" != "$VERSION" ]; then
+            printf '::warning::本次发的是 %s，而主包区间仍钉 %s：Aura3D.Avalonia 用不到刚发的这个包\n' "$VERSION" "$pinned"
+            printf '::warning::把 Directory.Packages.props 的 Aura3DAngleIosVersion 补成 %s（与上面那行同一次提交），再跑 pack.yml 重发主包\n' "$VERSION"
+          fi
+
+      - name: Check package contents
+        # csproj 里的 AngleNativeCheck 只在「两份切片都没有」时报错，只少一份照样打成包——
+        # 那种包装到应用上会 restore 通过、运行时不出图。这里按切片目录逐个核对，缺就红。
+        run: |
+          set -euo pipefail
+          pkg=$(ls packages/Aura3D.Angle.iOS.*.nupkg)
+          listing=$(unzip -Z1 "$pkg")
+          status=0
+          for required in \
+            native/iossimulator-arm64/libEGL.framework/libEGL \
+            native/iossimulator-arm64/libGLESv2.framework/libGLESv2 \
+            native/ios-arm64/libEGL.framework/libEGL \
+            native/ios-arm64/libGLESv2.framework/libGLESv2 \
+            build/Aura3D.Angle.iOS.targets \
+            buildTransitive/Aura3D.Angle.iOS.targets \
+            Aura3D.Angle.iOS.nuspec
+          do
+            if printf '%s\n' "$listing" | grep -qxF "$required"; then
+              printf 'ok   %s\n' "$required"
+            else
+              printf 'MISS %s\n' "$required"
+              printf '::error::%s 里缺少 %s\n' "$pkg" "$required"
+              status=1
+            fi
+          done
+          exit "$status"
+
+      - name: Summarize
+        run: |
+          set -euo pipefail
+          pkg=$(ls packages/Aura3D.Angle.iOS.*.nupkg)
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' <(unzip -p "$pkg" Aura3D.Angle.iOS.nuspec) | head -1)
+          declared=$(grep -m1 -oE '<Version>[^<]+</Version>' src/Aura3D.Angle.iOS/Aura3D.Angle.iOS.csproj | sed -E 's:</?Version>::g')
+          pinned=$(grep -m1 -oE '<Aura3DAngleIosVersion>[^<]+</Aura3DAngleIosVersion>' Directory.Packages.props | sed -E 's:</?Aura3DAngleIosVersion>::g')
+          {
+            echo "## Aura3D.Angle.iOS"
+            echo
+            echo "| 项 | 值 |"
+            echo "| --- | --- |"
+            echo "| 包 | \`$(basename "$pkg")\` |"
+            echo "| 输入的版本 | $VERSION |"
+            echo "| nuspec 版本 | $version |"
+            echo "| csproj 写死的版本 | $declared |"
+            echo "| Directory.Packages.props 钉的区间 | $pinned |"
+            echo "| 大小 | $(du -h "$pkg" | cut -f1) |"
+            echo "| commit | ${{ github.sha }} |"
+            echo "| 本次是否推送 nuget.org | ${{ inputs.publish && '是' || '否（只留 artifact）' }} |"
+            if [ "$declared" != "$version" ] || [ "$pinned" != "$version" ]; then
+              echo
+              echo "发出去的是 $version，而仓库里还写着 \`$declared\` / 钉着 \`$pinned\`。发完把这两处补成 $version（同一次提交）：\`Aura3D.Angle.iOS.csproj\` 的 \`<Version>\`、\`Directory.Packages.props\` 的 \`Aura3DAngleIosVersion\`（它只喂主包的精确区间）；然后跑 \`pack.yml\` 重发主包。"
+            fi
+            echo
+            echo "想在应用里本地用这个包：把 artifact 里的 nupkg 放进仓库根的 local-feed/，即可被 NuGet.config 的 aura3d-local-feed 源解析。"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload nupkg
+        uses: actions/upload-artifact@v4
+        with:
+          name: aura3d-angle-ios-nupkg
+          path: packages/*.nupkg
+          if-no-files-found: error
+          retention-days: 30
+
+  # 与 pack.yml 的 publish-to-nuget 同构：GitHub OIDC 换 nuget.org 的临时 API Key，
+  # environment 名必须与可信发布策略里填的一致，否则令牌 environment 声明为空、校验失败。
+  # needs: pack 意味着上面两道内容核对没过就绝不会推包。
+  publish-to-nuget:
+    if: inputs.publish
+    needs: pack
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: aura3d-angle-ios-nupkg
+          path: packages
+
+      - name: Refuse a version nuget.org already has
+        # 版本号来自触发时的输入，所以「忘了 bump」表现为重复输入同一个号——pack.yml 用的是
+        # --skip-duplicate，重复版本号会被静默跳过：nuget.org 上留的还是旧切片，而仓库里已经翻篇，
+        # 消费方装到哪个无从判断。这里把它变成红：要推的版本号必须是 nuget.org 上还没有的。
+        run: |
+          set -euo pipefail
+          count=$(find packages -maxdepth 1 -name 'Aura3D.Angle.iOS.*.nupkg' | wc -l | tr -d '[:space:]')
+          if [ "$count" != 1 ]; then
+            printf '::error::artifact 里有 %s 个 Aura3D.Angle.iOS 包，期望正好 1 个\n' "$count"
+            exit 1
+          fi
+          pkg=$(ls packages/Aura3D.Angle.iOS.*.nupkg)
+          version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' <(unzip -p "$pkg" Aura3D.Angle.iOS.nuspec) | head -1)
+          if [ -z "$version" ]; then
+            exit 1
+          fi
+          index=$(curl -sfL "https://api.nuget.org/v3-flatcontainer/aura3d.angle.ios/index.json" || true)
+          if printf '%s' "$index" | grep -qF "\"$version\""; then
+            printf '::error::Aura3D.Angle.iOS %s 已经在 nuget.org 上了，--skip-duplicate 会静默跳过它\n' "$version"
+            printf '::error::这次要推的切片与 nuget.org 上的 %s 不是同一份，换一个版本号；推完记得把 Aura3D.Angle.iOS.csproj 的 <Version> 与 Directory.Packages.props 的区间都补成这个号\n' "$version"
+            exit 1
+          fi
+          printf 'nuget.org 上没有 Aura3D.Angle.iOS %s，可以推\n' "$version"
+
+      # OIDC 令牌换取临时 API Key（有效期仅 1 小时），因此紧跟推送步骤，不做多余动作。
+      - name: NuGet login (OIDC -> temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          # 必须是 nuget.org 的“用户名/Profile name”，不是邮箱；建议存为仓库 secret NUGET_USER。
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet
+        run: dotnet nuget push "packages/*.nupkg" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
