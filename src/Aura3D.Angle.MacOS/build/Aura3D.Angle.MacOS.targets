@@ -1,0 +1,54 @@
+<Project>
+  <!--
+    把包里的 ANGLE dylib 和 IOSurface helper 变成应用输出目录里的文件（运行时
+    MacAngleNative 从 AppContext.BaseDirectory dlopen）。消费方不需要写任何东西：
+    装包即生效。同一份文件会经 build/ 与 buildTransitive/ 两个约定目录命中，
+    用哨兵属性保证只生效一次。
+
+    与 iOS 包的 NativeReference 注入不同：消费方是 net8.0/net10.0 桌面工程，
+    NativeReference 只被 Apple 工作负载的 targets 处理，net10.0 不看它——
+    动态 dylib 的正确注入方式就是拷贝到输出目录。
+  -->
+  <PropertyGroup Condition=" '$(Aura3DAngleMacosTargetsImported)' == 'true' Or $(TargetFramework.Contains('-ios')) Or $(TargetFramework.Contains('-android')) Or $(TargetFramework.Contains('-browser')) ">
+    <Aura3DAngleMacosTargetsSkip>true</Aura3DAngleMacosTargetsSkip>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Aura3DAngleMacosTargetsSkip)' != 'true' ">
+    <Aura3DAngleMacosTargetsImported>true</Aura3DAngleMacosTargetsImported>
+    <Aura3DAngleMacosRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../native'))</Aura3DAngleMacosRoot>
+    <!-- 不带 RID 的桌面构建默认给 arm64 切片；x64 切片将来有了按 RID 切换 -->
+    <Aura3DAngleMacosSlice Condition=" !$(RuntimeIdentifier.Contains('osx-x64')) ">macos-arm64</Aura3DAngleMacosSlice>
+    <Aura3DAngleMacosSlice Condition=" $(RuntimeIdentifier.Contains('osx-x64')) ">macos-x64</Aura3DAngleMacosSlice>
+  </PropertyGroup>
+
+  <!-- 报错文案默认英文，构建进程 UI 语言为中文时换中文；哨兵防 build/buildTransitive 重复定义 -->
+  <PropertyGroup Condition=" '$(Aura3DBuildUICulture)' == '' ">
+    <Aura3DBuildUICulture>$([System.Globalization.CultureInfo]::CurrentUICulture.TwoLetterISOLanguageName)</Aura3DBuildUICulture>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(Aura3DAngleMacosTargetsSkip)' != 'true' ">
+    <None Include="$(Aura3DAngleMacosRoot)/$(Aura3DAngleMacosSlice)/libEGL.dylib"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="libEGL.dylib"
+          Visible="false" />
+    <None Include="$(Aura3DAngleMacosRoot)/$(Aura3DAngleMacosSlice)/libGLESv2.dylib"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="libGLESv2.dylib"
+          Visible="false" />
+    <None Include="$(Aura3DAngleMacosRoot)/$(Aura3DAngleMacosSlice)/libAura3dAngleMacOSHelper.dylib"
+          CopyToOutputDirectory="PreserveNewest"
+          Link="libAura3dAngleMacOSHelper.dylib"
+          Visible="false" />
+  </ItemGroup>
+
+  <!--
+    切片缺失必须在这里失败。MacAngleNative 在运行时按文件存在与否决定是否回落原生 GL，
+    构建期不报错的话，回落是静默的——桌面端点云会退回不可见尘埃而没有一条日志指向原因。
+  -->
+  <Target Name="Aura3DAngleMacosNativeCheck" BeforeTargets="PrepareForBuild" Condition=" '$(Aura3DAngleMacosTargetsSkip)' != 'true' ">
+    <Error Condition=" !Exists('$(Aura3DAngleMacosRoot)/$(Aura3DAngleMacosSlice)/libEGL.dylib') And '$(Aura3DBuildUICulture)' != 'zh' "
+           Text="The Aura3D.Angle.MacOS package does not contain the $(Aura3DAngleMacosSlice) slice (RuntimeIdentifier='$(RuntimeIdentifier)'). Rebuild it with src/Aura3D.Angle.MacOS/build-angle-macos.sh, or remove the package reference to fall back to native OpenGL." />
+    <Error Condition=" !Exists('$(Aura3DAngleMacosRoot)/$(Aura3DAngleMacosSlice)/libEGL.dylib') And '$(Aura3DBuildUICulture)' == 'zh' "
+           Text="Aura3D.Angle.MacOS 包里没有 $(Aura3DAngleMacosSlice) 切片（RuntimeIdentifier='$(RuntimeIdentifier)'）。用 src/Aura3D.Angle.MacOS/build-angle-macos.sh 重建，或移除包引用以回落原生 OpenGL。" />
+  </Target>
+</Project>

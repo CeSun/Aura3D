@@ -13,6 +13,7 @@
          与消费方实际拿到的切片分叉。本仓库自身的 restore 也按这里的精确区间从 nuget.org 取切片包，
          所以这里必须先是线上已经发布的号。切片工程不走 MinVer（版本不来自 git tag）。 -->
     <Aura3DAngleIosVersion>0.1.0</Aura3DAngleIosVersion>
+    <Aura3DAngelMacosVersion>0.1.0</Aura3DAngelMacosVersion>
     <Aura3DAvaloniaBrowserVersion>0.1.0</Aura3DAvaloniaBrowserVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -27,6 +28,10 @@
     <!-- 精确区间：ANGLE 的 native 切片与 Aura3D.Avalonia 里的 DllImport 签名是 ABI 配对，
          不能让消费方被动升到一个没配套测过的切片上。 -->
     <PackageVersion Include="Aura3D.Angle.iOS" Version="[$(Aura3DAngleIosVersion)]" />
+    <!-- macOS 切片包：Aura3D.Avalonia 尚未引用（首次发布前引用会让 restore 失败）。
+         首次 build-macos-lib.yml 发布后，在 net10.0 TFM 加 PackageReference 并把本行
+         的精确区间交给消费方传递解析。 -->
+    <PackageVersion Include="Aura3D.Angle.MacOS" Version="[$(Aura3DAngelMacosVersion)]" />
     <!-- 同样是精确区间：包里的 wasm 链接开关与浏览器后端的 GLES 调用面配对，升降级要和库一起过验证。 -->
     <PackageVersion Include="Aura3D.Avalonia.Browser" Version="[$(Aura3DAvaloniaBrowserVersion)]" />
     <PackageVersion Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
