@@ -1,5 +1,8 @@
 #version 300 es
-precision mediump float;
+// Shared uniforms (viewMatrix) are declared highp by the paired lighting fragments;
+// GLES requires identical precision for a uniform across stages, so the default
+// float precision here must stay highp or the program fails to link.
+precision highp float;
 
 #define MAX_BONES 256
 #define MAX_DIRECTIONAL_LIGHTS 4
