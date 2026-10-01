@@ -236,6 +236,7 @@ public partial class RenderPass
             // ANGLE/ES 上下文无此桌面枚举（GL_INVALID_ENUM）；ES 的 gl_PointSize 无需使能。
             // 立即吞掉该错误，避免污染后续 glGetError 队列。
             gl.GetError();
+            PushPointSize(mesh.Material);
         }
         if (mesh.Geometry.IndicesCount > 0)
             gl.DrawElements(primitive, (uint)mesh.Geometry.IndicesCount, GLEnum.UnsignedInt, (void*)0);
@@ -262,6 +263,7 @@ public partial class RenderPass
             // ANGLE/ES 上下文无此桌面枚举（GL_INVALID_ENUM）；ES 的 gl_PointSize 无需使能。
             // 立即吞掉该错误，避免污染后续 glGetError 队列。
             gl.GetError();
+            PushPointSize(instancedMesh.Material);
         }
         if (instancedMesh.IndicesCount > 0)
             gl.DrawElementsInstanced(primitive, (uint)instancedMesh.IndicesCount, GLEnum.UnsignedInt, (void*)0, (uint)instancedMesh.InstanceCount);
@@ -313,6 +315,36 @@ public partial class RenderPass
                 UniformMatrix4(kv.Key, matrix4Value);
             }
         }
+
+        // Optional feature uniforms always need a value: uniforms persist across draws, so a
+        // material without the parameter must push 0 instead of inheriting the previous
+        // mesh's state. Shaders without the uniform skip via location == -1.
+        PushParameterDefault(material, Material.UseVertexColorParameterName, 0f);
+        PushParameterDefault(material, Material.UnlitParameterName, 0f);
+    }
+
+    private void PushParameterDefault(Material? material, string name, float defaultValue)
+    {
+        if (material == null || !material.TryGetParameterValue(name, out float _))
+            UniformFloat(name, defaultValue);
+    }
+
+    /// <summary>
+    /// POINT 图元的点尺寸。材质给了 <see cref="Material.PointSizeParameterName"/> 就用材质值，
+    /// 否则推引擎默认（与主流引擎一致：不写 gl_PointSize 时驱动普遍落 1 像素，这里显式化为契约）；
+    /// 两者都按设备 ALIASED_POINT_SIZE_RANGE 上限收敛，ANGLE 各后端的差别最大。
+    /// 着色器没有该 uniform 时 <see cref="UniformFloat"/> 按 location == -1 跳过。
+    /// </summary>
+    internal const float DefaultPointSize = 1f;
+
+    protected void PushPointSize(Material? material)
+    {
+        var size = material != null
+            && material.TryGetParameterValue(Material.PointSizeParameterName, out float requested)
+                ? requested
+                : DefaultPointSize;
+
+        UniformFloat(Material.PointSizeParameterName, System.Math.Clamp(size, 1f, renderPipeline.MaxPointSize));
     }
 
     /// <summary>

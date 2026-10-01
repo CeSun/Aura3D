@@ -137,6 +137,13 @@
   <data name="Demo_Hism_Summary" xml:space="preserve"><value>InstancedMeshGroup's octree grouping and background tree building, and the cost of in-place updates versus rebuilding the tree</value></data>
   <data name="Demo_Particles_Title" xml:space="preserve"><value>Particle system</value></data>
   <data name="Demo_Particles_Summary" xml:space="preserve"><value>The three emission paths (billboard / one-shot burst / mesh mode), the flame sheet that pages by lifetime, and what the lifecycle buttons actually do</value></data>
+  <data name="Demo_PointcloudMix_Title" xml:space="preserve"><value>Point cloud + model</value></data>
+  <data name="Demo_PointcloudMix_Summary" xml:space="preserve"><value>A procedural point cloud and a glTF table in one default pipeline: point size, unlit and vertex colors are plain material parameters — no shader overrides, and the pipeline stays switchable</value></data>
+  <data name="PointcloudMix_Intro" xml:space="preserve"><value>The rainbow shell is a 6000-point cloud (xyz + rgb, exactly what a .ply carries) hovering over a glTF table, both drawn by the default pipeline. Point size, unlit and vertex colors are ordinary material parameters: the engine writes gl_PointSize for point primitives, falls back to a stable normal when the cloud has none, and the loader applies the same preset to xyz/rgb .ply files. Switch the pipeline at the bottom — the same scene keeps rendering. Turn unlit off to see why point clouds default to it: shading with the fallback normal goes dark on the wrong side.</value></data>
+  <data name="PointcloudMix_PointSettings" xml:space="preserve"><value>Point cloud material</value></data>
+  <data name="PointcloudMix_PointSize" xml:space="preserve"><value>Point size (px)</value></data>
+  <data name="PointcloudMix_Unlit" xml:space="preserve"><value>Unlit</value></data>
+  <data name="PointcloudMix_VertexColor" xml:space="preserve"><value>Vertex colors</value></data>
   <data name="AnimationMix_Intro" xml:space="preserve"><value>The two characters share one skeleton and each shows a way of combining several clips into a pose: left is the state machine (AnimationGraph) — idle/walk/run are three discrete states, and switching crossfades over BlendTime; right is the blend space (AnimationBlendSpace) — six clips sit at six points on a plane and the pose interpolates continuously by (X, Y) axis values. Left shows switching, right shows blending.</value></data>
   <data name="AnimationMix_AutoToggle" xml:space="preserve"><value>Cycle Idle → Walking → Running automatically</value></data>
   <data name="AnimationMix_ToggleInterval" xml:space="preserve"><value>Seconds per state</value></data>

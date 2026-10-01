@@ -43,6 +43,14 @@ public static class DemoRegistry
             LockPipeline: true),
 
         new(
+            Id: "pointcloud-mix",
+            Title: Strings.Keys.Demo_PointcloudMix_Title,
+            Group: Strings.Keys.Group_Basics,
+            Summary: Strings.Keys.Demo_PointcloudMix_Summary,
+            Assets: Assets.AssetManifest.RequireSet("CoffeeTable"),
+            Create: context => new PointcloudMixDemo(context)),
+
+        new(
             Id: "camera",
             Title: Strings.Keys.Demo_Camera_Title,
             Group: Strings.Keys.Group_Basics,

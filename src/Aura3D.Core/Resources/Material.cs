@@ -5,6 +5,24 @@ namespace Aura3D.Core.Resources;
 /// </summary>
 public class Material : IClone<Material>, IVersionedResource
 {
+    /// <summary>
+    /// Point size in screen pixels for POINT-primitive meshes. RenderPass pushes the value
+    /// (or a 1px default when unset) clamped to the device's ALIASED_POINT_SIZE_RANGE.
+    /// </summary>
+    public const string PointSizeParameterName = "uPointSize";
+
+    /// <summary>
+    /// Set to 1 to mix the mesh's per-vertex Color_0 attribute into baseColor; RenderPass
+    /// pushes 0 for materials without the parameter. Loaders enable it for point clouds.
+    /// </summary>
+    public const string UseVertexColorParameterName = "uUseVertexColor";
+
+    /// <summary>
+    /// Set to 1 to skip lighting and show raw base color; RenderPass pushes 0 for materials
+    /// without the parameter. Point clouds without normals default to this.
+    /// </summary>
+    public const string UnlitParameterName = "uUnlit";
+
     private readonly List<Channel> _channels = [];
 
     /// <summary>

@@ -221,7 +221,30 @@ The same vertices become a point cloud, a wireframe, or solid surfaces depending
 | `TriangleFan` | vertices fan out around the first vertex | n - 2 | discs, fans |
 
 > [!TIP]
-> Points and lines usually ignore lighting: to draw colored point clouds/wireframes the common setup is the NoLight pipeline plus a small custom shader (point rendering also requires setting `gl_PointSize` in the vertex shader). See [Custom Materials and Shaders](./custom-material.md), and the Primitives gallery demo for a runnable comparison of all seven types.
+> Points and lines that ignore lighting (wireframes, colored point clouds) now work directly in the default pipelines through plain material parameters — no pipeline switch or custom shader needed. For fully custom point sprites, use the NoLight pipeline with a custom shader; see [Custom Materials and Shaders](./custom-material.md). The Primitives gallery demo compares all seven primitive types, and the Pointcloud Mix demo renders a point cloud and a model in one scene.
+
+### Point clouds: xyz/rgb .ply files and point-primitive materials
+
+Meshes whose primitive type is `Points` work out of the box in every default pipeline
+(Blinn-Phong, PBR forward & deferred, cel, NoLight): the draw call follows the primitive
+type, the vertex shaders write `gl_PointSize`, the default is 1px, and the value is clamped
+to the device's `ALIASED_POINT_SIZE_RANGE` — the ceiling is driver dependent, and ANGLE's
+D3D/Metal backends differ the most, so mind the browser.
+
+When `AssimpLoader` loads an xyz/rgb .ply (no faces, no normals — the file from issue #21),
+it clones the mesh's material and presets three parameters; triangle meshes sharing the
+material are unaffected:
+
+| Material parameter | Meaning | .ply point cloud default |
+|---|---|---|
+| `Material.PointSizeParameterName` (`uPointSize`) | Point size in screen pixels | 3 |
+| `Material.UseVertexColorParameterName` (`uUseVertexColor`) | Mix the `Color_0` vertex color into baseColor | 1 when colors present |
+| `Material.UnlitParameterName` (`uUnlit`) | Skip lighting, show raw baseColor | 1 |
+
+The unlit default matches mainstream point cloud viewers (CloudCompare and friends): pure
+point clouds have no normals, so lighting is undefined; clouds with real normals can set
+`uUnlit` to 0 to take part in lighting. All three parameters are independent switches on
+any material and can be changed at runtime without rebuilding shaders.
 
 ## Common pitfalls
 

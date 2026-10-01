@@ -1,7 +1,7 @@
 #version 300 es
-// Shared uniforms (viewMatrix) are declared highp by the paired lighting fragments;
-// GLES requires identical precision for a uniform across stages, so the default
-// float precision here must stay highp or the program fails to link.
+// Shared uniforms (viewMatrix) are declared highp by the paired lighting
+// fragments; GLES requires matching default float accuracy across stages, so
+// this file must keep highp or the program fails to link.
 precision highp float;
 
 #define MAX_BONES 256
@@ -40,15 +40,21 @@ uniform mat4 normalMatrix;
 
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
+// Point size for POINT primitives. RenderPass pushes a default clamped to the
+// device's ALIASED_POINT_SIZE_RANGE when the material does not set one; the
+// write below is ignored for line and triangle primitives.
+uniform float uPointSize;
 
 out vec2 vTexCoord;
 out vec3 vFragPosition;
 out mat3 vTBN;
+out vec4 vColor;
 
 
 void main()
 {
 	vTexCoord = texCoord;
+	vColor = color;
 
 #ifdef SKINNED_MESH
 
@@ -75,7 +81,7 @@ void main()
 		vec4 worldPosition = modelMatrix * vec4(position, 1.0);
 		vec3 T = normalize(mat3(normalMatrix) * tangent);
 		vec3 B = normalize(mat3(normalMatrix) * bitangent);
-		vec3 N = normalize(mat3(normalMatrix) * normal);
+		vec3 N = length(normal) > 0.0 ? normalize(mat3(normalMatrix) * normal) : vec3(0.0, 1.0, 0.0);
 #endif
 
 		mat3 TBN = mat3(T, B, N);
@@ -83,4 +89,5 @@ void main()
 
 		vFragPosition = worldPosition.xyz;
 		gl_Position = projectionMatrix * viewMatrix * worldPosition;
+		gl_PointSize = uPointSize;
 }

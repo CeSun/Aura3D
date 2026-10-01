@@ -16,10 +16,15 @@ uniform sampler2D Texture_Occlusion;
 in vec2 vTexCoord;
 in vec3 vFragPosition;
 in mat3 vTBN;
+// Pushed to 0 by RenderPass when the material does not set it (see base.frag
+// in Aura3D.Core): mixes the per-vertex Color_0 attribute into the GBuffer albedo.
+uniform float uUseVertexColor;
+in vec4 vColor;
 
-void main() 
+void main()
 {
     vec4 baseColor = texture(Texture_BaseColor, vTexCoord);
+    baseColor.rgb = mix(baseColor.rgb, vColor.rgb, uUseVertexColor);
     vec3 normal = texture(Texture_Normal, vTexCoord).xyz;
     vec4 metalness_roughness = texture(Texture_MetallicRoughness, vTexCoord);
     vec4 emissive = texture(Texture_Emissive, vTexCoord);

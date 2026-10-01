@@ -6,6 +6,13 @@ precision mediump sampler2DArray;
 #endif
 out vec4 outColor;
 
+// Optional material flags, pushed to 0 by RenderPass when the material does not
+// set them: uUseVertexColor mixes the per-vertex Color_0 attribute into baseColor,
+// uUnlit replaces the lit result with the raw base color (point clouds).
+uniform float uUseVertexColor;
+uniform float uUnlit;
+in vec4 vColor;
+
 
 #define MAX_DIRECTIONAL_LIGHTS 4
 #define MAX_POINT_LIGHTS 4
@@ -170,6 +177,8 @@ void main()
 {
 	vec4 baseColor = texture(BaseColorTexture, vTexCoord);
 
+	baseColor.rgb = mix(baseColor.rgb, vColor.rgb, uUseVertexColor);
+
 
 	vec3 normal = texture(NormalTexture, vTexCoord).xyz;
 	normal = normalize(normal * 2.0 - 1.0);
@@ -224,6 +233,8 @@ void main()
 
 		finalColor += (color * shadows[i]);
 	}
+
+	finalColor = mix(finalColor, baseColor.rgb, uUnlit);
 
 #ifdef BLENDMODE_TRANSLUCENT
 

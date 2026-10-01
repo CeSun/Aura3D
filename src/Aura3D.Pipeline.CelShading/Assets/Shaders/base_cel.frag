@@ -2,6 +2,11 @@
 precision mediump float;
 out vec4 outColor;
 
+// Pushed to 0 by RenderPass when the material does not set it (see base.frag
+// in Aura3D.Core): mixes the per-vertex Color_0 attribute into baseColor.
+uniform float uUseVertexColor;
+in vec4 vColor;
+
 const float brightnessLevels[16] = float[](0.7, 0.85, 0.85, 0.85, 0.85, 0.85, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
 const float baseAmbient = 0.;
 
@@ -236,6 +241,7 @@ void main()
 	{
 		baseColor = texture(BaseColorTexture, vTexCoord);
 	}
+	baseColor.rgb = mix(baseColor.rgb, vColor.rgb, uUseVertexColor);
 	// Cutoff discard belongs to Masked only; Translucent blends by alpha (see base.frag).
 	#ifdef BLENDMODE_MASKED
 		if (baseColor.a <= alphaCutoff)

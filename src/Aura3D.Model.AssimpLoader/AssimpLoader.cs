@@ -523,6 +523,24 @@ public static class AssimpLoader
 
         mesh.Material = materialMap[assimpMesh.MaterialIndex];
 
+        // 点云网格单独调材质：材质按索引共享，克隆避免影响同材质的三角形网格。
+        // 点图元一律默认 unlit（Load 开了 GenerateNormals 后处理，伪造的法线没有光照
+        // 意义），与 CloudCompare 等主流查看器一致；带真实法线的点云可自行把
+        // uUnlit 置 0。点尺寸给可见的 3px 默认，用户可改。
+        if (geometry.PrimitiveType == Aura3D.Core.Resources.PrimitiveType.Points && mesh.Material != null)
+        {
+            var pointMaterial = mesh.Material.Clone();
+
+            pointMaterial.SetParameterValue(Aura3D.Core.Resources.Material.UnlitParameterName, 1f);
+
+            if (assimpMesh.HasVertexColors(0))
+                pointMaterial.SetParameterValue(Aura3D.Core.Resources.Material.UseVertexColorParameterName, 1f);
+
+            pointMaterial.SetParameterValue(Aura3D.Core.Resources.Material.PointSizeParameterName, 3f);
+
+            mesh.Material = pointMaterial;
+        }
+
 
         if (assimpMesh.HasBones && skeleton != null)
         {

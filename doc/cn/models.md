@@ -221,7 +221,28 @@ view.AddNode(mesh);
 | `TriangleFan` | 顶点绕首个顶点扇形展开 | n - 2 | 圆盘、扇面 |
 
 > [!TIP]
-> 点与线通常不吃光照：想画彩色点云/线框，常见做法是配 NoLight 管线加一小段自定义着色器（点渲染还要在顶点着色器里设 `gl_PointSize`）。自定义着色器见 [自定义材质与着色器](./custom-material.md)，完整可跑的七种图元对照见 Gallery 的 Primitives 示例。
+> 点与线不吃光照的场合（线框、彩色点云）现在直接用默认管线加材质参数即可，不需要换管线或写自定义着色器；
+> 要完全自定义点精灵外观时再用 NoLight 管线加自定义着色器，见 [自定义材质与着色器](./custom-material.md)。
+> 完整可跑的七种图元对照见 Gallery 的 Primitives 示例，点云与模型同场景混载见 Pointcloud Mix 示例。
+
+### 点云：xyz/rgb 的 .ply 与点图元材质
+
+图元类型为 `Points` 的网格在全部默认管线（Blinn-Phong、PBR 前向与延迟、卡通、NoLight）里开箱即用：
+绘制按图元类型自动走 `GL_POINTS`，顶点着色器写 `gl_PointSize`，缺省 1px，并按设备的
+`ALIASED_POINT_SIZE_RANGE` 上限收敛——该上限与驱动相关，ANGLE 的 D3D/Metal 后端差别最大，浏览器端要留意。
+
+`AssimpLoader` 加载 xyz/rgb 的 .ply（无面、无法线，就是 issue #21 里那种文件）时，会给点网格
+克隆一份材质并预设三个参数，三角形网格不受影响：
+
+| Material 参数 | 含义 | .ply 点云的默认 |
+|---|---|---|
+| `Material.PointSizeParameterName`（`uPointSize`） | 点尺寸，屏幕像素 | 3 |
+| `Material.UseVertexColorParameterName`（`uUseVertexColor`） | 把 `Color_0` 顶点色混入基础色 | 有顶点色时 1 |
+| `Material.UnlitParameterName`（`uUnlit`） | 跳过光照直接显示基础色 | 1 |
+
+默认 unlit 的原因与主流点云查看器（CloudCompare 等）一致：纯点云没有法线，光照是未定义行为；
+带真实法线的点云可把 `uUnlit` 置 0 参与光照。三个参数在任何材质上都能单独开关，
+运行时改完无需重建着色器。
 
 ## 常见坑
 

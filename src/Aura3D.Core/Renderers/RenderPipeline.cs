@@ -135,6 +135,22 @@ public abstract partial class RenderPipeline
         : ShaderDialectConverter.Detect(gl);
     private ShaderDialect? _shaderDialect;
 
+    /// <summary>
+    /// Gets the largest point size the attached context renders, queried once from
+    /// ALIASED_POINT_SIZE_RANGE. The ceiling is device and driver dependent (ANGLE's
+    /// D3D/Metal backends differ the most), so point sizes pushed to shaders are clamped
+    /// to this. Reports 1 while no context is attached.
+    /// </summary>
+    public float MaxPointSize => _maxPointSize ??= gl is null ? 1f : QueryMaxPointSize(gl);
+    private float? _maxPointSize;
+
+    private static unsafe float QueryMaxPointSize(GL gl)
+    {
+        var range = stackalloc float[2];
+        gl.GetFloat(GLEnum.AliasedPointSizeRange, range);
+        return MathF.Max(1f, range[1]);
+    }
+
 
     /// <summary>
     /// Gets the every camera render passes.
@@ -297,6 +313,7 @@ public abstract partial class RenderPipeline
 
         gl = null;
         _shaderDialect = null;
+        _maxPointSize = null;
     }
 
     /// <summary>

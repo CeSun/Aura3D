@@ -33,13 +33,19 @@ uniform mat4 normalMatrix;
 
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
+// Point size for POINT primitives. RenderPass pushes a default clamped to the
+// device's ALIASED_POINT_SIZE_RANGE when the material does not set one; the
+// write below is ignored for line and triangle primitives.
+uniform float uPointSize;
 
 out vec2 vTexCoord;
+out vec4 vColor;
 
 
 void main()
 {
 	vTexCoord = texCoord;
+	vColor = color;
 
 #ifdef SKINNED_MESH
 
@@ -63,4 +69,5 @@ void main()
 #endif
 
 		gl_Position = projectionMatrix * viewMatrix * worldPosition;
+		gl_PointSize = uPointSize;
 }

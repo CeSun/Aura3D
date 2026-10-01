@@ -6,6 +6,13 @@ precision mediump sampler2DArray;
 
 layout (location = 0) out vec4 FragColor;
 
+// Optional material flags, pushed to 0 by RenderPass when the material does not
+// set them: uUseVertexColor mixes the per-vertex Color_0 attribute into albedo,
+// uUnlit zeroes the direct light contribution so point clouds show base color.
+uniform float uUseVertexColor;
+uniform float uUnlit;
+in vec4 vColor;
+
 
 
 uniform sampler2D Texture_BaseColor;
@@ -299,6 +306,7 @@ void main() {
 	}
     vec3 N = normal;
     vec3 albedo = baseColor.rgb;
+    albedo = mix(albedo, vColor.rgb, uUseVertexColor);
     float metalness = metalness_roughness.b;
     float roughness = metalness_roughness.g;
 
@@ -328,5 +336,6 @@ void main() {
     alpha = 0.0;
 #endif
 #endif
+    lightContribution *= 1.0 - uUnlit;
     FragColor = vec4(lightContribution, alpha);
 }

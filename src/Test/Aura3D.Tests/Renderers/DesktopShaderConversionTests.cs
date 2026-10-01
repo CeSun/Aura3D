@@ -12,6 +12,20 @@ public class DesktopShaderConversionTests
     private const string EsVersion = "#version 300 es";
     private const string DesktopVersion = "#version 410 core";
 
+    /// <summary>
+    /// The per-pipeline copies of the material mesh vertex shader, relative to src/. Registered
+    /// passes bind these via their Resources classes; RenderVisibleMeshesInCamera draws them
+    /// with whatever primitive type the geometry carries, including POINTS.
+    /// </summary>
+    private static readonly string[] MaterialMeshVertexShaderFiles =
+    [
+        "Aura3D.Core/Assets/Shaders/base.vert",
+        "Aura3D.Core/Assets/Shaders/nolight.vert",
+        "Aura3D.Pipeline.PBR/Assets/Shaders/mesh.vert",
+        "Aura3D.Pipeline.PBRForward/Assets/Shaders/mesh.vert",
+        "Aura3D.Pipeline.CelShading/Assets/Shaders/mesh.vert",
+    ];
+
     [Theory]
     [InlineData("precision mediump float;")]
     [InlineData("precision highp float;")]
@@ -140,6 +154,52 @@ public class DesktopShaderConversionTests
 
         foreach (var file in files)
             AssertDesktopCompatible(Path.GetFileName(file), File.ReadAllText(file));
+    }
+
+    /// <summary>
+    /// POINT primitives rely on the material vertex shaders writing gl_PointSize; RenderPass
+    /// pushes the uPointSize uniform (clamped to ALIASED_POINT_SIZE_RANGE) before the draw.
+    /// Every pipeline keeps its own copy of the mesh vertex shader, so a new copy must keep
+    /// both the declaration and the write or its point clouds render with an undefined size.
+    /// </summary>
+    [Fact]
+    public void MaterialMeshVertexShaders_ShouldDeclareAndWritePointSize()
+    {
+        var files = RepositoryShaderFiles();
+
+        Assert.NotEmpty(files);
+
+        foreach (var relative in MaterialMeshVertexShaderFiles)
+        {
+            var file = files.FirstOrDefault(f =>
+                f.Replace('\\', '/').EndsWith(relative, StringComparison.OrdinalIgnoreCase));
+
+            Assert.True(file is not null, $"Material mesh vertex shader '{relative}' was not found.");
+
+            var source = File.ReadAllText(file!);
+
+            Assert.Contains("uniform float uPointSize;", source);
+            Assert.Contains("gl_PointSize = uPointSize;", source);
+        }
+    }
+
+    /// <summary>
+    /// GLSL ES restricts shader source to the ASCII subset; the Adreno driver fails to compile
+    /// files containing multi-byte UTF-8 (even inside comments) with a bare "premature EOF",
+    /// and a UTF-8 BOM before #version is equally outside the allowed set. Chinese notes belong
+    /// in the C# sources, never in .vert/.frag files.
+    /// </summary>
+    [Fact]
+    public void ShaderFiles_ShouldBePureAscii()
+    {
+        var files = RepositoryShaderFiles();
+
+        Assert.NotEmpty(files);
+
+        foreach (var file in files)
+            foreach (var b in File.ReadAllBytes(file))
+                Assert.True(b < 0x80,
+                    $"{Path.GetFileName(file)} contains non-ASCII byte 0x{b:X2}; keep shader sources ASCII.");
     }
 
     private static void AssertDesktopCompatible(string name, string source)

@@ -137,6 +137,13 @@
   <data name="Demo_Hism_Summary" xml:space="preserve"><value>InstancedMeshGroup 的八叉树分组、后台建树，以及原地更新与整树重建的代价差</value></data>
   <data name="Demo_Particles_Title" xml:space="preserve"><value>粒子系统</value></data>
   <data name="Demo_Particles_Summary" xml:space="preserve"><value>公告板 / 一次性爆发 / 网格模式三条发射路径、按寿命翻页的火焰图，以及生命周期按钮的真实语义</value></data>
+  <data name="Demo_PointcloudMix_Title" xml:space="preserve"><value>点云与模型混载</value></data>
+  <data name="Demo_PointcloudMix_Summary" xml:space="preserve"><value>程序化点云和 glTF 桌子跑在同一个默认管线里：点尺寸、无光照、顶点色都是普通材质参数——零着色器覆盖，管线随意切换</value></data>
+  <data name="PointcloudMix_Intro" xml:space="preserve"><value>彩虹球壳是 6000 个点的点云（xyz + rgb，与 .ply 携带的信息完全一致），悬在 glTF 桌子上方，两者都由默认管线绘制。点尺寸、无光照、顶点色只是普通材质参数：引擎对点图元写 gl_PointSize，法线缺失时回退到稳定方向，加载器对 xyz/rgb 的 .ply 也应用同一套预设。切底部的管线——同一份场景照常出图。把「无光照」关掉就能看出点云为什么默认关光照：fallback 法线参与的明暗会暗在错误的一侧。</value></data>
+  <data name="PointcloudMix_PointSettings" xml:space="preserve"><value>点云材质</value></data>
+  <data name="PointcloudMix_PointSize" xml:space="preserve"><value>点尺寸（像素）</value></data>
+  <data name="PointcloudMix_Unlit" xml:space="preserve"><value>无光照</value></data>
+  <data name="PointcloudMix_VertexColor" xml:space="preserve"><value>顶点色</value></data>
   <data name="AnimationMix_Intro" xml:space="preserve"><value>左右两个角色共用同一副骨骼，各演示一种「多条剪辑合成一个姿势」的办法：左边是状态机（AnimationGraph）——待机/走路/跑步是三个离散状态，切换瞬间靠 BlendTime 交叉淡化；右边是混合空间（AnimationBlendSpace）——六条剪辑摆在平面上的六个点，姿势按 (X, Y) 轴值连续插值。左边看「切换」，右边看「渐变」。</value></data>
   <data name="AnimationMix_AutoToggle" xml:space="preserve"><value>沿 待机 → 走路 → 跑步 自动转圈</value></data>
   <data name="AnimationMix_ToggleInterval" xml:space="preserve"><value>每个状态停留 秒</value></data>

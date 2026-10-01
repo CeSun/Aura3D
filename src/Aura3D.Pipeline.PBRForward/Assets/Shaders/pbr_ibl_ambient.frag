@@ -29,6 +29,9 @@ uniform mat4 u_invViewProjMatrix;
 uniform vec3 u_cameraPos;
 uniform float u_max_mipmap;
 uniform float iblAmbientIntensity;
+uniform float uUseVertexColor;
+uniform float uUnlit;
+in vec4 vColor;
 
 const float PI = 3.14159265359;
 const float EPSILON = 0.0001;
@@ -53,6 +56,9 @@ void main() {
     vec4 metalness_roughness = texture(Texture_MetallicRoughness, vTexCoord);
 
     vec3 albedo = baseColor.rgb;
+    // Pushed to 0 by RenderPass when the material does not set it (see
+    // pbr_directionallight_lighting_pass.frag); uUnlit shows raw base color.
+    albedo = mix(albedo, vColor.rgb, uUseVertexColor);
     float alpha = baseColor.a;
    
     normal = normalize(normal.xyz * 2.0 - 1.0);
@@ -109,5 +115,5 @@ void main() {
 
     // Output final IBL color
     vec3 ambient = (diffuse + specular) * iblAmbientIntensity;
-    o_iblColor = vec4(ambient, alpha);
+    o_iblColor = vec4(mix(ambient, albedo, uUnlit), alpha);
 }
