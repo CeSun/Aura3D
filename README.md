@@ -103,7 +103,7 @@ public void OnSceneInitialized(object sender, InitializedRoutedEventArgs args)
 | [Aura3D.Model.GltfLoader](https://www.nuget.org/packages/Aura3D.Model.GltfLoader) | glTF/GLB model loader |
 | [Aura3D.Model.AssimpLoader](https://www.nuget.org/packages/Aura3D.Model.AssimpLoader) | Assimp model loader (50+ formats) |
 | [Aura3D.Pipeline.PBR](https://www.nuget.org/packages/Aura3D.Pipeline.PBR) | PBR deferred rendering pipeline |
-| [Aura3D.Pipeline.PBRForward](https://www.nuget.org/packages/Aura3D.Pipeline.PBRForward) | PBR forward rendering pipeline (publish pending — reference from source for now) |
+| [Aura3D.Pipeline.PBRForward](https://www.nuget.org/packages/Aura3D.Pipeline.PBRForward) | PBR forward rendering pipeline |
 | [Aura3D.Pipeline.CelShading](https://www.nuget.org/packages/Aura3D.Pipeline.CelShading) | Cel shading rendering pipeline |
 | [Aura3D.Angle.iOS](https://www.nuget.org/packages/Aura3D.Angle.iOS) | ANGLE (Metal) native frameworks for the iOS render path |
 
