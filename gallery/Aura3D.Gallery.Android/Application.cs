@@ -15,6 +15,12 @@ namespace Aura3D.Gallery.Android
 
         protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
         {
+            // 资产经 AndroidAsset 打进 APK 的 assets/ 目录，AssetManager 的入参是这层目录之下
+            // 的路径，即清单相对路径原样传入（Link 里的 assets\ 前缀本身就是包内那层 assets/）。
+            App.HostConfig = new AssetHostConfig(
+                IsWeb: false,
+                StreamOpener: path => Application.Context.Assets!.Open(path));
+
             return base.CustomizeAppBuilder(builder)
             .WithInterFont()
             .WithAura3DGalleryFonts();

@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Styling;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Aura3D.Gallery;
 
@@ -13,8 +14,15 @@ namespace Aura3D.Gallery;
 /// </summary>
 /// <param name="IsWeb">是否运行在浏览器里。</param>
 /// <param name="WebBaseUri">浏览器端资产根 URL，例如 <c>https://host/assets/</c>。</param>
-/// <param name="RootOverride">桌面/移动端指定的资产目录；<c>null</c> 表示自动探测。</param>
-public sealed record AssetHostConfig(bool IsWeb, Uri? WebBaseUri = null, string? RootOverride = null);
+/// <param name="RootOverride">桌面端指定的资产目录；<c>null</c> 表示自动探测。</param>
+/// <param name="StreamOpener">
+/// 包内资产宿主（安卓）提供的开流委托，入参为清单相对路径；给出后优先于目录探测。
+/// </param>
+public sealed record AssetHostConfig(
+    bool IsWeb,
+    Uri? WebBaseUri = null,
+    string? RootOverride = null,
+    Func<string, Stream>? StreamOpener = null);
 
 /// <summary>
 /// 示例应用入口。主题与外壳样式在 <c>App.axaml</c> 里声明，
@@ -70,6 +78,9 @@ public sealed partial class App : Application
 
             return new WebAssetProvider(baseUri, new AssetCache());
         }
+
+        if (HostConfig.StreamOpener is { } openStream)
+            return new StreamAssetProvider(openStream);
 
         return new FileAssetProvider(HostConfig.RootOverride);
     }

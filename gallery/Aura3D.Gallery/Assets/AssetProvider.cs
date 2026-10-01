@@ -118,6 +118,39 @@ public sealed class FileAssetProvider(string? rootOverride = null) : IAssetProvi
 }
 
 /// <summary>
+/// 由宿主注入「按清单相对路径开流」委托的实现，给资产只存在于包内、没有可按文件路径
+/// 访问目录的宿主用（安卓的 AssetManager）。共享工程不引平台包，平台差异全部留在宿主侧。
+/// </summary>
+public sealed class StreamAssetProvider(Func<string, Stream> openStream) : IAssetProvider
+{
+    /// <inheritdoc />
+    public bool IsWeb => false;
+
+    /// <inheritdoc />
+    public async Task<Stream> OpenAsync(
+        AssetRef asset,
+        IProgress<AssetProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        progress?.Report(new AssetProgress(asset.Key, 0, asset.Bytes, 0, 1));
+
+        // 与 FileAssetProvider 一样整块读进内存再返回：AssetManager 的流按序读取即可，
+        // 压缩条目不支持 seek，清单里的 Bytes 只当预分配容量提示，可能与实际大小有出入。
+        using var source = openStream(asset.Path);
+
+        var buffered = new MemoryStream(new byte[(int)Math.Clamp(asset.Bytes, 0, int.MaxValue)]);
+
+        await source.CopyToAsync(buffered, cancellationToken);
+
+        progress?.Report(new AssetProgress(asset.Key, buffered.Length, buffered.Length, 1, 1));
+
+        buffered.Position = 0;
+
+        return buffered;
+    }
+}
+
+/// <summary>
 /// 通过 HTTP 按需下载资产的实现。字节内容进 <see cref="AssetCache"/>，
 /// 因此在同一会话里重复进入同一功能页只会有一次网络开销（解码开销无法避免）。
 /// </summary>

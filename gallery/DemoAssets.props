@@ -2,16 +2,27 @@
 
   <!--
     演示资产刻意不走 <AvaloniaResource>：那等于把整个 assets 目录编进程序集，浏览器端就变成一个
-    168MB 的 Aura3D.Gallery.wasm，启动前必须整包下载。这里改为四个宿主各自把 gallery/assets 原样拷出去，
-    由共享工程按平台取用：桌面/iOS/Android 用 FileAssetProvider 探测 <BaseDirectory>/assets，
-    浏览器用 WebAssetProvider 取相对 URL assets/，逐页懒下载。
+    168MB 的 Aura3D.Gallery.wasm，启动前必须整包下载。这里改为各宿主按自身能力取用，由共享工程
+    按平台分发（见 Aura3D.Gallery/Assets/AssetProvider.cs）：
+      桌面用 Content 拷到 exe 旁，FileAssetProvider 探测 <BaseDirectory>/assets；
+      安卓没有可按文件路径访问的资产目录（Content 进不了 APK，AppContext.BaseDirectory 是
+      lib/arm64），只能用 AndroidAsset 塞进 APK 的 assets/，由 StreamAssetProvider 经
+      AssetManager 读取——Link 的 assets\ 前缀就是包内那层 assets/ 目录，宿主开流时传的
+      是去掉这层前缀的清单相对路径；
+      浏览器用 WebAssetProvider 取相对 URL assets/，逐页懒下载。
+      iOS 宿主尚未接线（同理进不了文件路径），需要时另加 BundleResource 与对应取用。
   -->
 
-  <ItemGroup Condition="!$(TargetFramework.Contains('-browser'))">
+  <ItemGroup Condition="!$(TargetFramework.Contains('-browser')) and !$(TargetFramework.Contains('-android'))">
     <Content Include="$(MSBuildThisFileDirectory)assets\**\*"
              Link="assets\%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <AndroidAsset Include="$(MSBuildThisFileDirectory)assets\**\*"
+                  Link="assets\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <!--
