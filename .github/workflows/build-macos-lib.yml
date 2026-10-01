@@ -82,6 +82,22 @@ jobs:
           git clone https://chromium.googlesource.com/angle/angle "$HOME/angle_macos"
           cd "$HOME/angle_macos"
           git checkout "$ANGLE_REVISION"
+          # gclient sync 需要 checkout 上一层的 .gclient 解决方案文件（ANGLE 的独立
+          # 检出流程本该由 scripts/bootstrap.py 生成，CI 里显式写等价物）：
+          # url 带 @revision 让 sync 钉在切片版本；solution 名必须与目录名一致。
+          {
+            echo 'solutions = ['
+            echo '  {'
+            echo '    "name": "angle_macos",'
+            echo '    "url": "https://chromium.googlesource.com/angle/angle@${ANGLE_REVISION}",'
+            echo '    "deps_file": "DEPS",'
+            echo '    "managed": False,'
+            echo '    "custom_deps": {},'
+            echo '    "custom_vars": {},'
+            echo '    "safety_check_site_path": None,'
+            echo '  },'
+            echo ']'
+          } > "$HOME/.gclient"
           gclient sync -D
 
       - name: Build ANGLE (macos-arm64, Metal backend)

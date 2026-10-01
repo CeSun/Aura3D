@@ -21,6 +21,23 @@ fi
 
 cd "$ANGLE_DIR"
 git checkout "$ANGLE_REVISION"
+# gclient sync 需要父目录的 .gclient；ANGLE 独立检出的标准做法是 scripts/bootstrap.py，
+# 这里显式写等价物，脚本在没 bootstrap 过的新机器上也能一次跑通。
+if [ ! -f "$(dirname "$ANGLE_DIR")/.gclient" ]; then
+  cat > "$(dirname "$ANGLE_DIR")/.gclient" <<GCLIENT
+solutions = [
+  {
+    "name": "$(basename "$ANGLE_DIR")",
+    "url": "https://chromium.googlesource.com/angle/angle@${ANGLE_REVISION}",
+    "deps_file": "DEPS",
+    "managed": False,
+    "custom_deps": {},
+    "custom_vars": {},
+    "safety_check_site_path": None,
+  },
+]
+GCLIENT
+fi
 gclient sync -D
 
 out="out/macos-arm64"
