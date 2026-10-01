@@ -83,7 +83,7 @@ jobs:
           pkg=$(ls packages/Aura3D.Angle.MacOS.*.nupkg)
           packed=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' <(unzip -p "$pkg" Aura3D.Angle.MacOS.nuspec) | head -1)
           declared=$(grep -m1 -oE '<Version>[^<]+</Version>' src/Aura3D.Angle.MacOS/Aura3D.Angle.MacOS.csproj | sed -E 's:</?Version>::g')
-          pinned=$(grep -m1 -oE '<Aura3DAngelMacosVersion>[^<]+</Aura3DAngelMacosVersion>' Directory.Packages.props | sed -E 's:</?Aura3DAngelMacosVersion>::g')
+          pinned=$(grep -m1 -oE '<Aura3DAngleMacosVersion>[^<]+</Aura3DAngleMacosVersion>' Directory.Packages.props | sed -E 's:</?Aura3DAngleMacosVersion>::g')
           printf '输入版本 %s\n包里版本 %s\n工程里写死的版本 %s\nprops 钉的区间版本 %s\n' "$VERSION" "$packed" "$declared" "$pinned"
           if [ "$packed" != "$VERSION" ]; then
             printf '::error::包里是 %s 而不是输入的 %s——版本号被规范化或 -p:Version 没生效，这种包不能发\n' "$packed" "$VERSION"
@@ -103,7 +103,7 @@ jobs:
           fi
           if [ "$pinned" != "$VERSION" ]; then
             printf '::warning::本次发的是 %s，而主包区间仍钉 %s：Aura3D.Avalonia 用不到刚发的这个包\n' "$VERSION" "$pinned"
-            printf '::warning::把 Directory.Packages.props 的 Aura3DAngelMacosVersion 补成 %s（与上面那行同一次提交），再跑 pack.yml 重发主包\n' "$VERSION" "$pinned"
+            printf '::warning::把 Directory.Packages.props 的 Aura3DAngleMacosVersion 补成 %s（与上面那行同一次提交），再跑 pack.yml 重发主包\n' "$VERSION" "$pinned"
           fi
 
       - name: Check package contents
@@ -136,7 +136,7 @@ jobs:
           pkg=$(ls packages/Aura3D.Angle.MacOS.*.nupkg)
           version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' <(unzip -p "$pkg" Aura3D.Angle.MacOS.nuspec) | head -1)
           declared=$(grep -m1 -oE '<Version>[^<]+</Version>' src/Aura3D.Angle.MacOS/Aura3D.Angle.MacOS.csproj | sed -E 's:</?Version>::g')
-          pinned=$(grep -m1 -oE '<Aura3DAngelMacosVersion>[^<]+</Aura3DAngelMacosVersion>' Directory.Packages.props | sed -E 's:</?Aura3DAngelMacosVersion>::g')
+          pinned=$(grep -m1 -oE '<Aura3DAngleMacosVersion>[^<]+</Aura3DAngleMacosVersion>' Directory.Packages.props | sed -E 's:</?Aura3DAngleMacosVersion>::g')
           {
             echo "## Aura3D.Angle.MacOS"
             echo
@@ -152,7 +152,7 @@ jobs:
             echo "| 本次是否推送 nuget.org | ${{ inputs.publish && '是' || '否（只留 artifact）' }} |"
             if [ "$declared" != "$version" ] || [ "$pinned" != "$version" ]; then
               echo
-              echo "发出去的是 $version，而仓库里还写着 \`$declared\` / 钉着 \`$pinned\`。发完把这两处补成 $version（同一次提交）：\`Aura3D.Angle.MacOS.csproj\` 的 \`<Version>\`、\`Directory.Packages.props\` 的 \`Aura3DAngelMacosVersion\`；然后跑 \`pack.yml\` 重发主包。"
+              echo "发出去的是 $version，而仓库里还写着 \`$declared\` / 钉着 \`$pinned\`。发完把这两处补成 $version（同一次提交）：\`Aura3D.Angle.MacOS.csproj\` 的 \`<Version>\`、\`Directory.Packages.props\` 的 \`Aura3DAngleMacosVersion\`；然后跑 \`pack.yml\` 重发主包。"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 

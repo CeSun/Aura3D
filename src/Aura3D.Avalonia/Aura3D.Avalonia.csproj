@@ -35,6 +35,10 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net10.0'">
     <!-- macOS 形态 B：lease 合成需要 ISkiaSharpApiLeaseFeature 与 SkiaSharp 类型 -->
     <PackageReference Include="Avalonia.Skia" />
+    <!-- macOS 后端运行时从应用目录 dlopen ANGLE dylib，dylib 由切片包的 buildTransitive
+         targets 拷贝注入到应用输出目录。与 iOS/Browser 的切片同构：精确区间依赖，
+         只进桌面 TFM（包内 targets 也会跳过 -ios/-android/-browser），应用侧零配置。 -->
+    <PackageReference Include="Aura3D.Angle.MacOS" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios' or '$(TargetFramework)' == 'net10.0-browser'">
