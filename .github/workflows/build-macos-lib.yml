@@ -1,11 +1,12 @@
 name: Build Library (Aura3D.Angle.MacOS)
 
-# 手动构建并发布 macOS 切片包的通道。与 iOS 包不同，这条流水线在 macos runner 上
-# 真正重建 ANGLE 切片（depot_tools + gn + ninja）和 IOSurface 的 C shim，然后打包：
-# 仓库里 native/macos-arm64/ 提交的切片只是「最近一次本地构建」的底子，
-# 流水线产出的才是本次发布的切片。
-# 版本号在触发时输入，用 -p:Version 覆盖工程里写死的那行；publish 输入设 false 时
-# 只构建 + pack + 校验、把 nupkg 当 artifact 传回来，不碰 nuget.org。
+# 手动构建并发布 macOS 切片包的通道：与 iOS 包同一套模式——ANGLE 切片直接提交在
+# native/macos-arm64/ 下，这条流水线只打包 + 校验 + 发布，因此任何 runner 都能出包，
+# 不需要 Xcode、macos runner 与 depot_tools。
+# 真正的切片重建是 src/Aura3D.Angle.MacOS/build-angle-macos.sh（depot_tools + gn + ninja
+# + C shim 编译），在本地跑，不在这条流水线里。
+# 版本号在触发时输入，用 -p:Version 覆盖工程里写死的那行，不改仓库文件也能发。
+# publish 输入设 false 时只 pack + 校验、把 nupkg 当 artifact 传回来，不碰 nuget.org。
 on:
   workflow_dispatch:
     inputs:
@@ -28,16 +29,13 @@ concurrency:
 env:
   DOTNET_NOLOGO: true
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-  # 与 iOS 切片同源同版本；升级时同时改 build-angle-macos.sh
-  ANGLE_REVISION: 58f8882372e8a4e83da821ac5d16f0323c3fa1af
 
 jobs:
-  build-and-pack:
-    name: Build ANGLE + Pack Aura3D.Angle.MacOS
-    # 必须用 macOS runner：ANGLE 按 target_os=mac 构建，Xcode 提供 clang 与 Metal 工具链
-    # （macos-15 镜像的 Xcode 16 内置 Metal，不需要 Xcode 26 的独立工具链下载）。
-    runs-on: macos-15
+  pack:
+    name: Pack Aura3D.Angle.MacOS
+    runs-on: ubuntu-latest
     env:
+      # 走 env 而不是把 ${{ inputs.version }} 直接插进 shell，触发者手滑打个引号也不会变成脚本注入
       VERSION: ${{ inputs.version }}
     steps:
       - uses: actions/checkout@v4
@@ -48,6 +46,8 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Check version input
+        # 先验形状再 pack：NuGet 会把 1.0 / 01.1.0 / 1.0.0.0 规范化成别的写法，
+        # 传进去和包里出来的对不上就直接红，省掉一次 pack 加一次无意义的推送尝试。
         run: |
           set -euo pipefail
           if [ -z "${VERSION:-}" ]; then
@@ -60,72 +60,9 @@ jobs:
           fi
           printf '版本号输入通过：%s\n' "$VERSION"
 
-      - name: Install depot_tools
-        # gn / ninja / gclient 都在里面；浅克隆即可，depot_tools 自更新在 sync 时自动完成
-        run: |
-          set -euo pipefail
-          git clone --depth=1 https://chromium.googlesource.com/chromium/tools/depot_tools.git "$HOME/depot_tools"
-          echo "$HOME/depot_tools" >> "$GITHUB_PATH"
-
-      - name: Cache ANGLE checkout
-        # gclient sync 要拉数 GB 的第三方源码；按 revision 做缓存键，同 revision 的重跑直接命中
-        id: angle-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/angle_macos
-          key: angle-macos-${{ env.ANGLE_REVISION }}
-
-      - name: Fetch ANGLE at pinned revision
-        if: steps.angle-cache.outputs.cache-hit != 'true'
-        run: |
-          set -euo pipefail
-          git clone https://chromium.googlesource.com/angle/angle "$HOME/angle_macos"
-          cd "$HOME/angle_macos"
-          git checkout "$ANGLE_REVISION"
-          # gclient sync 需要 checkout 上一层的 .gclient 解决方案文件（ANGLE 的独立
-          # 检出流程本该由 scripts/bootstrap.py 生成，CI 里显式写等价物）：
-          # url 带 @revision 让 sync 钉在切片版本；solution 名必须与目录名一致。
-          {
-            echo 'solutions = ['
-            echo '  {'
-            echo '    "name": "angle_macos",'
-            echo '    "url": "https://chromium.googlesource.com/angle/angle@${ANGLE_REVISION}",'
-            echo '    "deps_file": "DEPS",'
-            echo '    "managed": False,'
-            echo '    "custom_deps": {},'
-            echo '    "custom_vars": {},'
-            echo '    "safety_check_site_path": None,'
-            echo '  },'
-            echo ']'
-          } > "$HOME/.gclient"
-          gclient sync -D
-
-      - name: Build ANGLE (macos-arm64, Metal backend)
-        run: |
-          set -euo pipefail
-          cd "$HOME/angle_macos"
-          gn gen out/macos-arm64 --args='target_os = "mac"
-            target_cpu = "arm64"
-            is_component_build = false
-            angle_enable_metal = true
-            is_debug = false
-            enable_rust = false'
-          ninja -C out/macos-arm64 libEGL libGLESv2
-
-      - name: Stage slice + build IOSurface shim
-        # shim 源码在本仓库；切片产出自 ANGLE 构建。打包工程 native/ 下的提交件被本次构建覆盖。
-        run: |
-          set -euo pipefail
-          mkdir -p src/Aura3D.Angle.MacOS/native/macos-arm64
-          cp "$HOME/angle_macos/out/macos-arm64/libEGL.dylib" \
-             "$HOME/angle_macos/out/macos-arm64/libGLESv2.dylib" \
-             src/Aura3D.Angle.MacOS/native/macos-arm64/
-          cc -shared -o src/Aura3D.Angle.MacOS/native/macos-arm64/libAura3dAngleMacOSHelper.dylib \
-             src/Aura3D.Angle.MacOS/shim/aura3d_angle_macos.c \
-             -framework CoreFoundation -framework IOSurface
-          ls -la src/Aura3D.Angle.MacOS/native/macos-arm64/
-
       - name: Pack
+        # 工程里的 <Version> 是写死的字面值；这里用全局属性覆盖它——MSBuild 全局属性
+        # 优先于工程内的赋值，所以不改仓库文件也能发任意版本号。
         run: |
           set -euo pipefail
           if ! out=$(dotnet pack src/Aura3D.Angle.MacOS -c Release -o packages "-p:Version=$VERSION" 2>&1); then
@@ -165,7 +102,8 @@ jobs:
             printf '::warning::本次发的是 %s，工程里仍写死 %s；发完把 Aura3D.Angle.MacOS.csproj 的 <Version> 补成 %s\n' "$VERSION" "$declared" "$VERSION"
           fi
           if [ "$pinned" != "$VERSION" ]; then
-            printf '::warning::本次发的是 %s，而主包区间仍钉 %s；发完把 Directory.Packages.props 的 Aura3DAngelMacosVersion 补成 %s，再跑 pack.yml 重发主包\n' "$VERSION" "$pinned" "$VERSION"
+            printf '::warning::本次发的是 %s，而主包区间仍钉 %s：Aura3D.Avalonia 用不到刚发的这个包\n' "$VERSION" "$pinned"
+            printf '::warning::把 Directory.Packages.props 的 Aura3DAngelMacosVersion 补成 %s（与上面那行同一次提交），再跑 pack.yml 重发主包\n' "$VERSION" "$pinned"
           fi
 
       - name: Check package contents
@@ -197,6 +135,8 @@ jobs:
           set -euo pipefail
           pkg=$(ls packages/Aura3D.Angle.MacOS.*.nupkg)
           version=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' <(unzip -p "$pkg" Aura3D.Angle.MacOS.nuspec) | head -1)
+          declared=$(grep -m1 -oE '<Version>[^<]+</Version>' src/Aura3D.Angle.MacOS/Aura3D.Angle.MacOS.csproj | sed -E 's:</?Version>::g')
+          pinned=$(grep -m1 -oE '<Aura3DAngelMacosVersion>[^<]+</Aura3DAngelMacosVersion>' Directory.Packages.props | sed -E 's:</?Aura3DAngelMacosVersion>::g')
           {
             echo "## Aura3D.Angle.MacOS"
             echo
@@ -204,10 +144,16 @@ jobs:
             echo "| --- | --- |"
             echo "| 包 | \`$(basename "$pkg")\` |"
             echo "| 输入的版本 | $VERSION |"
-            echo "| ANGLE revision | $ANGLE_REVISION |"
+            echo "| nuspec 版本 | $version |"
+            echo "| csproj 写死的版本 | $declared |"
+            echo "| Directory.Packages.props 钉的区间 | $pinned |"
             echo "| 大小 | $(du -h "$pkg" | cut -f1) |"
             echo "| commit | ${{ github.sha }} |"
             echo "| 本次是否推送 nuget.org | ${{ inputs.publish && '是' || '否（只留 artifact）' }} |"
+            if [ "$declared" != "$version" ] || [ "$pinned" != "$version" ]; then
+              echo
+              echo "发出去的是 $version，而仓库里还写着 \`$declared\` / 钉着 \`$pinned\`。发完把这两处补成 $version（同一次提交）：\`Aura3D.Angle.MacOS.csproj\` 的 \`<Version>\`、\`Directory.Packages.props\` 的 \`Aura3DAngelMacosVersion\`；然后跑 \`pack.yml\` 重发主包。"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload nupkg
@@ -218,9 +164,12 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  # 与 build-ios-lib.yml 的 publish 同构：GitHub OIDC 换 nuget.org 的临时 API Key，
+  # environment 名必须与可信发布策略里填的一致，否则令牌 environment 声明为空、校验失败。
+  # needs: pack 意味着上面两道内容核对没过就绝不会推包。
   publish-to-nuget:
     if: inputs.publish
-    needs: build-and-pack
+    needs: pack
     runs-on: ubuntu-latest
     environment: production
     permissions:
@@ -233,6 +182,9 @@ jobs:
           path: packages
 
       - name: Refuse a version nuget.org already has
+        # 版本号来自触发时的输入，所以「忘了 bump」表现为重复输入同一个号——重复版本号
+        # 会被 --skip-duplicate 静默跳过：nuget.org 上留的还是旧切片，而仓库里已经翻篇。
+        # 这里把它变成红：要推的版本号必须是 nuget.org 上还没有的。
         run: |
           set -euo pipefail
           count=$(find packages -maxdepth 1 -name 'Aura3D.Angle.MacOS.*.nupkg' | wc -l | tr -d '[:space:]')
@@ -247,15 +199,18 @@ jobs:
           fi
           index=$(curl -sfL "https://api.nuget.org/v3-flatcontainer/aura3d.angle.macos/index.json" || true)
           if printf '%s' "$index" | grep -qF "\"$version\""; then
-            printf '::error::Aura3D.Angle.MacOS %s 已经在 nuget.org 上了，换一个版本号\n' "$version"
+            printf '::error::Aura3D.Angle.MacOS %s 已经在 nuget.org 上了，--skip-duplicate 会静默跳过它\n' "$version"
+            printf '::error::这次要推的切片与 nuget.org 上的 %s 不是同一份，换一个版本号；推完记得把 Aura3D.Angle.MacOS.csproj 的 <Version> 与 Directory.Packages.props 的区间都补成这个号\n' "$version"
             exit 1
           fi
           printf 'nuget.org 上没有 Aura3D.Angle.MacOS %s，可以推\n' "$version"
 
+      # OIDC 令牌换取临时 API Key（有效期仅 1 小时），因此紧跟推送步骤，不做多余动作。
       - name: NuGet login (OIDC -> temp API key)
         uses: NuGet/login@v1
         id: login
         with:
+          # 必须是 nuget.org 的“用户名/Profile name”，不是邮箱；建议存为仓库 secret NUGET_USER。
           user: ${{ secrets.NUGET_USER }}
 
       - name: Push to NuGet
