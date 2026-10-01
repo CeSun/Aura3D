@@ -17,6 +17,14 @@ Noto Sans SC 本身也没有，遇到这种字符改用它画得出来的等价�
 用法：
     python3 tools/fonts/generate-cjk-font.py            重新子集化（需要 fontTools）
     python3 tools/fonts/generate-cjk-font.py --check    只核对，不重生成（CI 用这条，纯标准库）
+
+核对两条（在 check 里做，不通过就红）：
+    - 子集产物与它的码点清单都在（缺了中文在浏览器上全是豆腐块）
+    - UI 源码与 resx 里出现的非 ASCII 字符都被子集覆盖
+
+体积只打印、不设门禁（曾有过 2.5 MB 预算，2026-10-01 按用户意见撤掉）。
+字体确实随程序集一次下载，但这个 MB 数完全由字符集范围决定，而范围是「界面要出哪些字」定的；
+拿一个拍出来的数字当闸门，只会在真需要扩字符集时报红，拦不住任何真实的坏情况。
 """
 import hashlib
 import sys
@@ -33,9 +41,6 @@ OUT = REPO_ROOT / "gallery" / "Aura3D.Gallery" / "Fonts" / "NotoSansSC-Subset.ot
 # 子集里真正落进了哪些码点，由生成时反读字体 cmap 写在这里。--check 拿它核对，
 # 于是 CI 不必装 fontTools、也不必自己解析 cmap，同时杜绝「字符集里有但源字体本来没有」的假通过。
 COVERED = Path(__file__).resolve().parent / "charset-covered.txt"
-
-# 子集产物是要编进程序集、浏览器启动时下载的，体积必须盯住。
-BUDGET_BYTES = 2_500_000
 
 # GB2312 之外的补充区段：拉丁、常用标点与符号、箭头、几何图形、装饰符号、全角形式。
 EXTRA_RANGES = [
@@ -115,8 +120,6 @@ def generate() -> int:
     COVERED.write_text("".join(chr(cp) for cp in sorted(font.getBestCmap())), encoding="utf-8")
     print(f"生成 {OUT.relative_to(REPO_ROOT)}：{size/1e6:.2f} MB，{font['maxp'].numGlyphs} 个字形，"
           f"{len(font.getBestCmap())} 个码点（写入 {COVERED.relative_to(REPO_ROOT)}）")
-    if size > BUDGET_BYTES:
-        raise SystemExit(f"超出预算 {BUDGET_BYTES/1e6:.1f} MB，需要收窄字符集")
     return 0
 
 
@@ -126,8 +129,6 @@ def check() -> int:
     if not COVERED.exists():
         raise SystemExit(f"缺少 {COVERED}：跑一次 generate-cjk-font.py 生成")
     size = OUT.stat().st_size
-    if size > BUDGET_BYTES:
-        raise SystemExit(f"{OUT.name} 体积 {size/1e6:.2f} MB，超出预算 {BUDGET_BYTES/1e6:.1f} MB")
 
     covered = set(COVERED.read_text(encoding="utf-8"))
     used = ui_chars()

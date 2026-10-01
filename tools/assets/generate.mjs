@@ -4,12 +4,17 @@
  *
  * 为什么必须走这一趟：旧工程把 Assets/** 用 AvaloniaResource 编进 Aura3D.Gallery 程序集，
  * 浏览器上就是一个 168MB 的 Aura3D.Gallery.wasm，启动前必须整包下载。新结构里资产完全在程序集之外，
- * 按功能页懒加载，所以这里的产物体积就是用户实际的下载量。
+ * 按功能页（页内再按需）懒加载，所以某一页的产物体积才是进那一页要付的下载量，
+ * 而全部产物的合计不是——没有哪次会话会把它下完。
  *
- * 预算（在 checkBudgets 里核对，超了就红着脸改）：
- *   - 全部 WebFriendly 资产合计 ≤ 20 MB
- *   - 单个功能页进页即取的资产合计 ≤ 6 MB
+ * 核对（在 checkManifest 里做，不通过就红）：
+ *   - 页面的 RequireSet 里不许有未登记的 Key
  *   - 清单里不许有没有任何代码取用的 Key
+ *
+ * 体积只打印、不设门禁。既然资产已经按页（乃至页内再按需）懒加载，一次会话永远不会把全部资产
+ * 下完，"合计多少 MB"不是任何用户要付的代价；用合计值当闸门只会挡住真实的演示需求，
+ * 拦不住真正的坏情况。单个资产是否上浏览器由 WebFriendly 表达，那是能力判断（如 Assimp 读不了
+ * 浏览器的 FBX），不是体积判断。
  *
  * 用法：node tools/assets/generate.mjs            重编码全部产物并核对
  *       node tools/assets/generate.mjs --check    不重编码，只按现有产物核对（CI 用这条）
@@ -80,12 +85,10 @@ const environments = [
   { key: 'Hdr1k', src: 'Textures/buikslotermeerplein_1k.hdr', out: 'environments/buikslotermeerplein_1k.hdr' },
 ];
 
-const WEB_BUDGET_BYTES = 20 * 1024 * 1024;
-
 async function main() {
   const only = argValue('--only');
 
-  // --check 不重编码，只按现有产物核对预算与取用覆盖：CI 上没有 160MB 源资产目录，靠这条守住预算。
+  // --check 不重编码，只按现有产物核对清单与代码的一致性：CI 上没有 160MB 源资产目录，靠这条守住登记表不漂移。
   if (process.argv.includes('--check')) {
     printAndCheck(JSON.parse(readFileSync(path.join(OUT, 'manifest.json'), 'utf8')));
 
@@ -169,16 +172,16 @@ async function main() {
 function printAndCheck(report) {
   print(report);
 
-  checkBudgets(report);
+  checkManifest(report);
 }
 
-const PAGE_BUDGET_BYTES = 6 * 1024 * 1024;
 const SHARED_DIR = path.join(repoRoot, 'gallery', 'Aura3D.Gallery');
 const REGISTRY = path.join(SHARED_DIR, 'Demos', 'DemoRegistry.cs');
 
-/// 预算的两条核对都在生成环节做死，不靠文档：单页 ≤ 6 MB、清单里不许有没人取的资产。
+/// 清单与代码的一致性核对：页面的 RequireSet 里不许有未登记的 Key，清单里不许有没有任何代码取用的 Key。
 /// 页与 Key 的关系只存在于 DemoRegistry.cs 的 RequireSet 里，所以这里直接按文本读它。
-function checkBudgets(report) {
+/// 体积只打印不设门禁，见文件头的说明。
+function checkManifest(report) {
   const bytesOf = new Map(report.map((row) => [row.key, row.bytes]));
   const problems = [];
 
@@ -193,10 +196,10 @@ function checkBudgets(report) {
 
     console.log(`  ${match[1].padEnd(18)} 进页即取 ${(total / 1024 / 1024).toFixed(2).padStart(5)} MB  ${keys.join(' ')}`);
 
-    if (keys.some((key) => !bytesOf.has(key))) {
-      problems.push(`${match[1]}：RequireSet 里有未登记的 Key ${keys.filter((k) => !bytesOf.has(k)).join(', ')}`);
-    } else if (total > PAGE_BUDGET_BYTES) {
-      problems.push(`${match[1]}：进页即取 ${(total / 1024 / 1024).toFixed(1)} MB > 6 MB`);
+    const unknown = keys.filter((key) => !bytesOf.has(key));
+
+    if (unknown.length > 0) {
+      problems.push(`${match[1]}：RequireSet 里有未登记的 Key ${unknown.join(', ')}`);
     }
   }
 
@@ -216,11 +219,11 @@ function checkBudgets(report) {
   }
 
   if (problems.length > 0) {
-    console.error(`\n资产预算核对不通过：\n  ${problems.join('\n  ')}`);
+    console.error(`\n清单核对不通过：\n  ${problems.join('\n  ')}`);
 
     process.exitCode = 1;
   } else {
-    console.log(`单页预算（≤ 6 MB）与取用覆盖（${bytesOf.size} 个 Key 全部有页取用）均通过。`);
+    console.log(`清单一致（${bytesOf.size} 个 Key 全部有页取用，页面的 RequireSet 无未登记 Key）。`);
   }
 }
 
@@ -384,13 +387,8 @@ function print(report) {
 
   console.log(`\n产物合计 ${(total / 1024 / 1024).toFixed(1)} MB；其中浏览器可下载 ${(webTotal / 1024 / 1024).toFixed(1)} MB（源目录 160 MB）`);
 
-  if (webTotal > WEB_BUDGET_BYTES) {
-    console.error(`超出预算：浏览器侧 ${(webTotal / 1024 / 1024).toFixed(1)} MB > ${(WEB_BUDGET_BYTES / 1024 / 1024).toFixed(0)} MB`);
-
-    process.exitCode = 1;
-  } else {
-    console.log(`预算内（≤ ${(WEB_BUDGET_BYTES / 1024 / 1024).toFixed(0)} MB）。`);
-  }
+  // 只报数，不判红：上面的合计按页懒加载摊开，没有任何一次会话会把这 26 MB 下完。
+  console.log('（体积仅供参考，不是门禁；资产按功能页、页内再按需下载。）');
 }
 
 await main();

@@ -278,7 +278,7 @@
   <data name="MaterialShaders_RotationSpeed" xml:space="preserve"><value>整排自转 °/s</value></data>
   <data name="MaterialShaders_Grid" xml:space="preserve"><value>地面网格</value></data>
   <data name="MaterialShaders_Runtime" xml:space="preserve"><value>运行状态</value></data>
-  <data name="ModelViewer_Intro" xml:space="preserve"><value>下拉里带「进页即取」的三项在 LoadAssetsAsync 里一次取完（本页预算约 3 MB），换它们不产生下载——换的只是场景里哪个 Model 节点 Enable。带「页内按需」的四项挂在页里取：选到才下载并解码，所以不计入功能页预算，浏览器端把重模型放在这一档，首屏就只付首屏的字节。</value></data>
+  <data name="ModelViewer_Intro" xml:space="preserve"><value>下拉里带「进页即取」的三项在 LoadAssetsAsync 里一次取完（本页约 3 MB），换它们不产生下载——换的只是场景里哪个 Model 节点 Enable。带「页内按需」的四项挂在页里取：选到才下载并解码，所以不计入进页即取的下载量，浏览器端把重模型放在这一档，首屏就只付首屏的字节。</value></data>
   <data name="ModelViewer_CurrentModel" xml:space="preserve"><value>当前模型</value></data>
   <data name="ModelViewer_Fit" xml:space="preserve"><value>FitToBoundingBox（padding 见下面滑杆）</value></data>
   <data name="ModelViewer_FitPadding" xml:space="preserve"><value>FitToBoundingBox 的 padding</value></data>
@@ -447,7 +447,7 @@
   <data name="ModelViewer_CopyOptionSharedResourceData" xml:space="preserve"><value>SharedResourceData（几何换壳、属性表仍共享）</value></data>
   <data name="ModelViewer_CopyOptionFullCopy" xml:space="preserve"><value>FullCopy（几何数据与贴图各自一份）</value></data>
   <data name="ModelViewer_LoadProgress" xml:space="preserve"><value>装载 {0}：{1} KB，下载 + 解码中…</value></data>
-  <data name="ModelViewer_LoadDone" xml:space="preserve"><value>装载 {0} 完成：{1} KB / 用时 {2} ms（清单登记路径 {3}，本页预算不含它）</value></data>
+  <data name="ModelViewer_LoadDone" xml:space="preserve"><value>装载 {0} 完成：{1} KB / 用时 {2} ms（清单登记路径 {3}，不计入进页即取的下载量）</value></data>
   <data name="ModelViewer_StructureReadout" xml:space="preserve"><value>{0} · 子节点 {1} · Mesh {2} 个 · 顶点合计 {3:N0} · 通道 [{4}] · BlendMode={5} DoubleSided={6} AlphaCutoff={7:0.##}</value></data>
   <data name="ModelViewer_BoxReadout" xml:space="preserve"><value>min ({0:0.##}, {1:0.##}, {2:0.##}) max ({3:0.##}, {4:0.##}, {5:0.##}) · BoundingBoxPadding={6:0.##} · CustomBoundingBox={7}</value></data>
   <data name="ModelViewer_BoxNone" xml:space="preserve"><value>无</value></data>

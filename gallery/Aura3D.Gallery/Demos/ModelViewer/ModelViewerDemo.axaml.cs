@@ -20,13 +20,13 @@ namespace Aura3D.Gallery.Demos;
 /// <summary>
 /// glTF/GLB 加载出来的 <see cref="ModelNode"/> 节点树：加载器把 glTF 的哪些东西搬进了引擎，
 /// 模型级包围盒的两个属性管什么，以及 <see cref="ModelNode.Clone(CopyType)"/> 三种副本到底共享了什么。
-/// 库里的模型分两档取：进页即取的算在本页预算里，页内按需取的不算——这是 web 端控制首屏字节的办法。
+/// 库里的模型分两档取：进页即取的算进该页的下载量，页内按需取的不算——这是 web 端控制首屏字节的办法。
 /// 参数行的排版全在 <c>ModelViewerDemo.axaml</c> 里，这里只剩场景组装与回调。
 /// </summary>
 public sealed partial class ModelViewerDemo : Demo
 {
     // 三个进页即取（清单里合计约 3 MB），三个挂在页内按需取，选到才下载。
-    // 后者不计入功能页的预算，因为 AssetBatch 允许取本页集合之外的 Key（回落到全表）。
+    // 后者不计入进页即取的下载量，因为 AssetBatch 允许取本页集合之外的 Key（回落到全表）。
     private static readonly (string Key, LinguaKey Label, bool Preload)[] Library =
     [
         ("Stool", Strings.Keys.ModelViewer_OptionStool, true),

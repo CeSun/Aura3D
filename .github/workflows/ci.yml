@@ -97,14 +97,17 @@ jobs:
         # microsoft-net-sdk-emscripten），`workload install emscripten` 直接报"未识别工作负载 ID"。
         run: dotnet workload install android wasm-tools ios
 
-      - name: Check gallery asset budgets
-        # gallery/assets 是入库的压缩产物；这一步核对总下载量 ≤20MB、单页进页即取 ≤6MB、
-        # 清单里没有无人取用的 Key。源资产（gallery/assets-src）不入库，所以这里只读现有产物。
+      - name: Check gallery asset manifest
+        # gallery/assets 是入库的压缩产物；这一步核对清单与代码一致：页面的 RequireSet 里没有未登记的 Key、
+        # 清单里没有无人取用的 Key。体积只打印不设门禁——资产在程序集之外、按功能页懒加载，
+        # 没有任何一次会话会把全部资产下完，合计值不是用户要付的代价。
+        # 源资产（gallery/assets-src）不入库，所以这里只读现有产物。
         run: node tools/assets/generate.mjs --check
 
       - name: Check gallery CJK font coverage
         # 浏览器宿主拿不到系统字体，中文靠内嵌的 Noto Sans SC 子集出字（子集与它的码点清单一并入库）。
-        # 这一步不重新生成字体，只核对 UI 里出现的非 ASCII 字符确实被子集覆盖、产物没超 2.5MB 预算。
+        # 这一步不重新生成字体，只核对产物在、且 UI 里出现的非 ASCII 字符确实被子集覆盖。
+        # 体积只打印不设门禁——字体大小由字符集范围决定，拍一个 MB 数当闸门只会挡住真要扩字符集的时候。
         run: python3 tools/fonts/generate-cjk-font.py --check
 
       - name: Build Aura3D.Gallery.Desktop

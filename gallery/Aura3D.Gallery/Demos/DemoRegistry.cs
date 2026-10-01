@@ -7,7 +7,7 @@ using System.Linq;
 namespace Aura3D.Gallery;
 
 /// <summary>
-/// 全部功能页的目录。导航、深链、体积预算都读这张表，所以新增一页只需在这里加一项。
+/// 全部功能页的目录。导航、深链、资产取用都读这张表，所以新增一页只需在这里加一项。
 /// 顺序即导航顺序，按分组聚集。
 /// </summary>
 public static class DemoRegistry
