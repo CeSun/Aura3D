@@ -21,46 +21,24 @@
 
 ## 简介
 
-Aura3D 是一个轻量级、高性能、可扩展的 Avalonia 3D 控件库。它提供了从模型加载、场景管理、光照阴影到自定义渲染管线的完整能力，默认管线基于 OpenGL ES 3.0，适合在 .NET 桌面应用中集成 3D 内容展示。
+Aura3D 是一个轻量级、高性能、可扩展的 Avalonia 3D 控件库。它覆盖了从模型加载、场景管理、光照阴影到自定义渲染管线的完整链路，适合在 .NET 桌面应用中集成 3D 内容。
 
 ## 特性
 
-### 场景与模型
-- **多格式模型加载** — 原生支持 glTF/GLB，通过 Assimp 扩展支持 FBX、OBJ、3DS 等 50+ 格式
-- **内置基础几何体** — 盒子、球体、圆柱体、平面
-- **场景图** — 层次化的节点树，支持父子变换继承
-
-### 光照与阴影
-- **方向光 / 点光 / 聚光灯** — 三种光源类型，支持颜色、衰减半径、阴影投射
-- **CSM 级联阴影** — 主方向光自动使用级联阴影贴图，可配置级联数量和分割方案
-- **Blinn-Phong 光照模型** — 默认前向渲染管线
-- **IBL 基于图像的光照** — PBR 管线从环境立方图烘培辐照度图与预滤波环境贴图
-- **HDR 环境贴图** — 天空盒 / 环境光背景
-
-### 动画系统
-- **骨骼动画** — 支持 glTF 蒙皮动画和 Assimp 导入的外部动画
-- **动画混合空间** — 2D 混合空间，在多个动画间平滑过渡
-- **动画状态图** — 基于条件的状态机，支持状态间的混合过渡
-
-### 渲染管线
-- **可替换渲染管线** — 内置 BlinnPhong（写实）、NoLight（无光照）
-- **PBR 延迟管线** — 基于物理的渲染，支持 Metallic-Roughness 工作流
-- **卡通渲染管线** — Cel Shading 风格，含屏占比驱动的描边
-- **自定义管线** — 自由组合 RenderPass，无需处理 VAO/VBO
-
-### 高级渲染
-- **GPU 实例化** — `InstancedMesh`，万级实例高性能渲染
-- **层次化实例化** — `InstancedMeshGroup`（类似 UE 的 HISM），支持增量更新与自动分组
-- **视锥体剔除** — 可开关，大幅减少不可见物体的绘制
-- **八叉树空间索引** — 自动扩张的八叉树，高效空间查询与剔除
-- **点云渲染** — 内置 `PointCloudPipeline`，基于实例化的高性能点云渲染
-- **图元渲染** — Triangles、Lines、LineStrip、LineLoop、Points、TriangleStrip、TriangleFan
-- **点击拾取** — `Scene.Pick` / `Scene.PickClosest`，支持三角形级别的 Mesh 和 InstancedMesh 拾取
-- **调试可视化** — 内置调试绘制，支持包围盒、光源、骨骼、摄像机视锥体等可视化
-
-### 平台
-- **Avalonia** — 支持 Windows、Linux、macOS、Android、iOS
-- **.NET 8+** — 支持 .NET 8.0 和 .NET 10.0
+| 分类 | 能力 |
+|---|---|
+| 场景与模型 | 场景图与层次化节点树；原生加载 glTF/GLB，通过 Assimp 支持 FBX、OBJ、3DS 等 50+ 格式；内置盒子 / 球体 / 圆柱 / 平面 |
+| 相机 | 透视与正交投影、对准目标与自动取景、`CameraController` 键鼠交互、多相机分屏、渲染到纹理 |
+| 光照与阴影 | 方向光 / 点光 / 聚光灯；主方向光 CSM 级联阴影（级联数与分割方案可配）；默认 Blinn-Phong 前向管线 |
+| 环境与 IBL | 纯色 / 贴图 / 立方图背景；HDR 全景天空盒；PBR 管线烘培辐照度图与预滤波环境贴图 |
+| 材质与着色器 | 材质通道与贴图及其采样参数；材质级自定义着色器与着色器宏；逐实例自定义属性 |
+| 动画 | glTF 蒙皮与 Assimp 外部动画；2D 动画混合空间；基于条件的动画状态图；骨骼挂点 |
+| 粒子 | CPU 模拟粒子系统，发射形状、网格粒子与 Flipbook、完整播放生命周期 |
+| 渲染管线 | 内置 BlinnPhong / NoLight / PBR 延迟 / PBR 前向 / 卡通（默认管线基于 OpenGL ES 3.0）；自由组合 RenderPass 的自定义管线，无需处理 VAO/VBO |
+| 实例化与拾取 | `InstancedMesh` GPU 实例化、`InstancedMeshGroup` 层次化实例化（HISM，增量更新与自动分组）、点云、全部图元拓扑；`Scene.Pick` 三角形级拾取 |
+| 性能与调试 | 视锥体剔除、八叉树空间索引、包围盒 / 光源 / 骨骼 / 摄像机视锥体调试绘制 |
+| GPU 资源 | 按需上传与回收，上下文丢失自动恢复 |
+| 平台 | Avalonia：Windows / Linux / macOS / Android / iOS；.NET 8.0 与 .NET 10.0，含浏览器（WebGL2） |
 
 ## 快速开始
 
@@ -72,21 +50,9 @@ dotnet add package Aura3D.Model.GltfLoader
 ```
 
 > [!IMPORTANT]
-> **Browser（`net10.0-browser`）项目：**当前 .NET 10 下，Release/静态发布必须在应用
-> `.csproj` 中同时加入以下三项配置：
->
-> ```xml
-> <PropertyGroup Condition="'$(Configuration)' == 'Release'">
->   <PublishTrimmed>false</PublishTrimmed>
->   <RunAOTCompilation>false</RunAOTCompilation>
->   <WasmLinkIcalls>false</WasmLinkIcalls>
-> </PropertyGroup>
-> ```
->
-> 原因是默认裁剪会漏掉 Silk.NET 函数指针调用需要的 WASM trampoline，而 icall linking
-> 还可能造成运行时与 `System.Private.CoreLib` 不同步；三项不能只配置一部分。
-> 错误特征、完整原因及干净发布要求见
-> [Browser Release/静态发布说明](doc/cn/platform-render-backends.md#browser-net10-release-config)。
+> **Browser（`net10.0-browser`）项目：**.NET 10 下 Release/静态发布需要在应用 `.csproj` 中额外
+> 加入三项 MSBuild 配置，详见
+> [Browser Release/静态发布说明](https://cesun.github.io/Aura3D-Docs/platform-render-backends.html#browser-net10-release-config)。
 
 > 至少需要安装一个模型加载库。`Aura3D.Model.GltfLoader` 用于加载 glTF/GLB 格式。
 > 如需加载 FBX、OBJ、3DS 等 50+ 格式，请额外安装 `Aura3D.Model.AssimpLoader`。
@@ -125,7 +91,7 @@ public void OnSceneInitialized(object sender, InitializedRoutedEventArgs args)
 }
 ```
 
-> 更多特性的使用方法请参阅 [文档目录](doc/cn/home.md)。
+> 更多特性的使用方法请参阅[中文文档](https://cesun.github.io/Aura3D-Docs/)。
 
 ## NuGet 包
 

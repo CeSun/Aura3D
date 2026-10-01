@@ -4,7 +4,7 @@
     <div id="link">
         <span>English</span> | 
         <a href="./README_CN.md">中文</a> |
-        <a href="https://cesun.github.io/Aura3D-Docs/">Documentation</a> |
+        <a href="https://cesun.github.io/Aura3D-Docs/en/">Documentation</a> |
         <a href="https://cesun.github.io/Aura3D-Gallery/">Online Demo</a>
     </div>
 </div>
@@ -12,55 +12,33 @@
 
 ![demo](./doc/images/example_debugtest.png)
 
-**Online gallery:** [Aura3D-Gallery](https://cesun.github.io/Aura3D-Gallery/) — Run every engine feature (pipelines, IBL, animation blend space, materials) directly in your browser.
+**Online gallery:** [Aura3D-Gallery](https://cesun.github.io/Aura3D-Gallery/) — run every engine feature (pipelines, IBL, animation blend space, materials) directly in your browser.
 
-**Demo project:** [TowerDefense3D](https://github.com/CeSun/TowerDefense3D) — A tower defense game built with Aura3D, showcasing real-world usage of the engine.
+**Demo project:** [TowerDefense3D](https://github.com/CeSun/TowerDefense3D) — a tower defense game built with Aura3D, showcasing real-world usage of the engine.
 
 > [!IMPORTANT]
 > The project is under active development. Feedback and suggestions are welcome via [Issues](https://github.com/CeSun/Aura3d/issues).
 
 ## Overview
 
-Aura3D is a lightweight, high-performance and extensible Avalonia 3D control library. It provides a complete set of capabilities from model loading, scene management, and lighting/shadows to custom rendering pipelines — the default pipeline runs on OpenGL ES 3.0 — suitable for integrating 3D content into .NET desktop applications.
+Aura3D is a lightweight, high-performance and extensible Avalonia 3D control library. It covers the full path from model loading, scene management and lighting/shadows to custom rendering pipelines, so you can integrate 3D content into .NET desktop applications.
 
 ## Features
 
-### Scene & Models
-- **Multi-format model loading** — Native glTF/GLB support, plus 50+ formats via Assimp extension (FBX, OBJ, 3DS, etc.)
-- **Built-in geometries** — Box, sphere, cylinder, plane
-- **Scene graph** — Hierarchical node tree with parent-child transform inheritance
-
-### Lighting & Shadows
-- **Directional / Point / Spot lights** — Three light types with color, attenuation radius, and shadow casting
-- **CSM cascaded shadows** — Automatic cascaded shadow maps for the main directional light, configurable cascade count and split scheme
-- **Blinn-Phong lighting model** — Default forward rendering pipeline
-- **IBL image-based lighting** — PBR pipelines build irradiance and prefiltered environment maps from an environment cubemap
-- **HDR environment maps** — Skybox / ambient background
-
-### Animation System
-- **Skeletal animation** — glTF skinning and Assimp-imported external animations
-- **Animation blend space** — 2D blend space for smooth transitions between animations
-- **Animation graph** — Condition-based state machine with blend transitions
-
-### Rendering Pipelines
-- **Replaceable pipelines** — Built-in BlinnPhong (realistic) and NoLight (unlit)
-- **PBR deferred pipeline** — Physically-based rendering with Metallic-Roughness workflow
-- **Cel shading pipeline** — Toon shading style with screen-proportional outlines
-- **Custom pipelines** — Compose RenderPass freely without dealing with VAO/VBO
-
-### Advanced Rendering
-- **GPU instancing** — `InstancedMesh` for high-performance rendering of thousands of instances
-- **Hierarchical instancing** — `InstancedMeshGroup` (similar to UE's HISM) with incremental updates and auto-grouping
-- **Frustum culling** — Togglable, greatly reduces invisible draw calls
-- **Octree spatial index** — Auto-expanding octree for efficient spatial queries and culling
-- **Point cloud** — Built-in `PointCloudPipeline` for high-performance instancing-based point cloud rendering
-- **Primitive rendering** — Triangles, Lines, LineStrip, LineLoop, Points, TriangleStrip, TriangleFan
-- **Click picking** — `Scene.Pick` / `Scene.PickClosest` for triangle-precise picking of Mesh and InstancedMesh
-- **Debug visualization** — Built-in debug drawing for bounding boxes, lights, bones, and camera frustums
-
-### Platforms
-- **Avalonia** — Windows, Linux, macOS, Android, iOS
-- **.NET 8+** — Supports .NET 8.0 and .NET 10.0
+| Area | Capabilities |
+|---|---|
+| Scene & models | Scene graph with a hierarchical node tree; native glTF/GLB loading plus FBX, OBJ, 3DS and 50+ formats via Assimp; built-in box / sphere / cylinder / plane |
+| Camera | Perspective and orthographic projection, look-at and auto-framing, `CameraController` mouse/keyboard interaction, multi-camera split views, render-to-texture |
+| Lighting & shadows | Directional, point and spot lights; CSM cascaded shadows for the main directional light (cascade count and split scheme configurable); Blinn-Phong forward pipeline by default |
+| Environment & IBL | Solid-color, image and cubemap backgrounds; HDR panoramic skybox; PBR pipelines bake irradiance and prefiltered environment maps |
+| Materials & shaders | Material channels and textures with sampling options; material-level custom shaders and shader macros; per-instance custom attributes |
+| Animation | glTF skinning and external Assimp animations; 2D animation blend space; condition-based animation state graph; bone attachment |
+| Particles | CPU-simulated particle system with emission shapes, mesh particles and flipbooks, full playback lifecycle |
+| Pipelines | Built-in BlinnPhong / NoLight / PBR deferred / PBR forward / cel shading (default pipeline runs on OpenGL ES 3.0); custom pipelines composed freely from RenderPass with no VAO/VBO handling |
+| Instancing & picking | `InstancedMesh` GPU instancing, `InstancedMeshGroup` hierarchical instancing (HISM with incremental updates and auto-grouping), point clouds, all primitive topologies; triangle-precise picking via `Scene.Pick` |
+| Performance & debug | Frustum culling, octree spatial index, debug drawing for bounds, lights, bones and camera frustums |
+| GPU resources | On-demand upload and release, automatic recovery from context loss |
+| Platforms | Avalonia on Windows / Linux / macOS / Android / iOS; .NET 8.0 and .NET 10.0, including browser (WebGL2) |
 
 ## Quick Start
 
@@ -72,21 +50,9 @@ dotnet add package Aura3D.Model.GltfLoader
 ```
 
 > [!IMPORTANT]
-> **Browser (`net10.0-browser`) projects:** with the current .NET 10 toolchain, Release/static
-> publishing requires all three properties below in the application `.csproj`:
->
-> ```xml
-> <PropertyGroup Condition="'$(Configuration)' == 'Release'">
->   <PublishTrimmed>false</PublishTrimmed>
->   <RunAOTCompilation>false</RunAOTCompilation>
->   <WasmLinkIcalls>false</WasmLinkIcalls>
-> </PropertyGroup>
-> ```
->
-> Default trimming can omit WASM trampolines required by Silk.NET function-pointer calls, while
-> icall linking can leave the runtime out of sync with `System.Private.CoreLib`; do not enable only
-> a subset of these settings. See [Browser Release/static publishing](doc/en/platform-render-backends.md#browser-net10-release-config)
-> for the failure signatures, full explanation, and clean-publish requirements.
+> **Browser (`net10.0-browser`) projects:** .NET 10 Release/static publishing requires three extra
+> MSBuild properties in the application `.csproj` — see
+> [Browser Release/static publishing](https://cesun.github.io/Aura3D-Docs/en/platform-render-backends.html#browser-net10-release-config).
 
 > At minimum you need one model loader. `Aura3D.Model.GltfLoader` handles glTF/GLB.
 > For FBX, OBJ, 3DS and 50+ other formats, also add `Aura3D.Model.AssimpLoader`.
@@ -125,7 +91,7 @@ public void OnSceneInitialized(object sender, InitializedRoutedEventArgs args)
 }
 ```
 
-> See the [documentation](doc/en/home.md) for more features.
+> See the [documentation](https://cesun.github.io/Aura3D-Docs/en/) for more features.
 
 ## NuGet Packages
 
