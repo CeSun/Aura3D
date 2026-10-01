@@ -264,6 +264,9 @@ view.AddNode(attachment);
 attachment.AddChild(torchMesh, AttachToParentRule.KeepLocal);
 ```
 
+> [!TIP]
+> By default the attachment inherits the model's transform, so `LocalOffset` and the prop's geometry are in model-local units. Many glTF assets carry a global scale on their scene root (0.01 is common for centimeter-authored models), and that scale flows into the attached subtree, shrinking a meter-authored prop a hundredfold. Set `NormalizeScale = true` on the `BoneAttachment` to inherit only the bone's position and orientation, making `LocalOffset` and the prop world-space (meters).
+
 ## Common Pitfalls
 
 > [!WARNING]

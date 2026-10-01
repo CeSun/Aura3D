@@ -264,6 +264,9 @@ view.AddNode(attachment);
 attachment.AddChild(torchMesh, AttachToParentRule.KeepLocal);
 ```
 
+> [!TIP]
+> 挂载点默认完整继承模型变换，`LocalOffset` 与道具几何用的是模型局部单位。很多 glTF 资产在场景根节点上带整体缩放（按厘米建模的模型常见 0.01），这层缩放会传进挂载子树，让按米建模的道具被缩小上百倍。给 `BoneAttachment` 设 `NormalizeScale = true`，挂载点就只继承骨骼的位置与朝向，`LocalOffset` 与道具几何都按世界单位（米）来。
+
 ## 常见坑
 
 > [!WARNING]

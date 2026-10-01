@@ -151,7 +151,8 @@ public static class DemoRegistry
             Title: Strings.Keys.Demo_SkinnedAnimation_Title,
             Group: Strings.Keys.Group_Assets,
             Summary: Strings.Keys.Demo_SkinnedAnimation_Summary,
-            Assets: Assets.AssetManifest.RequireSet("Soldier"),
+            // 火焰翻页图给手上的火把：粒子火焰是这页挂载演示里"看得见"的那部分
+            Assets: Assets.AssetManifest.RequireSet("Soldier", "ParticleFirePng"),
             Create: context => new SkinnedAnimationDemo(context)),
 
         new(

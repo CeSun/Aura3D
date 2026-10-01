@@ -24,7 +24,7 @@ order: 3
 | `InstancedMesh` | GPU instancing; one geometry drawn many times | `FromMesh(mesh)` (static), `AddInstance(Matrix4x4)`, `UpdateInstance(i, transform)`, `RemoveInstance(i)`, `SetInstances(list)`, `InstanceCount`, `Material`, `SetAttributeEnabled(name, bool)`, `SetInstanceAttribute<T>(attr, count, data)`, `EnableFrustumCulling` | `Aura3D.Core.Nodes` | [Instanced Rendering](./instanced-rendering.md) |
 | `InstancedMeshGroup` | HISM: octree grouping + frustum culling | ctor `InstancedMeshGroup(sourceMesh)`, `SourceMesh`, `MaxInstancesPerGroup` (default 1024), `MaxDepth` (default 6), `SetInstances(list)`, `AddInstance`/`AddInstances`, `UpdateInstance(i, transform)`, `Build()`, `InstanceCount`/`GroupCount`/`InPlaceUpdateCount`/`RebuildCount`, `IsBuilding` | `Aura3D.Core.Nodes` | [Instanced Rendering](./instanced-rendering.md) |
 | `ParticleSystem` | A set of CPU-simulated emitters | `Emitters`, `Play()`, `Stop()`, `Pause()`, `IsPlaying`, `ActiveCount`, `MaxParticles`, `CustomBoundingBox`, `EnableVisibilityCulling` | `Aura3D.Core.Nodes` | [Particle System](./particle-system.md) |
-| `BoneAttachment` | Pins a node to a specific bone | `Mesh` (must be skinned), `BoneName`, `LocalOffset` | `Aura3D.Core.Nodes` | [Animation System](./animation.md) |
+| `BoneAttachment` | Pins a node to a specific bone | `Mesh` (must be skinned), `BoneName`, `LocalOffset`, `NormalizeScale` | `Aura3D.Core.Nodes` | [Animation System](./animation.md) |
 
 ## Node base members
 

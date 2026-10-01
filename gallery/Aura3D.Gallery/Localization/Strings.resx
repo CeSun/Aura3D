@@ -396,7 +396,7 @@
   <data name="SkinnedAnimation_ShowBone" xml:space="preserve"><value>Debug.ShowBone (cyan bone lines)</value></data>
   <data name="SkinnedAnimation_Attachment" xml:space="preserve"><value>Attach a BoneAttachment (a torch bound to the hand)</value></data>
   <data name="SkinnedAnimation_AttachmentYaw" xml:space="preserve"><value>LocalOffset yaw (deg)</value></data>
-  <data name="SkinnedAnimation_AttachNote" xml:space="preserve"><value>A BoneAttachment's WorldTransform is LocalOffset times that bone's BonesTransform times the mesh's world matrix — the same data DebugDrawPass uses to draw the bone lines — and it must sit under the scene root to be updated every frame.</value></data>
+  <data name="SkinnedAnimation_AttachNote" xml:space="preserve"><value>A BoneAttachment's WorldTransform is LocalOffset times that bone's BonesTransform times the mesh's world matrix — the same data DebugDrawPass uses to draw the bone lines — and it must sit under the scene root to be updated every frame. Turn on NormalizeScale to attach props in world units when the model root carries a global scale.</value></data>
   <data name="SkinnedAnimation_BonePicker" xml:space="preserve"><value>Bone picker</value></data>
   <data name="SkinnedAnimation_PlaybackState" xml:space="preserve"><value>Playback state</value></data>  <data name="Geometries_VertexReadout" xml:space="preserve"><value>{0} vertices / {1} indices / ~{2:0.#} KB</value></data>
   <data name="Camera_BehindCamera" xml:space="preserve"><value>Behind the camera (WorldToScreen returns null)</value></data>

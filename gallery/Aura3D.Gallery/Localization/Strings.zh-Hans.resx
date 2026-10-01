@@ -396,7 +396,7 @@
   <data name="SkinnedAnimation_ShowBone" xml:space="preserve"><value>Debug.ShowBone（青色骨骼线）</value></data>
   <data name="SkinnedAnimation_Attachment" xml:space="preserve"><value>挂上 BoneAttachment（手上绑一支火把）</value></data>
   <data name="SkinnedAnimation_AttachmentYaw" xml:space="preserve"><value>LocalOffset 的偏航 °</value></data>
-  <data name="SkinnedAnimation_AttachNote" xml:space="preserve"><value>BoneAttachment 的 WorldTransform 是 LocalOffset × 该骨骼的 BonesTransform × Mesh 的世界矩阵，和 DebugDrawPass 画骨骼线用的是同一份数据；它自己得挂在场景根节点上才会被逐帧 Update。</value></data>
+  <data name="SkinnedAnimation_AttachNote" xml:space="preserve"><value>BoneAttachment 的 WorldTransform 是 LocalOffset × 该骨骼的 BonesTransform × Mesh 的世界矩阵，和 DebugDrawPass 画骨骼线用的是同一份数据；它自己得挂在场景根节点上才会被逐帧 Update。模型根节点带整体缩放时开 NormalizeScale，道具就能按世界单位（米）挂上去。</value></data>
   <data name="SkinnedAnimation_BonePicker" xml:space="preserve"><value>骨骼挑选</value></data>
   <data name="SkinnedAnimation_PlaybackState" xml:space="preserve"><value>播放状态</value></data>  <data name="Geometries_VertexReadout" xml:space="preserve"><value>{0} 顶点 / {1} 索引 / 约 {2:0.#} KB</value></data>
   <data name="Camera_BehindCamera" xml:space="preserve"><value>在相机背后（WorldToScreen 返回 null）</value></data>

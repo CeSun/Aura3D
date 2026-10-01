@@ -24,7 +24,7 @@ order: 3
 | `InstancedMesh` | GPU 实例化，一份几何画多次 | `FromMesh(mesh)`(静态)、`AddInstance(Matrix4x4)`、`UpdateInstance(i, transform)`、`RemoveInstance(i)`、`SetInstances(list)`、`InstanceCount`、`Material`、`SetAttributeEnabled(name, bool)`、`SetInstanceAttribute<T>(attr, count, data)`、`EnableFrustumCulling` | `Aura3D.Core.Nodes` | [实例化渲染](./instanced-rendering.md) |
 | `InstancedMeshGroup` | HISM：八叉树分组 + 视锥剔除 | 构造 `InstancedMeshGroup(sourceMesh)`、`SourceMesh`、`MaxInstancesPerGroup`(默认 1024)、`MaxDepth`(默认 6)、`SetInstances(list)`、`AddInstance`/`AddInstances`、`UpdateInstance(i, transform)`、`Build()`、`InstanceCount`/`GroupCount`/`InPlaceUpdateCount`/`RebuildCount`、`IsBuilding` | `Aura3D.Core.Nodes` | [实例化渲染](./instanced-rendering.md) |
 | `ParticleSystem` | CPU 模拟的粒子发射器集合 | `Emitters`、`Play()`、`Stop()`、`Pause()`、`IsPlaying`、`ActiveCount`、`MaxParticles`、`CustomBoundingBox`、`EnableVisibilityCulling` | `Aura3D.Core.Nodes` | [粒子系统](./particle-system.md) |
-| `BoneAttachment` | 把节点钉到某根骨骼上 | `Mesh`(须蒙皮网格)、`BoneName`、`LocalOffset` | `Aura3D.Core.Nodes` | [动画系统](./animation.md) |
+| `BoneAttachment` | 把节点钉到某根骨骼上 | `Mesh`(须蒙皮网格)、`BoneName`、`LocalOffset`、`NormalizeScale` | `Aura3D.Core.Nodes` | [动画系统](./animation.md) |
 
 ## Node 基类常用成员
 

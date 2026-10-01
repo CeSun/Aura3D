@@ -303,6 +303,8 @@ var sword = new BoneAttachment
 view.AddNode(sword);
 ```
 
+By default `LocalOffset` and anything attached below are interpreted in model-local units; if the model's root node carries a global scale (common for centimeter-authored glTF), set `NormalizeScale = true` to attach props in world units — see [Animation System](./animation.md).
+
 The skeleton system, `Skeleton`, and animation sampling are in [Animation System](./animation.md).
 
 ## Grid and AxisGizmo: debug aids, not nodes

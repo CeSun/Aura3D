@@ -303,6 +303,8 @@ var sword = new BoneAttachment
 view.AddNode(sword);
 ```
 
+默认 `LocalOffset` 与挂在下面的道具都按模型局部单位生效；若模型根节点带整体缩放（厘米建模的 glTF 很常见），想按世界单位挂道具就设 `NormalizeScale = true`，详见 [动画系统](./animation.md)。
+
 骨骼体系、`Skeleton` 与动画采样，见 [动画系统](./animation.md)。
 
 ## Grid 与 AxisGizmo：调试辅助，不是节点
