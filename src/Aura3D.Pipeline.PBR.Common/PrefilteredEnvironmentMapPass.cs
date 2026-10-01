@@ -106,7 +106,9 @@ public class PrefilteredEnvironmentMapPass : RenderPass<PBRPipelineBase>
         }
 
 
-        var perfilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap");
+        var perfilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>(PBRPipelineBase.PrefilteredEnvironmentMapStateKey);
+
+        // 同 IrradianceMapPass：FrameBufferId != 0 即"已烘好"，换背景由 setter 触发作废。
         if (perfilteredEnvMap != null && perfilteredEnvMap.FrameBufferId != 0)
             return;
 
@@ -121,7 +123,7 @@ public class PrefilteredEnvironmentMapPass : RenderPass<PBRPipelineBase>
 
             perfilteredEnvMap.SetSize(PREFILTER_WIDTH, PREFILTER_WIDTH);
             perfilteredEnvMap.SetDepthTexture(TextureFormat.DepthComponent16);
-            camera.SetPipelineGpuState("PrefilteredEnvironmentMap", perfilteredEnvMap);
+            camera.SetPipelineGpuState(PBRPipelineBase.PrefilteredEnvironmentMapStateKey, perfilteredEnvMap);
         }
 
         renderPipeline.EnsureSynced(perfilteredEnvMap);

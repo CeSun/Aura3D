@@ -87,8 +87,10 @@ void main()
             ibl = Scene.Background.AsT0;
         }
 
-        var irradianceMap = camera.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap");
+        var irradianceMap = camera.GetPipelineGpuState<CubeRenderTarget>(PBRPipelineBase.IrradianceMapStateKey);
 
+        // FrameBufferId != 0 表示这张辐照度图已经烘好；背景换了则由 Scene.Background 的
+        // setter 通知管线把缓存作废（见 PBRPipelineBase.OnBackgroundChanged），这里才会重烘。
         if (irradianceMap != null && irradianceMap.FrameBufferId != 0)
             return;
 
@@ -102,7 +104,7 @@ void main()
             .AddRenderTexture("Irradiance", TextureFormat.Rgba16f)
             .SetDepthTexture(TextureFormat.DepthComponent16);
 
-            camera.SetPipelineGpuState("IrradianceMap", irradianceMap);
+            camera.SetPipelineGpuState(PBRPipelineBase.IrradianceMapStateKey, irradianceMap);
         }
 
         renderPipeline.EnsureSynced(irradianceMap);

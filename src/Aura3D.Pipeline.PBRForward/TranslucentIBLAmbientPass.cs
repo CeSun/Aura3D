@@ -78,7 +78,7 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRPipelineBase>
     {
 
 
-        var perfilteredEnvMap = camera!.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap")!;
+        var perfilteredEnvMap = camera!.GetPipelineGpuState<CubeRenderTarget>(PBRPipelineBase.PrefilteredEnvironmentMapStateKey)!;
         var u_prefilterMap = perfilteredEnvMap.GetTexture(0)!;
 
         int nearestPowerOfTwo = (int)MathF.Pow(2, MathF.Floor(MathF.Log2(u_prefilterMap.Width)));
@@ -129,10 +129,10 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRPipelineBase>
         var u_brdfLUT = RenderPipeline.BrdfLutTexture;
 
 
-        var irradianceMap = camera!.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap")!;
+        var irradianceMap = camera!.GetPipelineGpuState<CubeRenderTarget>(PBRPipelineBase.IrradianceMapStateKey)!;
         var u_irradianceMap = irradianceMap.GetTexture(0)!;
 
-        var perfilteredEnvMap = camera!.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap")!;
+        var perfilteredEnvMap = camera!.GetPipelineGpuState<CubeRenderTarget>(PBRPipelineBase.PrefilteredEnvironmentMapStateKey)!;
         var u_prefilterMap = perfilteredEnvMap.GetTexture(0)!;
 
 
@@ -187,10 +187,10 @@ internal class TranslucentIBLAmbientPass : RenderPass<PBRPipelineBase>
     {
         var u_brdfLUT = RenderPipeline.BrdfLutTexture;
 
-        var irradianceMap = camera!.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap")!;
+        var irradianceMap = camera!.GetPipelineGpuState<CubeRenderTarget>(PBRPipelineBase.IrradianceMapStateKey)!;
         var u_irradianceMap = irradianceMap.GetTexture(0)!;
 
-        var perfilteredEnvMap = camera!.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap")!;
+        var perfilteredEnvMap = camera!.GetPipelineGpuState<CubeRenderTarget>(PBRPipelineBase.PrefilteredEnvironmentMapStateKey)!;
         var u_prefilterMap = perfilteredEnvMap.GetTexture(0)!;
 
         UniformMatrix4("viewMatrix", view);

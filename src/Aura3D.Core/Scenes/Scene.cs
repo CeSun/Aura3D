@@ -51,16 +51,39 @@ public class Scene
     /// <summary>
     /// Gets the background.
     /// </summary>
+    /// <remarks>
+    /// 背景是 IBL 烘焙的唯一输入，换掉它必须让管线里以它为输入的缓存（辐照度图、预滤波反射图）作废，
+    /// 所以 setter 会通知 <see cref="Renderers.RenderPipeline.OnBackgroundChanged"/>。
+    /// 重复赋同一个资源引用不触发通知，免得每帧重设背景的页面把 IBL 变成"永远重烘"。
+    /// </remarks>
     public OneOf<CubeTexture, Texture> Background
     {
         get => _background;
         set
         {
+            if (IsSameBackground(_background, value))
+                return;
+
             _background = value;
+
+            RenderPipeline.OnBackgroundChanged();
         }
     }
 
     private OneOf<CubeTexture, Texture> _background;
+
+    /// <summary>
+    /// 判断两次赋值指向的是不是同一个背景资源。
+    /// </summary>
+    private static bool IsSameBackground(in OneOf<CubeTexture, Texture> current, in OneOf<CubeTexture, Texture> next)
+    {
+        if (current.IsT0 != next.IsT0)
+            return false;
+
+        return current.IsT0
+            ? ReferenceEquals(current.AsT0, next.AsT0)
+            : ReferenceEquals(current.AsT1, next.AsT1);
+    }
 
     /// <summary>
     /// Gets the pipeline settings.

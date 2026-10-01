@@ -124,7 +124,7 @@ internal class PBRForwardIBLAmbientPass : PBRForwardMeshPass
 
     public override void Render(Camera camera)
     {
-        var prefilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap")!;
+        var prefilteredEnvMap = camera.GetPipelineGpuState<CubeRenderTarget>(PBRPipelineBase.PrefilteredEnvironmentMapStateKey)!;
         var prefilteredTexture = prefilteredEnvMap.GetTexture(0)!;
 
         int nearestPowerOfTwo = (int)MathF.Pow(2, MathF.Floor(MathF.Log2(prefilteredTexture.Width)));
@@ -138,8 +138,8 @@ internal class PBRForwardIBLAmbientPass : PBRForwardMeshPass
     {
         var activeCamera = camera ?? throw new InvalidOperationException("Camera has not been set for PBR forward IBL pass.");
 
-        var irradianceMap = activeCamera.GetPipelineGpuState<CubeRenderTarget>("IrradianceMap")!;
-        var prefilteredEnvMap = activeCamera.GetPipelineGpuState<CubeRenderTarget>("PrefilteredEnvironmentMap")!;
+        var irradianceMap = activeCamera.GetPipelineGpuState<CubeRenderTarget>(PBRPipelineBase.IrradianceMapStateKey)!;
+        var prefilteredEnvMap = activeCamera.GetPipelineGpuState<CubeRenderTarget>(PBRPipelineBase.PrefilteredEnvironmentMapStateKey)!;
 
         UniformMatrix4("u_viewMatrix", activeCamera.View);
         UniformMatrix4("u_projMatrix", activeCamera.Projection);

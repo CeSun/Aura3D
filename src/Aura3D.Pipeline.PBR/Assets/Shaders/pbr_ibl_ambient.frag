@@ -101,8 +101,8 @@ void main() {
 		normal = -normal;
 	}
 
-    float roughness = metalness_roughness.b;
-    float metallic = metalness_roughness.g;
+    float roughness = metalness_roughness.g;
+    float metallic = metalness_roughness.b;
     vec3 worldPos = vFragPosition;
 #endif
     // Clamp parameters to valid range

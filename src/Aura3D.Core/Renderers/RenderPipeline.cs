@@ -821,6 +821,17 @@ public abstract partial class RenderPipeline
     }
 
     /// <summary>
+    /// 背景被换掉时由 <see cref="Scene.Background"/> 的 setter 调用。
+    /// 以背景为输入的预计算（PBR 的 IBL 辐照度图与预滤波反射图）必须在这里作废缓存，
+    /// 否则它们会一直停在旧背景乃至引擎默认那张纯白立方图上。
+    /// 默认实现什么都不做。
+    /// </summary>
+    public virtual void OnBackgroundChanged()
+    {
+
+    }
+
+    /// <summary>
     /// Performs the before camera render operation.
     /// </summary>
     public virtual void BeforeCameraRender(Camera camera)
