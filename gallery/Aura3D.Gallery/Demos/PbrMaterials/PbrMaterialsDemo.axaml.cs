@@ -29,9 +29,6 @@ public sealed partial class PbrMaterialsDemo : Demo
         ("Galvanized Metal", "PbrGalvanizedBase", "PbrGalvanizedNormal", "PbrGalvanizedArm"),
     ];
 
-    private const string IrradianceKey = "IrradianceMap";
-    private const string PrefilterKey = "PrefilteredEnvironmentMap";
-
     private readonly List<Mesh> spheres = [];
 
     private CubeTexture environment = null!;
@@ -104,8 +101,9 @@ public sealed partial class PbrMaterialsDemo : Demo
         // 30×30 地面 + 拉远余量，抬过默认 far 100。
         scene.MainCamera.FarPlane = 150f;
 
-        // 环境立方图：IBL 只认 Scene.Background 的立方图分支。场景是新装的，GPU 状态里还没有
-        // 烘培缓存，直接赋值即可，不需要 Invalidate。
+        // 环境立方图：IBL 只认 Scene.Background 的立方图分支。挂上就行——
+        // 渲染先于本回调（Update → Render → SceneUpdated），首帧烘的其实是引擎那张默认纯白立方图，
+        // 而 Scene.Background 的 setter 会自动把两张烘焙缓存作废，下一帧就用这个天空盒重烘。
         scene.Background = environment;
 
         var sun = new DirectionalLight

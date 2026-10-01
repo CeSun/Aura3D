@@ -142,7 +142,7 @@ var texture = TextureLoader.LoadTexture(stream)
 > 所以只要想让金属度/粗糙度、法线一类通道**看得出效果**，场景就得挂一张有内容的立方图（HDR/六面天空盒），示例里的 PBR 页面正是这么做的。
 
 > [!TIP]
-> 在 PBR 管线下运行时换背景，IBL 的两张烘培结果缓存在相机节点上，可能仍是旧图。让它们失效的办法是清掉相机上键为 `IrradianceMap` 与 `PrefilteredEnvironmentMap` 的 GPU 状态——可直接照抄示例里的 `InvalidateIblCaches()`（见下面的 Environment 示例）。`Scene.Background` 从「纯色/普通图」切成立方图同样要清，否则画面会一直停在旧环境上。管线与 IBL 配置见[选择与配置管线](./pipelines.md)。
+> 换背景不用手动管缓存：给 `Scene.Background` 赋一个**新的**背景资源时，setter 会通知管线（`RenderPipeline.OnBackgroundChanged`），PBR 管线会把相机上烘好的 `IrradianceMap` 与 `PrefilteredEnvironmentMap` 作废，下一帧用新图重烘。需要手动干预的只有一种情况：背景资源引用没换、但内容被原地改过（例如同一张 `CubeTexture` 重新填充了数据）——这时调 `PBRPipelineBase.InvalidateIblBakeCaches()`（或参照 Environment 示例里的 `InvalidateIblCaches()`）。管线与 IBL 配置见[选择与配置管线](./pipelines.md)。
 
 ## 常见坑
 

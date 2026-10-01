@@ -169,7 +169,7 @@
   <data name="Background_FarPlane" xml:space="preserve"><value>FarPlane（正交那一支读它）</value></data>
   <data name="Background_ProjectionNote" xml:space="preserve"><value>两个变体的取景来源不一样，三根滑杆的表现因此不对称：透视那一支自己按 FOV 重算投影、near/far 写死 10..100，所以 FOV 会改天空取景而 FarPlane 毫无反应；正交那一支用相机自己的投影矩阵，但片元里框取方向的 orthoSize 写死成 100×宽高比，不读 OrthographicSize，所以改 OrthographicSize 只缩放前景、改 FarPlane 才会缩放天空。正交下滚轮也不起作用：缩放靠挪眼睛，而平行视锥与眼睛位置无关。这两处写死是引擎的不一致，不是用法问题。投影参数本身（含 FitToBoundingBox、WorldToScreen）在 camera 页有专门演示。</value></data>
   <data name="Background_KeyLightVisible" xml:space="preserve"><value>平行光可见（关掉只剩 IBL 打光）</value></data>
-  <data name="Background_RebakeIbl" xml:space="preserve"><value>重烘 IBL（换来源后球面停在旧环境时用）</value></data>
+  <data name="Background_RebakeIbl" xml:space="preserve"><value>重烘 IBL（换来源会自动重烘；背景资源内容被原地改过时用）</value></data>
   <data name="Background_IblNote" xml:space="preserve"><value>辐照度与预滤波反射只认立方图那一支：Background 不是 CubeTexture 时退到引擎自带的默认立方图（IrradianceMapPass 里读 RenderPipeline.DefaultIblAmbientCubeTexture）。两份结果缓存在相机节点上，FrameBufferId 非 0 就直接复用，所以本页在四种来源之间来回切时球面反射不会跟着变——要么按上面的按钮 Invalidate，要么 Reload。缓存机制的完整演示在 ibl-environment 页。</value></data>
   <data name="Background_IblCache" xml:space="preserve"><value>背景分支与 IBL 缓存</value></data>
   <data name="Camera_Intro" xml:space="preserve"><value>正交投影没有近大远小，用来量尺寸；透视投影改 FieldOfView 会同时改变垂直视野与纵横比效果。近/远裁剪面拉到物体之间就能看见截面——这是视锥剔除之外另一层「看不见」。</value></data>
@@ -201,7 +201,7 @@
   <data name="CelShading_FaceRenderType" xml:space="preserve"><value>RenderType=1 并打 face 标签（走 FACE_RENDER 分支）</value></data>
   <data name="CelShading_OutlineNote" xml:space="preserve"><value>这是 OutlinePass 唯一的公开旋钮。描边宽度与颜色是私有字段（2f / 1.5f / 黑），pass 实例只能从 RenderPipeline.EveryCameraRenderPasses 里按类型找出来——本页就是这么拿的。</value></data>
   <data name="CelShading_Bindings" xml:space="preserve"><value>绑定结果</value></data>
-  <data name="Environment_Intro" xml:space="preserve"><value>辐照度与预滤波反射各烘一次，结果挂在相机节点的两个 GPU 状态上，之后每帧直接复用。所以换环境图必须让那两个缓存重烘：本页给了「立刻重烘」按钮，它调 Invalidate() 把帧缓冲清零，管线下一帧就会重算。不点它也不 Reload 的话，画面会一直停在旧环境。</value></data>
+  <data name="Environment_Intro" xml:space="preserve"><value>辐照度与预滤波反射各烘一次，结果挂在相机节点的两个 GPU 状态上，之后每帧直接复用。换 Background 时 Scene 的 setter 会通知管线（OnBackgroundChanged）自动作废这两张缓存，下一帧用新图重烘，所以换环境图不需要手动干预。「立刻重烘」按钮留给剩下的一种情况：背景资源引用没换、但内容被原地改过，或者想强制重算对比——它调 Invalidate() 把帧缓冲清零。</value></data>
   <data name="Environment_Panorama" xml:space="preserve"><value>全景图</value></data>
   <data name="Environment_CubeSize" xml:space="preserve"><value>立方图边长</value></data>
   <data name="Environment_FaceSizeNote" xml:space="preserve"><value>面边长只对全景图那几条分支（HDRI 与程序化）生效，它是烘培的目标边长。六面天空盒分支是把那六张图直接喂给 IBL，面边长由图片本身决定，这个滑杆不参与。</value></data>
@@ -417,8 +417,8 @@
   <data name="Environment_BackgroundPlain" xml:space="preserve"><value>普通图（不驱动 IBL）</value></data>
   <data name="Environment_BackgroundNone" xml:space="preserve"><value>未设</value></data>
   <data name="Environment_Readout" xml:space="preserve"><value>背景 {0} · 全景选项 {1} · 请求面大小 {2} · IrradianceMap fbo={3} PrefilteredMap fbo={4} · IBL 强度 {5:0.00} 曝光 {6:0.00} · {7}</value></data>
-  <data name="Environment_Rebaked" xml:space="preserve"><value>已重烘，环境跟着换</value></data>
-  <data name="Environment_NotRebaked" xml:space="preserve"><value>未重烘：换图要按上面按钮或 Reload</value></data>
+  <data name="Environment_Rebaked" xml:space="preserve"><value>已手动强制重烘</value></data>
+  <data name="Environment_NotRebaked" xml:space="preserve"><value>未手动重烘（换图时引擎会自动重烘）</value></data>
   <data name="MaterialShaders_MapChecker" xml:space="preserve"><value>棋盘</value></data>
   <data name="MaterialShaders_MapSoftDot" xml:space="preserve"><value>柔光点</value></data>
   <data name="MaterialShaders_MapGradient" xml:space="preserve"><value>竖向渐变</value></data>

@@ -142,7 +142,7 @@ var texture = TextureLoader.LoadTexture(stream)
 > So whenever metallic/roughness or normal channels are supposed to **show their effect**, the scene needs a cubemap with actual content (HDR, six-face skybox) — exactly what the PBR pages in the Gallery do.
 
 > [!TIP]
-> Swapping the background at runtime under a PBR pipeline can leave IBL baked from the old image, because the two maps are cached as GPU state on the camera node. To force a rebake, invalidate the camera's cached states keyed `IrradianceMap` and `PrefilteredEnvironmentMap` — copy `InvalidateIblCaches()` from the Environment demo linked below. The same applies when `Scene.Background` switches from a solid color / plain image to a cubemap, otherwise the picture stays on the old environment forever. Pipeline and IBL configuration: [Choosing and Configuring Pipelines](./pipelines.md).
+> Swapping the background needs no manual cache management: assigning a **new** resource to `Scene.Background` makes the setter notify the pipeline (`RenderPipeline.OnBackgroundChanged`), and the PBR pipelines invalidate the camera's baked `IrradianceMap` and `PrefilteredEnvironmentMap`, rebaking from the new map on the next frame. The only case that needs a manual step is when the resource reference stays the same but its content was changed in place (e.g. the same `CubeTexture` refilled with new data) — then call `PBRPipelineBase.InvalidateIblBakeCaches()` (or copy `InvalidateIblCaches()` from the Environment demo). Pipeline and IBL configuration: [Choosing and Configuring Pipelines](./pipelines.md).
 
 ## Common pitfalls
 
