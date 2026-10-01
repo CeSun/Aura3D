@@ -100,8 +100,21 @@ public abstract partial class Aura3DViewBase : global::Avalonia.OpenGL.Controls.
         base.RequestNextFrameRendering();
     }
 
-    // 桌面端渲染回调与 UI 线程同线程，事件内联触发，行为与拆分前完全一致。
-    partial void DispatchSceneEvent(Action callback) => callback();
+    // 桌面端原生路径的渲染回调与 UI 线程同线程，事件内联触发，行为与拆分前完全一致；
+    // macOS 接管（形态 B）下渲染发生在合成器渲染线程（同 iOS），场景事件必须切回 UI 线程。
+    partial void DispatchSceneEvent(Action callback)
+    {
+        if (MacAngleBackend.IsActive)
+        {
+            if (Dispatcher.UIThread.CheckAccess())
+                callback();
+            else
+                Dispatcher.UIThread.Post(callback, DispatcherPriority.Render);
+            return;
+        }
+
+        callback();
+    }
 
     /// <summary>
     /// 模拟一次上下文丢失（测试页用）：句柄判为失效但不删除，走与真实丢失相同的恢复路径。
