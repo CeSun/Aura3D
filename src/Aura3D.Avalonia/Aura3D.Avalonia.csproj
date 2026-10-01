@@ -25,6 +25,26 @@
     <NoWarn>$(NoWarn);AVA1700</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net10.0'">
+    <!-- macOS 形态 B 分支的 lease 合成同样标注 Unstable -->
+    <NoWarn>$(NoWarn);AVA1700</NoWarn>
+    <!-- MacAngle 会话与合成通路大量使用函数指针与 IOSurface/CGL 原生指针 -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net10.0'">
+    <!-- macOS 形态 B：lease 合成需要 ISkiaSharpApiLeaseFeature 与 SkiaSharp 类型 -->
+    <PackageReference Include="Avalonia.Skia" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0-ios' or '$(TargetFramework)' == 'net10.0-browser'">
+    <!-- 平台专属分支各归其位：macOS 形态 B 的文件只进桌面 TFM，避免与 iOS/Browser 分支的
+         Render 覆盖冲突（iOS 的 Aura3DViewBase.Angle.cs 同样覆盖 Render）。 -->
+    <Compile Remove="Angle\MacAngleNative.cs" />
+    <Compile Remove="Angle\MacAngleGlesSession.cs" />
+    <Compile Remove="Aura3DViewBase.MacAngle.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia" />
   </ItemGroup>

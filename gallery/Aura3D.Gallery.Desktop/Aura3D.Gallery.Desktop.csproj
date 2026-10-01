@@ -14,6 +14,25 @@
 
     <Import Project="..\DemoAssets.props" />
 
+  <!--
+    macOS 形态 B（Aura3DViewBase + MacAngleBackend）：自持 ANGLE(Metal) 会话的动态库随应用
+    目录分发，由 MacAngleNative 在运行时从 BaseDirectory 加载。切片默认取本机 ANGLE 检出
+    （~/angle_ios/out/macos-arm64，由 build-angle-macos.sh 产出）；目录不存在时静默跳过，
+    此时 MacAngleBackend.Enabled 无效，宿主回落原生 GL 路径。正式分发应改走 NuGet 切片包
+    （与 Aura3D.Angle.iOS 同构），见 src/Aura3D.Angle.MacOS 的规划。
+  -->
+  <PropertyGroup>
+    <AngleMacNativeDir Condition=" '$(AngleMacNativeDir)' == '' ">$(HOME)/angle_ios/out/macos-arm64</AngleMacNativeDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AngleMacShimDir Condition=" '$(AngleMacShimDir)' == '' ">$(MSBuildProjectDirectory)\..\..\src\Aura3D.Angle.MacOS\shim</AngleMacShimDir>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(AngleMacNativeDir)' != '' And Exists('$(AngleMacNativeDir)\libEGL.dylib') ">
+    <None Include="$(AngleMacNativeDir)\libEGL.dylib" CopyToOutputDirectory="PreserveNewest" Link="libEGL.dylib" />
+    <None Include="$(AngleMacNativeDir)\libGLESv2.dylib" CopyToOutputDirectory="PreserveNewest" Link="libGLESv2.dylib" />
+    <None Include="$(AngleMacShimDir)\libAura3dAngleMacOSHelper.dylib" CopyToOutputDirectory="PreserveNewest" Link="libAura3dAngleMacOSHelper.dylib" />
+  </ItemGroup>
+
 <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->

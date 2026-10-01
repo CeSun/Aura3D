@@ -1,4 +1,7 @@
+using Avalonia;
 using Avalonia.OpenGL;
+using Avalonia.Threading;
+using Aura3D.Avalonia.Angle;
 
 namespace Aura3D.Avalonia;
 
@@ -9,6 +12,10 @@ namespace Aura3D.Avalonia;
 /// 后端共存：宿主 App 显式设成 <c>iOSRenderingMode.OpenGl</c> 时走这里；默认的 Metal 合成器下
 /// Avalonia 不提供 GL 互操作，<c>OpenGlControlBase</c> 会静默初始化失败，由 ANGLE 后端接管
 /// （归属判定见该文件的 <c>BackendPath</c>）。
+/// macOS 上宿主设 <see cref="MacAngleBackend.Enabled"/>（形态 B）时走接管门：原生 GL 上下文
+/// 本可成功创建，但驱动连硬件点图元都剔除，故意让初始化失败（异常被 OpenGlControlBase 吞掉并
+/// 永久判败，与 iOS Metal 合成器下的自然失败同路径），由 <c>Aura3DViewBase.MacAngle.cs</c>
+/// 的自持 ANGLE 会话接管。
 /// Browser 上 <c>WebGlContext</c> 同样不提供共享上下文/GPU 互操作，本回调永不触发，
 /// 由 <c>Aura3DViewBase.WebGl.cs</c> 的自持 WebGL2 分支接管（结构与 iOS ANGLE 分支同构）。
 /// </summary>
@@ -16,6 +23,14 @@ public abstract partial class Aura3DViewBase : global::Avalonia.OpenGL.Controls.
 {
     protected override void OnOpenGlInit(GlInterface gl)
     {
+        if (MacAngleBackend.IsActive)
+        {
+            // 有意抛出：OpenGlControlBase 会吞掉异常并把 GL 初始化永久判为失败，
+            // 之后它的帧回调不再触发，3D 视口由 MacAngle 分支全权接管。
+            Console.WriteLine("[aura3d-macangle] takeover enabled, native OpenGlControlBase disabled");
+            throw new InvalidOperationException("ANGLE takeover enabled on macOS");
+        }
+
         base.OnOpenGlInit(gl);
 
         OnGlContextReady();
@@ -37,6 +52,9 @@ public abstract partial class Aura3DViewBase : global::Avalonia.OpenGL.Controls.
 
     protected override void OnOpenGlLost()
     {
+        if (MacAngleBackend.IsActive)
+            return;
+
         base.OnOpenGlLost();
 
         ContextLostCore();
@@ -44,11 +62,17 @@ public abstract partial class Aura3DViewBase : global::Avalonia.OpenGL.Controls.
 
     protected override void OnOpenGlRender(GlInterface gl, int fb)
     {
+        if (MacAngleBackend.IsActive)
+            return;
+
         RenderFrameCore(gl.GetProcAddress, (uint)fb);
     }
 
     protected override void OnOpenGlDeinit(GlInterface gl)
     {
+        if (MacAngleBackend.IsActive)
+            return;
+
         base.OnOpenGlDeinit(gl);
 
         DetachAndReleaseGpu();
@@ -61,7 +85,20 @@ public abstract partial class Aura3DViewBase : global::Avalonia.OpenGL.Controls.
     partial void OnGlContextReady();
 
 #if !ANGLE_HOST && !WEBGL_HOST
-    partial void RequestNextFrameCore() => base.RequestNextFrameRendering();
+    partial void RequestNextFrameCore()
+    {
+        if (MacAngleBackend.IsActive)
+        {
+            // 接管状态下 OpenGlControlBase 的帧请求已失效（初始化判败），改走合成帧请求。
+            if (Dispatcher.UIThread.CheckAccess())
+                ((Visual)this).InvalidateVisual();
+            else
+                Dispatcher.UIThread.Post(() => ((Visual)this).InvalidateVisual(), DispatcherPriority.Render);
+            return;
+        }
+
+        base.RequestNextFrameRendering();
+    }
 
     // 桌面端渲染回调与 UI 线程同线程，事件内联触发，行为与拆分前完全一致。
     partial void DispatchSceneEvent(Action callback) => callback();
@@ -69,6 +106,15 @@ public abstract partial class Aura3DViewBase : global::Avalonia.OpenGL.Controls.
     /// <summary>
     /// 模拟一次上下文丢失（测试页用）：句柄判为失效但不删除，走与真实丢失相同的恢复路径。
     /// </summary>
-    public void SimulateContextLost() => OnOpenGlLost();
+    public void SimulateContextLost()
+    {
+        if (MacAngleBackend.IsActive)
+        {
+            ContextLostCore();
+            return;
+        }
+
+        OnOpenGlLost();
+    }
 #endif
 }
