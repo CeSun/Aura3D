@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Package.props" />
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Ufbx.NET" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Aura3D.Core\Aura3D.Core.csproj" />
+  </ItemGroup>
+
+</Project>

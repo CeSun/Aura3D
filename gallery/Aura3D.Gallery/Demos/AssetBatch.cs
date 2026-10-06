@@ -114,27 +114,17 @@ public sealed class AssetBatch
         });
 
     /// <summary>
-    /// 用 Assimp 加载任意其支持的模型（FBX/OBJ/…）。需要原生库，浏览器端不可用。
+    /// 用 ufbx 加载 FBX 模型。纯托管、无原生库，所以浏览器端这条路也走得通。
     /// </summary>
-    public Task<Core.Nodes.Model> AssimpModelAsync(string key, Func<string, Texture>? loadTextureFunc = null) =>
-        DecodeAsync(key, stream =>
-        {
-            var extension = Path.GetExtension(AssetManifest.All.First(a => a.Key == key).Path);
-
-            return AssimpLoader.Load(stream, extension, loadTextureFunc);
-        });
+    public Task<Core.Nodes.Model> FbxModelAsync(string key, Func<string, Texture>? loadTextureFunc = null) =>
+        DecodeAsync(key, stream => FbxLoader.Load(stream, loadTextureFunc: loadTextureFunc));
 
     /// <summary>
-    /// 用 Assimp 加载动画片段集合。<paramref name="skeleton"/> 传已加载模型的骨骼，
+    /// 用 ufbx 加载动画片段集合。<paramref name="skeleton"/> 传已加载模型的骨骼，
     /// 这样片段可以直接挂到同一角色上（FBX 动作库的标准用法）。
     /// </summary>
-    public Task<List<Animation>> AssimpAnimationsAsync(string key, Skeleton? skeleton) =>
-        DecodeAsync(key, stream =>
-        {
-            var extension = Path.GetExtension(AssetManifest.All.First(a => a.Key == key).Path);
-
-            return AssimpLoader.LoadAnimations(stream, skeleton, extension);
-        });
+    public Task<List<Animation>> FbxAnimationsAsync(string key, Skeleton? skeleton) =>
+        DecodeAsync(key, stream => FbxLoader.LoadAnimations(stream, skeleton));
 
     /// <summary>
     /// 读出一个文本资产（清单/调试用）。

@@ -56,6 +56,9 @@ jobs:
     - name: Pack Aura3D.Model.AssimpLoader
       run: dotnet pack src/Aura3D.Model.AssimpLoader -o packages -c Release
 
+    - name: Pack Aura3D.Model.FbxLoader
+      run: dotnet pack src/Aura3D.Model.FbxLoader -o packages -c Release
+
     - name: Pack Aura3D.Model.GltfLoader
       run: dotnet pack src/Aura3D.Model.GltfLoader -o packages -c Release
 

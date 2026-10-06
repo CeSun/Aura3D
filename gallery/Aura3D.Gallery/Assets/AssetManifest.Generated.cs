@@ -14,10 +14,10 @@ public static partial class AssetManifest
     /// </summary>
     public static IReadOnlyList<AssetRef> All { get; } =
     [
-        // —— 仅桌面资产：Assimp 原生库读的 FBX ——
-        new("FbxMannequin", "models/fbx/SK_Mannequin.FBX", 941_472, WebFriendly: false),
-        new("FbxIdle", "models/fbx/Idle_Rifle_Hip.FBX", 1_290_352, WebFriendly: false),
-        new("FbxJogFwd", "models/fbx/Jog_Fwd_Rifle.FBX", 697_072, WebFriendly: false),
+        // —— FBX：ufbx 纯托管读取 ——
+        new("FbxMannequin", "models/fbx/SK_Mannequin.FBX", 941_472),
+        new("FbxIdle", "models/fbx/Idle_Rifle_Hip.FBX", 1_290_352),
+        new("FbxJogFwd", "models/fbx/Jog_Fwd_Rifle.FBX", 697_072),
 
         // —— 模型 ——
         new("LionHead", "models/lion_head_1k.glb", 1_664_712),

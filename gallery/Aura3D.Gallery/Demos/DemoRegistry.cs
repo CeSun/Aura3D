@@ -173,14 +173,12 @@ public static class DemoRegistry
             Create: context => new AnimationMixDemo(context)),
 
         new(
-            Id: "assimp-fbx",
-            Title: Strings.Keys.Demo_AssimpFbx_Title,
+            Id: "fbx-animation",
+            Title: Strings.Keys.Demo_FbxAnimation_Title,
             Group: Strings.Keys.Group_Assets,
-            Summary: Strings.Keys.Demo_AssimpFbx_Summary,
+            Summary: Strings.Keys.Demo_FbxAnimation_Summary,
             Assets: Assets.AssetManifest.RequireSet("FbxMannequin", "FbxIdle", "FbxJogFwd"),
-            Create: context => new AssimpFbxDemo(context),
-            // Assimp 要原生库，浏览器端没有。
-            DesktopOnly: true),
+            Create: context => new FbxAnimationDemo(context)),
 
         new(
             Id: "instancing",

@@ -26,7 +26,7 @@ namespace Aura3D.Gallery;
 /// <param name="DefaultPipeline">进入该页时使用的管线。</param>
 /// <param name="LockPipeline">页面上不出现管线切换。演示页如果依赖某条管线的专属特性
 /// （点云、卡通材质扩展、只覆盖某个 pass 的自定义着色器），锁死管线才不会切出误导性的黑屏。</param>
-/// <param name="DesktopOnly">浏览器端不出现该页（依赖 Assimp 原生库或超大资产）。</param>
+/// <param name="DesktopOnly">浏览器端不出现该页（依赖只有桌面才有的原生库，或资产过大）。</param>
 public sealed record DemoDescriptor(
     string Id,
     LinguaKey Title,

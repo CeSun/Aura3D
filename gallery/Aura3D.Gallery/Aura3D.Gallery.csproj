@@ -11,7 +11,8 @@
       AVLN3001「XAML 资源没有公开无参构造，运行时加载器取不到」对这里的每个控件都是误报：
       外壳、宿主与 22 个演示页一律由自己的构造函数调 AvaloniaXamlLoader.Load(this) 装载，
       从不按 avares URI 反查类型（演示页必须带 DemoContext 才能构造，本就不该被无参加载）。
-      浏览器端已实测 21 页深链逐页出图，证明这条路径不依赖运行时加载器。
+      浏览器端已实测 21 页深链逐页出图，证明这条路径不依赖运行时加载器；FBX 动作库页随
+      ufbx 纯托管加载器才进浏览器端，是这 21 页之外的一页。
     -->
     <NoWarn>$(NoWarn);AVLN3001</NoWarn>
   </PropertyGroup>
@@ -61,8 +62,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Aura3D.Avalonia\Aura3D.Avalonia.csproj" />
     <ProjectReference Include="..\..\src\Aura3D.Model.GltfLoader\Aura3D.Model.GltfLoader.csproj" />
-    <!-- Assimp 需要原生库，浏览器上不可用；引用它只为桌面/移动端的加载器对比页。 -->
-    <ProjectReference Include="..\..\src\Aura3D.Model.AssimpLoader\Aura3D.Model.AssimpLoader.csproj" />
+    <!-- FBX 走 ufbx 的纯 C# 移植：没有原生库，所以 FBX 动作库这页在浏览器端也成立。 -->
+    <ProjectReference Include="..\..\src\Aura3D.Model.FbxLoader\Aura3D.Model.FbxLoader.csproj" />
     <ProjectReference Include="..\..\src\Aura3D.Pipeline.CelShading\Aura3D.Pipeline.CelShading.csproj" />
     <ProjectReference Include="..\..\src\Aura3D.Pipeline.PBR\Aura3D.Pipeline.PBR.csproj" />
     <ProjectReference Include="..\..\src\Aura3D.Pipeline.PBRForward\Aura3D.Pipeline.PBRForward.csproj" />

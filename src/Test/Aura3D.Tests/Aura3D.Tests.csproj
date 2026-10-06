@@ -24,6 +24,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Aura3D.Core\Aura3D.Core.csproj" />
     <ProjectReference Include="..\..\Aura3D.Model.AssimpLoader\Aura3D.Model.AssimpLoader.csproj" />
+    <ProjectReference Include="..\..\Aura3D.Model.FbxLoader\Aura3D.Model.FbxLoader.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 骨架、蒙皮、动画这三条路径只有真实 FBX 才覆盖得到；gallery/assets 里的三个文件已入库，直接取用。 -->
+    <None Include="..\..\..\gallery\assets\models\fbx\*.FBX" Link="Assets/fbx/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

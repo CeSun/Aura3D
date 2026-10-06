@@ -34,9 +34,9 @@
   <data name="Pipeline_CelShading" xml:space="preserve"><value>Cel shading</value></data>
   <data name="AnimationMix_Graph" xml:space="preserve"><value>AnimationGraph (left)</value></data>
   <data name="AnimationMix_BlendSpace" xml:space="preserve"><value>AnimationBlendSpace (right)</value></data>
-  <data name="AssimpFbx_Clips" xml:space="preserve"><value>Clips</value></data>
-  <data name="AssimpFbx_SampleInterface" xml:space="preserve"><value>The raw Animation.Sample interface</value></data>
-  <data name="AssimpFbx_SkeletonLoader" xml:space="preserve"><value>Skeleton and loader</value></data>
+  <data name="FbxAnimation_Clips" xml:space="preserve"><value>Clips</value></data>
+  <data name="FbxAnimation_SampleInterface" xml:space="preserve"><value>The raw Animation.Sample interface</value></data>
+  <data name="FbxAnimation_SkeletonLoader" xml:space="preserve"><value>Skeleton and loader</value></data>
   <data name="Background_Source" xml:space="preserve"><value>Background source</value></data>
   <data name="Background_ShaderVariants" xml:space="preserve"><value>The skybox's two shader variants</value></data>
   <data name="Background_CubemapFeedsIbl" xml:space="preserve"><value>Only the cubemap branch feeds IBL</value></data>
@@ -129,8 +129,8 @@
   <data name="Demo_SkinnedAnimation_Summary" xml:space="preserve"><value>AnimationSampler's four knobs, who drives Model.Update, and the bone matrices BoneAttachment takes</value></data>
   <data name="Demo_AnimationMix_Title" xml:space="preserve"><value>Animation state machine &amp; blend space</value></data>
   <data name="Demo_AnimationMix_Summary" xml:space="preserve"><value>AnimationGraph predicate transitions and BlendTime crossfades, AnimationBlendSpace axis values and inverse-distance weights</value></data>
-  <data name="Demo_AssimpFbx_Title" xml:space="preserve"><value>FBX animation library (Assimp)</value></data>
-  <data name="Demo_AssimpFbx_Summary" xml:space="preserve"><value>Fetching model and animation files separately, attaching external clips to the same Skeleton instance, and the raw Animation.Sample interface</value></data>
+  <data name="Demo_FbxAnimation_Title" xml:space="preserve"><value>FBX animation library (ufbx)</value></data>
+  <data name="Demo_FbxAnimation_Summary" xml:space="preserve"><value>Fetching model and animation files separately, attaching external clips to the same Skeleton instance, and the raw Animation.Sample interface</value></data>
   <data name="Demo_Instancing_Title" xml:space="preserve"><value>Instancing</value></data>
   <data name="Demo_Instancing_Summary" xml:space="preserve"><value>InstancedMesh batch versus per-instance updates, per-instance vertex colour attributes, and how an instance-aware shader is written</value></data>
   <data name="Demo_Hism_Title" xml:space="preserve"><value>Hierarchical instancing (HISM)</value></data>
@@ -157,15 +157,15 @@
   <data name="AnimationMix_ResetAxes" xml:space="preserve"><value>Reset (axes back to 0,0)</value></data>
   <data name="AnimationMix_BlendSpaceNote" xml:space="preserve"><value>The rectangle above is a top-down view of the 2D blend space; both axes run from -1 to +1. On the vertical axis: top = run forward, halfway = walk forward, bottom = walk backwards (KayKit has no backward run); on the horizontal axis: left/right ends = strafe runs; the origin = idle. The six grey dots are the sample clips and the blue thumb is the current axis value — drag it and the right character instantly plays the blended pose at those weights. With auto sweep on, the thumb shuttles up and down the vertical axis by itself; dragging manually pauses the sweep until you re-enable the toggle. Higher IdwPower hugs the nearest sample.</value></data>
   <data name="AnimationMix_BlendSpaceRow" xml:space="preserve"><value>Blend space</value></data>
-  <data name="AssimpFbx_Intro" xml:space="preserve"><value>SK_Mannequin.FBX carries no animation; the motion lives in two separate FBX files. A single file may contain several clips, and both the count and the names are read from the file itself.</value></data>
-  <data name="AssimpFbx_Sampler" xml:space="preserve"><value>Clip to attach</value></data>
-  <data name="AssimpFbx_NoSamplerNote" xml:space="preserve"><value>Choosing "no sampler" leaves Model.AnimationSampler null, so drawing falls back to Skeleton.BoneMatrixBuffer (the bind pose) and the character returns to T-pose — this is the line `mesh.AnimationSampler?.BoneMatrixBuffer ?? mesh.Skeleton!.BoneMatrixBuffer` inside the render pass.</value></data>
-  <data name="AssimpFbx_Bone" xml:space="preserve"><value>Pick a bone</value></data>
-  <data name="AssimpFbx_AtSecond" xml:space="preserve"><value>Sample at which second of the clip</value></data>
-  <data name="AssimpFbx_SampleNote" xml:space="preserve"><value>Animation.Sample(channel name, seconds) returns that bone's matrix at that moment. The engine has no player with a Play method — the player is hand-written: AnimationSampler advances time frame by frame and calls Sample. The slider pins that time for it.</value></data>
-  <data name="AssimpFbx_Result" xml:space="preserve"><value>Sample result</value></data>
-  <data name="AssimpFbx_Skeleton" xml:space="preserve"><value>Skeleton</value></data>
-  <data name="AssimpFbx_ClipTable" xml:space="preserve"><value>Clip table</value></data>
+  <data name="FbxAnimation_Intro" xml:space="preserve"><value>SK_Mannequin.FBX carries no animation; the motion lives in two separate FBX files. A single file may contain several clips, and the clip table reads their names and durations straight from the files. All three files go through FbxLoader, the managed ufbx port - no native library, so this page also runs in the browser.</value></data>
+  <data name="FbxAnimation_Sampler" xml:space="preserve"><value>Clip to attach</value></data>
+  <data name="FbxAnimation_NoSamplerNote" xml:space="preserve"><value>Choosing "no sampler" leaves Model.AnimationSampler null, so drawing falls back to Skeleton.BoneMatrixBuffer (the bind pose) and the character returns to T-pose — this is the line `mesh.AnimationSampler?.BoneMatrixBuffer ?? mesh.Skeleton!.BoneMatrixBuffer` inside the render pass.</value></data>
+  <data name="FbxAnimation_Bone" xml:space="preserve"><value>Pick a bone</value></data>
+  <data name="FbxAnimation_AtSecond" xml:space="preserve"><value>Sample at which second of the clip</value></data>
+  <data name="FbxAnimation_SampleNote" xml:space="preserve"><value>Animation.Sample(channel name, seconds) returns that bone's matrix at that moment. The engine has no player with a Play method — the player is hand-written: AnimationSampler advances time frame by frame and calls Sample. The slider pins that time for it.</value></data>
+  <data name="FbxAnimation_Result" xml:space="preserve"><value>Sample result</value></data>
+  <data name="FbxAnimation_Skeleton" xml:space="preserve"><value>Skeleton</value></data>
+  <data name="FbxAnimation_ClipTable" xml:space="preserve"><value>Clip table</value></data>
   <data name="Background_Intro" xml:space="preserve"><value>There is a single entry point for backgrounds: Scene.Background, typed OneOf&lt;CubeTexture, Texture&gt;. The cubemap branch samples by view direction, so the sky follows camera rotation only, not translation (the view the pass computes is a LookAt centred on the origin) — orbit with the right mouse button, then walk with WASD to separate the two. The plain-texture branch draws a window-filling quad, stretched rather than equirectangularly mapped, and does not move at all when you orbit.</value></data>
   <data name="Background_CubeSize" xml:space="preserve"><value>Cubemap edge length when baking the HDRI</value></data>
   <data name="Background_RenderBackground" xml:space="preserve"><value>Draw background (Camera.IsRenderBackground)</value></data>
@@ -429,15 +429,15 @@
   <data name="MaterialShaders_MapChecker" xml:space="preserve"><value>Checker</value></data>
   <data name="MaterialShaders_MapSoftDot" xml:space="preserve"><value>Soft dot</value></data>
   <data name="MaterialShaders_MapGradient" xml:space="preserve"><value>Vertical gradient</value></data>
-  <data name="MaterialShaders_Readout" xml:space="preserve"><value>Frame time {0:0.0} ms · uTime {1:0.00} · override key {2} · translucent cutoff {3:0.00}</value></data>  <data name="AssimpFbx_NoSampler" xml:space="preserve"><value>(no sampler: bind pose)</value></data>
-  <data name="AssimpFbx_NoClip" xml:space="preserve"><value>No clip available to sample</value></data>
-  <data name="AssimpFbx_SampleReadout" xml:space="preserve"><value>{2} of {0} at {1:0.##}s — translation ({3:0.###}, {4:0.###}, {5:0.###}) · {6} channels</value></data>
-  <data name="AssimpFbx_SkeletonReadout" xml:space="preserve"><value>{0} bones · root {1} · {2} index-map entries · clip Skeleton {3}</value></data>
-  <data name="AssimpFbx_SkeletonSame" xml:space="preserve"><value>is the same instance</value></data>
-  <data name="AssimpFbx_SkeletonDiff" xml:space="preserve"><value>is not the same instance</value></data>
-  <data name="AssimpFbx_ListSeparator" xml:space="preserve"><value>, </value></data>
-  <data name="AssimpFbx_ClipTableReadout" xml:space="preserve"><value>Current={0} · {1} clips fetched: {2} · {3} BonesTransform entries</value></data>
-  <data name="AssimpFbx_None" xml:space="preserve"><value>none</value></data>  <data name="CelShading_MeshReference" xml:space="preserve"><value>Reference: BaseColor only</value></data>
+  <data name="MaterialShaders_Readout" xml:space="preserve"><value>Frame time {0:0.0} ms · uTime {1:0.00} · override key {2} · translucent cutoff {3:0.00}</value></data>  <data name="FbxAnimation_NoSampler" xml:space="preserve"><value>(no sampler: bind pose)</value></data>
+  <data name="FbxAnimation_NoClip" xml:space="preserve"><value>No clip available to sample</value></data>
+  <data name="FbxAnimation_SampleReadout" xml:space="preserve"><value>{2} of {0} at {1:0.##}s — translation ({3:0.###}, {4:0.###}, {5:0.###}) · {6} channels</value></data>
+  <data name="FbxAnimation_SkeletonReadout" xml:space="preserve"><value>{0} bones · root {1} · {2} index-map entries · clip Skeleton {3}</value></data>
+  <data name="FbxAnimation_SkeletonSame" xml:space="preserve"><value>is the same instance</value></data>
+  <data name="FbxAnimation_SkeletonDiff" xml:space="preserve"><value>is not the same instance</value></data>
+  <data name="FbxAnimation_ListSeparator" xml:space="preserve"><value>, </value></data>
+  <data name="FbxAnimation_ClipTableReadout" xml:space="preserve"><value>Current={0} · {1} clips fetched: {2} · {3} BonesTransform entries</value></data>
+  <data name="FbxAnimation_None" xml:space="preserve"><value>none</value></data>  <data name="CelShading_MeshReference" xml:space="preserve"><value>Reference: BaseColor only</value></data>
   <data name="CelShading_MeshFace" xml:space="preserve"><value>Face (FACE_RENDER)</value></data>
   <data name="CelShading_MeshBody" xml:space="preserve"><value>Body</value></data>
   <data name="CelShading_FaceBodyBranch" xml:space="preserve"><value>takes the body branch</value></data>

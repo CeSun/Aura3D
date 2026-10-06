@@ -53,7 +53,7 @@ const models = [
   { key: 'CelCharacter', src: 'Models/NPC_Avatar_Girl_Sword_Nilou.glb', out: 'models/NPC_Avatar_Girl_Sword_Nilou.glb', largest: 0, raw: true },
 ];
 
-/// 仅桌面（Assimp 原生库读 FBX）：不减面不转码，原样复制，清单里标 WebFriendly=false。
+/// FBX 由 ufbx 的纯 C# 移植读取：不减面不转码，原样复制，浏览器可用（无原生库依赖）。
 const fbx = [
   { key: 'FbxMannequin', src: 'Models/SK_Mannequin.FBX', out: 'models/fbx/SK_Mannequin.FBX' },
   { key: 'FbxIdle', src: 'Models/Idle_Rifle_Hip.FBX', out: 'models/fbx/Idle_Rifle_Hip.FBX' },
@@ -120,7 +120,7 @@ async function main() {
 
     copyFileSync(path.join(SRC, item.src), path.join(OUT, item.out));
 
-    produced.push({ ...item, largest: 0, webFriendly: false });
+    produced.push({ ...item, largest: 0, webFriendly: true });
   }
 
   for (const item of textures) {
@@ -247,7 +247,7 @@ const CSHARP_MANIFEST = path.join(repoRoot, 'gallery', 'Aura3D.Gallery', 'Assets
 
 /// 分组顺序决定 C# 清单里的归类注释；匹配不到任何分组的路径要当场报错，不能静默漏登记。
 const groups = [
-  { title: '仅桌面资产：Assimp 原生库读的 FBX', match: (p) => p.startsWith('models/fbx/') },
+  { title: 'FBX：ufbx 纯托管读取', match: (p) => p.startsWith('models/fbx/') },
   { title: '模型', match: (p) => p.startsWith('models/') },
   { title: '贴图', match: (p) => p.startsWith('textures/') && !p.startsWith('textures/skybox/') },
   { title: '环境：HDRI 与立方图六面', match: (p) => p.startsWith('environments/') || p.startsWith('textures/skybox/') },

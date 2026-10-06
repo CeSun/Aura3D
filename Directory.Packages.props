@@ -52,6 +52,9 @@
     <PackageVersion Include="SharpGLTF.Toolkit" Version="1.0.5" />
     <PackageVersion Include="Silk.NET.OpenGLES" Version="2.22.0" />
     <PackageVersion Include="StbImageSharp" Version="2.30.15" />
+    <!-- ufbx 的纯 C# 移植，无原生依赖，所以 FbxLoader 在 browser/wasm 上也能跑。
+         上游目前只发预览版，这里跟随它最新的 alpha。 -->
+    <PackageVersion Include="Ufbx.NET" Version="0.23.0-alpha.0.4" />
     <PackageVersion Include="MinVer" Version="7.0.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageVersion Include="xunit" Version="2.9.2" />

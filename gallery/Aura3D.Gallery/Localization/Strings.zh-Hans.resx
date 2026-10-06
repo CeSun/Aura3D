@@ -34,9 +34,9 @@
   <data name="Pipeline_CelShading" xml:space="preserve"><value>卡通描边</value></data>
   <data name="AnimationMix_Graph" xml:space="preserve"><value>AnimationGraph（左）</value></data>
   <data name="AnimationMix_BlendSpace" xml:space="preserve"><value>AnimationBlendSpace（右）</value></data>
-  <data name="AssimpFbx_Clips" xml:space="preserve"><value>剪辑</value></data>
-  <data name="AssimpFbx_SampleInterface" xml:space="preserve"><value>Animation.Sample 的裸接口</value></data>
-  <data name="AssimpFbx_SkeletonLoader" xml:space="preserve"><value>骨架与加载器</value></data>
+  <data name="FbxAnimation_Clips" xml:space="preserve"><value>剪辑</value></data>
+  <data name="FbxAnimation_SampleInterface" xml:space="preserve"><value>Animation.Sample 的裸接口</value></data>
+  <data name="FbxAnimation_SkeletonLoader" xml:space="preserve"><value>骨架与加载器</value></data>
   <data name="Background_Source" xml:space="preserve"><value>背景来源</value></data>
   <data name="Background_ShaderVariants" xml:space="preserve"><value>天空盒的两个着色器变体</value></data>
   <data name="Background_CubemapFeedsIbl" xml:space="preserve"><value>只有立方图那一支喂 IBL</value></data>
@@ -129,8 +129,8 @@
   <data name="Demo_SkinnedAnimation_Summary" xml:space="preserve"><value>AnimationSampler 的四个旋钮、Model.Update 的推进权，以及 BoneAttachment 取的那份骨骼矩阵</value></data>
   <data name="Demo_AnimationMix_Title" xml:space="preserve"><value>动画状态机与混合空间</value></data>
   <data name="Demo_AnimationMix_Summary" xml:space="preserve"><value>AnimationGraph 的谓词转移与 BlendTime 交叉，AnimationBlendSpace 的轴值与反距离权重</value></data>
-  <data name="Demo_AssimpFbx_Title" xml:space="preserve"><value>FBX 动作库（Assimp）</value></data>
-  <data name="Demo_AssimpFbx_Summary" xml:space="preserve"><value>模型文件与动作文件分开取、同一个 Skeleton 实例挂外接剪辑，以及 Animation.Sample 的裸接口</value></data>
+  <data name="Demo_FbxAnimation_Title" xml:space="preserve"><value>FBX 动作库（ufbx）</value></data>
+  <data name="Demo_FbxAnimation_Summary" xml:space="preserve"><value>模型文件与动作文件分开取、同一个 Skeleton 实例挂外接剪辑，以及 Animation.Sample 的裸接口</value></data>
   <data name="Demo_Instancing_Title" xml:space="preserve"><value>实例化</value></data>
   <data name="Demo_Instancing_Summary" xml:space="preserve"><value>InstancedMesh 的批量/逐个更新、逐实例顶点色属性，以及实例感知着色器的写法</value></data>
   <data name="Demo_Hism_Title" xml:space="preserve"><value>层次实例化 HISM</value></data>
@@ -157,15 +157,15 @@
   <data name="AnimationMix_ResetAxes" xml:space="preserve"><value>Reset（轴回到 0,0）</value></data>
   <data name="AnimationMix_BlendSpaceNote" xml:space="preserve"><value>上面的矩形是二维混合空间的俯视图，两轴都是 -1～+1：竖中轴上端=前进跑、半程=前进走、下端=后退走（KayKit 没有后退跑），横中轴两端=左/右侧移跑，原点=静止。六个灰点是采样剪辑的摆位，蓝色滑块是当前轴值，按住拖动，右侧角色实时播放对应权重下的混合姿势；扫掠开着时滑块自己沿竖轴往返，手动拖动会自动暂停扫掠，勾回开关恢复。IdwPower 越大越贴最近的采样点。</value></data>
   <data name="AnimationMix_BlendSpaceRow" xml:space="preserve"><value>混合空间</value></data>
-  <data name="AssimpFbx_Intro" xml:space="preserve"><value>SK_Mannequin.FBX 里没有动画，动作分别放在两个 FBX 里。一个文件可能带多条剪辑，条数与命名都读的是文件实际内容。</value></data>
-  <data name="AssimpFbx_Sampler" xml:space="preserve"><value>挂上的动作</value></data>
-  <data name="AssimpFbx_NoSamplerNote" xml:space="preserve"><value>选“不挂采样器”时 Model.AnimationSampler 为空，绘制走的是 Skeleton.BoneMatrixBuffer（绑定姿势），所以角色回到 T-pose——这就是 RenderPass 里那句 `mesh.AnimationSampler?.BoneMatrixBuffer ?? mesh.Skeleton!.BoneMatrixBuffer`。</value></data>
-  <data name="AssimpFbx_Bone" xml:space="preserve"><value>取一根骨骼</value></data>
-  <data name="AssimpFbx_AtSecond" xml:space="preserve"><value>在该动作的哪一秒取样</value></data>
-  <data name="AssimpFbx_SampleNote" xml:space="preserve"><value>Animation.Sample(通道名, 秒) 返回那根骨骼在该时刻的矩阵，引擎里没有 Play 之类的播放器——播放器是自己写的：AnimationSampler 逐帧算时间，再调这个 Sample。滑杆就是替它把时间钉住。</value></data>
-  <data name="AssimpFbx_Result" xml:space="preserve"><value>取样结果</value></data>
-  <data name="AssimpFbx_Skeleton" xml:space="preserve"><value>骨架</value></data>
-  <data name="AssimpFbx_ClipTable" xml:space="preserve"><value>剪辑表</value></data>
+  <data name="FbxAnimation_Intro" xml:space="preserve"><value>SK_Mannequin.FBX 里没有动画，动作分别放在两个 FBX 里。一个文件可能带多条剪辑，剪辑表里的名字与时长都直接读自文件。三个文件都交给 FbxLoader（ufbx 的纯 C# 移植）读取——没有原生库，所以这页在浏览器里同样跑得起来。</value></data>
+  <data name="FbxAnimation_Sampler" xml:space="preserve"><value>挂上的动作</value></data>
+  <data name="FbxAnimation_NoSamplerNote" xml:space="preserve"><value>选“不挂采样器”时 Model.AnimationSampler 为空，绘制走的是 Skeleton.BoneMatrixBuffer（绑定姿势），所以角色回到 T-pose——这就是 RenderPass 里那句 `mesh.AnimationSampler?.BoneMatrixBuffer ?? mesh.Skeleton!.BoneMatrixBuffer`。</value></data>
+  <data name="FbxAnimation_Bone" xml:space="preserve"><value>取一根骨骼</value></data>
+  <data name="FbxAnimation_AtSecond" xml:space="preserve"><value>在该动作的哪一秒取样</value></data>
+  <data name="FbxAnimation_SampleNote" xml:space="preserve"><value>Animation.Sample(通道名, 秒) 返回那根骨骼在该时刻的矩阵，引擎里没有 Play 之类的播放器——播放器是自己写的：AnimationSampler 逐帧算时间，再调这个 Sample。滑杆就是替它把时间钉住。</value></data>
+  <data name="FbxAnimation_Result" xml:space="preserve"><value>取样结果</value></data>
+  <data name="FbxAnimation_Skeleton" xml:space="preserve"><value>骨架</value></data>
+  <data name="FbxAnimation_ClipTable" xml:space="preserve"><value>剪辑表</value></data>
   <data name="Background_Intro" xml:space="preserve"><value>背景只有一个入口：Scene.Background，类型是 OneOf&lt;CubeTexture, Texture&gt;。立方图那一支按视线方向采样，天空只跟相机旋转、不跟平移（pass 里现算的 view 是以原点的 LookAt）——按住右键转视角、再用 WASD 走几步就能分开这两件事。普通图那一支画的是一张铺满窗口的四边形，是拉伸而不是等距柱状映射，转视角时纹丝不动。</value></data>
   <data name="Background_CubeSize" xml:space="preserve"><value>HDRI 转立方图的边长</value></data>
   <data name="Background_RenderBackground" xml:space="preserve"><value>画背景（Camera.IsRenderBackground）</value></data>
@@ -429,15 +429,15 @@
   <data name="MaterialShaders_MapChecker" xml:space="preserve"><value>棋盘</value></data>
   <data name="MaterialShaders_MapSoftDot" xml:space="preserve"><value>柔光点</value></data>
   <data name="MaterialShaders_MapGradient" xml:space="preserve"><value>竖向渐变</value></data>
-  <data name="MaterialShaders_Readout" xml:space="preserve"><value>帧时 {0:0.0} ms · uTime {1:0.00} · 覆盖键 {2} · 透明面 cutoff {3:0.00}</value></data>  <data name="AssimpFbx_NoSampler" xml:space="preserve"><value>（不挂采样器：绑定姿势）</value></data>
-  <data name="AssimpFbx_NoClip" xml:space="preserve"><value>没有可取样的剪辑</value></data>
-  <data name="AssimpFbx_SampleReadout" xml:space="preserve"><value>{0} 在 {1:0.##}s 的 {2}：位移 ({3:0.###}, {4:0.###}, {5:0.###}) · 通道数 {6}</value></data>
-  <data name="AssimpFbx_SkeletonReadout" xml:space="preserve"><value>骨骼 {0} 根 · 根 {1} · 索引表 {2} 项 · 剪辑里的 Skeleton {3}</value></data>
-  <data name="AssimpFbx_SkeletonSame" xml:space="preserve"><value>就是同一个实例</value></data>
-  <data name="AssimpFbx_SkeletonDiff" xml:space="preserve"><value>不是同一个实例</value></data>
-  <data name="AssimpFbx_ListSeparator" xml:space="preserve"><value>，</value></data>
-  <data name="AssimpFbx_ClipTableReadout" xml:space="preserve"><value>当前={0} · 已取回 {1} 条：{2} · BonesTransform {3} 项</value></data>
-  <data name="AssimpFbx_None" xml:space="preserve"><value>无</value></data>  <data name="CelShading_MeshReference" xml:space="preserve"><value>对照：只有 BaseColor</value></data>
+  <data name="MaterialShaders_Readout" xml:space="preserve"><value>帧时 {0:0.0} ms · uTime {1:0.00} · 覆盖键 {2} · 透明面 cutoff {3:0.00}</value></data>  <data name="FbxAnimation_NoSampler" xml:space="preserve"><value>（不挂采样器：绑定姿势）</value></data>
+  <data name="FbxAnimation_NoClip" xml:space="preserve"><value>没有可取样的剪辑</value></data>
+  <data name="FbxAnimation_SampleReadout" xml:space="preserve"><value>{0} 在 {1:0.##}s 的 {2}：位移 ({3:0.###}, {4:0.###}, {5:0.###}) · 通道数 {6}</value></data>
+  <data name="FbxAnimation_SkeletonReadout" xml:space="preserve"><value>骨骼 {0} 根 · 根 {1} · 索引表 {2} 项 · 剪辑里的 Skeleton {3}</value></data>
+  <data name="FbxAnimation_SkeletonSame" xml:space="preserve"><value>就是同一个实例</value></data>
+  <data name="FbxAnimation_SkeletonDiff" xml:space="preserve"><value>不是同一个实例</value></data>
+  <data name="FbxAnimation_ListSeparator" xml:space="preserve"><value>，</value></data>
+  <data name="FbxAnimation_ClipTableReadout" xml:space="preserve"><value>当前={0} · 已取回 {1} 条：{2} · BonesTransform {3} 项</value></data>
+  <data name="FbxAnimation_None" xml:space="preserve"><value>无</value></data>  <data name="CelShading_MeshReference" xml:space="preserve"><value>对照：只有 BaseColor</value></data>
   <data name="CelShading_MeshFace" xml:space="preserve"><value>脸（FACE_RENDER）</value></data>
   <data name="CelShading_MeshBody" xml:space="preserve"><value>身体</value></data>
   <data name="CelShading_FaceBodyBranch" xml:space="preserve"><value>走身体分支</value></data>

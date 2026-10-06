@@ -57,19 +57,19 @@
     "key": "FbxMannequin",
     "path": "models/fbx/SK_Mannequin.FBX",
     "bytes": 941472,
-    "webFriendly": false
+    "webFriendly": true
   },
   {
     "key": "FbxIdle",
     "path": "models/fbx/Idle_Rifle_Hip.FBX",
     "bytes": 1290352,
-    "webFriendly": false
+    "webFriendly": true
   },
   {
     "key": "FbxJogFwd",
     "path": "models/fbx/Jog_Fwd_Rifle.FBX",
     "bytes": 697072,
-    "webFriendly": false
+    "webFriendly": true
   },
   {
     "key": "BackgroundJpg",

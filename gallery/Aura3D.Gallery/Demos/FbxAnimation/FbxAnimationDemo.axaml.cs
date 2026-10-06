@@ -16,15 +16,23 @@ using ModelNode = Aura3D.Core.Nodes.Model;
 namespace Aura3D.Gallery.Demos;
 
 /// <summary>
-/// Assimp 这条路：FBX 动作库的标准用法——模型文件只给骨骼，动作文件用同一个
+/// ufbx 这条路：FBX 动作库的标准用法——模型文件只给骨骼，动作文件用同一个
 /// <see cref="Skeleton"/> 实例去 <c>LoadAnimations</c>，拿到的剪辑就挂在同一副骨架上。
-/// 依赖 Assimp 原生库，所以只在桌面端出现。
-/// 参数行的排版全在 <c>AssimpFbxDemo.axaml</c> 里，这里只剩场景组装与回调。
+/// 加载器是纯托管的 <c>FbxLoader</c>，没有原生库，所以这页在浏览器端也成立。
+/// 参数行的排版全在 <c>FbxAnimationDemo.axaml</c> 里，这里只剩场景组装与回调。
 /// </summary>
-public sealed partial class AssimpFbxDemo : Demo
+public sealed partial class FbxAnimationDemo : Demo
 {
-    // 剪辑名来自 FBX 文件本身，是身份不是文案；只有第 0 项「不挂采样器」是需要翻译的界面文字。
-    private static readonly string[] ClipNames = ["Idle_Rifle_Hip", "Jog_Fwd_Rifle"];
+    // 标签与动作文件一一对应：ufbx 报的剪辑名是文件里的 take 名，这两个文件都存成 "Unreal Take"，
+    // 当不了选项文字，所以标签按「哪个文件来的」给；剪辑表与采样读数仍照实读文件里的名与时长。
+    // 第 0 项「不挂采样器」是需要翻译的界面文字。
+    private static readonly (string Label, string AssetKey)[] MotionFiles =
+    [
+        ("Idle_Rifle_Hip", "FbxIdle"),
+        ("Jog_Fwd_Rifle", "FbxJogFwd"),
+    ];
+
+    private static readonly string[] ClipNames = [.. MotionFiles.Select(file => file.Label)];
 
     private ModelNode? model;
     private readonly List<Animation> clips = [];
@@ -40,7 +48,7 @@ public sealed partial class AssimpFbxDemo : Demo
 
     /// <summary>「挂上的动作」下拉的选项，供 XAML 绑定（ComboRow.Options 是 IList）。</summary>
     public IList ClipOptions { get; } =
-        ClipNames.Prepend(Strings.Keys.AssimpFbx_NoSampler.T()).ToList();
+        ClipNames.Prepend(Strings.Keys.FbxAnimation_NoSampler.T()).ToList();
 
     /// <summary>骨骼名单：资产到位前是空的，<see cref="BuildScene"/> 里就地补齐。</summary>
     public AvaloniaList<string> BoneOptions { get; } = [];
@@ -49,7 +57,7 @@ public sealed partial class AssimpFbxDemo : Demo
     /// 建页：装配 XAML，并把动作下拉的选中项对齐到字段的初值。
     /// </summary>
     /// <param name="context">宿主环境。</param>
-    public AssimpFbxDemo(DemoContext context) : base(context)
+    public FbxAnimationDemo(DemoContext context) : base(context)
     {
         InitializeComponent();
 
@@ -59,22 +67,22 @@ public sealed partial class AssimpFbxDemo : Demo
     /// <inheritdoc />
     public override async Task LoadAssetsAsync(AssetBatch assets)
     {
-        var loaded = await assets.AssimpModelAsync("FbxMannequin");
+        var loaded = await assets.FbxModelAsync("FbxMannequin");
 
         loaded.Name = "SK_Mannequin";
 
         model = loaded;
 
         // 两个动作文件都传同一个 Skeleton：返回的剪辑直接就是这副骨架的，不需要重定向。
-        foreach (var key in new[] { "FbxIdle", "FbxJogFwd" })
+        foreach (var (label, key) in MotionFiles)
         {
-            var found = await assets.AssimpAnimationsAsync(key, model.Skeleton);
+            var found = await assets.FbxAnimationsAsync(key, model.Skeleton);
 
             foreach (var animation in found)
             {
                 clips.Add(animation);
 
-                byLabel[MatchLabel(animation.Name)] = animation;
+                byLabel[label] = animation;
             }
         }
     }
@@ -159,11 +167,6 @@ public sealed partial class AssimpFbxDemo : Demo
         ReportSample();
     }
 
-    private string MatchLabel(string animationName) =>
-        animationName.Contains("Idle", StringComparison.OrdinalIgnoreCase) ? ClipNames[0] :
-        animationName.Contains("Jog", StringComparison.OrdinalIgnoreCase) ? ClipNames[1] :
-        ClipNames[0];
-
     private void ApplyClip()
     {
         if (model == null)
@@ -203,14 +206,14 @@ public sealed partial class AssimpFbxDemo : Demo
 
         if (animation == null || string.IsNullOrEmpty(boneName))
         {
-            SampleReadout.Text = Strings.Keys.AssimpFbx_NoClip.T();
+            SampleReadout.Text = Strings.Keys.FbxAnimation_NoClip.T();
 
             return;
         }
 
         var matrix = animation.Sample(boneName, sampleTime);
 
-        SampleReadout.Text = Strings.Keys.AssimpFbx_SampleReadout.Format(
+        SampleReadout.Text = Strings.Keys.FbxAnimation_SampleReadout.Format(
             animation.Name,
             sampleTime,
             boneName,
@@ -229,23 +232,23 @@ public sealed partial class AssimpFbxDemo : Demo
 
         var retargeted = clips.Count > 0 && ReferenceEquals(clips[0].Skeleton, skeleton);
 
-        SkeletonReadout.Text = Strings.Keys.AssimpFbx_SkeletonReadout.Format(
+        SkeletonReadout.Text = Strings.Keys.FbxAnimation_SkeletonReadout.Format(
             skeleton.Bones.Count,
             skeleton.Root?.Name ?? "-",
             skeleton.GetBoneIndexMap().Count,
             retargeted
-                ? Strings.Keys.AssimpFbx_SkeletonSame.T()
-                : Strings.Keys.AssimpFbx_SkeletonDiff.T());
+                ? Strings.Keys.FbxAnimation_SkeletonSame.T()
+                : Strings.Keys.FbxAnimation_SkeletonDiff.T());
     }
 
     private void Report()
     {
-        var table = string.Join(Strings.Keys.AssimpFbx_ListSeparator.T(), clips.Select(c => $"{c.Name}({c.Duration:0.##}s)"));
+        var table = string.Join(Strings.Keys.FbxAnimation_ListSeparator.T(), clips.Select(c => $"{c.Name}({c.Duration:0.##}s)"));
 
-        ClipsReadout.Text = Strings.Keys.AssimpFbx_ClipTableReadout.Format(
+        ClipsReadout.Text = Strings.Keys.FbxAnimation_ClipTableReadout.Format(
             ClipLabel,
             clips.Count,
-            table.Length > 0 ? table : Strings.Keys.AssimpFbx_None.T(),
+            table.Length > 0 ? table : Strings.Keys.FbxAnimation_None.T(),
             sampler?.BonesTransform.Count ?? 0);
 
         ReportSkeleton();
